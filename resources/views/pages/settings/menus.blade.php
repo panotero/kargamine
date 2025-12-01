@@ -148,7 +148,7 @@
 
         // --------------------- LOAD ROLES ---------------------
         async function loadRoles() {
-            const res = await fetch(`${window.APP_URL}/api/userconfigs`, {
+            const res = await fetch(`api/userconfigs`, {
                 headers: {
                     Accept: "application/json"
                 }
@@ -184,7 +184,7 @@
 
         // --------------------- LOAD OFFICES ---------------------
         async function loadOffices() {
-            const res = await fetch(`${window.APP_URL}/api/offices`, {
+            const res = await fetch(`api/offices`, {
                 headers: {
                     Accept: "application/json"
                 }
@@ -229,7 +229,7 @@
         }
         // --------------------- LOAD MENUS ---------------------
         async function loadMenus() {
-            const res = await fetch(`${window.APP_URL}/api/nav_menus/list`, {
+            const res = await fetch(`api/nav_menus/list`, {
                 credentials: 'include',
                 headers: {
                     Accept: "application/json"
@@ -403,11 +403,11 @@
                 parent_menu: fields.parent.value,
             };
 
-            let url = `${window.APP_URL}/api/nav_menus`;
+            let url = `api/nav_menus`;
             let method = "POST";
 
             if (fields.id.value) {
-                url = `${window.APP_URL}/api/nav_menus/${fields.id.value}`;
+                url = `api/nav_menus/${fields.id.value}`;
                 method = "PUT";
             }
 
@@ -451,7 +451,7 @@
 
             if (!swapWith) return;
 
-            await fetch(`${window.APP_URL}/api/nav_menus/swap`, {
+            await fetch(`api/nav_menus/swap`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -471,7 +471,7 @@
 
             const confirmed = await customConfirm("Delete this menu?");
             if (!confirmed) return; // if user clicks Cancel, exit
-            await fetch(`${window.APP_URL}/api/nav_menus/${id}`, {
+            await fetch(`api/nav_menus/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",

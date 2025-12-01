@@ -21,10 +21,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 
-    <script>
-        window.APP_URL = "{{ config('app.url') }}";
-        window.API_URL = "{{ config('custom.api_url') }}";
-    </script>
 
 
     <!-- Scripts -->

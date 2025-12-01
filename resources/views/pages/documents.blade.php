@@ -72,110 +72,114 @@
     </div>
 
     <!-- Modal: New Document -->
-    <div id="modalNewDocument" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal">
+    <div id="modalNewDocument" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal p-5">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Upload New Document</h2>
-            <div id="modalErrorMessage"
-                class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-                <ul id="modalErrorList" class="list-disc list-inside"></ul>
-            </div>
-            <!-- PDF Upload Area -->
-            <div id="dropzone"
-                class="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 cursor-pointer hover:border-blue-400 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M7 16V4m0 0L3 8m4-4l4 4m-4 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3" />
-                </svg>
-                <p class="text-sm">
-                    Drag & drop a PDF file here or
-                    <span class="text-blue-600 underline">click to browse</span>
-                </p>
-                <input type="file" accept="application/pdf" class="hidden" id="fileInput" required />
-            </div>
+            <div class="max-h-[60vh] overflow-y-auto p-3 ">
 
-            <!-- Display selected file info -->
-            <p id="fileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Upload New Document</h2>
+                <div id="modalErrorMessage"
+                    class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                    <ul id="modalErrorList" class="list-disc list-inside"></ul>
+                </div>
+                <!-- PDF Upload Area -->
+                <div id="dropzone"
+                    class="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 cursor-pointer hover:border-blue-400 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16V4m0 0L3 8m4-4l4 4m-4 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3" />
+                    </svg>
+                    <p class="text-sm">
+                        Drag & drop a PDF file here or
+                        <span class="text-blue-600 underline">click to browse</span>
+                    </p>
+                    <input type="file" accept="application/pdf" class="hidden" id="fileInput" required />
+                </div>
 
-            <!-- Clear button -->
-            <button id="clearSelectionBtn"
-                class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition">Clear</button>
+                <!-- Display selected file info -->
+                <p id="fileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
+
+                <!-- Clear button -->
+                <button id="clearSelectionBtn"
+                    class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition">Clear</button>
 
 
-            <!-- Input Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm text-gray-600">Document Number</label>
-                        <input id="document_code" type="text" maxlength="25" pattern="^[a-zA-Z0-9\-_'\]+$"
-                            title="Only letters, numbers, hyphen (-), underscore (_), single quote ('), and double quote (\") are allowed."
-                            class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                <!-- Input Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-gray-600">Document Number</label>
+                            <input id="document_code" type="text" maxlength="25" pattern="^[a-zA-Z0-9\-_'\]+$"
+                                title="Only letters, numbers, hyphen (-), underscore (_), single quote ('), and double quote (\") are allowed."
+                                class="w-full border-gray-300 rounded-lg px-3 py-2" required />
 
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Subject</label>
+                            <input id="subject" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
+                                required />
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Signatory</label>
+                            <input id="signatory" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
+                                required />
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Remarks</label>
+                            <textarea id="remarks" class="w-full border-gray-300 rounded-lg px-3 py-2"></textarea>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Subject</label>
-                        <input id="subject" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
-                            required />
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Signatory</label>
-                        <input id="signatory" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
-                            required />
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Remarks</label>
-                        <textarea id="remarks" class="w-full border-gray-300 rounded-lg px-3 py-2"></textarea>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-gray-600">Origin Office</label>
+                            <select id="originOffice" class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect"
+                                required>
+                                <option>Select...</option>
+                            </select>
+                            <div id="otheroriginofficetb" class="hidden">
+                                <label class="text-sm text-gray-600">Specify Office</label>
+                                <input id="otheroriginoffice" type="text"
+                                    class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Destination Office</label>
+                            <select id="destinationOffice"
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect" required>
+                                <option>Select...</option>
+                            </select>
+                            <div id="otherdestinationofficetb" class="hidden">
+                                <label class="text-sm text-gray-600">Specify Office</label>
+                                <input id="otherdestinationoffice" type="text"
+                                    class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Document Type</label>
+
+                            <select id="documentType"
+                                class="docTypeSelect w-full border-gray-300 rounded-lg px-3 py-2" required>
+                            </select>
+                            <div id="otherdoctypetb" class="hidden">
+                                <label class="text-sm text-gray-600">Specify Document</label>
+                                <input id="otherdocument" type="text"
+                                    class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Document Date</label>
+                            <input id="document_date" type="date"
+                                class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">Due Date</label>
+                            <input id="due_date" type="date"
+                                class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                        </div>
                     </div>
                 </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm text-gray-600">Origin Office</label>
-                        <select id="originOffice" class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect"
-                            required>
-                            <option>Select...</option>
-                        </select>
-                        <div id="otheroriginofficetb" class="hidden">
-                            <label class="text-sm text-gray-600">Specify Office</label>
-                            <input id="otheroriginoffice" type="text"
-                                class="w-full border-gray-300 rounded-lg px-3 py-2" required />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Destination Office</label>
-                        <select id="destinationOffice" class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect"
-                            required>
-                            <option>Select...</option>
-                        </select>
-                        <div id="otherdestinationofficetb" class="hidden">
-                            <label class="text-sm text-gray-600">Specify Office</label>
-                            <input id="otherdestinationoffice" type="text"
-                                class="w-full border-gray-300 rounded-lg px-3 py-2" required />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Document Type</label>
 
-                        <select id="documentType" class="docTypeSelect w-full border-gray-300 rounded-lg px-3 py-2"
-                            required>
-                        </select>
-                        <div id="otherdoctypetb" class="hidden">
-                            <label class="text-sm text-gray-600">Specify Document</label>
-                            <input id="otherdocument" type="text"
-                                class="w-full border-gray-300 rounded-lg px-3 py-2" required />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Document Date</label>
-                        <input id="document_date" type="date"
-                            class="w-full border-gray-300 rounded-lg px-3 py-2" />
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Due Date</label>
-                        <input id="due_date" type="date" class="w-full border-gray-300 rounded-lg px-3 py-2" />
-                    </div>
-                </div>
             </div>
-
             <!-- Actions -->
             <div class="flex justify-end mt-8 space-x-3">
                 <button id="btnCancelModal"
@@ -206,7 +210,7 @@
 
             <!-- Content -->
             <div
-                class="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
+                class="max-h-[60vh] overflow-y-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
 
                 <!-- Left Section: Metadata -->
                 <div class="w-full lg:w-1/2 p-6 space-y-4">
@@ -365,11 +369,13 @@
             </div>
         </div>
     </div>
-
     <!-- PDF Preview Modal -->
     <div id="pdfPreviewModal"
         class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
+
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col">
+
+            <!-- Header -->
             <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 px-6 py-3">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">PDF Preview</h3>
 
@@ -379,42 +385,99 @@
                 </button>
             </div>
 
+            <!-- Body: Two Columns -->
+            <div class="flex flex-1 overflow-hidden">
 
+                <!-- LEFT: Carousel -->
+                <div
+                    class="w-2/3 flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
 
-            <!-- Glide (inside Flowbite modal) -->
-            <div id="galleryGlide" class="glide w-full max-w-md mx-auto relative">
+                    <div id="galleryGlide" class="glide w-full max-w-xl mx-auto relative">
 
-                <!-- Loading Overlay -->
-                <div id="galleryLoading"
-                    class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
-                    <div
-                        class="animate-spin text-black dark:text-gray-200 h-10 w-10 border-4 border-gray-400 border-t-transparent rounded-full">
+                        <!-- Loading Overlay -->
+                        <div id="galleryLoading"
+                            class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
+                            <div
+                                class="animate-spin text-black dark:text-gray-200 h-10 w-10 border-4 border-gray-400 border-t-transparent rounded-full">
+                            </div>
+                        </div>
+
+                        <div class="glide__track" data-glide-el="track">
+                            <ul class="glide__slides" id="glideSlides">
+                                <!-- JS will populate slides here -->
+                            </ul>
+
+                            <!-- Floating Controls -->
+                            <div class="pointer-events-none">
+
+                                <!-- Prev -->
+                                <button data-glide-dir="<"
+                                    class="slide-previous pointer-events-auto absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Next -->
+                                <button data-glide-dir=">"
+                                    class="slide-next pointer-events-auto absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="glide__track" data-glide-el="track">
-                    <ul class="glide__slides" id="glideSlides">
-                        <!-- JS will populate slides here -->
-                    </ul>
-                    <div class="flex justify-end space-x-2 mb-2">
-                        <button id="zoomIn" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">+</button>
-                        <button id="zoomOut" class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">-</button>
+                <!-- RIGHT: File Information Panel -->
+                <div class="w-1/3 p-6 overflow-y-auto">
+
+                    <h4 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">File Information</h4>
+
+                    <div class="space-y-3">
+
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">File Name</p>
+                            <p id="infoFileName" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Document Subject</p>
+                            <p id="infoDocSubject" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Date Uploaded</p>
+                            <p id="infoDateUploaded" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Uploader</p>
+                            <p id="infoUploader" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Uploaded Office</p>
+                            <p id="infoUploadedOffice" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Remarks</p>
+                            <p id="infoRemarks"
+                                class="font-medium text-gray-900 dark:text-gray-100 whitespace-pre-line">—</p>
+                        </div>
+
                     </div>
-                </div>
 
-                <!-- Controls -->
-                <div class="flex justify-between mt-4">
-                    <button data-glide-dir="<" class="slide-previous px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">
-                        Prev
-                    </button>
-
-                    <button data-glide-dir=">" class="slide-next px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">
-                        Next
-                    </button>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Control Number Modal -->
     <div id="controlNumberModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black/50 modal">

@@ -327,15 +327,6 @@ function initZoomFunction() {
     });
   };
 
-  document.getElementById("zoomIn").addEventListener("click", () => {
-    currentZoom += zoomStep;
-    applyZoom();
-  });
-  document.getElementById("zoomOut").addEventListener("click", () => {
-    currentZoom = Math.max(1, currentZoom - zoomStep);
-    applyZoom();
-  });
-
   const hammer = new Hammer(glideSlides);
   hammer.get("pinch").set({ enable: true });
 
@@ -646,9 +637,18 @@ function initdocumentcontroller() {
       clearBtnId: "clearSelectionBtn",
     });
     initroute();
+    init();
+    async function init() {
+      const response = await fillOfficeDropdown();
 
-    fillOfficeDropdown();
-    fillDocType();
+      if (response) {
+        console.log(document.getElementById("originOffice"));
+        document.getElementById("originOffice").value =
+          authUser.office.office_name;
+        fillDocType();
+      }
+    }
+    // console.log(authUser.office.office_name);
 
     // --------------------------
     // Utility function: Toggle "Other" field visibility

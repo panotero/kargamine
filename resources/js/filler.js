@@ -1,22 +1,24 @@
-function fillOfficeDropdown(otherofficetb = null) {
+async function fillOfficeDropdown(otherofficetb = null) {
   const officedropdown = document.querySelectorAll(".officeSelect");
 
+  // Fetch offices ONCE
+  const res = await fetch("/api/offices");
+  const offices = await res.json();
+
+  // Loop through dropdown elements and fill them
   officedropdown.forEach((officeoption) => {
-    // Fetch offices
-    fetch("/api/offices")
-      .then((res) => res.json())
-      .then((offices) => {
-        officeoption.innerHTML =
-          `<option value="">Select Office</option>` +
-          offices
-            .map(
-              (o) =>
-                `<option value="${o.office_name}">${o.office_name}</option>`
-            )
-            .join("") +
-          `<option value="Other">Other</option>`;
-      });
+    officeoption.innerHTML =
+      `<option value="">Select Office</option>` +
+      offices
+        .map(
+          (o) => `<option value="${o.office_name}">${o.office_name}</option>`
+        )
+        .join("") +
+      `<option value="Other">Other</option>`;
   });
+
+  // Tell caller that this async function is finished
+  return true;
 }
 function fillDocType(otherdocumenttb = null) {
   const documentdropdown = document.querySelectorAll(".docTypeSelect");
@@ -38,6 +40,8 @@ function fillDocType(otherdocumenttb = null) {
       });
   });
 }
+
+// window.routing
 // Call this function on page load
 async function fetchAuthUser() {
   try {
