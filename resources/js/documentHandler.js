@@ -353,21 +353,27 @@ function initdocumentcontroller() {
     let statuscolor = "";
     switch (status.toLowerCase()) {
       case "pending":
-        statuscolor = "bg-orange-600";
+        statuscolor = "bg-yellow-200"; // soft yellow for pending
+        break;
+      case "for approval":
+        statuscolor = "bg-yellow-100"; // lighter yellow for in-review
         break;
       case "complete":
-        statuscolor = "bg-green-600";
+        statuscolor = "bg-green-200"; // soft green for completed
         break;
       case "remanded":
-        statuscolor = "bg-red-400";
+        statuscolor = "bg-red-200"; // soft red for remanded
         break;
-      case "remanded":
-        statuscolor = "bg-red-800";
+      case "overdue":
+        statuscolor = "bg-red-300"; // slightly stronger red for urgency
         break;
-      case "signed":
-        statuscolor = "bg-blue-500";
+      case "approved":
+        statuscolor = "bg-blue-200"; // soft blue for approved
         break;
+      default:
+        statuscolor = "bg-gray-100"; // fallback neutral color
     }
+
     tr.innerHTML = `
         <td class="px-4 py-2">${document_control_number}</td>
         <td class="px-4 py-2">${document_code}</td>
@@ -390,7 +396,7 @@ function initdocumentcontroller() {
           created_at ? created_at.split("T")[0] : "-"
         }</td>
         <td class="px-4 py-2">${confidentiality || "-"}</td>
-        <td class="px-4 py-2"><div class="px-3 py-1 rounded-full text-white font-semibold text-center ${statuscolor}">${
+        <td class="px-4 py-2"><div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">${
       status || "-"
     }</div></td>
     `;

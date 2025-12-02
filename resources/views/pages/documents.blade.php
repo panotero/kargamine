@@ -355,8 +355,8 @@
                             </div>
                         </div>
 
-                        <div class="glide__track" data-glide-el="track">
-                            <ul class="glide__slides" id="glideSlides">
+                        <div class="glide__track h-[80vh] bg-gray-100" data-glide-el="track">
+                            <ul class="glide__slides h-full" id="glideSlides">
                             </ul>
                             <div class="pointer-events-none">
                                 <button data-glide-dir="<"
