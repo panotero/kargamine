@@ -1,4 +1,4 @@
-<div class="max-h-screen overflow-y-auto bg-gray-50 text-gray-800 p-5" id="contentDashboard">
+<div class="max-h-screen overflow-y-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5" id="contentDashboard">
 
 
     <!-- Content -->
@@ -7,7 +7,7 @@
         <div class=" mb-5">
             <div class="w-full flex justify-between mb-5">
 
-                <h2 class="text-lg font-semibold text-gray-700">
+                <h2 class="text-lg font-semibold text-gray-700 dark:text-white">
                     Assigned to You
                 </h2>
                 <button id="btnNewDocument"
@@ -17,9 +17,9 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto bg-white rounded-xl shadow">
+            <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
                 <table id="assignedToYouDocumentTable" class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                    <thead class=" text-gray-600 uppercase text-xs">
                         <tr>
                             <th class="px-4 py-3">Control Number</th>
                             <th class="px-4 py-3">Document Number</th>
@@ -34,7 +34,7 @@
                             <th class="px-4 py-3">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-gray-100 dark:bg-gray-700  dark:text-white">
                     </tbody>
                 </table>
             </div>
@@ -42,12 +42,12 @@
 
         <!-- Table 2: All Office Documents -->
         <div class="h-full">
-            <h2 class="text-lg font-semibold text-gray-700">
+            <h2 class="text-lg font-semibold text-gray-700  dark:text-white mb-5">
                 All Documents
             </h2>
 
             <!-- Table -->
-            <div class="overflow-x-auto bg-white rounded-xl shadow">
+            <div class="overflow-x-auto bg-white dark:bg-gray-800  rounded-xl shadow">
                 <table id="allDocumentTable" class="w-full text-sm text-left border-collapse">
                     <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                         <tr>
@@ -64,7 +64,7 @@
                             <th class="px-4 py-3">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-gray-100 dark:bg-gray-700 dark:text-white">
                     </tbody>
                 </table>
             </div>

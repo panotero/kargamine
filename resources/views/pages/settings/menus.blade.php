@@ -455,7 +455,9 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Accept: "application/json"
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                        .content,
                 },
                 body: JSON.stringify({
                     id1: current.id,
@@ -475,7 +477,9 @@
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
-                    Accept: "application/json"
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                        .content,
                 },
                 credentials: "include"
             });

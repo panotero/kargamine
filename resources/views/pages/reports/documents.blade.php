@@ -93,7 +93,7 @@
 
         <!-- Table / Document Preview -->
         <div class="w-full bg-white border rounded-lg shadow overflow-auto">
-            <table id="documentsTable" class="min-w-full divide-y divide-gray-200 p-5">
+            <table id="reportsocumentsTable" class="min-w-full divide-y divide-gray-200 p-5">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Control No.</th>

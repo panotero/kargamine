@@ -407,12 +407,29 @@ function initdocumentcontroller() {
     tr.dataset.userId = item.user_id || "";
     tr.dataset.status = status;
     tr.dataset.source = source;
-
+    let statuscolor = "";
+    switch (status.toLowerCase()) {
+      case "pending":
+        statuscolor = "bg-orange-600";
+        break;
+      case "complete":
+        statuscolor = "bg-green-600";
+        break;
+      case "remanded":
+        statuscolor = "bg-red-400";
+        break;
+      case "remanded":
+        statuscolor = "bg-red-800";
+        break;
+      case "signed":
+        statuscolor = "bg-blue-500";
+        break;
+    }
     tr.innerHTML = `
         <td class="px-4 py-2">${document_control_number}</td>
         <td class="px-4 py-2">${document_code}</td>
         <td class="px-4 py-2">
-            <select class="border rounded px-2 py-1 text-xs labeldropdown">
+            <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
                 <option ${
                   document_type === "General" ? "selected" : ""
                 }>General</option>
@@ -430,7 +447,9 @@ function initdocumentcontroller() {
           created_at ? created_at.split("T")[0] : "-"
         }</td>
         <td class="px-4 py-2">${confidentiality || "-"}</td>
-        <td class="px-4 py-2">${status || "-"}</td>
+        <td class="px-4 py-2"><div class="px-3 py-1 rounded-full text-white font-semibold text-center ${statuscolor}">${
+      status || "-"
+    }</div></td>
     `;
 
     tr.addEventListener("click", (e) => {
@@ -1040,6 +1059,8 @@ function initdocumentcontroller() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
       },
       body: JSON.stringify(post),
     });
@@ -1056,6 +1077,7 @@ function initdocumentcontroller() {
   // ----------------------------
   // Initialization
   // ----------------------------
+
   getDocs();
   initEventListeners();
 }

@@ -13,6 +13,8 @@ document.addEventListener("click", async function (event) {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+            .content,
         },
         body: JSON.stringify({ extraData: "test" }),
       });
@@ -63,7 +65,8 @@ document.addEventListener("submit", async function (e) {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "X-CSRF-TOKEN": form.querySelector('input[name="_token"]').value,
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
       },
       body: JSON.stringify(formData),
     });
