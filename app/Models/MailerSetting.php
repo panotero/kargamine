@@ -10,7 +10,7 @@ class MailerSetting extends Model
 {
     use HasFactory;
 
-    protected $table = 'mailer_settings'; // 👈 make sure this matches your DB table name
+    protected $table = 'mailer_settings';
     protected $fillable = [
         'mail_mailer',
         'mail_host',

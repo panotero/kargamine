@@ -9,14 +9,12 @@ class Document extends Model
 {
     use HasFactory;
 
-    protected $table = 'documents'; // optional if table name matches model
+    protected $table = 'documents';
 
-    // Make sure the primary key is 'id' and auto-incrementing
     protected $primaryKey = 'document_id';
     public $incrementing = true;
     protected $keyType = 'int';
 
-    // Fillable fields for mass assignment
     protected $fillable = [
         'document_code',
         'document_control_number',
@@ -42,13 +40,11 @@ class Document extends Model
         'involved_office' => 'array',
     ];
 
-    // A document has many files
     public function files()
     {
         return $this->hasMany(File::class, 'document_id', 'document_id');
     }
 
-    // A document has many modifications
     public function modifications()
     {
         return $this->hasMany(Modification::class, 'document_id', 'document_id');

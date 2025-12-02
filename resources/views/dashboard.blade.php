@@ -1,19 +1,13 @@
 <x-app-layout>
     <div class="flex h-screen dark:bg-gray-900">
-        <!-- Sidebar Wrapper -->
         <aside id="sidebar-wrapper"
             class="bg-white dark:bg-gray-900 shadow-lg w-64 fixed left-0 top-0 h-full flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0 z-40">
-
-            <!-- Header -->
             <div class="w-full p-5 dark:text-white">
                 <h1 class="font-semibold text-sm">ODDG-PP</h1>
                 <h1 class="text-md md:text-md font-bold">Document Monitoring Tool</h1>
             </div>
-
-            <!-- Main content area (fills remaining height) -->
             <div class="w-full flex flex-col justify-between flex-grow">
                 <nav id="sidebar-menu" class="p-4 space-y-2 text-black dark:text-white font-semibold">
-                    <!-- JS will populate here -->
                 </nav>
                 <div class="w-full p-5 flex justify-center dark:bg-gray-800">
                     <img class="h-10 w-auto mx-auto" src="{{ asset('/assets/images/TESDA_Logo.png') }}" alt="Logo">
@@ -25,26 +19,19 @@
             </div>
         </aside>
 
-        <!-- Overlay for mobile -->
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-30 lg:hidden"></div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col lg:ml-64 transition-all duration-300">
-            <!-- Mobile Toggle Button -->
             <button id="sidebar-toggle" class="lg:hidden absolute top-2 left-2 p-2 bg-gray-800 text-white rounded z-10">
                 ☰
             </button>
-
-            <!-- Header -->
             <header class="bg-white dark:bg-gray-800 shadow px-6 py-4 flex justify-between items-center">
                 <h2 id="page-title" class="text-xl font-semibold text-gray-800 dark:text-gray-200 max-lg:pl-5">
                     Dashboard
                 </h2>
 
                 <div class="flex items-center space-x-4">
-                    <!-- Notification Dropdown -->
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <!-- Trigger Button -->
                         <button @click="open = !open" id="notificationIcon"
                             class="relative p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
                             <svg class="h-6 w-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor"
@@ -53,33 +40,25 @@
                                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
                                 </path>
                             </svg>
-                            <!-- Optional red dot for unread notifications -->
                             <span id="notifcount"
                                 class="absolute top-0 right-0 block h-5 w-5 text-white rounded-full text-sm bg-red-500"></span>
                         </button>
-                        <!-- Notification Dropdown -->
                         <div x-show="open" x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-75"
                             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                             class="absolute right-0 mt-2 w-96 max-h-[32rem] overflow-y-auto rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50"
                             style="display: none;">
-
-                            <!-- Header -->
                             <div
                                 class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Notifications</h3>
                                 <button class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Mark all as
                                     read</button>
                             </div>
-
-                            <!-- Notification List -->
                             <div id="notificationsContainer" class="divide-y divide-gray-200 dark:divide-gray-700">
 
 
                             </div>
-
-                            <!-- Footer: See All -->
                             <div class="text-center py-3 border-t border-gray-200 dark:border-gray-700">
                                 <a href="#" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                                     See all notifications
@@ -88,9 +67,6 @@
                         </div>
 
                     </div>
-
-
-                    <!-- Profile Dropdown -->
                     <x-dropdown align="right" width="w-auto">
                         <x-slot name="trigger">
                             <button class="text-gray-800 dark:text-gray-200">
@@ -108,14 +84,10 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-                            <!-- Dropdown content goes here -->
                         </x-slot>
                     </x-dropdown>
                 </div>
             </header>
-
-
-            <!-- Content Area -->
             <main id="content" class="flex-1 overflow-y-auto text-gray-800 dark:text-gray-200">
             </main>
         </div>

@@ -1,13 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   let lastTouchEnd = 0;
 
-  // resources/js/disableZoom.js
   document.addEventListener("gesturestart", function (e) {
-    e.preventDefault(); //block pinch zoom
+    e.preventDefault();
   });
 
   document.addEventListener("dblclick", function (e) {
-    e.preventDefault(); //block double-tap zoom
+    e.preventDefault();
   });
 });
 window.initDataTables = function initDataTables() {
@@ -18,11 +17,8 @@ window.initDataTables = function initDataTables() {
         searching: true,
         info: true,
         responsive: true,
-        dom: "Bfrtip", // include buttons & search input
-        buttons: [
-          "excel", // Excel export
-          "pdf", // PDF export
-        ],
+        dom: "Bfrtip",
+        buttons: ["excel", "pdf"],
         stripeClasses: [""],
         language: {
           search: "",
@@ -32,7 +28,6 @@ window.initDataTables = function initDataTables() {
         initComplete: function () {
           const tableEl = this;
 
-          // Style table header
           $(tableEl).find("thead th").css({
             "background-color": "#f8f8f8",
             color: "#1c1c1c",
@@ -42,7 +37,6 @@ window.initDataTables = function initDataTables() {
             "text-align": "left",
           });
 
-          // Style search input (white and rounded)
           $('div.dataTables_filter input[type="search"]').css({
             "background-color": "#ffffff",
             border: "1px solid #d0d0d0",
@@ -54,26 +48,21 @@ window.initDataTables = function initDataTables() {
             "box-shadow": "0 1px 3px rgba(0,0,0,0.1)",
             outline: "none",
           });
-
-          // Make the whole table rounded
           $(tableEl).css({
             "border-radius": "12px",
             overflow: "hidden",
             border: "1px solid #e0e0e0",
           });
 
-          // Apply pagination styling initially
           stylePagination(tableEl);
         },
         drawCallback: function () {
-          // Reapply pagination styling on every redraw
           stylePagination(this);
         },
       });
     }
 
     function stylePagination(table) {
-      // Button styles
       const buttonStyle = {
         "background-color": "#ffffff",
         border: "1px solid #d0d0d0",
@@ -107,7 +96,6 @@ window.initDataTables = function initDataTables() {
         .find("a.paginate_button.previous, a.paginate_button.next")
         .remove();
 
-      // Flex container
       paginate.css({
         display: "flex",
         justifyContent: "center",
@@ -119,7 +107,7 @@ window.initDataTables = function initDataTables() {
       const dt = $(table).DataTable();
       const info = dt.page.info();
       const totalPages = info.pages;
-      const currentPage = info.page + 1; // 1-based
+      const currentPage = info.page + 1;
       const maxButtons = 3;
 
       let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
@@ -129,7 +117,6 @@ window.initDataTables = function initDataTables() {
         startPage = Math.max(1, endPage - maxButtons + 1);
       }
 
-      // Clear previous numeric buttons
       paginate.find("span").remove();
 
       const span = $("<span></span>").css({
@@ -138,7 +125,6 @@ window.initDataTables = function initDataTables() {
         alignItems: "center",
       });
 
-      // First page button
       const firstBtn = $('<a class="paginate_button first" href="#">«</a>').css(
         buttonStyle
       );
@@ -148,7 +134,6 @@ window.initDataTables = function initDataTables() {
       });
       span.append(firstBtn);
 
-      // Previous button (custom SVG)
       const prevBtn = $(
         '<a class="paginate_button previous" href="#"></a>'
       ).css(buttonStyle);
@@ -161,14 +146,12 @@ window.initDataTables = function initDataTables() {
       });
       span.append(prevBtn);
 
-      // Ellipsis before
       if (startPage > 1) {
         span.append(
           '<span class="dark:text-white" style="display:flex;align-items:center;">…</span>'
         );
       }
 
-      // Numeric buttons
       for (let i = startPage; i <= endPage; i++) {
         const btn = $(
           `<a class="paginate_button ${
@@ -183,14 +166,12 @@ window.initDataTables = function initDataTables() {
         span.append(btn);
       }
 
-      // Ellipsis after
       if (endPage < totalPages) {
         span.append(
           '<span class="dark:text-white" style="display:flex;align-items:center;">…</span>'
         );
       }
 
-      // Next button (custom SVG)
       const nextBtn = $('<a class="paginate_button next" href="#"></a>').css(
         buttonStyle
       );
@@ -205,7 +186,6 @@ window.initDataTables = function initDataTables() {
         });
       span.append(nextBtn);
 
-      // Last page button
       const lastBtn = $('<a class="paginate_button last" href="#">»</a>').css(
         buttonStyle
       );

@@ -31,14 +31,12 @@ class Notification extends Model
         'user_id' => 'integer',
     ];
 
-    // Relationship to Document
     public function document()
     {
         return $this->belongsTo(Document::class, 'document_id');
     }
 
 
-    // Relationship to User (who should receive the notification)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

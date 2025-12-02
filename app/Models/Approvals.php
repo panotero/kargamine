@@ -10,7 +10,6 @@ class Approvals extends Model
     use HasFactory;
     protected $table = 'approval_table';
 
-    // Fillable columns
     protected $fillable = [
         'document_id',
         'user_id',
@@ -20,10 +19,6 @@ class Approvals extends Model
         'status',
     ];
 
-    /**
-     * Relationship to Document model
-     * approval_table.document_id → documents.document_id
-     */
     public function document()
     {
         return $this->belongsTo(Document::class, 'document_id', 'document_id')

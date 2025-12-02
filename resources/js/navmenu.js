@@ -1,13 +1,10 @@
-// resources/js/navmenu.js
 document.addEventListener("DOMContentLoaded", function () {
   const sidebar = document.getElementById("sidebar-menu");
   if (!sidebar) return;
 
-  // === PAGE LOADER FUNCTION ===
   async function loadPage(menu) {
     if (!menu) return;
 
-    // Save the last visited menu
     localStorage.setItem("lastMenu", JSON.stringify(menu));
 
     const menulist = document.querySelectorAll(".menu");
@@ -38,13 +35,11 @@ document.addEventListener("DOMContentLoaded", function () {
       activepage.classList.remove("hover:bg-gray-200", "text-black");
     }
 
-    // Update page title
     const titleEl = document.getElementById("page-title");
     if (titleEl) titleEl.textContent = menu.title;
 
     const contentEl = document.getElementById("content");
 
-    // Show card-style loading skeleton
     contentEl.innerHTML = `
     <div class="mx-auto w-full rounded-md p-4 animate-pulse mt-4">
       <div class="w-full flex space-x-4">
@@ -72,7 +67,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const data = await res.text();
         contentEl.innerHTML = `<div class="dark p-4 dark:bg-gray-800 rounded shadow">${data}</div>`;
 
-        // Execute any inline/external scripts
         const scripts = contentEl.querySelectorAll("script");
         scripts.forEach((oldScript) => {
           const newScript = document.createElement("script");
@@ -95,9 +89,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  window.loadPage = loadPage; // expose globally for other JS
+  window.loadPage = loadPage;
 
-  // === BUILD TREE STRUCTURE ===
   function buildTree(flat) {
     const map = {};
     flat.forEach((m) => (map[m.id] = Object.assign({}, m, { children: [] })));
@@ -112,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return roots;
   }
 
-  // === CREATE MENU ITEM ===
   function createMenuItem(menu) {
     const wrapper = document.createElement("div");
     wrapper.className = "w-full";
@@ -155,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }`;
         childBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          loadPage(child); // loads child + saves as lastMenu
+          loadPage(child);
           if (window.innerWidth < 1024) toggleSidebar();
         });
         sub.appendChild(childBtn);
@@ -176,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       btn.addEventListener("click", () => {
         loadPage(menu);
-        if (window.innerWidth < 1024) toggleSidebar(); // Auto-close on mobile
+        if (window.innerWidth < 1024) toggleSidebar();
       });
     }
 
@@ -184,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   fetch(`api/debug_auth`, {
-    credentials: "include", // send cookies for session-based auth
+    credentials: "include",
     headers: {
       Accept: "application/json",
     },
@@ -193,15 +185,14 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      return res.json(); // parse JSON response
+      return res.json();
     })
     .catch((err) => {
       console.error("Fetch error:", err);
     });
 
-  // === FETCH MENUS ===
   fetch(`api/load_menu`, {
-    credentials: "include", // IMPORTANT
+    credentials: "include",
     headers: {
       Accept: "application/json",
     },
@@ -223,9 +214,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-      // Restore last visited page
       let lastMenu = localStorage.getItem("lastMenu");
-      //   console.log(lastMenu);
       if (lastMenu) {
         try {
           lastMenu = JSON.parse(lastMenu);
@@ -236,28 +225,23 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // fallback if no lastMenu
       if (firstMenu) loadPage(firstMenu);
       else if (menus.length) loadPage(menus[0]);
     })
     .catch((err) => console.error("Failed to load nav menus", err));
 
-  // Elements
   const sidebarWrapper = document.getElementById("sidebar-wrapper");
   const sidebarToggle = document.getElementById("sidebar-toggle");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
   const sidebarMenu = document.getElementById("sidebar-menu");
 
-  // Toggle sidebar open/close
   function toggleSidebar() {
     const isHidden = sidebarWrapper.classList.contains("-translate-x-full");
 
     if (isHidden) {
-      // Open
       sidebarWrapper.classList.remove("-translate-x-full");
       sidebarOverlay.classList.remove("hidden");
     } else {
-      // Close
       sidebarWrapper.classList.add("-translate-x-full");
       sidebarOverlay.classList.add("hidden");
     }
@@ -266,19 +250,16 @@ document.addEventListener("DOMContentLoaded", function () {
   sidebarToggle.addEventListener("click", toggleSidebar);
   sidebarOverlay.addEventListener("click", toggleSidebar);
 
-  // Hide sidebar when a menu link is clicked (mobile only)
   sidebarMenu.addEventListener("click", (e) => {
     const link = e.target.closest("a");
-    if (!link) return; // only proceed if a link is clicked
+    if (!link) return;
 
     if (window.innerWidth < 1024) {
-      // mobile breakpoint
       sidebarWrapper.classList.add("-translate-x-full");
       sidebarOverlay.classList.add("hidden");
     }
   });
 
-  // Optional: reset sidebar visibility on window resize
   window.addEventListener("resize", () => {
     if (window.innerWidth >= 1024) {
       sidebarWrapper.classList.remove("-translate-x-full");

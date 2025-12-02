@@ -16,7 +16,7 @@ class Listing extends Model
         'price',
         'link',
         'status',
-        'images', // store as JSON array
+        'images',
     ];
 
     protected $casts = [

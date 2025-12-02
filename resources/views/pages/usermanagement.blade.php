@@ -1,4 +1,3 @@
-<!-- User Config Table -->
 <div class="container mx-auto">
 
     <div class="w-full h-auto bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
@@ -24,18 +23,15 @@
                 <tbody id="userTableBody" class="bg-gray-100 dark:bg-gray-700"></tbody>
             </table>
 
-            <!-- Mobile Card Container -->
             <div id="userCardList" class="hidden md:hidden overflow-y-auto max-h-[400px] p-3 space-y-3"></div>
         </div>
 
     </div>
 
-    <!-- Modal -->
     <div id="userModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center z-50 modal">
         <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl relative transition-all text-black">
             <h2 id="modalTitle" class="text-xl font-semibold mb-4 ">Add New User</h2>
 
-            <!-- Form -->
             <form id="userForm" class="space-y-4">
                 <input type="hidden" id="userId" />
 
@@ -85,20 +81,13 @@
 
 </div>
 
-<!-- Script -->
 <script>
     (function() {
-        // ==========================
-        // API Endpoints
-        // ==========================
         const apiUsers = "/api/users";
         const apiOffices = "/api/offices";
         const apiConfigs = "/api/userconfigs";
         const patchsaveinfo = "/api/users/save";
 
-        // ==========================
-        // DOM Elements
-        // ==========================
         const userTableBody = document.getElementById("userTableBody");
         const userModal = document.getElementById("userModal");
         const modalTitle = document.getElementById("modalTitle");
@@ -114,9 +103,6 @@
         const officeSelect = document.getElementById("officeSelect");
         const configSelect = document.getElementById("configSelect");
 
-        // ==========================
-        // Load Users Table
-        // ==========================
         async function loadUsers() {
             try {
                 const res = await fetch(apiUsers);
@@ -156,21 +142,14 @@
             }
         }
 
-        // ==========================
-        // Log Table Content
-        // ==========================
         function logTableContent() {
             const rows = userTableBody.querySelectorAll("tr");
             const tableData = Array.from(rows).map((row) =>
                 Array.from(row.querySelectorAll("td")).map((cell) => cell.textContent.trim())
             );
 
-            // console.log(" Table data:", tableData);
         }
 
-        // ==========================
-        // Load Dropdowns
-        // ==========================
         async function loadDropdowns() {
             try {
                 const [officesRes, configsRes] = await Promise.all([
@@ -194,9 +173,6 @@
             }
         }
 
-        // ==========================
-        // Modal Handling
-        // ==========================
         function openModal(edit = false, user = null) {
             userModal.classList.remove("hidden");
             saveBtn.classList.add("hidden");
@@ -220,16 +196,11 @@
             userId.value = "";
         }
 
-        // ==========================
-        // Event Listeners
-        // ==========================
 
-        // Detect form input changes
         userForm.addEventListener("input", () => {
             saveBtn.classList.remove("hidden");
         });
 
-        // Submit (Add or Edit)
         userForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -261,25 +232,20 @@
             }
         });
 
-        // Global click handler
         document.addEventListener("click", async (e) => {
             const id = e.target.dataset.id;
 
-            // Edit
             if (e.target.matches(".editBtn")) {
                 const res = await fetch(`${apiUsers}/${id}`);
                 const data = await res.json();
                 openModal(true, data);
             }
 
-            // Deactivate
             if (e.target.matches(".deactivateBtn")) {
 
-                // Use customConfirm instead of default confirm
                 const confirmed = await customConfirm("Deactivate this user?");
-                if (!confirmed) return; // if user clicks Cancel, exit
+                if (!confirmed) return;
 
-                // User clicked OK → proceed with API call
                 const response = await fetch(`/api/users/deactivate/${id}`, {
                     method: "PATCH",
                     headers: {
@@ -303,16 +269,13 @@
 
                 }
 
-                // Reload users table
                 loadUsers();
             }
 
-            // Reactivate
             if (e.target.matches(".reactivateBtn")) {
 
-                // Use customConfirm instead of default confirm
                 const confirmed = await customConfirm("Reactivate this user?");
-                if (!confirmed) return; // if user clicks Cancel, exit
+                if (!confirmed) return;
                 const response = await fetch(`/api/users/reactivate/${id}`, {
                     method: "PATCH",
                     headers: {
@@ -338,13 +301,9 @@
             }
         });
 
-        // Modal buttons
         addUserBtn.addEventListener("click", () => openModal());
         cancelBtn.addEventListener("click", closeModal);
 
-        // ==========================
-        // Initialize
-        // ==========================
         loadUsers();
         loadDropdowns();
     })();

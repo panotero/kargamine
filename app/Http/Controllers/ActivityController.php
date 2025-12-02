@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ActivityController extends Controller
 {
-    // // GET /api/activities
+
     public function index()
     {
         $activities = Activity::with(['document', 'user'])
@@ -18,7 +18,6 @@ class ActivityController extends Controller
         return response()->json($activities);
     }
 
-    // GET /api/activities/{id}
     public function show($id)
     {
         $activity = Activity::with(['document', 'user'])->find($id);
@@ -30,7 +29,6 @@ class ActivityController extends Controller
         return response()->json($activity);
     }
 
-    // POST /api/activities
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -48,7 +46,6 @@ class ActivityController extends Controller
         return response()->json(['message' => 'Activity logged successfully', 'data' => $activity], 201);
     }
 
-    // DELETE /api/activities/{id}
     public function destroy($id)
     {
         $activity = Activity::find($id);

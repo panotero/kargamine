@@ -12,9 +12,6 @@ use App\Models\Activity;
 
 class ApprovalsController extends Controller
 {
-    /**
-     * Get all approvals assigned to the logged-in user
-     */
     public function getMyApprovals()
     {
         $user = Auth::user();
@@ -38,9 +35,6 @@ class ApprovalsController extends Controller
         ]);
     }
 
-    /**
-     * Process approval actions for a document
-     */
     public function handleApprovalAction(Request $request, $document_id)
     {
         $user = User::with(['office', 'userConfig'])->find(Auth::id());
@@ -58,7 +52,6 @@ class ApprovalsController extends Controller
 
         $currentOffice = $user->office->office_name ?? null;
 
-        // Get current approval
         $approval = Approvals::with('document')
             ->where('document_id', $document_id)
             ->where('status', 0)
@@ -92,18 +85,12 @@ class ApprovalsController extends Controller
         ]);
     }
 
-    /**
-     * Handles logic for approval actions
-     */
     private function processApproval($approval, $validated, $user, $currentOffice)
     {
         $approval->remarks = 'Approved';
         if ($approval->approval_type === "final-approval") {
 
 
-            // ---------------------------------------
-            // FIND USERS TO NOTIFY
-            // ---------------------------------------
             $admin_users = User::with(['userConfig', 'office'])
                 ->whereHas('userConfig', function ($q) {
                     $q->where('approval_type', 'routing')
@@ -115,9 +102,6 @@ class ApprovalsController extends Controller
                 ->get();
 
 
-            // ---------------------------------------
-            // CREATE NOTIFICATION RECORDS
-            // ---------------------------------------
             foreach ($admin_users as $admin) {
                 DB::table('notifications')->insert([
                     'document_id'        => $approval->document->document_id,
@@ -145,7 +129,6 @@ class ApprovalsController extends Controller
             ];
             Activity::create($activityData);
 
-            //create activity
 
             Document::where('document_id', $approval->document->document_id)
                 ->update([
@@ -154,7 +137,6 @@ class ApprovalsController extends Controller
                     'status' => "Approved",
                 ]);
 
-            // Mark current approval complete
             $approval->status = 1;
             $approval->updated_at = now();
         } else {
@@ -216,7 +198,6 @@ class ApprovalsController extends Controller
                 ];
                 Activity::create($activityData);
 
-                //create activity
 
                 Document::where('document_id', $approval->document->document_id)
                     ->update([
@@ -224,7 +205,6 @@ class ApprovalsController extends Controller
                         'date_forwarded' => now(),
                     ]);
             }
-            // Mark current approval complete
             $approval->status = 1;
             $approval->updated_at = now();
         }

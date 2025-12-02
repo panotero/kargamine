@@ -5,14 +5,13 @@
 
     </div>
 
-    <!-- Office Table -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-10">
         <div class="w-full flex justify-between p-5">
 
             <h2 class="text-xl font-semibold mb-4">Office List</h2>
             <button data-modal-name = "officeModal"
                 class="px-5 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-2xl shadow-sm modal">
-                ➕ Add Office
+                Add Office
             </button>
         </div>
         <div class="overflow-x-auto">
@@ -31,14 +30,13 @@
         </div>
     </div>
 
-    <!-- User Config Table -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
         <div class="w-full flex justify-between p-5">
 
             <h2 class="text-xl font-semibold mb-4">User Config List</h2>
             <button data-modal-name = "userModal"
                 class="px-5 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-2xl shadow-sm modal">
-                ➕ Add User Config
+                Add User Config
             </button>
         </div>
         <div class="overflow-x-auto">
@@ -56,14 +54,13 @@
             </table>
         </div>
     </div>
-    <!-- Document Type Table -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
         <div class="w-full flex justify-between p-5">
 
             <h2 class="text-xl font-semibold mb-4">Document Type List</h2>
             <button data-modal-name = "documentModal"
                 class="px-5 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-2xl shadow-sm modal">
-                ➕ Add Document Type
+                Add Document Type
             </button>
         </div>
         <div class="overflow-x-auto">
@@ -82,7 +79,6 @@
     </div>
 </div>
 
-<!-- Office Modal -->
 <div id="officeModal"
     class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 modal-overlay modal">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-96 p-6">
@@ -101,7 +97,6 @@
     </div>
 </div>
 
-<!-- User Config Modal -->
 <div id="userModal" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 modal-overlay modal">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-96 p-6">
         <h3 class="text-lg font-semibold mb-4">Add New User Config</h3>
@@ -122,7 +117,6 @@
         </form>
     </div>
 </div>
-<!-- Document Type Modal -->
 <div id="documentModal"
     class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 modal-overlay modal">
 
@@ -130,14 +124,10 @@
         <h3 class="text-lg font-semibold mb-4">Add New Document Type</h3>
 
         <form id="documentTypeForm">
-
-            <!-- Document Type -->
             <input type="text" name="document_type" placeholder="Document Type"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
                           dark:bg-gray-900 p-2"
                 required>
-
-            <!-- Description -->
             <textarea name="description" placeholder="Description (optional)"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
                              dark:bg-gray-900 p-2 h-24"></textarea>
@@ -158,8 +148,6 @@
 <script>
     (function() {
         const base = '/api';
-
-        // Fetch and render both tables
         async function loadData() {
             const [offices, users, documentTypes] = await Promise.all([
                 fetch(`${base}/offices`).then(res => res.json()),
@@ -232,7 +220,6 @@
             })
         }
 
-        // Submit forms
         document.getElementById('officeForm').onsubmit = async e => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -264,7 +251,6 @@
             closeModal('documentModal');
             loadData();
         };
-        // Delete functions
         async function deleteOffice(id) {
             await fetch(`${base}/offices/${id}`, {
                 method: 'DELETE'
@@ -293,11 +279,10 @@
 
                 const modal = document.getElementById(modalName);
                 if (modal) {
-                    modal.classList.remove('hidden'); // Show the modal
+                    modal.classList.remove('hidden');
                 }
             });
         });
-        // Close functionality
         closemodalbutton.forEach(button => {
             button.addEventListener('click', () => {
                 closeModal();
@@ -305,9 +290,7 @@
 
         });
 
-        // Close when clicking outside modal content
         document.addEventListener('click', (e) => {
-            // Check if clicked element has a background overlay class
             if (e.target.classList.contains('modal-overlay')) {
                 closeModal();
             }
@@ -317,7 +300,6 @@
             const openModals = document.querySelectorAll('[id$="Modal"]:not(.hidden)');
             openModals.forEach(m => m.classList.add('hidden'));
         }
-        // Initial load
         loadData();
     })();
 </script>

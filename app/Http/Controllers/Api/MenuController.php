@@ -8,7 +8,6 @@ use App\Models\NavMenu;
 
 class MenuController extends Controller
 {
-    //
 
     public function index()
     {

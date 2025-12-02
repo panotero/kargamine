@@ -7,14 +7,11 @@ function customConfirm(message) {
 
     if (!modal || !messageEl || !okBtn || !cancelBtn) return;
 
-    // Set message
     messageEl.textContent = message;
 
-    // Show modal and prevent background scroll
     modal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
 
-    // Clean up and resolve Promise
     const closeModal = (value) => {
       modal.classList.add("hidden");
       document.body.classList.remove("overflow-hidden");

@@ -1,13 +1,7 @@
 <div class="w-full h-screen p-5 bg-gray-50">
     <div class="container mx-auto space-y-6">
-
-        <!-- Top Stats & Filters -->
         <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4">
-
-            <!-- Left Stats Panel -->
             <div class="flex flex-col w-full lg:w-1/3 gap-4">
-
-                <!-- First Row: Total & Active Users -->
                 <div class="flex gap-4">
                     <div class="flex-1 border rounded-lg p-4 bg-blue-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Total Users</div>
@@ -18,8 +12,6 @@
                         <div class="text-2xl font-bold mt-2">1,020</div>
                     </div>
                 </div>
-
-                <!-- Second Row: Pending, Suspended, Admins, Guests -->
                 <div class="flex gap-4">
                     <div class="flex-1 border rounded-lg p-2 bg-gray-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Pending</div>
@@ -40,29 +32,19 @@
                 </div>
 
             </div>
-
-            <!-- Right Filters Panel -->
             <div class="flex flex-1 w-full gap-4 flex-wrap items-end">
-
-                <!-- DateTime Pickers -->
                 <div class="flex flex-col flex-1 gap-4">
-                    <!-- Registered From -->
                     <div>
                         <label for="registeredFrom" class="text-gray-700 font-medium">Registered From</label>
                         <input id="registeredFrom" type="text" placeholder="Select start date"
                             class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none datetimepicker" />
                     </div>
-
-                    <!-- Registered To -->
                     <div>
                         <label for="registeredTo" class="text-gray-700 font-medium">Registered To</label>
                         <input id="registeredTo" type="text" placeholder="Select end date"
                             class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none datetimepicker" />
                     </div>
                 </div>
-
-
-                <!-- Role & Status Dropdowns -->
                 <div class="flex flex-col flex-1 gap-2">
                     <label class="text-gray-700 font-medium">Role</label>
                     <select class="border rounded-lg p-2 w-full">
@@ -79,8 +61,6 @@
                         <option>Pending</option>
                     </select>
                 </div>
-
-                <!-- Export Buttons -->
                 <div class="flex flex-col flex-1 gap-2 justify-end">
                     <button
                         class="w-full border border-gray-300 rounded-lg p-2 bg-red-500 text-white font-medium hover:bg-red-600 transition">
@@ -94,8 +74,6 @@
 
             </div>
         </div>
-
-        <!-- Table / User Preview -->
         <div class="w-full bg-white border rounded-lg shadow overflow-auto">
             <table class="min-w-full divide-y divide-gray-200  p-5">
                 <thead class="bg-gray-50">
@@ -125,7 +103,6 @@
                         <td class="px-4 py-2 text-sm text-yellow-500 font-medium">Pending</td>
                         <td class="px-4 py-2 text-sm">Oct 2, 2025</td>
                     </tr>
-                    <!-- Add more rows dynamically or integrate DataTables -->
                 </tbody>
             </table>
         </div>
@@ -134,7 +111,6 @@
 </div>
 <script>
     (function() {
-        // After your content is loaded dynamically
         initDataTables();
         initDatePickers();
     })();

@@ -1,23 +1,15 @@
-// Import PDF.js
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 
-// Worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = "/js/pdf.worker.min.js";
 
-/* ---------------------------------------------
- * BUILD HTML <li> SLIDE FROM IMAGE SRC
- * --------------------------------------------- */
 function buildSlideHTML(imgSrc) {
   return `
     <li class="glide__slide flex items-center justify-center bg-gray-100">
-      <img src="${imgSrc}" class="max-h-[80vh] w-auto object-contain rounded-xl">
+      <img src="${imgSrc}" class="max-h-full w-auto object-contain">
     </li>
   `;
 }
 
-/* ---------------------------------------------
- * LOAD SLIDES (accepts array of HTML strings)
- * --------------------------------------------- */
 function loadSlidesFromArray(slides = []) {
   const slideContainer = document.getElementById("glideSlides");
   const loadingOverlay = document.getElementById("galleryLoading");
@@ -31,13 +23,9 @@ function loadSlidesFromArray(slides = []) {
 
   initGlide();
 
-  // hide loader
   loadingOverlay.classList.add("hidden");
 }
 
-/* ---------------------------------------------
- * GLIDE INITIALIZER (safe for SPA)
- * --------------------------------------------- */
 let glideInstance = null;
 
 window.initGlide = function initGlide() {
@@ -62,10 +50,7 @@ window.initGlide = function initGlide() {
     .addEventListener("click", () => glideInstance.go(">"));
 };
 
-/* ---------------------------------------------
- * EXTRACT IMAGES FROM PDF AND RETURN SLIDE HTML
- * --------------------------------------------- */
-async function extractPdfImages(pdfUrl, scale = 1.5) {
+async function extractPdfImages(pdfUrl, scale = 1) {
   const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
 
   const slideElements = [];
@@ -85,16 +70,13 @@ async function extractPdfImages(pdfUrl, scale = 1.5) {
       viewport,
     }).promise;
 
-    // Convert PDF page to data URL image
     const imgSrc = canvas.toDataURL("image/png");
 
-    // Convert to <li> slide html
     slideElements.push(buildSlideHTML(imgSrc));
   }
 
   return slideElements;
 }
 
-/* Expose to global for SPA */
 window.extractPdfImages = extractPdfImages;
 window.loadSlidesFromArray = loadSlidesFromArray;

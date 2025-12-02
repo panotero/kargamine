@@ -3,11 +3,10 @@ function initroute() {
     .getElementById("routeSubmitBtn")
     .addEventListener("click", async () => {
       console.log("routebutton clicked");
-      const documentId = document.getElementById("docId").value; // hidden input
+      const documentId = document.getElementById("docId").value;
       const destinationOffice =
         document.getElementById("routeOfficeSelect").value;
       const recipientUserId = document.getElementById("routeUserSelect").value;
-      //   console.log(recipientUserId);
       const approvalType = document.getElementById("routeApprovalSelect").value;
       const routeStatusSelect =
         document.getElementById("routeStatusSelect").value;
@@ -20,7 +19,6 @@ function initroute() {
       }
 
       try {
-        // Use FormData for text + file upload
         const formData = new FormData();
         formData.append("document_id", documentId);
         formData.append("destination_office", destinationOffice);
@@ -39,7 +37,7 @@ function initroute() {
             "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
               .content,
           },
-          body: formData, // DO NOT USE JSON HERE
+          body: formData,
         });
 
         const data = await res.json();
@@ -56,8 +54,6 @@ function initroute() {
             message: "Routing Success",
           });
         }
-
-        // optionally refresh activity log or close modal
       } catch (err) {
         console.error(err);
         alert("Failed to route document.");

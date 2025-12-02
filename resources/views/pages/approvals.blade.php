@@ -2,7 +2,6 @@
     <div class=" container mx-auto py-5 rounded-lg">
         <div>
 
-            <!-- Filters -->
             <div class="flex flex-wrap gap-3 mb-4">
                 <select class="rounded-full border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     <option>Filter by Office</option>
@@ -17,7 +16,6 @@
                     class="rounded-full border-gray-300 px-4 py-2 text-sm w-64 focus:ring-blue-500 focus:border-blue-500" />
             </div>
 
-            <!-- Table -->
             <div class="overflow-x-auto bg-white rounded-xl shadow">
                 <table id="approvaltable" class="w-full text-sm text-left border-collapse responsive-table  p-5">
                     <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
@@ -39,12 +37,10 @@
                 </table>
             </div>
         </div>
-        <!-- Document Details Modal -->
         <div id="approvalDocumentModal"
             class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-2 sm:px-4 modal modal-open">
             <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
 
-                <!-- Header -->
                 <div class="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
                     <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 break-all">
                         Document Control Number: <span id="modalapprovalDocControlNumber">DCN-0001</span>
@@ -56,16 +52,12 @@
                     </p>
                 </div>
 
-                <!-- Content -->
                 <div
-                    class="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
+                    class="max-h-[70vh] overflow-y-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
 
-                    <!-- LEFT SECTION: PDF PREVIEW CAROUSEL -->
                     <div class="w-full lg:w-1/2 p-4 sm:p-6">
-                        <!-- Glide (inside Flowbite modal) -->
                         <div id="galleryGlide" class="glide w-full max-w-md mx-auto relative">
 
-                            <!-- Loading Overlay -->
                             <div id="galleryLoading"
                                 class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
                                 <div
@@ -73,31 +65,29 @@
                                 </div>
                             </div>
 
-                            <div class="glide__track" data-glide-el="track">
-                                <ul class="glide__slides" id="approvalglideSlides">
-                                    <!-- JS will populate slides here -->
+                            <div class="glide__track h-[60vh]" data-glide-el="track">
+                                <ul class="glide__slides  h-full" id="approvalglideSlides">
                                 </ul>
-                            </div>
 
-                            <!-- Controls -->
-                            <div class="flex justify-between mt-4">
                                 <button data-glide-dir="<"
-                                    class="slide-previous px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">
-                                    Prev
+                                    class="slide-previous pointer-events-auto absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                    </svg>
                                 </button>
 
                                 <button data-glide-dir=">"
-                                    class="slide-next px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">
-                                    Next
+                                    class="slide-next pointer-events-auto absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- RIGHT SECTION: DOCUMENT INFORMATION -->
                     <div class="w-full lg:w-1/2 p-4 sm:p-6 space-y-6">
-
-                        <!-- Title + Download -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Document Information</h3>
 
@@ -182,13 +172,9 @@
                                     class="text-gray-900 dark:text-gray-100 text-right break-all"></span>
                             </div>
                         </div>
-
-
-
                     </div>
                 </div>
 
-                <!-- FOOTER BUTTONS -->
                 <div
                     class="border-t border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 flex flex-wrap justify-end gap-2 sm:gap-3">
 
@@ -217,33 +203,25 @@
             </div>
         </div>
 
-        <!-- Approval Modal -->
         <div id="approvalModal"
             class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6">
 
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative">
-
-
-                <!-- Modal Header -->
                 <h2 class="text-xl font-semibold text-gray-900 mb-5">Approval Details</h2>
 
-                <!-- Hidden Approval ID -->
                 <input type="hidden" id="approval_id">
                 <div id="finalApproval" class=" m-5 hidden">
                     <h1>Confirm your approval please</h1>
                 </div>
                 <div id="preApproval">
-                    <!-- User Select (Hidden Initially, shown for pre-approval) -->
                     <div id="userSelectWrapper" class="mb-5">
                         <label for="userSelect" class="block text-gray-700 font-medium mb-2">Select User</label>
                         <select id="userSelect"
                             class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                            <!-- Options populated dynamically via JS -->
                         </select>
                     </div>
 
                 </div>
-                <!-- Remarks (Hidden Initially) -->
                 <div id="remarksWrapper" class="mb-5">
                     <label for="remarksTextarea" class="block text-gray-700 font-medium mb-2">Remarks</label>
                     <textarea id="remarksTextarea"
@@ -252,7 +230,6 @@
                 </div>
 
 
-                <!-- Buttons -->
                 <div class="flex flex-col sm:flex-row sm:justify-end gap-3">
                     <button id="confirmApprovalBtn"
                         class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg w-full sm:w-auto">
@@ -319,7 +296,6 @@
                 <td class="px-4 py-2">${doc.status}</td>
             `;
 
-                // Handle row click (open modal)
                 tr.addEventListener("click", (e) => {
                     if (e.target.classList.contains("labeldropdown")) return;
                     loadModal(app);
@@ -333,14 +309,11 @@
         }
 
         async function loadModal(app) {
-            // console.log(doc);
 
-            // HEADER
             document.getElementById("modalapprovalDocControlNumber").innerText = app.document
                 .document_control_number;
             document.getElementById("modalapproveDocStatus").innerText = app.document.status;
 
-            // Document Modal Fields
             document.getElementById("docTitle").innerText = app.document.particular ?? "";
             document.getElementById("document_id").innerText = app.document.document_id ?? "";
             document.getElementById("docCode").innerText = app.document.document_code ?? "";
@@ -353,7 +326,7 @@
             document.getElementById("docConfidentiality").innerText = app.document.confidentiality ?? "";
             document.getElementById("docDept").innerText = app.document.office_origin ?? "";
             document.getElementById("docAuthor").innerText = app.document.user_id ??
-                ""; // If you want actual username, return it from backend
+                "";
             document.getElementById("docDate").innerText = app.document.date_received ?? "";
             document.getElementById("docRemarks").innerText = app.document.remarks ?? "";
 
@@ -374,8 +347,6 @@
             } else {
                 console.warn("initGlide() not available yet.");
             }
-
-            //check approval type
             if (app.approval_type === "final-approval") {
                 document.getElementById("finalApproval").classList.remove("hidden");
                 document.getElementById("preApproval").classList.add("hidden");
@@ -385,7 +356,6 @@
 
             }
 
-            // RIGHT DETAILS SECTION
             setText("modalDocCode", app.document.document_code);
             setText("modalDocType", app.document.document_type);
             setText("modalDocOrigin", app.document.office_origin);
@@ -402,7 +372,6 @@
             if (el) el.innerText = value;
         }
 
-        // Init loader
         loadApprovals();
         initApprovalHandler();
 
@@ -421,7 +390,6 @@
             const confirmBtn = document.getElementById("confirmApprovalBtn");
             const approvalIdInput = document.getElementById("approval_id");
 
-            // Create user select dynamically
             let userSelectWrapper = document.getElementById("userSelectWrapper");
             if (!userSelectWrapper) {
                 userSelectWrapper = document.createElement("div");
@@ -435,7 +403,6 @@
         `;
             }
 
-            // BASE URL FOR APPROVAL ACTIONS
             const baseUrl = "/api/approvals";
             async function sendApprovalAction(
                 approvalId,
@@ -462,7 +429,6 @@
                     const result = await response.json();
                     console.log("Server Response:", result);
 
-                    // Hide modals if the response is OK
                     if (response.ok) {
                         const approvalDocumentModal = document.getElementById("approvalDocumentModal");
                         const approvalModal = document.getElementById("approvalModal");
@@ -477,7 +443,6 @@
                 }
             }
 
-            // Load users from API (filter by office & approval type)
             function populateUsers(approvalType) {
                 fetch("/api/users")
                     .then((res) => res.json())
@@ -497,7 +462,6 @@
                             .join("");
                     });
             }
-            // Confirm button click
             confirmBtn.addEventListener("click", function() {
                 const selectedOption = userSelect.options[userSelect.selectedIndex];
                 const approvalId = document_id.textContent;
@@ -514,14 +478,12 @@
                 );
             });
 
-            // APPROVE BUTTON
             modalApproveBtn.addEventListener("click", () => {
                 initModal({
                     modalId: "approvalModal"
                 });
             });
 
-            // DISAPPROVE BUTTON
             modalDisapproveBtn.addEventListener("click", () => {
                 initModal({
                     modalId: "approvalModal"

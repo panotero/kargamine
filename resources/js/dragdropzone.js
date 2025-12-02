@@ -15,24 +15,20 @@ function initPDFDropzone({ dropzoneId, fileInputId, fileInfoId, clearBtnId }) {
     )} KB)`;
     clearBtn.classList.remove("hidden");
 
-    // Assign the file to the file input so it works on form submission
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
   }
 
-  // Highlight dropzone on drag
   dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropzone.classList.add("border-blue-400", "bg-blue-50");
   });
 
-  // Remove highlight when leaving dropzone
   dropzone.addEventListener("dragleave", () => {
     dropzone.classList.remove("border-blue-400", "bg-blue-50");
   });
 
-  // Handle dropped file
   dropzone.addEventListener("drop", (e) => {
     e.preventDefault();
     dropzone.classList.remove("border-blue-400", "bg-blue-50");
@@ -51,12 +47,10 @@ function initPDFDropzone({ dropzoneId, fileInputId, fileInfoId, clearBtnId }) {
     }
   });
 
-  // Open file picker when clicked
   dropzone.addEventListener("click", () => {
     fileInput.click();
   });
 
-  // Handle selected file via input
   fileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -70,7 +64,6 @@ function initPDFDropzone({ dropzoneId, fileInputId, fileInfoId, clearBtnId }) {
     showFile(file);
   });
 
-  // Clear selected file
   clearBtn.addEventListener("click", () => {
     fileInput.value = "";
     fileInfo.textContent = "";
@@ -80,18 +73,16 @@ function initPDFDropzone({ dropzoneId, fileInputId, fileInfoId, clearBtnId }) {
 
 function initModal({ modalId }) {
   const modal = document.getElementById(modalId);
-  const closeBtn = modal.querySelector(".modal-close"); // search inside modal
+  const closeBtn = modal.querySelector(".modal-close");
 
   if (!modal || !closeBtn) {
     console.warn("Missing modal elements. Check your IDs.");
     return;
   }
 
-  // Open modal immediately (no new click event)
   modal.classList.remove("hidden");
   document.body.classList.add("overflow-hidden");
 
-  // Close modal (button)
   closeBtn.addEventListener("click", () => {
     modal.classList.add("hidden");
     document.body.classList.remove("overflow-hidden");

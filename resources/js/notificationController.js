@@ -1,28 +1,23 @@
-let allNotificationIds = []; // store all IDs
+let allNotificationIds = [];
 let lastUnreadCount = 0;
 const NotifContainer = document.getElementById("notifcount");
-const notifIcon = document.getElementById("notificationIcon"); // icon you click
+const notifIcon = document.getElementById("notificationIcon");
 
 function initNotificationStream() {
   const evtSource = new EventSource("/api/notifications/stream");
   evtSource.onmessage = function (event) {
     const notifications = JSON.parse(event.data);
 
-    // Count UNREAD notifications
     const unreadCount = notifications.filter((n) => n.is_read === false).length;
     if (unreadCount <= 0) {
       NotifContainer.classList.add("hidden");
     } else {
       NotifContainer.classList.remove("hidden");
     }
-    // console.log(unreadCount);
 
-    // Update the counter display
     NotifContainer.textContent = unreadCount > 0 ? unreadCount : "";
-    // Save all notification IDs
     allNotificationIds = notifications.map((n) => n.id);
 
-    // Convert backend data to JS array format you want
     const notificationsArray = notifications.map((item) => ({
       id: item.id,
       message: item.message,
@@ -30,38 +25,23 @@ function initNotificationStream() {
       created_at: item.created_at,
       is_read: item.is_read,
     }));
-    // 🔥 Only call getDocs() if unread count changed
     if (unreadCount !== lastUnreadCount) {
-      //   console.log(
-      //     "Notification count changed:",
-      //     lastUnreadCount,
-      //     "→",
-      //     unreadCount
-      //   );
-
       if (typeof window.getDocs === "function") {
         window.getDocs();
       } else {
         console.warn("getDocs() not available yet.");
       }
 
-      // Update tracker
       lastUnreadCount = unreadCount;
     }
 
-    // Populate your UI list if needed
     populateNotifications(notificationsArray);
   };
 
-  evtSource.onerror = (err) => {
-    // console.error("SSE error:", err);
-  };
-  // Mark all as read when notification icon is clicked
+  evtSource.onerror = (err) => {};
   notifIcon.addEventListener("click", async () => {
     if (allNotificationIds.length === 0) return;
-    // console.log(Array.isArray(allNotificationIds));
     try {
-      //   console.log("icon button clicked");
       const res = await fetch("/api/notifications/mark-read", {
         method: "POST",
         headers: {
@@ -73,11 +53,9 @@ function initNotificationStream() {
       });
 
       if (res.ok) {
-        // reset unread counter
         NotifContainer.textContent = "";
 
         NotifContainer.classList.add("hidden");
-        // console.log(res);
       } else {
         console.error("Failed to mark notifications as read.");
       }
@@ -91,7 +69,7 @@ function populateNotifications(notificationsArray) {
   const container = document.getElementById("notificationsContainer");
   if (!container) return;
 
-  container.innerHTML = ""; // clear existing
+  container.innerHTML = "";
   const additionalMessage = "";
 
   notificationsArray.forEach((notification) => {
@@ -118,7 +96,6 @@ function populateNotifications(notificationsArray) {
   </div>
         `;
 
-    // Click listener
     li.addEventListener("click", () => {
       console.log("Notification clicked:");
       console.log("Message:", notification.message);
@@ -131,7 +108,6 @@ function populateNotifications(notificationsArray) {
 
 function formatNotificationMessage(msg) {
   msg = msg.toLowerCase();
-  //   console.log(msg);
 
   if (msg.includes("uploaded")) return "Uploaded a file";
   if (msg.includes("approval")) {

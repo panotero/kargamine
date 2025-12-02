@@ -4,7 +4,6 @@ async function logActivity(
   documentControlNumber = null
 ) {
   try {
-    // Assuming you have auth user info available in JS
     const userId = window.authUser ? window.authUser.id : null;
 
     const payload = {
@@ -15,7 +14,6 @@ async function logActivity(
     };
 
     const response = await fetch("/api/activities", {
-      // your POST route
       method: "POST",
       headers: {
         "Content-Type": "application/json",

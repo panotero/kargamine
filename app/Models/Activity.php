@@ -24,19 +24,16 @@ class Activity extends Model
     ];
     protected $table = 'activities';
 
-    // Activity performed by this user (user_id)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    // Activity initiated by this user (from_user_id)
     public function fromUser()
     {
         return $this->belongsTo(User::class, 'from_user_id', 'id');
     }
 
-    // Activity routed to this user (routed_to)
     public function routedUser()
     {
         return $this->belongsTo(User::class, 'routed_to', 'id');

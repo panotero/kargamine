@@ -15,16 +15,14 @@ class TableToCard {
     this.addResizeListener();
   }
 
-  // Initialize card rendering
   init() {
     this.renderCards();
   }
 
-  // Render cards based on current viewport
   renderCards() {
     if (window.innerWidth <= this.mobileBreakpoint) {
-      this.cardContainer.innerHTML = ""; // clear previous cards
-      this.table.classList.add("hidden"); // hide table
+      this.cardContainer.innerHTML = "";
+      this.table.classList.add("hidden");
 
       const rows = Array.from(this.table.querySelectorAll("tbody tr"));
       const headers = Array.from(this.table.querySelectorAll("thead th")).map(
@@ -48,19 +46,17 @@ class TableToCard {
 
         cells.forEach((cell, index) => {
           if (index < headers.length - 1) {
-            // skip actions for now
             const field = document.createElement("p");
             field.innerHTML = `<strong>${headers[index]}:</strong> ${cell.textContent}`;
             card.appendChild(field);
           }
         });
 
-        // Actions (last column)
         const actionsCell = cells[cells.length - 1];
         if (actionsCell) {
           const actions = document.createElement("div");
           actions.classList.add("flex", "gap-2", "justify-end");
-          actions.innerHTML = actionsCell.innerHTML; // copy buttons/links
+          actions.innerHTML = actionsCell.innerHTML;
           card.appendChild(actions);
         }
 
@@ -74,12 +70,10 @@ class TableToCard {
     }
   }
 
-  // Re-render cards on window resize
   addResizeListener() {
     window.addEventListener("resize", () => this.renderCards());
   }
 
-  // Call this to manually refresh cards (e.g., after SPA table update)
   refresh() {
     this.renderCards();
   }

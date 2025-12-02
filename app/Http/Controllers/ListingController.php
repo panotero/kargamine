@@ -34,17 +34,11 @@ class ListingController extends Controller
 
         $imagetodelete = $request->deleted_images;
 
-        // Handle $listing->images whether it's JSON string or array
         $currentImages = is_array($listing->images)
             ? $listing->images
             : (json_decode($listing->images, true) ?? []);
 
-        // Remove all values from $images that exist in $toDelete
         $images = array_diff($currentImages, $imagetodelete);
-
-        // Result: $images now contains only the remaining ones
-
-        // Update all other fields
         $listing->update([
             'property_name' => $request->property_name,
             'address'       => $request->address,
@@ -52,14 +46,13 @@ class ListingController extends Controller
             'price'         => $request->price,
             'link'          => $request->link,
             'status'        => $request->status,
-            'images'        => json_encode(array_values($images)), // always save as JSON
+            'images'        => json_encode(array_values($images)),
         ]);
 
         return response()->json(['success' => true, 'message' => 'Listing updated successfully']);
     }
     public function store(Request $request)
     {
-        // dd($request->file('images'), $request->all());
         try {
             $request->validate([
                 'propertyName' => 'required|string|max:255',
@@ -76,8 +69,6 @@ class ListingController extends Controller
 
             if ($request->hasFile('images')) {
                 $listingsPath = base_path('../public/listings');
-
-                // Check if folder exists; if not, create it
                 if (!file_exists($listingsPath)) {
                     mkdir($listingsPath, 0777, true);
                 }
@@ -103,13 +94,12 @@ class ListingController extends Controller
             ]);
 
             Log::info('Listing created successfully:', ['listing' => $listing]);
-            // Log::info('Listing directory:', ['dir' => $publicPath]);
 
 
             return response()->json([
                 'message' => 'Listing saved successfully.',
-                'inputs' => $request->all(), // text fields
-                'files' => $request->file('images'), // uploaded images
+                'inputs' => $request->all(),
+                'files' => $request->file('images'),
             ]);
         } catch (ValidationException $e) {
             Log::warning('Validation failed:', ['errors' => $e->errors()]);
@@ -131,7 +121,6 @@ class ListingController extends Controller
     }
 
 
-    // Optional: delete listing
     public function destroy(Listing $listing)
     {
         if ($listing->images) {

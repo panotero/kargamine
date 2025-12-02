@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class NavMenu extends Model
 {
-    protected $table = 'nav_menus';   // Explicitly set table name if it’s not plural
+    protected $table = 'nav_menus';
     protected $fillable = [
         'title',
         'icon',

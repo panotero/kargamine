@@ -38,7 +38,6 @@ document.addEventListener("click", async function (event) {
   }
 });
 
-// Submit listener OUTSIDE the click handler
 document.addEventListener("submit", async function (e) {
   const form = e.target;
 

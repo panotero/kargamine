@@ -1,6 +1,5 @@
 function initFlowbite() {
   if (typeof window.Flowbite === "undefined") {
-    // Dynamically load Flowbite JS if not already loaded
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/@glidejs/glide";
     script.defer = true;
@@ -9,7 +8,6 @@ function initFlowbite() {
     };
     document.head.appendChild(script);
   } else {
-    // If already loaded, you can re-initialize components if needed
     console.log("Flowbite already loaded");
   }
 }
@@ -34,7 +32,6 @@ try {
       `
       )
       .join("");
-    // console.log(imageSlides);
     let num = listing.price;
     price = num;
     const slideHTML = `
@@ -81,7 +78,6 @@ try {
   console.log(error);
 }
 
-// Initialize Parent Glide
 const parentGlide = new Glide(".glide-parent", {
   type: "carousel",
   autoplay: 2000,

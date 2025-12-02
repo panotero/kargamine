@@ -25,7 +25,6 @@ Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
 
-// Protected routes
 Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
@@ -34,7 +33,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/debug_auth', function () {
         $user = auth()->user();
         if ($user) {
-            $user->load('office'); // Eager load the office relationship
+            $user->load('office');
         }
 
         return [
@@ -43,7 +42,6 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
         ];
     });
 
-    //page control
     Route::get('/page_dashboard', [PageController::class, 'page_dashboard']);
     Route::get('/page_usermanagement', [PageController::class, 'page_UserManagement']);
     Route::get('/page_menus', [PageController::class, 'page_Menus']);
@@ -60,7 +58,6 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/settings', [PageController::class, 'settings'])->name('settings');
 
 
-    //mailing service
     Route::get('/page_mailer', [PageController::class, 'page_Mailer']);
     Route::post('/mailer_save', [MailerController::class, 'save'])->name('mailer_save');
     Route::post('/mailer/send', [MailerController::class, 'send'])->name('mailer.send');

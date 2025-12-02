@@ -1,14 +1,8 @@
-// ----------------------------
-// Global function to populate Document Modal
-// ----------------------------
 async function populateDocumentModal(documentId) {
   try {
     const res = await fetch(`/api/documents/${documentId}`);
     const data = await res.json();
 
-    // ------------------------
-    // Check if document exists
-    // ------------------------
     if (!data || Object.keys(data).length === 0) {
       hideModal("DocumentModal");
       showMessage({
@@ -17,17 +11,9 @@ async function populateDocumentModal(documentId) {
       });
       return;
     }
-
-    // ------------------------
-    // Populate Header
-    // ------------------------
     document.getElementById("docId").value = data.document_id;
     setText("docControlNumber", data.document_control_number);
     setText("docStatus", data.status);
-
-    // ------------------------
-    // Populate Metadata
-    // ------------------------
     setText("docTitle", data.particular);
     setText("docDept", data.office_origin);
     setText("docAuthor", data.signatory || "N/A");
@@ -40,40 +26,23 @@ async function populateDocumentModal(documentId) {
     setText("docDestination", data.destination_office || "N/A");
     setText("docConfidentiality", data.confidentiality || "Normal");
     setText("docRemarks", data.remarks || "-");
-
-    // ------------------------
-    // Populate Files / Versions
-    // ------------------------
     populateFileList(data.files || []);
-
-    // ------------------------
-    // Populate Activity Log
-    // ------------------------
     populateActivityLog(data || []);
   } catch (error) {
     console.error("Failed to populate document modal:", error);
   }
 }
 
-// ------------------------
-// Helper: set textContent safely
-// ------------------------
 function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text || "";
 }
 
-// ------------------------
-// Helper: hide modal
-// ------------------------
 function hideModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add("hidden");
 }
 
-// ------------------------
-// Populate file list
-// ------------------------
 function populateFileList(files) {
   const fileList = document.getElementById("fileVersionsList");
   fileList.innerHTML = "";
@@ -126,16 +95,12 @@ function populateFileList(files) {
       </a>
     `;
 
-    // Open PDF modal on LI click
     li.addEventListener("click", () => openPdfModal(file.file_path));
 
     fileList.appendChild(li);
   });
 }
 
-// ------------------------
-// Open PDF modal and populate slides
-// ------------------------
 async function openPdfModal(filePath) {
   initModal({ modalId: "pdfPreviewModal" });
 
@@ -147,9 +112,6 @@ async function openPdfModal(filePath) {
   initZoomFunction();
 }
 
-// ------------------------
-// Populate Activity Log
-// ------------------------
 function populateActivityLog(data) {
   const activityLog = document.getElementById("activityLog"); // important logs only
   const fullActivityLog = document.getElementById("fullActivityLog"); // full log history
@@ -193,9 +155,6 @@ function populateActivityLog(data) {
 
     let displayText = "";
 
-    // ----------------------------------------
-    // ROUTE ACTION
-    // ----------------------------------------
     if (act.action === "route" || act.action === "upload") {
       let routeTarget = "";
 
@@ -219,15 +178,9 @@ function populateActivityLog(data) {
                 <p> <span class="font-semibold">remarks: </span> ${remarks}</p>
             `;
 
-      // ROUTE is considered an IMPORTANT activity → show in main list
       importantDiv.innerHTML = displayText;
       activityLog.appendChild(importantDiv);
-    }
-
-    // ----------------------------------------
-    // OTHER ACTIONS
-    // ----------------------------------------
-    else {
+    } else {
       const userName = act.user_id ? `User ${act.user_id}` : "Unknown";
 
       displayText = `
@@ -238,7 +191,6 @@ function populateActivityLog(data) {
                 </p>
             `;
 
-      // Only APPROVED / RECEIVED / REJECTED etc. should appear in important logs
       const importantActions = [
         "approve",
         "reject",
@@ -253,17 +205,11 @@ function populateActivityLog(data) {
       }
     }
 
-    // ----------------------------------------
-    // FULL LOG ALWAYS GETS EVERY ENTRY
-    // ----------------------------------------
     fullDiv.innerHTML = displayText;
     fullActivityLog.appendChild(fullDiv);
   });
 }
 
-// ------------------------
-// Zoom functionality
-// ------------------------
 function initZoomFunction() {
   let currentZoom = 1;
   const zoomStep = 0.2;
@@ -299,11 +245,6 @@ function initZoomFunction() {
 }
 
 function initdocumentcontroller() {
-  // ----------------------------
-  // Helper Functions
-  // ----------------------------
-
-  // Calculate duration between two dates
   function calculateDuration(startDate, endDate) {
     if (!startDate || !endDate) return "-";
     const start = new Date(startDate);
@@ -381,7 +322,6 @@ function initdocumentcontroller() {
         if (el) el.textContent = "";
       });
 
-      // Show skeleton loader for files
       const fileList = document.getElementById("fileVersionsList");
       if (fileList) {
         fileList.innerHTML = `
@@ -391,7 +331,6 @@ function initdocumentcontroller() {
   `;
       }
 
-      // Show skeleton loader for activity log
       const log = document.getElementById("activityLog");
       if (log) {
         log.innerHTML = `
@@ -416,7 +355,6 @@ function initdocumentcontroller() {
       const recipient_id = item.recipient_id;
       if (source === "all" || status === "for approval") {
         routeBtn.classList.add("hidden");
-        //check if the assigned user id is same with the logged user
         if (status === "for approval" && recipient_id === window.authUser.id)
           approvalButtons.classList.remove("hidden");
       } else {
@@ -433,13 +371,9 @@ function initdocumentcontroller() {
 
     tableBody.appendChild(tr);
 
-    // Only initialize if requested (default: true)
     if (initTable) initDataTables();
   }
 
-  // ----------------------------
-  // Fetch and Render Documents
-  // ----------------------------
   window.getDocs = async function getDocs() {
     if (!window.authUser) return;
 
@@ -468,7 +402,6 @@ function initdocumentcontroller() {
           ? doc.involved_office
           : [];
 
-        // All Documents
         const canSeeAllDocs =
           !userOfficeName ||
           userOfficeName === "ODDG-PP" ||
@@ -476,7 +409,6 @@ function initdocumentcontroller() {
         if (canSeeAllDocs)
           appendDocumentRow(allDocsTableBody, doc, "all", false);
 
-        // Assigned To You
         let showAssigned = false;
         const recipientId = doc.recipient_id;
 
@@ -492,16 +424,12 @@ function initdocumentcontroller() {
           appendDocumentRow(assignedTableBody, doc, "assigned", false);
       });
 
-      // Initialize DataTables **once** per table after all rows are appended
       initDataTables();
     } catch (error) {
       console.error("Error fetching documents:", error);
     }
   };
 
-  // ----------------------------
-  // Event Listeners
-  // ----------------------------
   function initEventListeners() {
     initPDFDropzone({
       dropzoneId: "dropzone",
@@ -514,7 +442,6 @@ function initdocumentcontroller() {
     fillOfficeDropdown();
     fillDocType();
 
-    // Element references
     const destinationOfficedropdown =
       document.getElementById("destinationOffice");
     const originOfficedropdown = document.getElementById("originOffice");
@@ -527,11 +454,9 @@ function initdocumentcontroller() {
     const otheroriginoffice = document.getElementById("otheroriginofficetb");
     const otherdoctype = document.getElementById("otherdoctypetb");
 
-    // Apply toggle logic
     toggleOtherField(destinationOfficedropdown, otherdestinationoffice);
     toggleOtherField(originOfficedropdown, otheroriginoffice);
     toggleOtherField(documentType, otherdoctype);
-    // Utility function for toggling the "Other" textboxes
     function toggleOtherField(dropdown, textbox) {
       dropdown.addEventListener("change", () => {
         textbox.classList.toggle("hidden", dropdown.value !== "Other");
@@ -542,7 +467,6 @@ function initdocumentcontroller() {
       "#modalNewDocument button.bg-blue-600"
     );
     const fileInput = document.getElementById("fileInput");
-    // Open New Document Modal
     document.getElementById("btnNewDocument")?.addEventListener("click", () => {
       initModal({
         modalId: "modalNewDocument",
@@ -583,7 +507,6 @@ function initdocumentcontroller() {
       let originValue = originDropdown.value.trim().toLowerCase();
       let destinationValue = destinationDropdown.value.trim().toLowerCase();
 
-      // Process Origin
       if (originValue === "other") {
         formData.append(
           "office_origin",
@@ -593,7 +516,6 @@ function initdocumentcontroller() {
         formData.append("office_origin", originDropdown.value);
       }
 
-      // Process Destination
       if (destinationValue === "other") {
         formData.append(
           "destination_office",
@@ -642,7 +564,6 @@ function initdocumentcontroller() {
         }
         console.log(result);
 
-        // Hide New Document modal
         document.getElementById("modalNewDocument").classList.add("hidden");
 
         const modal = document.getElementById("modalNewDocument");
@@ -662,14 +583,12 @@ function initdocumentcontroller() {
             }
           });
 
-          // Optionally reset any custom display elements like file info
           const fileInfo = modal.querySelector("#fileInfo");
           const clearBtn = modal.querySelector("#clearSelectionBtn");
           if (fileInfo) fileInfo.textContent = "";
           if (clearBtn) clearBtn.classList.add("hidden");
         }
 
-        // Populate and show Control Number modal
         if (result.docControlNumber) {
           const controlModal = document.getElementById("controlNumberModal");
           const controlText = document.getElementById("controlNumberText");
@@ -677,7 +596,6 @@ function initdocumentcontroller() {
             ? result.docControlNumber.join(", ")
             : result.docControlNumber;
 
-          // Trigger your modal-open class to open it
           controlModal.classList.add("modal-open");
         }
 
@@ -691,7 +609,6 @@ function initdocumentcontroller() {
       }
     });
 
-    // PDF Preview Modal
     document.querySelectorAll(".fileInfoButton").forEach((btn) =>
       btn.addEventListener("click", () =>
         initModal({
@@ -700,7 +617,6 @@ function initdocumentcontroller() {
       )
     );
 
-    // Routing Modal
     document.querySelectorAll(".routeBtn").forEach((btn) => {
       btn.addEventListener("click", () => {
         initPDFDropzone({
@@ -715,7 +631,6 @@ function initdocumentcontroller() {
       });
     });
 
-    // Office change logic
     const officeSelect = document.getElementById("routeOfficeSelect");
     const userSelect = document.getElementById("routeUserSelect");
     const approvalSelect = document.getElementById("approvalSelect");
@@ -759,14 +674,10 @@ function initdocumentcontroller() {
     });
   }
 
-  // ----------------------------
-  // Initialization
-  // ----------------------------
   getDocs();
   initEventListeners();
 }
 
-// Expose to global
 window.initdocumentcontroller = initdocumentcontroller;
 window.populateDocumentModal = populateDocumentModal;
 window.initZoomFunction = initZoomFunction;

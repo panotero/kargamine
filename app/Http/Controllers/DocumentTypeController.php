@@ -7,7 +7,6 @@ use App\Models\DocumentType;
 
 class DocumentTypeController extends Controller
 {
-    //
     public function index()
     {
         return DocumentType::all();

@@ -19,9 +19,6 @@ use Illuminate\Validation\Rule;
 class DocumentController extends Controller
 {
 
-    // ---------------------------------------
-    // GET /api/documents
-    // ---------------------------------------
     public function index()
     {
         $documents = Document::with('files', 'activities')->get();
@@ -30,9 +27,6 @@ class DocumentController extends Controller
 
     public function confirm(Request $request)
     {
-        // ---------------------------------------
-        // content of the request must be document_id, user_id of the logged user
-        // ---------------------------------------
         $document = Document::with('files', 'activities')
             ->where('document_id', $request->document_id)
             ->first();
@@ -52,9 +46,6 @@ class DocumentController extends Controller
 
 
 
-        // ---------------------------------------
-        // create notificaation item to the uploaded of the document
-        // ---------------------------------------
 
         DB::table('notifications')->insert([
             'document_id'        => $request->document_id,
@@ -68,11 +59,6 @@ class DocumentController extends Controller
             'updated_at'         => now(),
         ]);
 
-        //
-
-        // ---------------------------------------
-        // CREATE ACTIVITY LOG
-        // ---------------------------------------
         $activityData = [
             'action'                  => 'confirm',
             'document_id'             => $document->document_id,
@@ -85,17 +71,10 @@ class DocumentController extends Controller
         ];
         Activity::create($activityData);
 
-        // ---------------------------------------
-        // RESPONSE
-        // ---------------------------------------
         return response()->json([
             'message'           => 'Confirming receipt successfully',
         ], 201);
     }
-
-    // ---------------------------------------
-    // GET /api/documents/{idOrControlNumber}
-    // ---------------------------------------
     public function show($id)
     {
         $document = Document::with(
@@ -116,15 +95,8 @@ class DocumentController extends Controller
     }
     public function store(Request $request)
     {
-        // ---------------------------------------
-        // FETCH USER WITH RELATIONS
-        // ---------------------------------------
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
-
-        // ---------------------------------------
-        // VALIDATION
-        // ---------------------------------------
 
         $validator = Validator::make($request->all(), [
             'document_code' => [
@@ -188,14 +160,11 @@ class DocumentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Invalid input detected.',
-                'invalid_fields' => $validator->errors(), // ← shows the exact invalid fields
+                'invalid_fields' => $validator->errors(),
             ], 422);
         }
 
 
-        // ---------------------------------------
-        // GENERATE DOCUMENT CONTROL NUMBER
-        // ---------------------------------------
         $today  = now()->format('dmY');
         $prefix = "{$today}-";
 
@@ -211,9 +180,6 @@ class DocumentController extends Controller
         $documentControlNumber = $prefix . $sequence;
 
 
-        // ---------------------------------------
-        // BUILD INVOLVED OFFICE LIST
-        // ---------------------------------------
         $involved_office = [
             $request->office_origin,
             $user->office->office_name,
@@ -224,9 +190,6 @@ class DocumentController extends Controller
         }
 
 
-        // ---------------------------------------
-        // CREATE DOCUMENT RECORD
-        // ---------------------------------------
         $document = Document::create([
             'document_code'           => $request->document_code,
             'document_control_number' => $documentControlNumber,
@@ -246,9 +209,6 @@ class DocumentController extends Controller
         ]);
 
 
-        // ---------------------------------------
-        // HANDLE FILE UPLOAD
-        // ---------------------------------------
         if ($request->hasFile('file')) {
             $file          = $request->file('file');
             $officeFolder  = $document->office_origin ?? 'UnknownOffice';
@@ -278,9 +238,6 @@ class DocumentController extends Controller
         }
 
 
-        // ---------------------------------------
-        // FIND USERS TO NOTIFY
-        // ---------------------------------------
         $admin_users = User::with(['userConfig', 'office'])
             ->whereHas('userConfig', function ($q) {
                 $q->where('approval_type', 'routing')
@@ -292,9 +249,6 @@ class DocumentController extends Controller
             ->get();
 
 
-        // ---------------------------------------
-        // CREATE NOTIFICATION RECORDS
-        // ---------------------------------------
         foreach ($admin_users as $admin) {
             DB::table('notifications')->insert([
                 'document_id'        => $document->document_id,
@@ -310,10 +264,6 @@ class DocumentController extends Controller
             ]);
         }
 
-
-        // ---------------------------------------
-        // CREATE ACTIVITY LOG
-        // ---------------------------------------
         Activity::create([
             'action'                  => 'upload',
             'document_id'             => $document->document_id,
@@ -326,9 +276,6 @@ class DocumentController extends Controller
         ]);
 
 
-        // ---------------------------------------
-        // RESPONSE
-        // ---------------------------------------
         return response()->json([
             'message'           => 'Document created successfully',
             'data'              => $document,
@@ -337,15 +284,6 @@ class DocumentController extends Controller
         ], 201);
     }
 
-
-
-
-
-
-
-    // ---------------------------------------
-    // PUT/PATCH /api/documents/{id}
-    // ---------------------------------------
 
     public function update(Request $request, $id)
     {
@@ -359,10 +297,6 @@ class DocumentController extends Controller
         return response()->json(['message' => 'Document updated successfully', 'data' => $document]);
     }
 
-
-    // ---------------------------------------
-    // DELETE /api/documents/{id}
-    // ---------------------------------------
     public function destroy($id)
     {
         $document = Document::find($id);

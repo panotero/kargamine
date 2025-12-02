@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class UserConfigController extends Controller
 {
-    //
+
     public function index()
     {
         return response()->json(UserConfig::all());
@@ -22,11 +22,9 @@ class UserConfigController extends Controller
             'approval_type' => 'required|in:pre-approval,final-approval,routing',
         ]);
 
-        // Log the validated data
         Log::info('Creating new user config record', $validated);
 
         try {
-            // ✅ Check if designation already exists
             $exists = UserConfig::where('designation', $validated['designation'])->exists();
 
             if ($exists) {
@@ -36,20 +34,17 @@ class UserConfigController extends Controller
 
                 return response()->json([
                     'error' => 'Designation already exists.'
-                ], 422); // 422 = Unprocessable Entity
+                ], 422);
             }
 
-            // Create record
             $userConfig = UserConfig::create($validated);
 
-            // Log success
             Log::info('User config record created successfully', [
                 'userconfig_id' => $userConfig->id
             ]);
 
             return response()->json($userConfig, 201);
         } catch (\Exception $e) {
-            // Log error if something goes wrong
             Log::error('Failed to create user config record', [
                 'error' => $e->getMessage(),
                 'data' => $validated,

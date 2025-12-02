@@ -8,15 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    //
+
     public function getNotifications()
     {
         $user = Auth::user();
         $notifications = Notification::with('document')->where(function ($query) use ($user) {
-            // 1. Show notifications explicitly routed to this user
+
             $query->where('routed_to', $user->id)
 
-                // 2. OR notifications that are not routed to anyone
                 ->orWhere(function ($sub) use ($user) {
                     $sub->whereNull('routed_to')
                         ->where('destination_office', $user->office->office_name);
@@ -24,24 +23,22 @@ class NotificationController extends Controller
         })
             ->orderBy('created_at', 'desc')
             ->get();
-
-        // dd($user);
         return response()->json($notifications);
     }
     public function stream()
     {
         $user = auth()->user();
         if (!$user) {
-            abort(403); // prevent unauthorized access
+            abort(403);
         }
 
         return response()->stream(function () use ($user) {
             while (true) {
-                // Only get notifications for the logged-in user
+
                 $notifications = Notification::where('user_id', $user->id)
-                    ->with('document') // include related document if needed
+                    ->with('document')
                     ->orderBy('created_at', 'desc')
-                    ->get(['id', 'document_id', 'message', 'is_read', 'created_at']); // select only necessary columns
+                    ->get(['id', 'document_id', 'message', 'is_read', 'created_at']);
 
                 echo "data: " . json_encode($notifications) . "\n\n";
                 ob_flush();
@@ -59,7 +56,6 @@ class NotificationController extends Controller
 
     public function markRead(Request $request)
     {
-        // dd($request->ids);
 
         $user = Auth::user();
         foreach ($request->ids as $ids) {
@@ -68,17 +64,6 @@ class NotificationController extends Controller
                 ->update([
                     'is_read' => 1,
                 ]);
-
-            // Notification::whereIn('id', $ids)
-            //     ->where(function ($query) use ($user) {
-            //         // Only mark notifications that belong to this user or are unassigned (routed_to null)
-            //         $query->where('routed_to', $user->id)
-            //             ->orWhere(function ($sub) use ($user) {
-            //                 $sub->whereNull('routed_to')
-            //                     ->where('destination_office', $user->office->office_name);
-            //             });
-            //     })
-            //     ->update(['is_read' => true]);
         }
 
         return response()->json(['success' => true]);

@@ -15,13 +15,9 @@ class MenusController extends Controller
     {
         $user = Auth::user();
 
-        // Fetch menus ordered by parent and order
         $menus = NavMenu::orderBy('parent_menu', 'asc')
             ->orderBy('menu_order', 'asc')
             ->get();
-        // dd($menus);
-
-        // Filter by allowed_roles AND allowed_offices
         $filtered = $menus->filter(function ($menu) use ($user) {
             $allowedRoles = json_decode($menu->allowed_roles, true) ?? [];
             $allowedOffices = json_decode($menu->allowed_office, true) ?? [];
@@ -30,7 +26,6 @@ class MenusController extends Controller
                 in_array($user->office->office_name, $allowedOffices);
         })->values();
 
-        // Build nested parent-child structure
         $grouped = $filtered->where('parent_menu', 0)->map(function ($parent) use ($filtered) {
             $children = $filtered->where('parent_menu', $parent->id)->values();
             return [
@@ -74,16 +69,11 @@ class MenusController extends Controller
             ]);
 
             $parentId = $data['parent_menu'] ?? 0;
-
-            // ✅ Find current max order under same parent
             $maxOrder = \App\Models\NavMenu::where('parent_menu', $parentId)->max('menu_order');
             $maxOrder = $maxOrder ? intval($maxOrder) : 0;
-
-            // ✅ Use provided menu_order if valid, otherwise set next available order
             if (empty($data['menu_order']) || $data['menu_order'] <= 0) {
                 $data['menu_order'] = $maxOrder + 1;
             } else {
-                // If manually inserted order, shift others down
                 \App\Models\NavMenu::where('parent_menu', $parentId)
                     ->where('menu_order', '>=', $data['menu_order'])
                     ->increment('menu_order');
@@ -131,12 +121,9 @@ class MenusController extends Controller
                 'parent_menu' => 'nullable|integer',
             ]);
 
-            // Update parent menu first
             $menu->update($data);
 
             Log::info('UPDATE success', ['updated_menu' => $menu]);
-
-            // Update all child menus to inherit allowed_office from parent
             $childMenus = NavMenu::where('parent_menu', $id)->get();
 
             foreach ($childMenus as $child) {
@@ -206,13 +193,13 @@ class MenusController extends Controller
         $id1 = $request->input('id1');
         $id2 = $request->input('id2');
 
-        Log::info('🔄 Swap request received', [
+        Log::info('Swap request received', [
             'id1' => $id1,
             'id2' => $id2
         ]);
 
         if (!$id1 || !$id2) {
-            Log::warning('⚠️ Invalid IDs for swap', ['id1' => $id1, 'id2' => $id2]);
+            Log::warning('Invalid IDs for swap', ['id1' => $id1, 'id2' => $id2]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid menu IDs provided.'
@@ -223,7 +210,7 @@ class MenusController extends Controller
         $menu2 = DB::table('nav_menus')->where('id', $id2)->first();
 
         if (!$menu1 || !$menu2) {
-            Log::warning('⚠️ Menu not found for swap', [
+            Log::warning('Menu not found for swap', [
                 'menu1_found' => (bool) $menu1,
                 'menu2_found' => (bool) $menu2
             ]);
@@ -233,7 +220,7 @@ class MenusController extends Controller
             ], 404);
         }
 
-        Log::info('📋 Current menu order before swap', [
+        Log::info('Current menu order before swap', [
             'menu1' => ['id' => $menu1->id, 'title' => $menu1->title, 'menu_order' => $menu1->menu_order],
             'menu2' => ['id' => $menu2->id, 'title' => $menu2->title, 'menu_order' => $menu2->menu_order]
         ]);
@@ -249,7 +236,7 @@ class MenusController extends Controller
                     ->update(['menu_order' => $menu1->menu_order]);
             });
 
-            Log::info('✅ Swap completed successfully', [
+            Log::info('Swap completed successfully', [
                 'swapped' => [
                     'menu1' => ['id' => $menu1->id, 'new_order' => $menu2->menu_order],
                     'menu2' => ['id' => $menu2->id, 'new_order' => $menu1->menu_order],
@@ -258,7 +245,7 @@ class MenusController extends Controller
 
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
-            Log::error('❌ Swap failed', [
+            Log::error('Swap failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

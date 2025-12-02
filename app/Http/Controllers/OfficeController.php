@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class OfficeController extends Controller
 {
-    //
+
     public function index()
     {
         return response()->json(Office::all());
@@ -21,7 +21,6 @@ class OfficeController extends Controller
             'office_code' => 'required|string|max:20|unique:office_table',
         ]);
 
-        // Log the validated data
         Log::info('Creating new office record', $validated);
 
         try {
@@ -31,12 +30,10 @@ class OfficeController extends Controller
                 'created_at' => now(),
             ]);
 
-            // Log success
             Log::info('Office record created successfully', ['office_id' => $office->id]);
 
             return response()->json($office, 201);
         } catch (\Exception $e) {
-            // Log error if something goes wrong
             Log::error('Failed to create office record', [
                 'error' => $e->getMessage(),
                 'data' => $validated,
@@ -50,7 +47,6 @@ class OfficeController extends Controller
     {
         $office = Office::findOrFail($id);
 
-        // Log before deleting
         Log::info('Deleting office record', [
             'office_id' => $office->id,
             'office_name' => $office->office_name,
@@ -61,7 +57,6 @@ class OfficeController extends Controller
 
         $office->delete();
 
-        // Log after successful delete
         Log::info('Office deleted successfully', [
             'office_id' => $id,
             'timestamp' => now(),

@@ -1,9 +1,7 @@
 <div class="max-h-screen overflow-y-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5" id="contentDashboard">
 
 
-    <!-- Content -->
     <div class="h-full container mx-auto py-5 ">
-        <!-- Table 1: Assigned to You -->
         <div class=" mb-5">
             <div class="w-full flex justify-between mb-5">
 
@@ -16,7 +14,6 @@
                 </button>
             </div>
 
-            <!-- Table -->
             <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
                 <table id="assignedToYouDocumentTable" class="w-full text-sm text-left border-collapse">
                     <thead class=" text-gray-600 uppercase text-xs">
@@ -40,13 +37,10 @@
             </div>
         </div>
 
-        <!-- Table 2: All Office Documents -->
         <div class="h-full">
             <h2 class="text-lg font-semibold text-gray-700  dark:text-white mb-5">
                 All Documents
             </h2>
-
-            <!-- Table -->
             <div class="overflow-x-auto bg-white dark:bg-gray-800  rounded-xl shadow">
                 <table id="allDocumentTable" class="w-full text-sm text-left border-collapse">
                     <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
@@ -70,8 +64,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal: New Document -->
     <div id="modalNewDocument" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal p-5">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
             <div class="max-h-[60vh] overflow-y-auto p-3 ">
@@ -81,7 +73,6 @@
                     class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
                     <ul id="modalErrorList" class="list-disc list-inside"></ul>
                 </div>
-                <!-- PDF Upload Area -->
                 <div id="dropzone"
                     class="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 cursor-pointer hover:border-blue-400 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24"
@@ -95,16 +86,9 @@
                     </p>
                     <input type="file" accept="application/pdf" class="hidden" id="fileInput" required />
                 </div>
-
-                <!-- Display selected file info -->
                 <p id="fileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
-
-                <!-- Clear button -->
                 <button id="clearSelectionBtn"
                     class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition">Clear</button>
-
-
-                <!-- Input Fields -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div class="space-y-4">
                         <div>
@@ -180,7 +164,6 @@
                 </div>
 
             </div>
-            <!-- Actions -->
             <div class="flex justify-end mt-8 space-x-3">
                 <button id="btnCancelModal"
                     class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 modal-close">
@@ -192,13 +175,9 @@
             </div>
         </div>
     </div>
-
-    <!-- Document Details Modal -->
     <div id="DocumentModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
 
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh overflow-y-auto">
-
-            <!-- Header -->
             <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
                 <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     Document Control Number: <span id="docControlNumber">DCN-0001</span>
@@ -207,12 +186,8 @@
                     Status: <span id="docStatus" class="font-medium text-blue-600 dark:text-blue-400">Active</span>
                 </p>
             </div>
-
-            <!-- Content -->
             <div
                 class="max-h-[60vh] overflow-y-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
-
-                <!-- Left Section: Metadata -->
                 <div class="w-full lg:w-1/2 p-6 space-y-4">
                     <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Document Metadata</h3>
                     <div class="space-y-2 text-md">
@@ -266,8 +241,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Right Section: File Versions -->
                 <div class="w-full lg:w-1/2 p-6 space-y-5">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">File Versions</h3>
@@ -276,8 +249,6 @@
                             Download Latest
                         </a>
                     </div>
-
-                    <!-- Versions List -->
                     <div class="space-y-2">
                         <div
                             class="border border-gray-200 dark:border-gray-700 rounded-lg max-h-48 lg:h-48 overflow-y-auto">
@@ -290,8 +261,6 @@
                             </ul>
                         </div>
                     </div>
-
-                    <!-- Activity History -->
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
                         <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">Activity History</h3>
                         <ul id="activityLog" class="space-y-2 max-h-48 lg:h-48 overflow-y-auto ">
@@ -301,14 +270,10 @@
                             </div>
                         </ul>
                     </div>
-                    <!-- Activity History -->
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700 relative">
                         <div class="flex items-center justify-between">
-
-                            <!-- Eye Icon (Toggle Full Logs) -->
                             <button id="toggleFullLogBtn"
                                 class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
-                                <!-- Lucide Eye Icon -->
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -328,14 +293,11 @@
                             </h4>
 
                             <ul id="fullActivityLog" class="space-y-2 max-h-60 overflow-y-auto">
-                                <!-- Full logs inserted here -->
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Footer Buttons anchored bottom-right -->
             <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 mt-auto flex justify-end gap-3">
 
                 <button id="btnConfirm"
@@ -369,13 +331,10 @@
             </div>
         </div>
     </div>
-    <!-- PDF Preview Modal -->
     <div id="pdfPreviewModal"
         class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
 
         <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col">
-
-            <!-- Header -->
             <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 px-6 py-3">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">PDF Preview</h3>
 
@@ -384,17 +343,11 @@
                     Cancel
                 </button>
             </div>
-
-            <!-- Body: Two Columns -->
             <div class="flex flex-1 overflow-hidden">
-
-                <!-- LEFT: Carousel -->
                 <div
                     class="w-2/3 flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
 
                     <div id="galleryGlide" class="glide w-full max-w-xl mx-auto relative">
-
-                        <!-- Loading Overlay -->
                         <div id="galleryLoading"
                             class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
                             <div
@@ -404,13 +357,8 @@
 
                         <div class="glide__track" data-glide-el="track">
                             <ul class="glide__slides" id="glideSlides">
-                                <!-- JS will populate slides here -->
                             </ul>
-
-                            <!-- Floating Controls -->
                             <div class="pointer-events-none">
-
-                                <!-- Prev -->
                                 <button data-glide-dir="<"
                                     class="slide-previous pointer-events-auto absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700"
@@ -418,8 +366,6 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                                     </svg>
                                 </button>
-
-                                <!-- Next -->
                                 <button data-glide-dir=">"
                                     class="slide-next pointer-events-auto absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700"
@@ -432,8 +378,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- RIGHT: File Information Panel -->
                 <div class="w-1/3 p-6 overflow-y-auto">
 
                     <h4 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">File Information</h4>
@@ -477,9 +421,6 @@
             </div>
         </div>
     </div>
-
-
-    <!-- Control Number Modal -->
     <div id="controlNumberModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black/50 modal">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80 max-w-full relative">
             <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Document Created</h2>
@@ -490,22 +431,14 @@
             </button>
         </div>
     </div>
-
-    <!-- Routing Modal -->
     <div id="routingModal" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
         <div
             class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6">
-
-            <!-- Hidden Document ID -->
             <input type="hidden" id="docId" value="">
-
-            <!-- Header -->
             <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Route Document</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Select office and user for routing</p>
             </div>
-
-            <!-- Office Selection -->
             <div class="space-y-2">
                 <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select Office</label>
                 <select id="routeOfficeSelect"
@@ -513,8 +446,6 @@
                     <option value="">Loading offices...</option>
                 </select>
             </div>
-
-            <!-- Internal Routing Section -->
             <div id="internalSection" class="hidden space-y-2">
                 <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select User</label>
                 <select required id="routeUserSelect"
@@ -530,8 +461,6 @@
                     <option value="final-approval">Final-approval</option>
                 </select>
             </div>
-
-            <!-- External Routing Section -->
             <div id="externalSection" class="hidden space-y-4">
                 <div class="space-y-2">
                     <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select Status</label>
@@ -542,8 +471,6 @@
                         <option value="remand">Remand</option>
                     </select>
                 </div>
-
-                <!-- Drag & Drop Upload Section (Visible only when Approved) -->
                 <div id="pdfUploadSection" class="hidden">
 
                     <div id="routedropzone"
@@ -564,16 +491,12 @@
                         class="mt-2 text-xs text-gray-500 hover:text-red-500 transition">Clear Selection</button>
                 </div>
             </div>
-
-            <!-- Remarks -->
             <div class="space-y-2">
                 <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Remarks</label>
                 <textarea id="routeRemarks"
                     class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                     rows="3" placeholder="Enter remarks..."></textarea>
             </div>
-
-            <!-- Action Buttons -->
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
                     class="modal-close px-5 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
@@ -591,10 +514,6 @@
 <script>
     (function() {
 
-        // showMessage({
-        //     status: "success",
-        //     message: "Routing Success",
-        // });
         initdocumentcontroller();
 
     })();

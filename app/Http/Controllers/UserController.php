@@ -11,8 +11,6 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    //
-    // UserController.php
     public function index()
     {
         return response()->json(User::with('office', 'userConfig')->get());
@@ -40,15 +38,10 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Deactivate a user by ID
-     */
     public function deactivate($id)
     {
         try {
             $user = User::findOrFail($id);
-
-            // Update status to deactivated
             $user->status = 'deactivated';
             $user->save();
 
@@ -70,8 +63,6 @@ class UserController extends Controller
 
         try {
             $user = User::findOrFail($id);
-
-            // Update status to deactivated
             $user->status = 'active';
             $user->save();
 
@@ -105,18 +96,14 @@ class UserController extends Controller
         ]);
 
         try {
-            // Remove null values so they won't overwrite existing columns
             $data = array_filter($validated, function ($value) {
                 return !is_null($value) && $value !== '';
             });
-
-            // If password is provided, hash it
             if (isset($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
 
             if ($id) {
-                // Update existing record
                 $user = User::findOrFail($id);
                 $user->update($data);
             }
@@ -141,7 +128,6 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        // Validate request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -152,7 +138,6 @@ class UserController extends Controller
         ]);
 
         try {
-            // Create the user
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -160,7 +145,7 @@ class UserController extends Controller
                 'role' => $validated['role'] ?? null,
                 'office_id' => $validated['office_id'] ?? null,
                 'role_id' => $validated['role_id'] ?? null,
-                'status' => 'active', // default active
+                'status' => 'active',
             ]);
 
             Log::info('User created successfully', ['user_id' => $user->id]);

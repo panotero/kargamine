@@ -1,11 +1,8 @@
 <x-guest-layout>
-    <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
-
-        <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full dark:bg-gray-100" type="email" name="email"
@@ -13,16 +10,13 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
 
             <div class="relative mt-1">
-                <!-- Toggle Button -->
                 <button type="button" id="togglePassword"
                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
 
-                    <!-- Eye Icon (Default: Hidden/Password) -->
                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                         stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.423 7.51
@@ -32,7 +26,6 @@
                     </svg>
                 </button>
 
-                <!-- Password Input -->
                 <x-text-input id="password" class="block w-full pr-12 dark:bg-gray-100" type="password" name="password"
                     required autocomplete="current-password" />
             </div>
@@ -40,7 +33,6 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Remember Me -->
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">
                 <input id="remember_me" type="checkbox"
@@ -88,7 +80,6 @@
             const type = passwordField.type === "password" ? "text" : "password";
             passwordField.type = type;
 
-            // Swap SVG icon
             eyeIcon.innerHTML = type === "password" ? eyeOpen : eyeClosed;
         });
     });

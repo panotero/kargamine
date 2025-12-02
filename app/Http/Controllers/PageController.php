@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Log;
 
 class PageController extends Controller
 {
-    //
-
     public function page_dashboard()
     {
         return view('pages.dashboard');

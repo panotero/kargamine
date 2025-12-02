@@ -6,7 +6,6 @@
         </button>
     </div>
 
-    <!-- ✅ Table -->
     <table class="w-full border  p-5" id="navMenuTable">
         <thead class="bg-gray-200 text-black">
             <tr>
@@ -19,12 +18,10 @@
             </tr>
         </thead>
         <tbody id="navMenuTbody">
-            <!-- Rows inserted dynamically -->
         </tbody>
     </table>
 </div>
 
-<!-- Modal -->
 <div id="menuModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center modal">
     <div class="bg-white w-full max-w-md rounded shadow p-6 relative">
         <h3 id="modalTitle" class="text-lg font-semibold mb-4">Add New Menu</h3>
@@ -54,20 +51,17 @@
             <div>
                 <label class="block font-medium">Allowed Roles</label>
                 <div id="menuRolesContainer" class="grid grid-cols-2 gap-2 text-black">
-                    <!-- Checkboxes will be injected here -->
                 </div>
             </div>
             <div>
                 <label class="block font-medium">Allowed Office</label>
                 <div id="menuOfficeContainer" class="grid grid-cols-2 gap-2 text-black">
-                    <!-- Checkboxes will be injected here -->
                 </div>
             </div>
 
             <div>
                 <label class="block font-medium">Parent Menu</label>
                 <select id="menuParent" class="w-full border p-2 rounded text-black">
-                    <!-- Options will be injected here -->
                 </select>
             </div>
 
@@ -99,7 +93,6 @@
         const tableBody = document.getElementById("navMenuTbody");
         let menusData = [];
 
-        // --------------------- MODAL FUNCTIONS ---------------------
         cancelBtn.addEventListener("click", () => {
             closeModal();
         });
@@ -146,7 +139,6 @@
             modal.classList.remove("flex");
         }
 
-        // --------------------- LOAD ROLES ---------------------
         async function loadRoles() {
             const res = await fetch(`api/userconfigs`, {
                 headers: {
@@ -182,7 +174,6 @@
             });
         }
 
-        // --------------------- LOAD OFFICES ---------------------
         async function loadOffices() {
             const res = await fetch(`api/offices`, {
                 headers: {
@@ -194,7 +185,6 @@
             const container = fields.officeCheckBoxFiller;
             container.innerHTML = "";
 
-            // --- Check All ---
             const checkAllWrapper = document.createElement("label");
             checkAllWrapper.classList.add("flex", "items-center", "gap-2", "mb-2");
             checkAllWrapper.innerHTML = `
@@ -203,7 +193,6 @@
     `;
             container.appendChild(checkAllWrapper);
 
-            // --- Individual Office Checkboxes ---
             offices.forEach(office => {
                 const wrapper = document.createElement("label");
                 wrapper.classList.add("flex", "items-center", "gap-2");
@@ -219,7 +208,6 @@
                 container.appendChild(wrapper);
             });
 
-            // --- Check All Logic ---
             const checkAllBox = container.querySelector("#checkAllOffices");
             checkAllBox.addEventListener("change", () => {
                 container.querySelectorAll(".officeCheckbox").forEach(cb => {
@@ -227,7 +215,6 @@
                 });
             });
         }
-        // --------------------- LOAD MENUS ---------------------
         async function loadMenus() {
             const res = await fetch(`api/nav_menus/list`, {
                 credentials: 'include',
@@ -238,11 +225,9 @@
             menusData = await res.json();
             tableBody.innerHTML = "";
 
-            // Build a lookup for menu titles
             const menuMap = {};
             menusData.forEach(menu => menuMap[menu.id] = menu.title);
 
-            // Helper function to recursively render menus
             function renderMenuRows(parentId = 0, level = 0) {
                 const children = menusData
                     .filter(m => m.parent_menu === parentId)
@@ -256,7 +241,6 @@
                         "Main Menu" :
                         (menuMap[menu.parent_menu] || "Unknown");
 
-                    // Find siblings and current index (for up/down)
                     const siblings = menusData
                         .filter(m => m.parent_menu === menu.parent_menu)
                         .sort((a, b) => a.menu_order - b.menu_order);
@@ -267,7 +251,6 @@
                     const roles = JSON.parse(menu.allowed_roles).join(', ');
                     const targetpage = menu.link.replace(/^\//, '');
 
-                    // Indentation for child menus
                     const indent = "&nbsp;".repeat(level * 6) + (level > 0 ? "↳ " : "");
 
                     tr.innerHTML = `
@@ -296,25 +279,20 @@
                 </td>
             `;
 
-                    // Existing click logic (unchanged)
                     tr.addEventListener("click", (e) => {
                         if (e.target.closest("td.menubuttons")) {
                             return;
                         }
-                        // Your main logic here (only runs if not clicking menubuttons)
-                        // console.log("Row clicked, not menubuttons");
 
                         modalTitle.textContent = "Modify Menu";
                         saveBtn.textContent = "Modify";
 
-                        // Populate all fields
                         fields.id.value = menu.id;
                         fields.title.value = menu.title || "";
                         fields.icon.value = menu.icon || "";
                         fields.link.value = menu.link || "";
                         fields.parent.value = menu.parent_menu || 0;
 
-                        // Populate roles checkboxes
                         const allowedRoles = JSON.parse(menu.allowed_roles || "[]");
                         document.querySelectorAll('.roleCheckbox').forEach(cb => {
                             cb.checked = allowedRoles.includes(cb.value);
@@ -329,18 +307,14 @@
                         modal.classList.add("flex");
                     });
 
-                    // Append to table
                     tableBody.appendChild(tr);
 
-                    // Recursively render child menus
                     renderMenuRows(menu.id, level + 1);
                 });
             }
 
-            // Render top-level menus first
             renderMenuRows(0);
 
-            // Populate parent dropdown
             const parentSelect = fields.parent;
             parentSelect.innerHTML = `<option value="0">Main Menu</option>`;
             menusData
@@ -354,7 +328,6 @@
         }
 
 
-        // --------------------- PARENT CHANGE ---------------------
         fields.parent.addEventListener("change", () => {
             const parentId = parseInt(fields.parent.value);
             if (parentId === 0) {
@@ -372,21 +345,17 @@
             }
         });
 
-        // --------------------- FORM SUBMIT ---------------------
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            // Collect selected roles
             let checkedRoles = Array.from(document.querySelectorAll(".roleCheckbox:checked"))
                 .map(cb => cb.value);
 
-            // Collect selected offices
             let checkedOffices = Array.from(document.querySelectorAll(".officeCheckbox:checked"))
                 .map(cb => cb.value);
 
             const parentId = parseInt(fields.parent.value);
 
-            // Inherit from parent menu if a parent is selected
             if (parentId !== 0) {
                 const parentMenu = menusData.find(m => m.id === parentId);
 
@@ -411,7 +380,6 @@
                 method = "PUT";
             }
 
-            // Send request to backend
             const res = await fetch(url, {
                 method,
                 headers: {
@@ -421,14 +389,12 @@
                 body: JSON.stringify(payload)
             });
 
-            // Close modal and reload menus/roles/offices
             closeModal();
             await loadMenus();
             await loadRoles();
             await loadOffices();
         });
 
-        // --------------------- TABLE BUTTON ACTIONS ---------------------
         tableBody.addEventListener("click", async (e) => {
             const btn = e.target.closest("button");
             if (!btn) return;
@@ -472,7 +438,7 @@
         async function deleteMenu(id) {
 
             const confirmed = await customConfirm("Delete this menu?");
-            if (!confirmed) return; // if user clicks Cancel, exit
+            if (!confirmed) return;
             await fetch(`api/nav_menus/${id}`, {
                 method: "DELETE",
                 headers: {
@@ -486,11 +452,9 @@
             loadMenus();
         }
 
-        // --------------------- ADD MENU BUTTON ---------------------
         const addBtn = document.getElementById("addMenuBtn");
         addBtn.addEventListener("click", () => openModal("Add"));
 
-        // --------------------- INITIAL LOAD ---------------------
         loadRoles();
         loadMenus();
         loadOffices();

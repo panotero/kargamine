@@ -27,7 +27,6 @@ class RoutingController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
             }
 
-            // Validate request fields (file NOT in validation yet)
             $validated = $request->validate([
                 'document_id'        => 'required|integer',
                 'destination_office' => 'required|string',
@@ -37,9 +36,6 @@ class RoutingController extends Controller
                 'remarks'            => 'nullable|string',
             ]);
 
-
-
-            // Load document
             $document = Document::findOrFail($validated['document_id']);
 
             $originOffice      = $document->office_origin;
@@ -48,12 +44,8 @@ class RoutingController extends Controller
             $sameOffice        = ($destinationOffice === $user->office->office_name);
             $backToOrigin      = ($destinationOffice === $originOffice);
 
-            // ---------------------------------------
-            // If routing outside user's office, mark external
-            // ---------------------------------------
             if (!$sameOffice) {
                 $activityData['to_external'] = 1;
-                //check the office name if existing in involved office.
 
                 $admin_users = User::with(['userConfig', 'office'])
                     ->whereHas('userConfig', function ($q) {
@@ -65,9 +57,6 @@ class RoutingController extends Controller
                     })
                     ->get();
 
-                // -------------------------------
-                // HANDLE PDF FILE UPLOAD
-                // -------------------------------
                 if ($request->hasFile('pdf_file') && $request->file('pdf_file')->isValid()) {
 
                     $file = $request->file('pdf_file');
@@ -76,7 +65,6 @@ class RoutingController extends Controller
                     $fileName = uniqid() . '-' . $cleanOriginal;
                     $publicPath = public_path("assets/documents/{$officeFolder}/pdf");
 
-                    // Create directory if not existing
                     if (!is_dir($publicPath)) {
                         mkdir($publicPath, 0777, true);
                     }
@@ -197,7 +185,7 @@ class RoutingController extends Controller
                 DB::table('approval_table')
                     ->where('user_id', $user->id)
                     ->update(['status' => 1]);
-                //create approval rows
+
                 Approvals::create([
                     'document_id' => $document->document_id,
                     'user_id' => $recipientUserId,
@@ -208,16 +196,10 @@ class RoutingController extends Controller
                 ]);
             }
             Activity::create($activityData);
-
-
-
-            // Update Document
             $document->update([
                 'destination_office' => $destinationOffice,
                 'recipient_id'       => $recipientUserId,
             ]);
-
-            // Final Response Message
             if ($sameOffice) {
                 return response()->json([
                     'status'  => 'success',
