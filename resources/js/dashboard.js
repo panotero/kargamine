@@ -20,6 +20,16 @@ window.initDataTables = function initDataTables() {
         dom: "Bfrtip",
         buttons: ["excel", "pdf"],
         stripeClasses: [""],
+        responsive: {
+          details: {
+            type: "column", // makes a little (+) icon appear
+            target: "tr",
+          },
+        },
+        columnDefs: [
+          { responsivePriority: 1, targets: 0 },
+          { responsivePriority: 2, targets: -1 },
+        ],
         language: {
           search: "",
           searchPlaceholder: "Search...",
@@ -61,6 +71,7 @@ window.initDataTables = function initDataTables() {
         },
       });
     }
+    table.addClass("w-full");
 
     function stylePagination(table) {
       const buttonStyle = {

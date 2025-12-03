@@ -23,3 +23,4 @@ import "./pdf.worker.min.mjs";
 import "./routeControl";
 import "./approvalHandler";
 import "./flatpicker";
+import "datatables.net-responsive-dt/css/responsive.dataTables.css";

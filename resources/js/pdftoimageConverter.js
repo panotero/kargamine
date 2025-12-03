@@ -49,8 +49,12 @@ window.initGlide = function initGlide() {
     .querySelector(".slide-next")
     .addEventListener("click", () => glideInstance.go(">"));
 };
-
-async function extractPdfImages(pdfUrl, scale = 1) {
+async function extractPdfImages(
+  pdfUrl,
+  scale = 1,
+  maxWidth = 800,
+  maxHeight = 800
+) {
   const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
 
   const slideElements = [];
@@ -59,6 +63,7 @@ async function extractPdfImages(pdfUrl, scale = 1) {
     const page = await pdf.getPage(i);
     const viewport = page.getViewport({ scale });
 
+    // Render original PDF page
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
@@ -70,12 +75,45 @@ async function extractPdfImages(pdfUrl, scale = 1) {
       viewport,
     }).promise;
 
-    const imgSrc = canvas.toDataURL("image/png");
+    // 🔽 DOWNSIZE HERE
+    const resizedDataUrl = downsizeCanvas(canvas, maxWidth, maxHeight);
 
-    slideElements.push(buildSlideHTML(imgSrc));
+    // Build response item
+    slideElements.push(buildSlideHTML(resizedDataUrl));
   }
 
   return slideElements;
+}
+function downsizeCanvas(sourceCanvas, maxWidth, maxHeight, quality = 0.8) {
+  const width = sourceCanvas.width;
+  const height = sourceCanvas.height;
+
+  let newWidth = width;
+  let newHeight = height;
+
+  // Maintain aspect ratio
+  if (width > height) {
+    if (width > maxWidth) {
+      newHeight = Math.round((height * maxWidth) / width);
+      newWidth = maxWidth;
+    }
+  } else {
+    if (height > maxHeight) {
+      newWidth = Math.round((width * maxHeight) / height);
+      newHeight = maxHeight;
+    }
+  }
+
+  // Create resized canvas
+  const resizeCanvas = document.createElement("canvas");
+  resizeCanvas.width = newWidth;
+  resizeCanvas.height = newHeight;
+
+  const rctx = resizeCanvas.getContext("2d");
+  rctx.drawImage(sourceCanvas, 0, 0, newWidth, newHeight);
+
+  // Return smaller image (JPEG compresses better)
+  return resizeCanvas.toDataURL("image/jpeg", quality);
 }
 
 window.extractPdfImages = extractPdfImages;

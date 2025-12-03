@@ -334,7 +334,7 @@
     <div id="pdfPreviewModal"
         class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
 
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] lg:flex lg:flex-col">
             <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 px-6 py-3">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">PDF Preview</h3>
 
@@ -343,9 +343,9 @@
                     Cancel
                 </button>
             </div>
-            <div class="flex flex-1 overflow-hidden">
+            <div class="lg:flex w-full max-h-[70vh] overflow-y-auto">
                 <div
-                    class="w-2/3 flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
+                    class="lg:w-2/3 w-full flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
 
                     <div id="galleryGlide" class="glide w-full max-w-xl mx-auto relative">
                         <div id="galleryLoading"

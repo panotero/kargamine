@@ -212,19 +212,17 @@ class DocumentController extends Controller
         if ($request->hasFile('file')) {
             $file          = $request->file('file');
             $officeFolder  = $document->office_origin ?? 'UnknownOffice';
-
             $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
             $fileName      = uniqid() . '-' . $cleanOriginal;
-
-            $folderPath    = public_path("assets/documents/$officeFolder/pdf");
-
+            $folder = "storage/assets/documents/$officeFolder/pdf";
+            $folderPath    = public_path($folder);
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0777, true);
             }
 
             $file->move($folderPath, $fileName);
 
-            $filePath = "assets/documents/$officeFolder/pdf/$fileName";
+            $filePath = "$folder/$fileName";
 
             DB::table('files')->insert([
                 'document_id'      => $document->document_id,
