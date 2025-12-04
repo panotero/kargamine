@@ -3,7 +3,7 @@ let lastUnreadCount = 0;
 const NotifContainer = document.getElementById("notifcount");
 const notifIcon = document.getElementById("notificationIcon");
 
-function initNotificationStream() {
+window.initNotificationStream = function initNotificationStream() {
   const evtSource = new EventSource("/api/notifications/stream");
   evtSource.onmessage = function (event) {
     const notifications = JSON.parse(event.data);
@@ -63,7 +63,7 @@ function initNotificationStream() {
       console.error(err);
     }
   });
-}
+};
 
 function populateNotifications(notificationsArray) {
   const container = document.getElementById("notificationsContainer");
@@ -135,5 +135,3 @@ function formatTimestamp(isoString) {
     minute: "2-digit",
   });
 }
-
-window.loadNotifications = initNotificationStream;

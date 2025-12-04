@@ -21,7 +21,51 @@ class DocumentController extends Controller
 
     public function index()
     {
-        $documents = Document::with('files', 'activities')->get();
+        // Eager load files, activities, and related users
+        $documents = Document::with([
+            'files',
+            'activities',
+            'user',           // user who uploaded/created
+            'recipient',      // recipient user
+            'confirmedBy'     // user who confirmed
+        ])->get();
+
+        // Optionally map extra info if needed
+        $documents->transform(function ($doc) {
+            return [
+                'document_id' => $doc->document_id,
+                'document_control_number' => $doc->document_control_number,
+                'document_code' => $doc->document_code,
+                'date_received' => $doc->date_received,
+                'label' => $doc->label,
+                'particular' => $doc->particular,
+                'office_origin' => $doc->office_origin,
+                'destination_office' => $doc->destination_office,
+                'user_id' => $doc->user_id,
+                'user_name' => $doc->user->name ?? 'Unknown',
+                'recipient_id' => $doc->recipient_id,
+                'recipient_name' => $doc->recipient->name ?? 'Unknown',
+                'document_form' => $doc->document_form,
+                'document_type' => $doc->document_type,
+                'date_of_document' => $doc->date_of_document,
+                'due_date' => $doc->due_date,
+                'signatory' => $doc->signatory,
+                'date_forwarded' => $doc->date_forwarded,
+                'receipt_confirmation' => $doc->receipt_confirmation,
+                'receipt_confirmed_by' => $doc->receipt_confirmed_by,
+                'confirmed_by_name' => $doc->confirmedBy->name ?? 'Unknown',
+                'involved_office' => $doc->involved_office,
+                'action_taken' => $doc->action_taken,
+                'status' => $doc->status,
+                'remarks' => $doc->remarks,
+                'confidentiality' => $doc->confidentiality,
+                'created_at' => $doc->created_at,
+                'updated_at' => $doc->updated_at,
+                'files' => $doc->files,
+                'activities' => $doc->activities
+            ];
+        });
+
         return response()->json($documents);
     }
 
@@ -274,11 +318,14 @@ class DocumentController extends Controller
         ]);
 
 
-        return response()->json([
+        Log::info([
             'message'           => 'Document created successfully',
             'data'              => $document,
             'userlist'          => $admin_users,
             'docControlNumber'  => $documentControlNumber,
+        ]);
+        return response()->json([
+            'message'           => 'Document created successfully'
         ], 201);
     }
 

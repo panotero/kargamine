@@ -14,6 +14,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Make sure you include these libraries in your HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -55,25 +59,12 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             console.log("all content has been loaded");
-            loadNotifications();
+            initNotificationStream();
 
 
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        flatpickr("#registeredFrom", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true
-        });
-
-        flatpickr("#registeredTo", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true
-        });
-    </script>
 </body>
 
 </html>

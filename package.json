@@ -19,7 +19,7 @@
         "chart.js": "^4.5.1",
         "datatables.net-responsive": "^3.0.7",
         "datatables.net-responsive-dt": "^3.0.7",
-        "flowbite": "^4.0.0",
+        "flowbite": "^4.0.1",
         "jquery": "^3.7.1",
         "pdfjs-dist": "^5.4.394"
     }

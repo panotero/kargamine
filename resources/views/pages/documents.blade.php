@@ -262,40 +262,49 @@
                         </div>
                     </div>
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">Activity History</h3>
-                        <ul id="activityLog" class="space-y-2 max-h-48 lg:h-48 overflow-y-auto ">
+                        <div class="flex justify-between w-full">
+
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">Activity History</h3>
+
+                            <!-- Make this the relative container -->
+                            <div class="relative pt-4 border-t border-gray-200 dark:border-gray-700">
+
+                                <div class="flex items-center justify-between">
+                                    <button id="toggleFullLogBtn"
+                                        class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                                            <circle cx="12" cy="12" r="3" stroke="currentColor"
+                                                stroke-width="1.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- DROPDOWN -->
+                                <div id="fullActivityLogContainer"
+                                    class="hidden absolute right-full bottom-0 mr-3 w-96 border border-gray-300 dark:border-gray-700
+                rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl z-50">
+
+                                    <h4 class="text-md font-medium mb-2 text-gray-700 dark:text-gray-200">
+                                        Full Activity Log
+                                    </h4>
+
+                                    <ul id="fullActivityLog" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <ul id="activityLog" class="space-y-2 max-h-48 lg:h-48 overflow-y-auto">
                             <div id="spinner" class="flex items-center justify-center">
                                 <div class="w-10 h-10 border-2 border-gray-200 border-t-2 border-t-gray-800 rounded-full animate-spin"
                                     role="status" aria-label="Loading"></div>
                             </div>
                         </ul>
                     </div>
-                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700 relative">
-                        <div class="flex items-center justify-between">
-                            <button id="toggleFullLogBtn"
-                                class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
-                                    <circle cx="12" cy="12" r="3" stroke="currentColor"
-                                        stroke-width="1.5" />
-                                </svg>
-                            </button>
-                        </div>
 
-                        <div id="fullActivityLogContainer"
-                            class="hidden absolute bottom-full left-0 w-full border border-gray-300 dark:border-gray-700
-               rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl z-50">
-
-                            <h4 class="text-md font-medium mb-2 text-gray-700 dark:text-gray-200">
-                                Full Activity Log
-                            </h4>
-
-                            <ul id="fullActivityLog" class="space-y-2 max-h-60 overflow-y-auto">
-                            </ul>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 mt-auto flex justify-end gap-3">

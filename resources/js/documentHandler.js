@@ -153,7 +153,6 @@ function populateActivityLog(data) {
   }
   const activities = [...data.activities].reverse();
   activities.forEach((act) => {
-    console.log(act);
     const importantDiv = document.createElement("li");
     const fullDiv = document.createElement("li");
 
@@ -168,94 +167,115 @@ function populateActivityLog(data) {
     );
     fullDiv.classList.add("text-sm", "text-gray-600", "dark:text-gray-300");
 
-    const timeAgo = new Date(act.created_at).toLocaleString();
-    const fromUser = "Unknown";
+    const date = new Date(act.created_at);
+
+    const time = date.toLocaleString("en-US", {
+      month: "long", // full month name
+      day: "2-digit", // 01, 02, ...
+      year: "numeric", // 2020
+      hour: "numeric", // 1–12
+      minute: "2-digit", // 00–59
+      hour12: true, // AM/PM
+    });
+
+    // Example output: "January 01, 2020, 9:00 AM"
+
+    // Remove the comma before AM/PM if you want exactly "January 01, 2020 9AM"
+    const timeAgo = time.replace(/, /, " ").replace(":00", "");
     const remarks = act.final_remarks;
 
-    let displayText = "";
+    const mainActions = ["route", "upload", "approved", "signed", "confirm"];
+    const importantActions = [
+      "approve",
+      "reject",
+      "receive",
+      "returned",
+      "review",
+    ];
 
-    if (
-      ["route", "upload", "approved", "signed", "confirm"].includes(act.action)
-    ) {
-      let routeTarget = "";
-      let actionText = "";
+    // --------------------------
+    // FULL LOG: all activities
+    // --------------------------
+    let fullText = "";
+    const fullUserName = act.user?.name || `User ${act.user_id || "Unknown"}`;
+    let fullActionText = "";
 
-      if (act.to_external == 1) {
-        routeTargetOffice = data.destination_office
-          ? data.destination_office
-          : "Unknown Office";
-      } else {
-        routeTarget = act.routed_to
-          ? `User ${act.routed_to}`
-          : "Unknown Recipient";
-      }
+    switch (act.action) {
+      case "route":
+        const routeTargetFull =
+          act.to_external === 1
+            ? data.destination_office || "Unknown Office"
+            : act.routed_to
+            ? `User ${act.routed_to}`
+            : "Unknown Recipient";
+        fullActionText = `routed the document to <span class="font-semibold">${routeTargetFull}</span>`;
+        break;
+      case "upload":
+        const uploadTargetFull =
+          act.to_external === 1
+            ? data.destination_office || "Unknown Office"
+            : act.routed_to
+            ? `User ${act.routed_to}`
+            : "";
+        fullActionText = `<span class="font-semibold">${fullUserName}</span> uploaded a document${
+          uploadTargetFull
+            ? ` for <span class="font-semibold">${
+                act.from_user?.name || "Unknown"
+              }</span>`
+            : ""
+        }`;
+        break;
+      case "approved":
+        const approvedTargetFull =
+          act.to_external === 1
+            ? data.destination_office || "Unknown Office"
+            : act.routed_to
+            ? `User ${act.routed_to}`
+            : "";
+        fullActionText = `approved the document${
+          approvedTargetFull
+            ? ` for <span class="font-semibold">${approvedTargetFull}</span>`
+            : ""
+        }`;
+        break;
+      case "confirm":
+        fullActionText = `<span class="font-semibold">${fullUserName}</span> confirmed receipt of document number: <span class="font-semibold">${act.document_control_number}</span>`;
+        break;
+      case "signed":
+        fullActionText = `<span class="font-semibold">${fullUserName}</span> signed the document`;
+        break;
+      default:
+        fullActionText = `<span class="font-semibold">${fullUserName}</span> ${act.action} the document`;
+        break;
+    }
 
-      switch (act.action) {
-        case "route":
-          actionText = `<span>routed the document to <p class="font-semibold">${routeTarget}</p</span>`;
-          break;
-        case "upload":
-          actionText = `<span class="font-semibold">${
-            act.user.name
-          }</span> uploaded a document ${
-            routeTarget
-              ? ` for <span class="font-semibold">${act.from_user.name}</span>`
-              : ""
-          } <br>`;
-          break;
-        case "approved":
-          actionText = `approved the document${
-            routeTarget
-              ? ` for <span class="font-semibold">${routeTarget}</span>`
-              : ""
-          }`;
-          break;
-        case "confirm":
-          actionText = `<span class="font-semibold">${act.user.name}</span> confirmed receipt of document number: <p class="font-semibold">${act.document_control_number}<br></p>`;
-          break;
-      }
-
-      displayText = `
-        <p>
-             ${actionText}
-            <span class="text-gray-500 text-xs">${timeAgo}</span>
-
+    fullText = `
+      <p>
+        ${fullActionText}
+        <span class="text-gray-500 text-xs">${timeAgo}</span>
         ${
           remarks
             ? `<p><span class="font-semibold">Remarks: </span>${remarks}</p>`
             : ""
         }
-    </p>`;
+      </p>
+  `;
+    fullDiv.innerHTML = fullText;
+    fullActivityLog.appendChild(fullDiv);
 
-      importantDiv.innerHTML = displayText;
+    // --------------------------
+    // IMPORTANT LOG: only main/important actions
+    // --------------------------
+    if (
+      mainActions.includes(act.action) ||
+      importantActions.includes(act.action)
+    ) {
+      let importantText = fullText; // reuse fullText as base
+      importantDiv.innerHTML = importantText;
       activityLog.appendChild(importantDiv);
-    } else {
-      const userName = act.user_id ? `User ${act.user_id}` : "Unknown";
-
-      displayText = `
-                <p>
-                    <span class="font-semibold">${userName}</span>
-                    ${act.action} the document
-                </p>
-                <p>
-                    <span class="text-gray-500 text-xs">${timeAgo}</span>
-                </p>
-            `;
-
-      const importantActions = [
-        "approve",
-        "reject",
-        "receive",
-        "returned",
-        "review",
-      ];
-
-      if (importantActions.includes(act.action)) {
-        importantDiv.innerHTML = displayText;
-        activityLog.appendChild(importantDiv);
-      }
     }
   });
+
   const activityLogcont = document.getElementById("activityLog");
   activityLogcont.scrollTop = 0;
 }
@@ -417,8 +437,6 @@ function initdocumentcontroller() {
     });
 
     tableBody.appendChild(tr);
-
-    if (initTable) initDataTables();
   }
   function checkActionButtons(
     status = false,
@@ -774,7 +792,7 @@ function initdocumentcontroller() {
           }
 
           if (errors.length > 0) {
-            showModalErrors(errors);
+            showModalErrors(errors + "error from backend");
             modal.scrollTop = 0;
             return;
           }
@@ -786,7 +804,6 @@ function initdocumentcontroller() {
             message: "Document has been uploaded",
           });
         }
-
         resetFormModal("modalNewDocument");
         showControlNumberModal(result.docControlNumber);
         getDocs();

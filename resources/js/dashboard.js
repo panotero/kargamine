@@ -9,8 +9,29 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
   });
 });
+
+window.reloadDataTables = function refreshTable() {
+  let table = $("#yourTableID").DataTable();
+
+  table.clear().destroy();
+
+  $.get("/your/route", function (html) {
+    $("#yourTableID").html(html);
+
+    initDataTables();
+  });
+};
 window.initDataTables = function initDataTables() {
   document.querySelectorAll("table").forEach((table) => {
+    if ($.fn.dataTable.isDataTable(table)) {
+      const dt = $(table).DataTable();
+
+      dt.clear();
+      dt.rows.add($(table).find("tbody tr"));
+      dt.draw();
+
+      return; // No need to reinitialize
+    }
     if (!$.fn.dataTable.isDataTable(table)) {
       $(table).DataTable({
         paging: true,
@@ -71,7 +92,6 @@ window.initDataTables = function initDataTables() {
         },
       });
     }
-    table.addClass("w-full");
 
     function stylePagination(table) {
       const buttonStyle = {

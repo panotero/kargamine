@@ -53,4 +53,18 @@ class Document extends Model
     {
         return $this->hasMany(Activity::class, 'document_control_number', 'document_control_number');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function recipient()
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    public function confirmedBy()
+    {
+        return $this->belongsTo(User::class, 'receipt_confirmed_by');
+    }
 }
