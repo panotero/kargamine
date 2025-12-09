@@ -13,3 +13,7 @@
   transform: translateZ(0);
   will-change: transform;
 }
+
+/* Vendor CSS */
+@import "datatables.net-dt/css/dataTables.dataTables.css";
+@import "flatpickr/dist/flatpickr.min.css";
