@@ -1,9 +1,8 @@
-window.apiRequest = async function apiRequest(
-  url,
-  method = "GET",
-  data = null
-) {
+window.apiRequest = async function apiRequest(url, method = null, data = null) {
   try {
+    if (method === null) {
+      throw new Error("API Request Error: 'method' cannot be null.");
+    }
     const csrfToken = document
       .querySelector('meta[name="csrf-token"]')
       ?.getAttribute("content");
@@ -12,6 +11,7 @@ window.apiRequest = async function apiRequest(
       method: method.toUpperCase(),
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
         "X-CSRF-TOKEN": csrfToken,
       },
     };
@@ -34,5 +34,41 @@ window.apiRequest = async function apiRequest(
   } catch (error) {
     console.error("API Error:", error);
     return [];
+  }
+};
+
+// fetch function with max retries implemented
+window.fetchWithRetry = async function fetchWithRetry(
+  url,
+  options = {},
+  retries = 3,
+  delay = 500
+) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      // 🟦 Handle responses with no JSON (ex: DELETE / 204)
+      const contentType = res.headers.get("Content-Type") || "";
+      if (!contentType.includes("application/json")) {
+        return null; // or return true if DELETE success
+      }
+
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    } catch (err) {
+      console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err);
+
+      if (i < retries - 1) {
+        await new Promise((r) => setTimeout(r, delay));
+      } else {
+        console.error(`All fetch attempts failed for ${url}`);
+        return null;
+      }
+    }
   }
 };

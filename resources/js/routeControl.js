@@ -13,9 +13,9 @@ function initroute() {
       const remarks = document.getElementById("routeRemarks").value;
       const routedPdfFile = document.getElementById("routefileInput");
       if (routedPdfFile.files && routedPdfFile.files.length > 0) {
-        console.log("File is selected");
+        // console.log("File is selected");
       } else {
-        console.log("No file selected");
+        // console.log("No file selected");
       }
 
       try {

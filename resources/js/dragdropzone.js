@@ -73,20 +73,38 @@ function initPDFDropzone({ dropzoneId, fileInputId, fileInfoId, clearBtnId }) {
 
 function initModal({ modalId }) {
   const modal = document.getElementById(modalId);
-  const closeBtn = modal.querySelector(".modal-close");
+  const closeBtn = modal?.querySelector(".modal-close");
 
   if (!modal || !closeBtn) {
     console.warn("Missing modal elements. Check your IDs.");
     return;
   }
 
+  // Save current scroll position
+  const scrollY = window.scrollY;
+
+  // Show modal
   modal.classList.remove("hidden");
-  document.body.classList.add("overflow-hidden");
+
+  // Disable background scrolling
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.overflow = "hidden";
 
   closeBtn.addEventListener("click", () => {
     modal.classList.add("hidden");
-    document.body.classList.remove("overflow-hidden");
+
+    // Restore scroll position and allow scrolling
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.overflow = "";
+    window.scrollTo(0, scrollY);
   });
 }
+
 window.initModal = initModal;
 window.initPDFDropzone = initPDFDropzone;

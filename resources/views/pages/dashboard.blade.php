@@ -3,42 +3,32 @@
 
 
         {{-- Top row: 6 stat cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-5 sm:grid-cols-3 gap-4">
 
             {{-- Total Documents --}}
-            <div class="relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
+            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-5 shadow-lg dark:bg-gray-600 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-sm">Total Documents</p>
-                        <h2 class="mt-2 text-3xl font-bold" id="totalDocuments">0</h2>
+                        <h2 class="mt-2 text-2xl font-bold" id="totalDocuments">0</h2>
                         <p class="mt-1 text-xs">All files in the system</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <button class="px-3 py-1 rounded-full text-xs font-medium hover:bg-white/12 transition">
-                            View
-                        </button>
                     </div>
                 </div>
             </div>
 
             {{-- For Discussion --}}
-            <div class="relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
+            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-sm">For Discussion</p>
                         <h2 class="mt-2 text-3xl font-bold " id="forDiscussion">0</h2>
                         <p class="mt-1 text-xs">Needs attention</p>
                     </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <button class="px-3 py-1 rounded-full text-xs font-medium hover:bg-white/12 transition">
-                            Manage
-                        </button>
-                    </div>
                 </div>
             </div>
 
             {{-- Pending --}}
-            <div class="relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
+            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-sm">Pending</p>
@@ -54,7 +44,7 @@
             </div>
 
             {{-- Processed --}}
-            <div class="relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
+            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-sm">Processed</p>
@@ -70,7 +60,7 @@
             </div>
 
             {{-- Overdue --}}
-            <div class="relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
+            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-sm">Overdue</p>
@@ -86,7 +76,7 @@
             </div>
 
             {{-- Remanded --}}
-            <div class="relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
+            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-sm">Remanded</p>
@@ -106,7 +96,7 @@
 
         <div class="mt-8 flex justify-center ">
             <div class="w-full ">
-                <div class="rounded-2xl  -white/6 backdrop-blur-lg p-4 shadow-lg  dark:bg-gray-600">
+                <div class="rounded-2xl  -white/6 backdrop-blur-lg p-4 shadow-lg bg-white  dark:bg-gray-600">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-lg font-medium ">File Activity</h3>
                         <div class="flex items-center gap-2  >
@@ -121,9 +111,10 @@
                         </div>
                     </div>
 
-                    <div class="pt-2">
-                        <canvas id="fileGraph" class="w-full h-64"></canvas>
+                    <div class="w-full h-[30vh] ">
+                        <canvas id="fileGraph" class="w-full h-full"></canvas>
                     </div>
+
                     <p class="mt-2 text-xs text-gray-400">Sample data shown — replace with your API when ready.</p>
                 </div>
             </div>
@@ -132,7 +123,7 @@
         {{-- Two-column area: Recent updates + Top 5 priority (table) --}}
         <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Recent updates (span 2 columns on large screens) --}}
-            <div class="lg:col-span-2 rounded-2xl dark:bg-gray-600 bg-white backdrop-blur-lg p-4 shadow-lg">
+            <div class="lg:col-span-1 rounded-2xl dark:bg-gray-600 bg-white backdrop-blur-lg p-4 shadow-lg">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-medium ">Recent Updates</h3>
                     <span class="text-xs ">Latest 10</span>
@@ -202,7 +193,7 @@
             </div>
 
             {{-- Top 5 priority (compact table) --}}
-            <div class="rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
+            <div class="col-span-2 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-medium ">Top 5 Priority</h3>
                     <span class="text-xs ">By priority</span>
@@ -225,6 +216,144 @@
 
     </div>
 </div>
+<script>
+    // Global function to render File Activity Graph
+    window.renderFileActivityGraph = function(range = 'week') {
+        // Sample data
+        const sampleData = {
+            week: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                routing: [12, 15, 9, 14, 20, 18, 10],
+                approve: [8, 10, 6, 12, 15, 12, 7],
+                disapprove: [2, 3, 1, 2, 3, 2, 1]
+            },
+            month: {
+                labels: Array.from({
+                    length: 30
+                }, (_, i) => `Day ${i+1}`),
+                routing: Array.from({
+                    length: 30
+                }, () => Math.floor(Math.random() * 30)),
+                approve: Array.from({
+                    length: 30
+                }, () => Math.floor(Math.random() * 20)),
+                disapprove: Array.from({
+                    length: 30
+                }, () => Math.floor(Math.random() * 10))
+            },
+            year: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                routing: Array.from({
+                    length: 12
+                }, () => Math.floor(Math.random() * 300)),
+                approve: Array.from({
+                    length: 12
+                }, () => Math.floor(Math.random() * 200)),
+                disapprove: Array.from({
+                    length: 12
+                }, () => Math.floor(Math.random() * 100))
+            }
+        };
+
+        const ctx = document.getElementById('fileGraph').getContext('2d');
+
+        // Create gradients for each line
+        const routingGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+        routingGradient.addColorStop(0, 'rgba(255, 165, 0, 0.5)');
+        routingGradient.addColorStop(1, 'rgba(255, 165, 0, 0)');
+
+        const approveGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+        approveGradient.addColorStop(0, 'rgba(0, 128, 0, 0.5)');
+        approveGradient.addColorStop(1, 'rgba(0, 128, 0, 0)');
+
+        const disapproveGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+        disapproveGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
+        disapproveGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+
+        // Destroy previous chart if exists
+        if (window.fileActivityChart) {
+            window.fileActivityChart.destroy();
+        }
+
+        window.fileActivityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sampleData[range].labels,
+                datasets: [{
+                        label: 'Routing',
+                        data: sampleData[range].routing,
+                        borderColor: 'orange',
+                        backgroundColor: routingGradient,
+                        fill: true,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Approve',
+                        data: sampleData[range].approve,
+                        borderColor: 'green',
+                        backgroundColor: approveGradient,
+                        fill: true,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Disapprove',
+                        data: sampleData[range].disapprove,
+                        borderColor: 'red',
+                        backgroundColor: disapproveGradient,
+                        fill: true,
+                        tension: 0.2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    };
+
+    // IIFE to initialize the chart on page load
+    (function() {
+        window.renderFileActivityGraph('week'); // default week
+
+        // Change graph on range select
+        document.getElementById('graph-range').addEventListener('change', function() {
+            window.renderFileActivityGraph(this.value);
+        });
+    })();
+</script>
+
 <script>
     (function() {
 
@@ -473,7 +602,6 @@
         // -----------------------------
         initDashboard();
 
-        initDatePickers();
         fillOfficeDropdown();
         initDataTables();
     })();

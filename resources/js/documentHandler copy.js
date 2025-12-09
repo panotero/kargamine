@@ -1,7 +1,11 @@
 async function populateDocumentModal(documentId) {
   try {
-    const res = await fetch(`/api/documents/${documentId}`);
-    const data = await res.json();
+    const data = await fetchWithRetry(`/api/documents/${documentId}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
 
     if (!data || Object.keys(data).length === 0) {
       hideModal("DocumentModal");
@@ -109,7 +113,6 @@ async function openPdfModal(filePath) {
 
   const slides = await extractPdfImages(pdfUrl);
   loadSlidesFromArray(slides);
-  initZoomFunction();
 }
 
 function populateActivityLog(data) {
@@ -207,40 +210,6 @@ function populateActivityLog(data) {
 
     fullDiv.innerHTML = displayText;
     fullActivityLog.appendChild(fullDiv);
-  });
-}
-
-function initZoomFunction() {
-  let currentZoom = 1;
-  const zoomStep = 0.2;
-  const glideSlides = document.getElementById("glideSlides");
-
-  const applyZoom = () => {
-    glideSlides.querySelectorAll("img").forEach((img) => {
-      img.style.transform = `scale(${currentZoom})`;
-      img.style.transition = "transform 0.2s";
-      img.style.transformOrigin = "center center";
-    });
-  };
-
-  document.getElementById("zoomIn").addEventListener("click", () => {
-    currentZoom += zoomStep;
-    applyZoom();
-  });
-  document.getElementById("zoomOut").addEventListener("click", () => {
-    currentZoom = Math.max(1, currentZoom - zoomStep);
-    applyZoom();
-  });
-
-  const hammer = new Hammer(glideSlides);
-  hammer.get("pinch").set({ enable: true });
-
-  hammer.on("pinch", (ev) => {
-    currentZoom = Math.max(1, ev.scale);
-    applyZoom();
-  });
-  hammer.on("pinchend", (ev) => {
-    currentZoom = Math.max(1, ev.scale);
   });
 }
 
@@ -382,8 +351,12 @@ function initdocumentcontroller() {
     const userApprovalType = window.authUser.user_config?.approval_type || null;
 
     try {
-      const res = await fetch("/api/documents");
-      const documents = await res.json();
+      const documents = await fetchWithRetry("/api/documents", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
       const allDocsTableBody = document.querySelector(
         "#allDocumentTable tbody"
@@ -430,7 +403,7 @@ function initdocumentcontroller() {
     }
   };
 
-  function initEventListeners() {
+  async function initEventListeners() {
     initPDFDropzone({
       dropzoneId: "dropzone",
       fileInputId: "fileInput",
@@ -445,7 +418,7 @@ function initdocumentcontroller() {
     const destinationOfficedropdown =
       document.getElementById("destinationOffice");
     const originOfficedropdown = document.getElementById("originOffice");
-    console.log(originOfficedropdown);
+    // console.log(originOfficedropdown);
     const documentType = document.getElementById("documentType");
 
     const otherdestinationoffice = document.getElementById(
@@ -548,8 +521,8 @@ function initdocumentcontroller() {
       try {
         submitBtn.disabled = true;
         submitBtn.textContent = "Submitting...";
-
-        const response = await fetch("/api/documents", {
+        //4.
+        const response = await fetchWithRetry("/api/documents", {
           method: "POST",
           body: formData,
         });
@@ -562,7 +535,7 @@ function initdocumentcontroller() {
           );
           return;
         }
-        console.log(result);
+        // console.log(result);
 
         document.getElementById("modalNewDocument").classList.add("hidden");
 
@@ -650,6 +623,7 @@ function initdocumentcontroller() {
       );
 
       if (selected === currentOffice) {
+        //5.
         fetch("/api/users")
           .then((res) => res.json())
           .then((users) => {
@@ -680,4 +654,3 @@ function initdocumentcontroller() {
 
 window.initdocumentcontroller = initdocumentcontroller;
 window.populateDocumentModal = populateDocumentModal;
-window.initZoomFunction = initZoomFunction;

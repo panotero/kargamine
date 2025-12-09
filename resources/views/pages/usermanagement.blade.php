@@ -1,29 +1,48 @@
-<div class="container mx-auto">
+<div class="max-h-[90vh] max-w-[90vw] overflow-auto bg-gray-50 dark:bg-gray-800 text-gray-800 rounded-lg">
 
-    <div class="w-full h-auto bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
-        <div class="w-full flex justify-between p-5">
+    <div class="h-full container mx-auto py-5 ">
+        <div class=" mb-5">
+            <div class="w-full flex justify-between mb-5">
 
-            <h2 class="text-xl font-semibold mb-4">User List</h2>
-            <button id="addUserBtn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow">
-                + New User
-            </button>
-        </div>
-        <div class="overflow-y-auto max-h-[75vh]">
-            <table class="min-w-full text-sm border-collapse dark:text-white p-5" id="userTable">
-                <thead class="bg-gray-100 dark:bg-gray-700">
-                    <tr class="bg-gray-100 dark:bg-gray-700 text-left">
-                        <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600">ID</th>
-                        <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600">Name</th>
-                        <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600">Email</th>
-                        <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600">Role</th>
-                        <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600">Office</th>
-                        <th class="text-center px-6 py-3 text-sm font-semibold text-gray-600">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody" class="bg-gray-100 dark:bg-gray-700"></tbody>
-            </table>
+                <h2 class="text-lg font-semibold text-gray-700 dark:text-white">
+                    User List
+                </h2>
+                <button id="addUserBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition modal-open">
+                    + New User
+                </button>
+            </div>
+            <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
+                <table id="userTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">ID</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Name</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Email</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Role</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Office</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Actions</span>
+                            </th>
+                        </tr>
+                    </thead>
 
-            <div id="userCardList" class="hidden md:hidden overflow-y-auto max-h-[400px] p-3 space-y-3"></div>
+                    <tbody id="userTableBody"
+                        class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
+                        <!-- Rows will be inserted dynamically -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>

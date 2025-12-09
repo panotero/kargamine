@@ -112,6 +112,5 @@
 <script>
     (function() {
         initDataTables();
-        initDatePickers();
     })();
 </script>

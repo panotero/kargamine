@@ -394,7 +394,6 @@
         // -----------------------------
         initDashboard();
 
-        initDatePickers();
         fillOfficeDropdown();
         initDataTables();
     })();

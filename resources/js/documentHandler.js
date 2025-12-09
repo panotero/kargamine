@@ -1,7 +1,11 @@
 async function populateDocumentModal(documentId) {
   try {
-    const res = await fetch(`/api/documents/${documentId}`);
-    const data = await res.json();
+    const data = await fetchWithRetry(`/api/documents/${documentId}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
     if (!data || Object.keys(data).length === 0) {
       hideModal("DocumentModal");
       showMessage({
@@ -127,7 +131,6 @@ async function openPdfModal(filePath) {
 
   const slides = await extractPdfImages(pdfUrl);
   loadSlidesFromArray(slides);
-  initZoomFunction();
 }
 
 function populateActivityLog(data) {
@@ -278,31 +281,6 @@ function populateActivityLog(data) {
 
   const activityLogcont = document.getElementById("activityLog");
   activityLogcont.scrollTop = 0;
-}
-
-function initZoomFunction() {
-  let currentZoom = 1;
-  const zoomStep = 0.2;
-  const glideSlides = document.getElementById("glideSlides");
-
-  const applyZoom = () => {
-    glideSlides.querySelectorAll("img").forEach((img) => {
-      img.style.transform = `scale(${currentZoom})`;
-      img.style.transition = "transform 0.2s";
-      img.style.transformOrigin = "center center";
-    });
-  };
-
-  const hammer = new Hammer(glideSlides);
-  hammer.get("pinch").set({ enable: true });
-
-  hammer.on("pinch", (ev) => {
-    currentZoom = Math.max(1, ev.scale);
-    applyZoom();
-  });
-  hammer.on("pinchend", (ev) => {
-    currentZoom = Math.max(1, ev.scale);
-  });
 }
 
 function initdocumentcontroller() {
@@ -537,8 +515,12 @@ function initdocumentcontroller() {
     const userApprovalType = authUser.user_config?.approval_type || null;
 
     try {
-      const response = await fetch("/api/documents");
-      const documents = await response.json();
+      const documents = await fetchWithRetry("/api/documents", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
       const allDocsTableBody = document.querySelector(
         "#allDocumentTable tbody"
@@ -580,8 +562,6 @@ function initdocumentcontroller() {
           appendDocumentRow(assignedTableBody, doc, "assigned", false);
         }
       });
-
-      initDataTables();
     } catch (error) {
       console.error("Error fetching documents:", error);
     }
@@ -599,7 +579,6 @@ function initdocumentcontroller() {
       const response = await fillOfficeDropdown();
 
       if (response) {
-        console.log(document.getElementById("originOffice"));
         document.getElementById("originOffice").value =
           authUser.office.office_name;
         fillDocType();
@@ -627,7 +606,7 @@ function initdocumentcontroller() {
       initModal({ modalId: "modalNewDocument" });
     });
     submitBtn.addEventListener("click", async () => {
-      console.log("submitBtn clicked");
+      //   console.log("submitBtn clicked");
       const modal = document.getElementById("modalNewDocument");
       if (!modal) return;
 
@@ -762,21 +741,17 @@ function initdocumentcontroller() {
       try {
         submitBtn.disabled = true;
         submitBtn.textContent = "Submitting...";
-        console.log(document.querySelector('meta[name="csrf-token"]'));
-        const response = await fetch("/api/documents", {
+        const result = await fetchWithRetry("/api/documents", {
           method: "POST",
-
           headers: {
             "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
               .content,
           },
           body: formData,
         });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          if (response.status === 422) {
+        console.log(result);
+        if (!result) {
+          if (result.status === 422) {
             const invalid = result.invalid_fields;
 
             let messages = ["Invalid input detected:"];
@@ -883,9 +858,16 @@ function initdocumentcontroller() {
       );
 
       if (selected === currentOffice) {
-        const users = await fetch("/api/users").then((res) => res.json());
+        const users = await fetchWithRetry("/api/users", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
         const filtered = users.filter(
-          (u) => u.office?.office_name === currentOffice
+          (u) =>
+            u.office?.office_name === currentOffice &&
+            u.user_config.approval_type !== "routing"
         );
         userSelect.innerHTML =
           `<option value="">Select User</option>` +
@@ -957,7 +939,7 @@ function initdocumentcontroller() {
       document_id: confirmButton.dataset.documentId,
       user_id: window.authUser.id,
     };
-    const response = await fetch("/api/documents/confirm", {
+    const result = await fetchWithRetry("/api/documents/confirm", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -966,10 +948,7 @@ function initdocumentcontroller() {
       },
       body: JSON.stringify(post),
     });
-    const result = await response.json();
-    if (response.ok) {
-      console.log("result ok!");
-
+    if (result) {
       document.getElementById("routeDocumentBtn").classList.remove("hidden");
       confirmButton.classList.add("hidden");
       getDocs();
@@ -982,4 +961,3 @@ function initdocumentcontroller() {
 
 window.initdocumentcontroller = initdocumentcontroller;
 window.populateDocumentModal = populateDocumentModal;
-window.initZoomFunction = initZoomFunction;

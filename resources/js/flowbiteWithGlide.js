@@ -4,11 +4,11 @@ function initFlowbite() {
     script.src = "https://cdn.jsdelivr.net/npm/@glidejs/glide";
     script.defer = true;
     script.onload = () => {
-      console.log("Flowbite JS loaded");
+      //   console.log("Flowbite JS loaded");
     };
     document.head.appendChild(script);
   } else {
-    console.log("Flowbite already loaded");
+    // console.log("Flowbite already loaded");
   }
 }
 

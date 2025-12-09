@@ -91,10 +91,10 @@
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Document Information</h3>
 
-                            <button id="modalDownloadLatestBtn"
+                            <a id="modalDownloadLatestBtn" download href="#"
                                 class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg w-full sm:w-auto">
-                                Download Latest
-                            </button>
+                                Download File
+                            </a>
                         </div>
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between gap-3">
@@ -253,39 +253,59 @@
 <script>
     (function() {
         const tableBody = document.querySelector("#approvaltable tbody");
-        async function loadApprovals() {
+        const baseApiUrl = "/api/approvals";
+        const baseUrl = window.location.origin;
+
+        // =========================
+        // Helper Functions
+        // =========================
+        async function fetchJson(url, options = {}) {
             try {
-                const res = await fetch("api/approvals");
-                const data = await res.json();
-
-                if (!data.approvals) return;
-
-                renderTable(data.approvals);
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.headers.get("Content-Type")?.includes("application/json") ?
+                    await res.json() :
+                    null;
             } catch (err) {
-                console.error("Error loading approvals:", err);
+                console.error(`Error fetching ${url}:`, err);
+                return null;
             }
         }
 
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = value ?? "";
+        }
+
+        function createSelect(options = [], selectedValue = "") {
+            return `<select class="border rounded px-2 py-1 text-xs labeldropdown">
+            ${options
+                .map(
+                    (opt) =>
+                        `<option ${opt === selectedValue ? "selected" : ""}>${opt}</option>`
+                )
+                .join("")}
+        </select>`;
+        }
+
+        function clearContainer(container) {
+            if (container) container.innerHTML = "";
+        }
+
+        // =========================
+        // Table Rendering
+        // =========================
         function renderTable(approvals) {
-            tableBody.innerHTML = "";
+            clearContainer(tableBody);
 
-            approvals.forEach(app => {
+            approvals.forEach((app) => {
                 const doc = app.document;
-
-
                 const tr = document.createElement("tr");
                 tr.classList.add("border-t", "hover:bg-gray-50", "cursor-pointer");
 
                 tr.innerHTML = `
                 <td class="px-4 py-2">${doc.document_control_number}</td>
-
-                <td class="px-4 py-2">
-                    <select class="border rounded px-2 py-1 text-xs labeldropdown">
-                        <option ${doc.confidentiality === "General" ? "selected":""}>General</option>
-                        <option ${doc.confidentiality === "Confidential" ? "selected":""}>Confidential</option>
-                    </select>
-                </td>
-
+                <td class="px-4 py-2">${createSelect(["General", "Confidential"], doc.confidentiality)}</td>
                 <td class="px-4 py-2">${doc.particular}</td>
                 <td class="px-4 py-2">${doc.office_origin}</td>
                 <td class="px-4 py-2">${doc.destination_office}</td>
@@ -308,189 +328,160 @@
             });
         }
 
+        // =========================
+        // Load Approvals
+        // =========================
+        async function loadApprovals() {
+            const data = await fetchJson(`${baseApiUrl}`);
+            if (!data?.approvals) return;
+            renderTable(data.approvals);
+        }
+
+        // =========================
+        // Load Modal
+        // =========================
         async function loadModal(app) {
+            const doc = app.document;
 
-            document.getElementById("modalapprovalDocControlNumber").innerText = app.document
-                .document_control_number;
-            document.getElementById("modalapproveDocStatus").innerText = app.document.status;
+            // Basic info
+            setText("modalapprovalDocControlNumber", doc.document_control_number);
+            setText("modalapproveDocStatus", doc.status);
+            setText("docTitle", doc.particular ?? "");
+            setText("document_id", doc.document_id ?? "");
+            setText("docCode", doc.document_code ?? "");
+            setText("docForm", doc.document_form ?? "");
+            setText("docType", doc.document_type ?? "");
+            setText("docDueDate", doc.due_date ?? "None");
+            setText("approvalType", app.approval_type ?? "");
+            setText("docDestination", doc.destination_office ?? "");
+            setText("docConfidentiality", doc.confidentiality ?? "");
+            setText("docDept", doc.office_origin ?? "");
+            setText("docAuthor", doc.user_id ?? "");
+            setText("docDate", doc.date_received ?? "");
+            setText("docRemarks", doc.remarks ?? "");
 
-            document.getElementById("docTitle").innerText = app.document.particular ?? "";
-            document.getElementById("document_id").innerText = app.document.document_id ?? "";
-            document.getElementById("docCode").innerText = app.document.document_code ?? "";
-            document.getElementById("docForm").innerText = app.document.document_form ?? "";
-            document.getElementById("docType").innerText = app.document.document_type ?? "";
-            document.getElementById("docDueDate").innerText = app.document.due_date ?? "None";
-            document.getElementById("approvalType").innerText = app.approval_type ?? "";
+            // PDF file
+            let pdfUrl = "";
+            if (doc.files?.length > 0) {
+                const lastFile = doc.files[doc.files.length - 1];
+                pdfUrl = `${baseUrl}/${lastFile.file_path}`;
+            }
+            document.getElementById("modalDownloadLatestBtn").href = pdfUrl;
 
-            document.getElementById("docDestination").innerText = app.document.destination_office ?? "";
-            document.getElementById("docConfidentiality").innerText = app.document.confidentiality ?? "";
-            document.getElementById("docDept").innerText = app.document.office_origin ?? "";
-            document.getElementById("docAuthor").innerText = app.document.user_id ??
-                "";
-            document.getElementById("docDate").innerText = app.document.date_received ?? "";
-            document.getElementById("docRemarks").innerText = app.document.remarks ?? "";
-
-            const baseUrl = window.location.origin;
-            const pdfUrl = `${baseUrl}/${app.document.files[0].file_path}`;
-
-            const slides = await extractPdfImages(pdfUrl);
-
+            // Slides
+            const slides = pdfUrl ? await extractPdfImages(pdfUrl) : [];
             const slideContainer = document.getElementById("approvalglideSlides");
+            clearContainer(slideContainer);
+            slides.forEach((slideHTML) => slideContainer.insertAdjacentHTML("beforeend", slideHTML));
+            if (typeof window.initGlide === "function") window.initGlide();
 
-            slideContainer.innerHTML = "";
-            slides.forEach((slideHTML) => {
-                slideContainer.insertAdjacentHTML("beforeend", slideHTML);
+            // Approval type toggle
+            document.getElementById("finalApproval").classList.toggle(
+                "hidden",
+                app.approval_type !== "final-approval"
+            );
+            document.getElementById("preApproval").classList.toggle(
+                "hidden",
+                app.approval_type === "final-approval"
+            );
+
+            // Additional fields
+            setText("modalDocCode", doc.document_code);
+            setText("modalDocType", doc.document_type);
+            setText("modalDocOrigin", doc.office_origin);
+            setText("modalDocDestination", doc.destination_office);
+            setText("modalDocRemarks", doc.remarks ?? "None");
+            setText("modalDocSignatory", doc.signatory ?? "—");
+            setText("modalDocConfidentiality", doc.confidentiality);
+            setText("modalDocDateReceived", doc.date_received);
+            setText("modalDocDueDate", doc.due_date ?? "—");
+        }
+
+        // =========================
+        // Approval Actions
+        // =========================
+        async function sendApprovalAction({
+            approvalId,
+            action,
+            next_action,
+            remarks = "",
+            nextUserId = null
+        }) {
+            const response = await fetchJson(`${baseApiUrl}/${approvalId}/action`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({
+                    action,
+                    next_action,
+                    remarks,
+                    next_user_id: nextUserId,
+                }),
             });
 
-            if (typeof window.initGlide === "function") {
-                window.initGlide();
-            } else {
-                console.warn("initGlide() not available yet.");
+            if (response) {
+                // Close modals
+                document.getElementById("approvalDocumentModal")?.classList.add("hidden");
+                document.getElementById("approvalModal")?.classList.add("hidden");
+                await loadApprovals();
             }
-            if (app.approval_type === "final-approval") {
-                document.getElementById("finalApproval").classList.remove("hidden");
-                document.getElementById("preApproval").classList.add("hidden");
-            } else {
-                document.getElementById("finalApproval").classList.add("hidden");
-                document.getElementById("preApproval").classList.remove("hidden");
-
-            }
-
-            setText("modalDocCode", app.document.document_code);
-            setText("modalDocType", app.document.document_type);
-            setText("modalDocOrigin", app.document.office_origin);
-            setText("modalDocDestination", app.document.destination_office);
-            setText("modalDocRemarks", app.document.remarks ?? "None");
-            setText("modalDocSignatory", app.document.signatory ?? "—");
-            setText("modalDocConfidentiality", app.document.confidentiality);
-            setText("modalDocDateReceived", app.document.date_received);
-            setText("modalDocDueDate", app.document.due_date ?? "—");
         }
 
-        function setText(id, value) {
-            const el = document.getElementById(id);
-            if (el) el.innerText = value;
+        async function populateUsers(approvalType) {
+            const userSelect = document.getElementById("userSelect");
+            const users = await fetchJson("/api/users");
+            if (!users) return;
+
+            const filtered = users.filter(
+                (u) =>
+                u.office?.office_name === window.authUser.office.office_name &&
+                u.user_config?.approval_type !== approvalType
+            );
+
+            userSelect.innerHTML =
+                `<option value="">Select User</option>` +
+                filtered
+                .map(
+                    (u) =>
+                    `<option value="${u.id}" data-approvalType="${u.user_config.approval_type}">${u.name}</option>`
+                )
+                .join("");
         }
 
-        loadApprovals();
-        initApprovalHandler();
-
-        function initApprovalHandler(currentOffice) {
-
-            populateUsers("routing");
-
+        function initApprovalHandler() {
             const userSelect = document.getElementById("userSelect");
             const modalApproveBtn = document.getElementById("modalApproveBtn");
             const modalDisapproveBtn = document.getElementById("modalDisapproveBtn");
-            const document_id = document.getElementById("document_id"); // hidden field
-
-            const approvalModal = document.getElementById("approvalModal");
-            const remarksWrapper = document.getElementById("remarksWrapper");
-            const remarksTextarea = document.getElementById("remarksTextarea");
             const confirmBtn = document.getElementById("confirmApprovalBtn");
-            const approvalIdInput = document.getElementById("approval_id");
+            const remarksTextarea = document.getElementById("remarksTextarea");
+            const document_id = document.getElementById("document_id");
 
-            let userSelectWrapper = document.getElementById("userSelectWrapper");
-            if (!userSelectWrapper) {
-                userSelectWrapper = document.createElement("div");
-                userSelectWrapper.id = "userSelectWrapper";
-                userSelectWrapper.className = "mb-5";
-                userSelectWrapper.innerHTML = `
-            <label for="userSelect" class="block text-gray-700 font-medium mb-2">Select User</label>
-            <select id="userSelect"
-                class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300">
-            </select>
-        `;
-            }
+            populateUsers("routing");
 
-            const baseUrl = "/api/approvals";
-            async function sendApprovalAction(
-                approvalId,
-                action,
-                next_action,
-                remarks = "",
-                nextUserId = null
-            ) {
-                try {
-                    const response = await fetch(`${baseUrl}/${approvalId}/action`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                                .content,
-                        },
-                        body: JSON.stringify({
-                            action,
-                            next_action,
-                            remarks,
-                            next_user_id: nextUserId,
-                        }),
-                    });
-                    const result = await response.json();
-                    console.log("Server Response:", result);
-
-                    if (response.ok) {
-                        const approvalDocumentModal = document.getElementById("approvalDocumentModal");
-                        const approvalModal = document.getElementById("approvalModal");
-
-                        if (approvalDocumentModal) approvalDocumentModal.classList.add("hidden");
-                        if (approvalModal) approvalModal.classList.add("hidden");
-                        loadApprovals();
-                    }
-
-                } catch (err) {
-                    console.error("Approval action error:", err);
-                }
-            }
-
-            function populateUsers(approvalType) {
-                fetch("/api/users")
-                    .then((res) => res.json())
-                    .then((users) => {
-                        const filtered = users.filter(
-                            (u) =>
-                            u.office?.office_name === window.authUser.office.office_name &&
-                            u.user_config?.approval_type !== approvalType
-                        );
-
-                        userSelect.innerHTML =
-                            `<option value="">Select User</option>` +
-                            filtered
-                            .map((u) =>
-                                `<option value="${u.id}" data-approvalType = "${u.user_config.approval_type}">${u.name}</option>`
-                            )
-                            .join("");
-                    });
-            }
-            confirmBtn.addEventListener("click", function() {
+            confirmBtn.addEventListener("click", () => {
                 const selectedOption = userSelect.options[userSelect.selectedIndex];
-                const approvalId = document_id.textContent;
-
-                const nextUserId = userSelect.value;
-                const remarks = remarksTextarea.value;
-
-                sendApprovalAction(
-                    approvalId,
-                    "approved",
-                    selectedOption.dataset.approvaltype,
-                    remarks,
-                    nextUserId
-                );
-            });
-
-            modalApproveBtn.addEventListener("click", () => {
-                initModal({
-                    modalId: "approvalModal"
+                sendApprovalAction({
+                    approvalId: document_id.textContent,
+                    action: "approved",
+                    next_action: selectedOption.dataset.approvaltype,
+                    remarks: remarksTextarea.value,
+                    nextUserId: userSelect.value,
                 });
             });
 
-            modalDisapproveBtn.addEventListener("click", () => {
-                initModal({
+            [modalApproveBtn, modalDisapproveBtn].forEach((btn) =>
+                btn.addEventListener("click", () => initModal({
                     modalId: "approvalModal"
-                });
-            });
-        };
+                }))
+            );
+        }
 
-
+        // =========================
+        // Initialize
+        // =========================
+        loadApprovals();
+        initApprovalHandler();
     })();
 </script>

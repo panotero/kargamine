@@ -1,4 +1,4 @@
-<div class="max-h-screen overflow-y-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5" id="contentDashboard">
+<div class="max-h-[90vh] max-w-[90vw] overflow-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5 rounded-lg">
 
 
     <div class="h-full container mx-auto py-5 ">
@@ -13,56 +13,103 @@
                     + New Document
                 </button>
             </div>
-
             <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
-                <table id="assignedToYouDocumentTable" class="w-full text-sm text-left border-collapse">
-                    <thead class=" text-gray-600 uppercase text-xs">
+                <table id="assignedToYouDocumentTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                         <tr>
-                            <th class="px-4 py-3">Control Number</th>
-                            <th class="px-4 py-3">Document Number</th>
-                            <th class="px-4 py-3">Label</th>
-                            <th class="px-4 py-3">Subject</th>
-                            <th class="px-4 py-3">Origin Office</th>
-                            <th class="px-4 py-3">Destination Office</th>
-                            <th class="px-4 py-3">Due Date</th>
-                            <th class="px-4 py-3">Duration</th>
-                            <th class="px-4 py-3">Date Uploaded</th>
-                            <th class="px-4 py-3">Confidentiality</th>
-                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Control Number</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Document Number</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Label</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Subject</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Origin Office</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Destination Office</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Due Date</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Duration</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Date Uploaded</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Confidentiality</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Status</span>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-gray-100 dark:bg-gray-700  dark:text-white">
+
+                    <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
+                        <!-- Rows will be inserted dynamically -->
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <div class="h-full">
+        <div class="mb-5">
             <h2 class="text-lg font-semibold text-gray-700  dark:text-white mb-5">
                 All Documents
             </h2>
-            <div class="overflow-x-auto bg-white dark:bg-gray-800  rounded-xl shadow">
-                <table id="allDocumentTable" class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+            <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
+                <table id="allDocumentTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                         <tr>
-                            <th class="px-4 py-3">Control #</th>
-                            <th class="px-4 py-3">Document Number</th>
-                            <th class="px-4 py-3">Label</th>
-                            <th class="px-4 py-3">Subject</th>
-                            <th class="px-4 py-3">Origin Office</th>
-                            <th class="px-4 py-3">Destination Office</th>
-                            <th class="px-4 py-3">Due Date</th>
-                            <th class="px-4 py-3">Duration</th>
-                            <th class="px-4 py-3">Date Uploaded</th>
-                            <th class="px-4 py-3">Confidentiality</th>
-                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Control Number</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Document Number</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Label</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Subject</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Origin Office</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Destination Office</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Due Date</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Duration</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Date Uploaded</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Confidentiality</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="flex items-center">Status</span>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-gray-100 dark:bg-gray-700 dark:text-white">
+
+                    <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
+                        <!-- Rows will be inserted dynamically -->
                     </tbody>
                 </table>
             </div>
         </div>
+
     </div>
     <div id="modalNewDocument" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal p-5">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
@@ -524,6 +571,7 @@
     (function() {
 
         initdocumentcontroller();
+
 
     })();
 </script>

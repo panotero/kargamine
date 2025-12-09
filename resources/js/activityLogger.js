@@ -13,7 +13,7 @@ async function logActivity(
       user_id: userId,
     };
 
-    const response = await fetch("/api/activities", {
+    const data = await fetchWithRetry("/api/activities", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -24,12 +24,10 @@ async function logActivity(
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
+    if (!data) {
       console.error("Failed to log activity:", data);
     } else {
-      console.log("Activity logged successfully:", data);
+      //   console.log("Activity logged successfully:", data);
     }
   } catch (error) {
     console.error("Error logging activity:", error);

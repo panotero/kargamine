@@ -5,11 +5,11 @@ function initFlowbite() {
       "https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.7.0/flowbite.min.js";
     script.defer = true;
     script.onload = () => {
-      console.log("Flowbite JS loaded");
+      //   console.log("Flowbite JS loaded");
     };
     document.head.appendChild(script);
   } else {
-    console.log("Flowbite already loaded");
+    // console.log("Flowbite already loaded");
   }
 }
 
