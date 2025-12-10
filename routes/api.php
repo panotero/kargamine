@@ -113,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::prefix('activities')->group(function () {
+        Route::get('/byOffice/{officeName}', [ActivityController::class, 'getActivitiesByOffice']);
         Route::get('/', [ActivityController::class, 'index']);
         Route::get('/{id}', [ActivityController::class, 'show']);
         Route::post('/', [ActivityController::class, 'store']);

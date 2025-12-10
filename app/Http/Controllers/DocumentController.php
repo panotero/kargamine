@@ -126,7 +126,8 @@ class DocumentController extends Controller
             'activities',
             'activities.user',
             'activities.fromUser',
-            'activities.routedUser'
+            'activities.routedUser',
+            'approvals',
         )
             ->where('document_id', $id)
             ->first();

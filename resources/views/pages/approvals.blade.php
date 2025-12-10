@@ -103,10 +103,6 @@
                                     class="text-gray-900 dark:text-gray-100 text-right break-all"></span>
                             </div>
 
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 dark:text-gray-400">Document ID:</span>
-                                <span id="document_id" class="text-gray-900 dark:text-gray-100"></span>
-                            </div>
                             <div class="flex justify-between gap-3">
                                 <span class="text-gray-600 dark:text-gray-400">Document Code:</span>
                                 <span id="docCode"
@@ -203,46 +199,6 @@
             </div>
         </div>
 
-        <div id="approvalModal"
-            class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6">
-
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative">
-                <h2 class="text-xl font-semibold text-gray-900 mb-5">Approval Details</h2>
-
-                <input type="hidden" id="approval_id">
-                <div id="finalApproval" class=" m-5 hidden">
-                    <h1>Confirm your approval please</h1>
-                </div>
-                <div id="preApproval">
-                    <div id="userSelectWrapper" class="mb-5">
-                        <label for="userSelect" class="block text-gray-700 font-medium mb-2">Select User</label>
-                        <select id="userSelect"
-                            class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        </select>
-                    </div>
-
-                </div>
-                <div id="remarksWrapper" class="mb-5">
-                    <label for="remarksTextarea" class="block text-gray-700 font-medium mb-2">Remarks</label>
-                    <textarea id="remarksTextarea"
-                        class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                        rows="4" placeholder="Enter remarks..."></textarea>
-                </div>
-
-
-                <div class="flex flex-col sm:flex-row sm:justify-end gap-3">
-                    <button id="confirmApprovalBtn"
-                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg w-full sm:w-auto">
-                        Confirm
-                    </button>
-                    <button
-                        class="modal-close w-full sm:w-auto border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-xl transition">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-
 
 
 
@@ -318,32 +274,35 @@
 
                 tr.addEventListener("click", (e) => {
                     if (e.target.classList.contains("labeldropdown")) return;
-                    loadModal(app);
+                    checkActionButtons(doc.status, doc.receipt_confirmation);
+
+                    clearModalFields();
+                    showSkeletonLoaders();
+
                     initModal({
-                        modalId: "approvalDocumentModal"
+                        modalId: "DocumentModal"
                     });
+                    populateDocumentModal(doc.document_id);
+                    logActivity(
+                        "view",
+                        doc.document_id,
+                        doc.document_control_number
+                    );
+
                 });
 
                 tableBody.appendChild(tr);
             });
         }
-
-        // =========================
-        // Load Approvals
-        // =========================
         async function loadApprovals() {
             const data = await fetchJson(`${baseApiUrl}`);
             if (!data?.approvals) return;
             renderTable(data.approvals);
         }
 
-        // =========================
-        // Load Modal
-        // =========================
         async function loadModal(app) {
             const doc = app.document;
 
-            // Basic info
             setText("modalapprovalDocControlNumber", doc.document_control_number);
             setText("modalapproveDocStatus", doc.status);
             setText("docTitle", doc.particular ?? "");
@@ -360,7 +319,6 @@
             setText("docDate", doc.date_received ?? "");
             setText("docRemarks", doc.remarks ?? "");
 
-            // PDF file
             let pdfUrl = "";
             if (doc.files?.length > 0) {
                 const lastFile = doc.files[doc.files.length - 1];
@@ -368,22 +326,12 @@
             }
             document.getElementById("modalDownloadLatestBtn").href = pdfUrl;
 
-            // Slides
             const slides = pdfUrl ? await extractPdfImages(pdfUrl) : [];
             const slideContainer = document.getElementById("approvalglideSlides");
             clearContainer(slideContainer);
             slides.forEach((slideHTML) => slideContainer.insertAdjacentHTML("beforeend", slideHTML));
             if (typeof window.initGlide === "function") window.initGlide();
 
-            // Approval type toggle
-            document.getElementById("finalApproval").classList.toggle(
-                "hidden",
-                app.approval_type !== "final-approval"
-            );
-            document.getElementById("preApproval").classList.toggle(
-                "hidden",
-                app.approval_type === "final-approval"
-            );
 
             // Additional fields
             setText("modalDocCode", doc.document_code);
@@ -396,92 +344,6 @@
             setText("modalDocDateReceived", doc.date_received);
             setText("modalDocDueDate", doc.due_date ?? "—");
         }
-
-        // =========================
-        // Approval Actions
-        // =========================
-        async function sendApprovalAction({
-            approvalId,
-            action,
-            next_action,
-            remarks = "",
-            nextUserId = null
-        }) {
-            const response = await fetchJson(`${baseApiUrl}/${approvalId}/action`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                },
-                body: JSON.stringify({
-                    action,
-                    next_action,
-                    remarks,
-                    next_user_id: nextUserId,
-                }),
-            });
-
-            if (response) {
-                // Close modals
-                document.getElementById("approvalDocumentModal")?.classList.add("hidden");
-                document.getElementById("approvalModal")?.classList.add("hidden");
-                await loadApprovals();
-            }
-        }
-
-        async function populateUsers(approvalType) {
-            const userSelect = document.getElementById("userSelect");
-            const users = await fetchJson("/api/users");
-            if (!users) return;
-
-            const filtered = users.filter(
-                (u) =>
-                u.office?.office_name === window.authUser.office.office_name &&
-                u.user_config?.approval_type !== approvalType
-            );
-
-            userSelect.innerHTML =
-                `<option value="">Select User</option>` +
-                filtered
-                .map(
-                    (u) =>
-                    `<option value="${u.id}" data-approvalType="${u.user_config.approval_type}">${u.name}</option>`
-                )
-                .join("");
-        }
-
-        function initApprovalHandler() {
-            const userSelect = document.getElementById("userSelect");
-            const modalApproveBtn = document.getElementById("modalApproveBtn");
-            const modalDisapproveBtn = document.getElementById("modalDisapproveBtn");
-            const confirmBtn = document.getElementById("confirmApprovalBtn");
-            const remarksTextarea = document.getElementById("remarksTextarea");
-            const document_id = document.getElementById("document_id");
-
-            populateUsers("routing");
-
-            confirmBtn.addEventListener("click", () => {
-                const selectedOption = userSelect.options[userSelect.selectedIndex];
-                sendApprovalAction({
-                    approvalId: document_id.textContent,
-                    action: "approved",
-                    next_action: selectedOption.dataset.approvaltype,
-                    remarks: remarksTextarea.value,
-                    nextUserId: userSelect.value,
-                });
-            });
-
-            [modalApproveBtn, modalDisapproveBtn].forEach((btn) =>
-                btn.addEventListener("click", () => initModal({
-                    modalId: "approvalModal"
-                }))
-            );
-        }
-
-        // =========================
-        // Initialize
-        // =========================
         loadApprovals();
-        initApprovalHandler();
     })();
 </script>

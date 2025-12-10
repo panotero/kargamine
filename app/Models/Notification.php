@@ -41,4 +41,11 @@ class Notification extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+
+    public function approvals()
+    {
+
+        return $this->belongsTo(Approvals::class, 'document_id', 'document_id');
+    }
 }

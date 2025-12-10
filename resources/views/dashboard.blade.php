@@ -48,7 +48,7 @@
                             x-transition:leave="transition ease-in duration-75"
                             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                             class="absolute right-0 mt-2 w-96 max-h-[32rem] overflow-y-auto rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50"
-                            style="display: none;">
+                            style="display: none;" id="notificationWrapper">
                             <div
                                 class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Notifications</h3>
@@ -90,6 +90,417 @@
             </header>
             <main id="content" class="flex-1 overflow-y-auto text-gray-800 dark:text-gray-200">
             </main>
+
+            <div id="DocumentModal"
+                class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
+
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh overflow-y-auto">
+                    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                            Document Control Number: <span id="docControlNumber">DCN-0001</span>
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Status: <span id="docStatus"
+                                class="font-medium text-blue-600 dark:text-blue-400">Active</span>
+                        </p>
+                    </div>
+                    <div
+                        class="max-h-[60vh] overflow-y-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
+                        <div class="w-full lg:w-1/2 p-6 space-y-4">
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">Document Metadata</h3>
+                            <div class="space-y-2 text-md">
+
+                                <div class="flex justify-between hidden">
+                                    <span class="text-gray-600 dark:text-gray-400">Document ID:</span>
+                                    <span id="document_id" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Document Number:</span>
+                                    <span id="docCode" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Subject:</span>
+                                    <span id="docTitle" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Origin Office:</span>
+                                    <span id="docDept" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Created By / User ID:</span>
+                                    <span id="docSignatory" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Type:</span>
+                                    <span id="docType" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Confidentiality:</span>
+                                    <span id="docConfidentiality" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Document Date:</span>
+                                    <span id="docDate" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Due Date:</span>
+                                    <span id="docDueDate" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Status:</span>
+                                    <span id="docStatus" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Remarks:</span>
+                                    <span id="docRemarks" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Uploaded At:</span>
+                                    <span id="created_at" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Date Received:</span>
+                                    <span id="date_received" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full lg:w-1/2 p-6 space-y-5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">File Versions</h3>
+                                <a id="downloadLatestBtn" download
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition">
+                                    Download Latest
+                                </a>
+                            </div>
+                            <div class="space-y-2">
+                                <div
+                                    class="border border-gray-200 dark:border-gray-700 rounded-lg max-h-48 lg:h-48 overflow-y-auto">
+                                    <ul id="fileVersionsList"
+                                        class="divide-y divide-gray-200 dark:divide-gray-700 flex flex-col-reverse">
+                                        <div id="spinner" class="flex items-center justify-center">
+                                            <div class="w-10 h-10 border-2 border-gray-200 border-t-2 border-t-gray-800 rounded-full animate-spin"
+                                                role="status" aria-label="Loading"></div>
+                                        </div>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <div class="flex justify-between w-full">
+
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">Activity
+                                        History</h3>
+
+                                    <!-- Make this the relative container -->
+                                    <div class="relative pt-4 border-t border-gray-200 dark:border-gray-700">
+
+                                        <div class="flex items-center justify-between">
+                                            <button id="toggleFullLogBtn"
+                                                class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="1.5"
+                                                        d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                                                    <circle cx="12" cy="12" r="3" stroke="currentColor"
+                                                        stroke-width="1.5" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- DROPDOWN -->
+                                        <div id="fullActivityLogContainer"
+                                            class="hidden absolute right-full bottom-0 mr-3 w-96 border border-gray-300 dark:border-gray-700
+                rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl z-50">
+
+                                            <h4 class="text-md font-medium mb-2 text-gray-700 dark:text-gray-200">
+                                                Full Activity Log
+                                            </h4>
+
+                                            <ul id="fullActivityLog" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <ul id="activityLog" class="space-y-2 max-h-48 lg:h-48 overflow-y-auto">
+                                    <div id="spinner" class="flex items-center justify-center">
+                                        <div class="w-10 h-10 border-2 border-gray-200 border-t-2 border-t-gray-800 rounded-full animate-spin"
+                                            role="status" aria-label="Loading"></div>
+                                    </div>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div
+                        class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 mt-auto flex justify-end gap-3">
+
+                        <button id="btnConfirm"
+                            class="hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
+                            Confirm Receipt
+                        </button>
+                        <button id="routeDocumentBtn"
+                            class="hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium routeBtn">
+                            Route Document
+                        </button>
+                        <div class="approvalButtons hidden" id="approvalButtons">
+                            <button id="modalApproveBtn"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto modal-open">
+                                Approve
+                            </button>
+
+                            <button id="modalDisapproveBtn"
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto">
+                                Disapprove
+                            </button>
+
+                            <button id="modalRequestDiscussionBtn"
+                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto">
+                                Request for Discussion
+                            </button>
+                        </div>
+                        <button
+                            class="modal-close border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="pdfPreviewModal"
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
+
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] lg:flex lg:flex-col">
+                    <div
+                        class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 px-6 py-3">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">PDF Preview</h3>
+
+                        <button
+                            class="modal-close border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                            Cancel
+                        </button>
+                    </div>
+                    <div class="lg:flex w-full max-h-[70vh] overflow-y-auto">
+                        <div
+                            class="lg:w-2/3 w-full flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
+
+                            <div id="galleryGlide" class="glide w-full max-w-xl mx-auto relative">
+                                <div id="galleryLoading"
+                                    class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
+                                    <div
+                                        class="animate-spin text-black dark:text-gray-200 h-10 w-10 border-4 border-gray-400 border-t-transparent rounded-full">
+                                    </div>
+                                </div>
+
+                                <div class="glide__track h-[80vh] bg-gray-100" data-glide-el="track">
+                                    <ul class="glide__slides h-full" id="glideSlides">
+                                    </ul>
+                                    <div class="pointer-events-none">
+                                        <button data-glide-dir="<"
+                                            class="slide-previous pointer-events-auto absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                        <button data-glide-dir=">"
+                                            class="slide-next pointer-events-auto absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3 hover:bg-white transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-1/3 p-6 overflow-y-auto">
+
+                            <h4 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">File Information
+                            </h4>
+
+                            <div class="space-y-3">
+
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">File Name</p>
+                                    <p id="infoFileName" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Document Subject</p>
+                                    <p id="infoDocSubject" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Date Uploaded</p>
+                                    <p id="infoDateUploaded" class="font-medium text-gray-900 dark:text-gray-100">—
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Uploader</p>
+                                    <p id="infoUploader" class="font-medium text-gray-900 dark:text-gray-100">—</p>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Uploaded Office</p>
+                                    <p id="infoUploadedOffice" class="font-medium text-gray-900 dark:text-gray-100">—
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Remarks</p>
+                                    <p id="infoRemarks"
+                                        class="font-medium text-gray-900 dark:text-gray-100 whitespace-pre-line">—</p>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="controlNumberModal"
+                class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black/50 modal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80 max-w-full relative">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Document Created</h2>
+                    <p id="controlNumberText" class="text-gray-700 dark:text-gray-300 mb-4 text-center text-sm"></p>
+                    <button
+                        class="modal-close px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200 w-full">
+                        Close
+                    </button>
+                </div>
+            </div>
+            <div id="routingModal"
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal z-50">
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6">
+                    <input type="hidden" id="docId" value="">
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Route Document</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Select office and user for routing</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select Office</label>
+                        <select id="routeOfficeSelect"
+                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 officeSelect">
+                            <option value="">Loading offices...</option>
+                        </select>
+                    </div>
+                    <div id="internalSection" class="hidden space-y-2">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select User</label>
+                        <select required id="routeUserSelect"
+                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Loading users...</option>
+                        </select>
+
+                        <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select Approval
+                            Type</label>
+                        <select required id="routeApprovalSelect"
+                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Approval Type</option>
+                            <option value="pre-approval">Pre-approval</option>
+                            <option value="final-approval">Final-approval</option>
+                        </select>
+                    </div>
+                    <div id="externalSection" class="hidden space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select Status</label>
+                            <select id="routeStatusSelect"
+                                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="remand">Remand</option>
+                            </select>
+                        </div>
+                        <div id="pdfUploadSection" class="hidden">
+
+                            <div id="routedropzone"
+                                class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 dark:text-gray-400 cursor-pointer hover:border-blue-400 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16V4m0 0L3 8m4-4l4 4m-4 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3" />
+                                </svg>
+                                <p class="text-sm">
+                                    Drag & drop a PDF file here or
+                                    <span class="text-blue-600 dark:text-blue-400 underline">click to browse</span>
+                                </p>
+                                <input type="file" accept="application/pdf" class="" id="routefileInput" />
+                            </div>
+                            <div id="routefileInfo" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></div>
+                            <button id="clearrouteSelectionBtn"
+                                class="mt-2 text-xs text-gray-500 hover:text-red-500 transition">Clear
+                                Selection</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Remarks</label>
+                        <textarea id="routeRemarks"
+                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                            rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                            class="modal-close px-5 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                        <button id="routeSubmitBtn"
+                            class="px-5 py-2 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700 transition">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div id="approvalModal"
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6">
+
+                <div
+                    class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-5">Approval Details</h2>
+
+                    <input type="hidden" id="approval_id">
+                    <div id="finalApproval" class=" m-5 hidden">
+                        <h1>Confirm your approval please</h1>
+                    </div>
+                    <div id="preApproval">
+                        <div id="userSelectWrapper" class="mb-5">
+                            <label for="userSelect" class="block text-gray-700 font-medium mb-2">Select User</label>
+                            <select id="userSelect"
+                                class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            </select>
+                        </div>
+
+                    </div>
+                    <div id="remarksWrapper" class="mb-5">
+                        <label for="remarksTextarea" class="block text-gray-700 font-medium mb-2">Remarks</label>
+                        <textarea id="remarksTextarea"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            rows="4" placeholder="Enter remarks..."></textarea>
+                    </div>
+
+
+                    <div class="flex flex-col sm:flex-row sm:justify-end gap-3">
+                        <button id="confirmApprovalBtn"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg w-full sm:w-auto">
+                            Confirm
+                        </button>
+                        <button
+                            class="modal-close w-full sm:w-auto border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-xl transition">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script></script>

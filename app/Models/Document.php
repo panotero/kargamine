@@ -67,4 +67,10 @@ class Document extends Model
     {
         return $this->belongsTo(User::class, 'receipt_confirmed_by');
     }
+
+    public function approvals()
+    {
+
+        return $this->belongsTo(Approvals::class, 'document_id', 'document_id');
+    }
 }

@@ -1,24 +1,16 @@
 <div class="min-h-screen">
     <div class="w-full  container mx-auto py-5 dark:text-gray-200 text-gray-900">
 
-
-        {{-- Top row: 6 stat cards --}}
-        <div class="grid grid-cols-5 sm:grid-cols-3 gap-4">
-
-            {{-- Total Documents --}}
-            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-5 shadow-lg dark:bg-gray-600 bg-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm">Total Documents</p>
-                        <h2 class="mt-2 text-2xl font-bold" id="totalDocuments">0</h2>
-                        <p class="mt-1 text-xs">All files in the system</p>
-                    </div>
+        <div class="grid grid-cols-5 gap-3">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
+                <div>
+                    <p class="text-sm">Total Documents</p>
+                    <h2 class="mt-2 text-2xl font-bold" id="totalDocuments">0</h2>
+                    <p class="mt-1 text-xs">All files in the system</p>
                 </div>
             </div>
-
-            {{-- For Discussion --}}
-            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
-                <div class="flex justify-between items-start">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
+                <div>
                     <div>
                         <p class="text-sm">For Discussion</p>
                         <h2 class="mt-2 text-3xl font-bold " id="forDiscussion">0</h2>
@@ -26,71 +18,29 @@
                     </div>
                 </div>
             </div>
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
 
-            {{-- Pending --}}
-            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm">Pending</p>
-                        <h2 class="mt-2 text-3xl font-bold" id="pending">0</h2>
-                        <p class="mt-1 text-xs">Waiting for processing</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <button class="px-3 py-1 rounded-full text-xs font-medium hover:bg-white/12 transition">
-                            Action
-                        </button>
-                    </div>
+                <div>
+                    <p class="text-sm">Pending</p>
+                    <h2 class="mt-2 text-3xl font-bold" id="pending">0</h2>
+                    <p class="mt-1 text-xs">Waiting for processing</p>
                 </div>
             </div>
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
 
-            {{-- Processed --}}
-            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm">Processed</p>
-                        <h2 class="mt-2 text-3xl font-bold" id="processed">0</h2>
-                        <p class="mt-1 text-xs">Completed files</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <button class="px-3 py-1 rounded-full text-xs font-medium hover:bg-white/12 transition">
-                            View
-                        </button>
-                    </div>
+                <div>
+                    <p class="text-sm">Overdue</p>
+                    <h2 class="mt-2 text-3xl font-bold" id="overdue">0</h2>
+                    <p class="mt-1 text-xs">Past due date</p>
                 </div>
             </div>
-
-            {{-- Overdue --}}
-            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm">Overdue</p>
-                        <h2 class="mt-2 text-3xl font-bold" id="overdue">0</h2>
-                        <p class="mt-1 text-xs">Past due date</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <button class="px-3 py-1 rounded-full text-xs font-medium hover:bg-white/12 transition">
-                            Action
-                        </button>
-                    </div>
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
+                <div>
+                    <p class="text-sm">Remanded</p>
+                    <h2 class="mt-2 text-3xl font-bold" id="remanded">0</h2>
+                    <p class="mt-1 text-xs">Returned for revision</p>
                 </div>
             </div>
-
-            {{-- Remanded --}}
-            <div class="col-span-1 relative rounded-2xl backdrop-blur-lg p-4 shadow-lg dark:bg-gray-600 bg-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-sm">Remanded</p>
-                        <h2 class="mt-2 text-3xl font-bold" id="remanded">0</h2>
-                        <p class="mt-1 text-xs">Returned for revision</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <button class="px-3 py-1 rounded-full text-xs font-medium hover:bg-white/12 transition">
-                            Manage
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
 
@@ -217,140 +167,143 @@
     </div>
 </div>
 <script>
-    // Global function to render File Activity Graph
-    window.renderFileActivityGraph = function(range = 'week') {
-        // Sample data
-        const sampleData = {
-            week: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                routing: [12, 15, 9, 14, 20, 18, 10],
-                approve: [8, 10, 6, 12, 15, 12, 7],
-                disapprove: [2, 3, 1, 2, 3, 2, 1]
-            },
-            month: {
-                labels: Array.from({
-                    length: 30
-                }, (_, i) => `Day ${i+1}`),
-                routing: Array.from({
-                    length: 30
-                }, () => Math.floor(Math.random() * 30)),
-                approve: Array.from({
-                    length: 30
-                }, () => Math.floor(Math.random() * 20)),
-                disapprove: Array.from({
-                    length: 30
-                }, () => Math.floor(Math.random() * 10))
-            },
-            year: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                routing: Array.from({
-                    length: 12
-                }, () => Math.floor(Math.random() * 300)),
-                approve: Array.from({
-                    length: 12
-                }, () => Math.floor(Math.random() * 200)),
-                disapprove: Array.from({
-                    length: 12
-                }, () => Math.floor(Math.random() * 100))
+    (function() {
+        // Global function to render File Activity Graph
+        window.renderFileActivityGraph = function(range = 'week') {
+            // Sample data
+            const sampleData = {
+                week: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    routing: [12, 15, 9, 14, 20, 18, 10],
+                    approve: [8, 10, 6, 12, 15, 12, 7],
+                    disapprove: [2, 3, 1, 2, 3, 2, 1]
+                },
+                month: {
+                    labels: Array.from({
+                        length: 30
+                    }, (_, i) => `Day ${i+1}`),
+                    routing: Array.from({
+                        length: 30
+                    }, () => Math.floor(Math.random() * 30)),
+                    approve: Array.from({
+                        length: 30
+                    }, () => Math.floor(Math.random() * 20)),
+                    disapprove: Array.from({
+                        length: 30
+                    }, () => Math.floor(Math.random() * 10))
+                },
+                year: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                        'Dec'
+                    ],
+                    routing: Array.from({
+                        length: 12
+                    }, () => Math.floor(Math.random() * 300)),
+                    approve: Array.from({
+                        length: 12
+                    }, () => Math.floor(Math.random() * 200)),
+                    disapprove: Array.from({
+                        length: 12
+                    }, () => Math.floor(Math.random() * 100))
+                }
+            };
+
+            const ctx = document.getElementById('fileGraph').getContext('2d');
+
+            // Create gradients for each line
+            const routingGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+            routingGradient.addColorStop(0, 'rgba(255, 165, 0, 0.5)');
+            routingGradient.addColorStop(1, 'rgba(255, 165, 0, 0)');
+
+            const approveGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+            approveGradient.addColorStop(0, 'rgba(0, 128, 0, 0.5)');
+            approveGradient.addColorStop(1, 'rgba(0, 128, 0, 0)');
+
+            const disapproveGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+            disapproveGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
+            disapproveGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+
+            // Destroy previous chart if exists
+            if (window.fileActivityChart) {
+                window.fileActivityChart.destroy();
             }
-        };
 
-        const ctx = document.getElementById('fileGraph').getContext('2d');
-
-        // Create gradients for each line
-        const routingGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-        routingGradient.addColorStop(0, 'rgba(255, 165, 0, 0.5)');
-        routingGradient.addColorStop(1, 'rgba(255, 165, 0, 0)');
-
-        const approveGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-        approveGradient.addColorStop(0, 'rgba(0, 128, 0, 0.5)');
-        approveGradient.addColorStop(1, 'rgba(0, 128, 0, 0)');
-
-        const disapproveGradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-        disapproveGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
-        disapproveGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-
-        // Destroy previous chart if exists
-        if (window.fileActivityChart) {
-            window.fileActivityChart.destroy();
-        }
-
-        window.fileActivityChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: sampleData[range].labels,
-                datasets: [{
-                        label: 'Routing',
-                        data: sampleData[range].routing,
-                        borderColor: 'orange',
-                        backgroundColor: routingGradient,
-                        fill: true,
-                        tension: 0.2
-                    },
-                    {
-                        label: 'Approve',
-                        data: sampleData[range].approve,
-                        borderColor: 'green',
-                        backgroundColor: approveGradient,
-                        fill: true,
-                        tension: 0.2
-                    },
-                    {
-                        label: 'Disapprove',
-                        data: sampleData[range].disapprove,
-                        borderColor: 'red',
-                        backgroundColor: disapproveGradient,
-                        fill: true,
-                        tension: 0.2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
+            window.fileActivityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sampleData[range].labels,
+                    datasets: [{
+                            label: 'Routing',
+                            data: sampleData[range].routing,
+                            borderColor: 'orange',
+                            backgroundColor: routingGradient,
+                            fill: true,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Approve',
+                            data: sampleData[range].approve,
+                            borderColor: 'green',
+                            backgroundColor: approveGradient,
+                            fill: true,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Disapprove',
+                            data: sampleData[range].disapprove,
+                            borderColor: 'red',
+                            backgroundColor: disapproveGradient,
+                            fill: true,
+                            tension: 0.2
+                        }
+                    ]
                 },
-                interaction: {
-                    mode: 'nearest',
-                    intersect: false
-                },
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
                             display: true,
-                            text: 'Time'
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
                         }
                     },
-                    y: {
-                        display: true,
-                        title: {
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
                             display: true,
-                            text: 'Count'
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
                         },
-                        beginAtZero: true
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            },
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
-    };
+            });
+        };
 
-    // IIFE to initialize the chart on page load
-    (function() {
         window.renderFileActivityGraph('week'); // default week
 
         // Change graph on range select
         document.getElementById('graph-range').addEventListener('change', function() {
             window.renderFileActivityGraph(this.value);
         });
+
+
     })();
 </script>
 
@@ -358,6 +311,7 @@
     (function() {
 
 
+        getActivityData();
 
         let allDocuments = []; // store all fetched documents
 
@@ -388,6 +342,20 @@
             });
         }
 
+        async function getActivityData() {
+            try {
+
+                const data = await fetchWithRetry(`/api/activities/byOffice/${authUser.office.office_name}`, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
         // -----------------------------
         // Update Counts
         // -----------------------------
@@ -406,7 +374,6 @@
             let total = filtered.length;
             let forDiscussion = 0;
             let pending = 0;
-            let processed = 0;
             let overdue = 0;
             let remanded = 0;
 
@@ -414,9 +381,6 @@
                 switch ((doc.status || "").toLowerCase()) {
                     case "pending":
                         pending++;
-                        break;
-                    case "processed":
-                        processed++;
                         break;
                     case "overdue":
                         overdue++;
@@ -433,7 +397,6 @@
             document.getElementById("totalDocuments").textContent = total.toLocaleString();
             document.getElementById("forDiscussion").textContent = forDiscussion.toLocaleString();
             document.getElementById("pending").textContent = pending.toLocaleString();
-            document.getElementById("processed").textContent = processed.toLocaleString();
             document.getElementById("overdue").textContent = overdue.toLocaleString();
             document.getElementById("remanded").textContent = remanded.toLocaleString();
         }

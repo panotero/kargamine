@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   //loads page to the content area
-  async function loadPage(menu) {
+  window.loadPage = async function loadPage(menu) {
     if (!menu) return;
     localStorage.setItem("lastMenu", JSON.stringify(menu));
 
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>`;
       console.error(err);
     }
-  }
+  };
 
   window.loadPage = loadPage;
 

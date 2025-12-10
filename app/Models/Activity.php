@@ -9,14 +9,16 @@ class Activity extends Model
 {
     use HasFactory;
 
-
+    protected $casts = [
+        'involved_office' => 'array',
+    ];
     protected $fillable = [
         'action',
         'document_id',
         'final_approval',
         'document_control_number',
         'to_external',
-
+        'involved_office',
         'from_user_id',
         'user_id',
         'routed_to',

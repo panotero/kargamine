@@ -2,6 +2,7 @@ let allNotificationIds = [];
 let lastUnreadCount = 0;
 const NotifContainer = document.getElementById("notifcount");
 const notifIcon = document.getElementById("notificationIcon");
+const notificationWrapper = document.getElementById("notificationWrapper");
 
 window.initNotificationStream = function initNotificationStream() {
   const evtSource = new EventSource("/api/notifications/stream");
@@ -18,13 +19,15 @@ window.initNotificationStream = function initNotificationStream() {
     NotifContainer.textContent = unreadCount > 0 ? unreadCount : "";
     allNotificationIds = notifications.map((n) => n.id);
 
-    const notificationsArray = notifications.map((item) => ({
-      id: item.id,
-      message: item.message,
-      documentControlNumber: item.document?.document_control_number || null,
-      created_at: item.created_at,
-      is_read: item.is_read,
-    }));
+    // const notificationsArray = notifications.map((item) => ({
+    //   id: item.id,
+    //   message: item.message,
+    //   documentControlNumber: item.document?.document_control_number || null,
+    //   document_id: item.document?.document_id || null,
+    //   status: item.approvals?.status || null,
+    //   created_at: item.created_at,
+    //   is_read: item.is_read,
+    // }));
     if (unreadCount !== lastUnreadCount) {
       if (typeof window.getDocs === "function") {
         window.getDocs();
@@ -35,7 +38,7 @@ window.initNotificationStream = function initNotificationStream() {
       lastUnreadCount = unreadCount;
     }
 
-    populateNotifications(notificationsArray);
+    populateNotifications(notifications);
   };
 
   evtSource.onerror = (err) => {};
@@ -78,7 +81,7 @@ function populateNotifications(notificationsArray) {
     li.className =
       "cursor-pointer px-4 py-3 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600";
 
-    li.dataset.documentControlNumber = notification.documentControlNumber;
+    li.dataset.document_id = notification.document_id;
 
     li.innerHTML = `
   <div class="flex items-start space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
@@ -98,8 +101,27 @@ function populateNotifications(notificationsArray) {
 
     li.addEventListener("click", () => {
       console.log("Notification clicked:");
-      console.log("Message:", notification.message);
-      console.log("Control Number:", notification.documentControlNumber);
+      console.log("Message:", notification.document.status);
+      console.log("document ID", notification.document_id);
+
+      checkActionButtons(
+        notification.document.status,
+        notification.document.receipt_confirmation
+      );
+
+      clearModalFields();
+      showSkeletonLoaders();
+
+      initModal({
+        modalId: "DocumentModal",
+      });
+      populateDocumentModal(notification.document_id);
+      notificationWrapper.style.display = "none";
+      logActivity(
+        "view",
+        notification.document_id,
+        notification.document.document_control_number
+      );
     });
 
     container.appendChild(li);

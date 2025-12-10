@@ -36,7 +36,7 @@ class NotificationController extends Controller
             while (true) {
 
                 $notifications = Notification::where('user_id', $user->id)
-                    ->with('document')
+                    ->with('document', 'approvals')
                     ->orderBy('created_at', 'desc')
                     ->get(['id', 'document_id', 'message', 'is_read', 'created_at']);
 
