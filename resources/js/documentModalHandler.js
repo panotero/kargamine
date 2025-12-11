@@ -433,6 +433,9 @@ window.sendApprovalAction = async function sendApprovalAction({
 };
 
 window.populateUsers = async function populateUsers(approvalType) {
+  const data = await fetchAuthUser();
+  console.log(data);
+  const currentOffice = data.office?.office_name || null;
   const userSelect = document.getElementById("userSelect");
   const users = await fetchWithRetry("/api/users", {
     method: "GET",
@@ -445,7 +448,7 @@ window.populateUsers = async function populateUsers(approvalType) {
 
   const filtered = users.filter(
     (u) =>
-      u.office?.office_name === window.authUser.office.office_name &&
+      u.office?.office_name === currentOffice &&
       u.user_config?.approval_type !== approvalType
   );
 
@@ -465,8 +468,6 @@ const modalDisapproveBtn = document.getElementById("modalDisapproveBtn");
 const confirmBtn = document.getElementById("confirmApprovalBtn");
 const remarksTextarea = document.getElementById("remarksTextarea");
 const document_id = document.getElementById("document_id");
-
-populateUsers("routing");
 
 confirmBtn.addEventListener("click", () => {
   const selectedOption = userSelect.options[userSelect.selectedIndex];

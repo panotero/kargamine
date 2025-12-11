@@ -65,7 +65,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             console.log("all content has been loaded");
             initNotificationStream();
-
+            populateUsers("routing");
 
         });
     </script>

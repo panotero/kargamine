@@ -39,13 +39,11 @@ function fillDocType(otherdocumenttb = null) {
 
 async function fetchAuthUser() {
   try {
-    const response = await fetch("/api/user_info", {
+    const data = await fetchWithRetry("/api/user_info", {
       headers: {
         Accept: "application/json",
       },
     });
-
-    const data = await response.json();
 
     if (data.isLoggedIn) {
       window.authUser = data.user;
@@ -53,6 +51,7 @@ async function fetchAuthUser() {
       window.authUser = null;
       console.log("User is not logged in");
     }
+    return data;
   } catch (error) {
     console.error("Failed to fetch user info:", error);
     window.authUser = null;
