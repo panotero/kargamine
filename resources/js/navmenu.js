@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!res.ok)
         throw new Error(`Failed to load page: ${res.status} ${res.statusText}`);
       const data = await res.text();
-      contentEl.innerHTML = `<div class="dark p-4 dark:bg-gray-800 rounded shadow">${data}</div>`;
+      contentEl.innerHTML = `<div class="dark lg:p-4 dark:bg-gray-800 rounded shadow">${data}</div>`;
 
       // Execute inline scripts
       contentEl.querySelectorAll("script").forEach((oldScript) => {

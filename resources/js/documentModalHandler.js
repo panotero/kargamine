@@ -33,17 +33,10 @@ window.checkActionButtons = function checkActionButtons(
     status = status.toLowerCase();
   }
 
-<<<<<<< HEAD
   console.log(documentRecepientId);
   console.log(documentDestinationOffice);
   console.log(window.authUser.office.office_name);
-=======
-  //   console.log(documentRecepientId);
-  //   console.log(documentDestinationOffice);
-  //   console.log(window.authUser.office.office_name);
->>>>>>> 4ed3c00b4c959ac116952df08291c3283ad26dae
 
-  //check if the recepient id is equal to logged in user id
   if (
     documentRecepientId !== false ||
     documentDestinationOffice === window.authUser.office.office_name

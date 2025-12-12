@@ -6,7 +6,7 @@ window.initDataTables = function initDataTables() {
         searching: true,
         info: true,
         lengthChange: false, // remove "Show X entries"
-        scrollY: "300px", // table body height
+        scrollY: "250px", // table body height
         scrollCollapse: true,
         scrollX: true, // allow horizontal scroll
         dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
