@@ -100,12 +100,14 @@ function populateNotifications(notificationsArray) {
         `;
 
     li.addEventListener("click", () => {
-      console.log("Notification clicked:");
-      console.log("Message:", notification.document.status);
-      console.log("document ID", notification.document_id);
+      //   console.log("Notification clicked:");
+      //   console.log("Message:", notification.document.status);
+      //   console.log("document ID", notification.document_id);
 
       checkActionButtons(
         notification.document.status,
+        notification.document.recepient_id,
+        notification.document.destination_office,
         notification.document.receipt_confirmation
       );
 
