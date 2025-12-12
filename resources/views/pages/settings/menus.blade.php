@@ -100,7 +100,7 @@
         function openModal(mode = "Add", menu = null) {
             modalTitle.textContent = mode === "Add" ? "Add New Menu" : "Modify Menu";
             saveBtn.textContent = mode === "Add" ? "Save" : "Modify";
-            console.log(mode);
+            // console.log(mode);
             if (menu) {
                 fields.id.value = menu.id;
                 fields.title.value = menu.title || "";

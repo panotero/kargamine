@@ -116,7 +116,13 @@ function initdocumentcontroller() {
 
     tr.addEventListener("click", (e) => {
       if (e.target.classList.contains("labeldropdown")) return;
-      checkActionButtons(item.status, item.receipt_confirmation, source);
+      checkActionButtons(
+        item.status,
+        item.recipient_id,
+        item.destination_office,
+        item.receipt_confirmation,
+        source
+      );
 
       clearModalFields();
       showSkeletonLoaders();

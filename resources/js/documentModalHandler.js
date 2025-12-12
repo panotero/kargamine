@@ -5,6 +5,7 @@ window.checkActionButtons = function checkActionButtons(
   receiptConfirmation = false,
   source = false
 ) {
+  //   console.log(documentData);
   const actionButtonArray = [
     {
       name: "approvalActions",
@@ -32,9 +33,15 @@ window.checkActionButtons = function checkActionButtons(
     status = status.toLowerCase();
   }
 
+<<<<<<< HEAD
   console.log(documentRecepientId);
   console.log(documentDestinationOffice);
   console.log(window.authUser.office.office_name);
+=======
+  //   console.log(documentRecepientId);
+  //   console.log(documentDestinationOffice);
+  //   console.log(window.authUser.office.office_name);
+>>>>>>> 4ed3c00b4c959ac116952df08291c3283ad26dae
 
   //check if the recepient id is equal to logged in user id
   if (
@@ -149,18 +156,21 @@ window.populateDocumentModal = async function populateDocumentModal(
     populateActivityLog(data || []);
 
     // Approval type toggle
-    document
-      .getElementById("finalApproval")
-      .classList.toggle(
-        "hidden",
-        data.approvals.approval_type !== "final-approval"
-      );
-    document
-      .getElementById("preApproval")
-      .classList.toggle(
-        "hidden",
-        data.approvals.approval_type === "final-approval"
-      );
+    // console.log(data);
+    if (data.approvals) {
+      document
+        .getElementById("finalApproval")
+        .classList.toggle(
+          "hidden",
+          data.approvals.approval_type !== "final-approval"
+        );
+      document
+        .getElementById("preApproval")
+        .classList.toggle(
+          "hidden",
+          data.approvals.approval_type === "final-approval"
+        );
+    }
   } catch (error) {
     console.error("Failed to populate document modal:", error);
   }
@@ -444,6 +454,9 @@ window.sendApprovalAction = async function sendApprovalAction({
 };
 
 window.populateUsers = async function populateUsers(approvalType) {
+  const data = await fetchAuthUser();
+  //   console.log(data);
+  const currentOffice = data.office?.office_name || null;
   const userSelect = document.getElementById("userSelect");
   const users = await fetchWithRetry("/api/users", {
     method: "GET",
@@ -456,7 +469,7 @@ window.populateUsers = async function populateUsers(approvalType) {
 
   const filtered = users.filter(
     (u) =>
-      u.office?.office_name === window.authUser.office.office_name &&
+      u.office?.office_name === currentOffice &&
       u.user_config?.approval_type !== approvalType
   );
 
@@ -476,8 +489,6 @@ const modalDisapproveBtn = document.getElementById("modalDisapproveBtn");
 const confirmBtn = document.getElementById("confirmApprovalBtn");
 const remarksTextarea = document.getElementById("remarksTextarea");
 const document_id = document.getElementById("document_id");
-
-populateUsers("routing");
 
 confirmBtn.addEventListener("click", () => {
   const selectedOption = userSelect.options[userSelect.selectedIndex];

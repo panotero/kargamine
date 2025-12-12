@@ -42,7 +42,7 @@ function initroute() {
 
         const data = await res.json();
         if (res.ok) {
-          console.log(data);
+          //   console.log(data);
           window.getDocs();
           const routingmodal = document.getElementById("routingModal");
           routingmodal.classList.add("hidden");
