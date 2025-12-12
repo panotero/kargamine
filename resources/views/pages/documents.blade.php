@@ -1,4 +1,4 @@
-<div class="max-h-[90vh] max-w-[90vw] overflow-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5 rounded-lg">
+<div class="max-h-screen w-screen lg:w-[90vh] overflow-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5 rounded-lg">
 
 
     <div class="h-full container mx-auto py-5 ">
@@ -15,7 +15,7 @@
             </div>
             <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
                 <table id="assignedToYouDocumentTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600uppercase text-xs">
                         <tr>
                             <th class="px-4 py-3">
                                 <span class="flex items-center">Control Number</span>

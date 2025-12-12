@@ -88,7 +88,7 @@
                     </x-dropdown>
                 </div>
             </header>
-            <main id="content" class="flex-1 overflow-y-auto text-gray-800 dark:text-gray-200">
+            <main id="content" class="flex-1 overflow-y-auto  text-gray-800 dark:text-gray-200">
             </main>
 
             <div id="DocumentModal"

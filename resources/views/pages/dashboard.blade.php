@@ -1,7 +1,7 @@
 <div class="min-h-screen">
     <div class="w-full  container mx-auto py-5 dark:text-gray-200 text-gray-900">
 
-        <div class="grid grid-cols-5 gap-3">
+        <div class="grid md:grid-cols-5 grid-cols-1 gap-3">
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
                 <div>
                     <p class="text-sm">Total Documents</p>
@@ -71,9 +71,9 @@
         </div>
 
         {{-- Two-column area: Recent updates + Top 5 priority (table) --}}
-        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6 w-full ">
             {{-- Recent updates (span 2 columns on large screens) --}}
-            <div class="lg:col-span-1 rounded-2xl dark:bg-gray-600 bg-white backdrop-blur-lg p-4 shadow-lg">
+            <div class="col-span-1 rounded-2xl dark:bg-gray-600 bg-white backdrop-blur-lg p-4 shadow-lg w-full mx-auto">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-medium ">Recent Updates</h3>
                     <span class="text-xs ">Latest 10</span>
@@ -143,7 +143,7 @@
             </div>
 
             {{-- Top 5 priority (compact table) --}}
-            <div class="col-span-2 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
+            <div class="lg:col-span-2 col-span-1 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-medium ">Top 5 Priority</h3>
                     <span class="text-xs ">By priority</span>

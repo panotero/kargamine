@@ -272,9 +272,9 @@
             <td class="hidden">${doc.updated_at || ""}</td>
         `;
                 tableBody.appendChild(row);
-
-                initDataTables();
             });
+
+            initDataTables();
         }
         let prevFromDate = "";
         let prevToDate = "";
@@ -395,6 +395,5 @@
         initDashboard();
 
         fillOfficeDropdown();
-        initDataTables();
     })();
 </script>

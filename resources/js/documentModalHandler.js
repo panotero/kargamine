@@ -1,5 +1,7 @@
 window.checkActionButtons = function checkActionButtons(
   status = false,
+  documentRecepientId = false,
+  documentDestinationOffice = false,
   receiptConfirmation = false,
   source = false
 ) {
@@ -30,24 +32,33 @@ window.checkActionButtons = function checkActionButtons(
     status = status.toLowerCase();
   }
 
-  //   console.log(status);
-  if (receiptConfirmation === 0) {
-    const confirmationAction = actionButtonArray.find(
-      (item) => item.name === "confirmationActions"
-    );
-    if (confirmationAction?.el)
-      confirmationAction.el.classList.remove("hidden");
-  } else {
-    if (status && status === "for approval") {
-      const approvalAction = actionButtonArray.find(
-        (item) => item.name === "approvalActions"
+  console.log(documentRecepientId);
+  console.log(documentDestinationOffice);
+  console.log(window.authUser.office.office_name);
+
+  //check if the recepient id is equal to logged in user id
+  if (
+    documentRecepientId !== false ||
+    documentDestinationOffice === window.authUser.office.office_name
+  ) {
+    if (receiptConfirmation === 0) {
+      const confirmationAction = actionButtonArray.find(
+        (item) => item.name === "confirmationActions"
       );
-      if (approvalAction?.el) approvalAction.el.classList.remove("hidden");
+      if (confirmationAction?.el)
+        confirmationAction.el.classList.remove("hidden");
     } else {
-      const routeAction = actionButtonArray.find(
-        (item) => item.name === "routeActions"
-      );
-      if (routeAction?.el) routeAction.el.classList.remove("hidden");
+      if (status && status === "for approval") {
+        const approvalAction = actionButtonArray.find(
+          (item) => item.name === "approvalActions"
+        );
+        if (approvalAction?.el) approvalAction.el.classList.remove("hidden");
+      } else {
+        const routeAction = actionButtonArray.find(
+          (item) => item.name === "routeActions"
+        );
+        if (routeAction?.el) routeAction.el.classList.remove("hidden");
+      }
     }
   }
 };

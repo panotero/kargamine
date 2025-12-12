@@ -191,6 +191,8 @@ function initdocumentcontroller() {
     } catch (error) {
       console.error("Error fetching documents:", error);
     }
+
+    initDataTables();
   };
   function initEventListeners() {
     initPDFDropzone({
