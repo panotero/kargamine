@@ -186,13 +186,15 @@
                                 </div>
                             </div>
                             <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <div class="flex justify-between w-full">
 
-                                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">Activity
-                                        History</h3>
+                                <!-- Make THIS the positioning context -->
+                                <div class="flex justify-between w-full relative">
 
-                                    <!-- Make this the relative container -->
-                                    <div class="relative pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">
+                                        Activity History
+                                    </h3>
+
+                                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
 
                                         <div class="flex items-center justify-between">
                                             <button id="toggleFullLogBtn"
@@ -210,8 +212,13 @@
 
                                         <!-- DROPDOWN -->
                                         <div id="fullActivityLogContainer"
-                                            class="hidden absolute right-full bottom-0 mr-3 w-96 border border-gray-300 dark:border-gray-700
-                rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl z-50">
+                                            class="hidden absolute z-50
+                       bottom-0
+                       left-1/2 -translate-x-1/2
+                       sm:left-auto sm:right-full sm:translate-x-0 sm:mr-3
+                       w-[90vw] sm:w-96
+                       border border-gray-300 dark:border-gray-700
+                       rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl">
 
                                             <h4 class="text-md font-medium mb-2 text-gray-700 dark:text-gray-200">
                                                 Full Activity Log
@@ -229,7 +236,9 @@
                                             role="status" aria-label="Loading"></div>
                                     </div>
                                 </ul>
+
                             </div>
+
 
                         </div>
                     </div>
@@ -284,8 +293,32 @@
                     <div class="lg:flex w-full max-h-[70vh] overflow-y-auto">
                         <div
                             class="lg:w-2/3 w-full flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
+                            <div id="galleryLoading"
+                                class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
+                                {{-- <div
+                                    class="animate-spin text-black dark:text-gray-200 h-10 w-10 border-4 border-gray-400 border-t-transparent rounded-full">
+                                </div> --}}
+                            </div>
+                            {{-- swiper carousel --}}
+                            <div id="gallerySwiper" class="swiper w-full max-w-xl mx-auto relative">
+                                <div class="swiper-wrapper h-[80vh]" id="swiperSlides"></div>
 
-                            <div id="galleryGlide" class="glide w-full max-w-xl mx-auto relative">
+                                <button
+                                    class="swiper-button-prev slide-previous absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3">
+
+                                </button>
+
+                                <button
+                                    class="swiper-button-next slide-next absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3">
+
+                                </button>
+
+                                <div class="swiper-pagination"></div>
+                            </div>
+
+
+                            {{-- glide carousel --}}
+                            {{-- <div id="galleryGlide" class="glide w-full max-w-xl mx-auto relative">
                                 <div id="galleryLoading"
                                     class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
                                     <div
@@ -318,7 +351,7 @@
 
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="w-1/3 p-6 overflow-y-auto">
 

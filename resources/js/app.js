@@ -3,7 +3,22 @@
 // import "flowbite-datatables";
 // import { DataTable } from "simple-datatables";
 // window.DataTable = DataTable;
-// import "simple-datatables/dist/style.css";
+// import "simple-datatables/dist/style.css";//
+
+//swiper js
+import Swiper from "swiper";
+import { Navigation, Pagination, Zoom } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/zoom";
+
+window.Swiper = Swiper;
+window.Navigation = Navigation;
+window.Pagination = Pagination;
+window.Zoom = Zoom;
+//end swiper js
 
 import Alpine from "alpinejs";
 

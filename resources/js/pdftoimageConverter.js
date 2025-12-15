@@ -1,54 +1,93 @@
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "/js/pdf.worker.min.js";
+//backup for glider
+// function buildSlideHTML(imgSrc) {
+//   return `
+//     <li class="glide__slide flex items-center justify-center bg-gray-100">
+//       <img src="${imgSrc}" class="max-h-full w-auto object-contain">
+//     </li>
+//   `;
+// }
 
+//function for swiper
 function buildSlideHTML(imgSrc) {
   return `
-    <li class="glide__slide flex items-center justify-center bg-gray-100">
-      <img src="${imgSrc}" class="max-h-full w-auto object-contain">
-    </li>
+    <div class="swiper-slide flex items-center justify-center bg-gray-100">
+      <div class="swiper-zoom-container">
+        <img src="${imgSrc}" class="max-h-full w-auto object-contain">
+      </div>
+    </div>
   `;
 }
 
 function loadSlidesFromArray(slides = []) {
-  const slideContainer = document.getElementById("glideSlides");
+  //containter for glide
+  //   const slideContainer = document.getElementById("glideSlides");
+
+  //container for swiper
+  const slideContainer = document.getElementById("swiperSlides");
+
   const loadingOverlay = document.getElementById("galleryLoading");
 
   slideContainer.innerHTML = "";
-  loadingOverlay.classList.remove("hidden");
+  //   loadingOverlay.classList.remove("hidden");
 
   slides.forEach((slideHTML) => {
     slideContainer.insertAdjacentHTML("beforeend", slideHTML);
   });
+  //   loadingOverlay.classList.add("hidden");
 
-  initGlide();
-
-  loadingOverlay.classList.add("hidden");
+  initSwiper();
 }
 
-let glideInstance = null;
+// window.initSwiper = function initSwiper() {
+//   if (swiperInstance) swiperInstance.destroy();
 
-window.initGlide = function initGlide() {
-  if (glideInstance) glideInstance.destroy();
+//   swiperInstance = new Glide("#swiperSlides", {
+//     type: "slider",
+//     focusAt: "center",
+//     perView: 1,
+//     gap: 10,
+//     hoverpause: true,
+//   });
 
-  glideInstance = new Glide("#galleryGlide", {
-    type: "slider",
-    focusAt: "center",
-    perView: 1,
-    gap: 10,
-    hoverpause: true,
+//   swiperInstance.mount();
+
+//   document
+//     .querySelector(".slide-previous")
+//     .addEventListener("click", () => swiperInstance.go("<"));
+
+//   document
+//     .querySelector(".slide-next")
+//     .addEventListener("click", () => swiperInstance.go(">"));
+// };
+let swiperInstance = null;
+
+window.initSwiper = function initSwiper() {
+  if (swiperInstance) {
+    swiperInstance.destroy(true, true);
+  }
+
+  swiperInstance = new Swiper("#gallerySwiper", {
+    modules: [Navigation, Pagination, Zoom], // ✅ CORRECT
+    slidesPerView: 1,
+    spaceBetween: 10,
+    zoom: {
+      maxRatio: 3,
+    },
+    grabCursor: true,
+    pagination: {
+      el: ".swiper-pagination",
+      clickable: true,
+    },
+    navigation: {
+      nextEl: ".slide-next",
+      prevEl: ".slide-previous",
+    },
   });
-
-  glideInstance.mount();
-
-  document
-    .querySelector(".slide-previous")
-    .addEventListener("click", () => glideInstance.go("<"));
-
-  document
-    .querySelector(".slide-next")
-    .addEventListener("click", () => glideInstance.go(">"));
 };
+
 async function extractPdfImages(
   pdfUrl,
   scale = 1,

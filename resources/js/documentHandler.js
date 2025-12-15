@@ -562,10 +562,30 @@ function initdocumentcontroller() {
     }
   }
 
-  document.getElementById("toggleFullLogBtn").addEventListener("click", () => {
-    const panel = document.getElementById("fullActivityLogContainer");
-    panel.classList.toggle("hidden");
+  document.addEventListener("click", function (e) {
+    const btn = document.getElementById("toggleFullLogBtn");
+    const dropdown = document.getElementById("fullActivityLogContainer");
+
+    if (!btn || !dropdown) return;
+
+    const isClickInside = btn.contains(e.target) || dropdown.contains(e.target);
+
+    if (!isClickInside) {
+      dropdown.classList.add("hidden");
+    }
   });
+  window.addEventListener("scroll", () => {
+    const dropdown = document.getElementById("fullActivityLogContainer");
+    dropdown?.classList.add("hidden");
+  });
+  document
+    .getElementById("toggleFullLogBtn")
+    .addEventListener("click", function (e) {
+      e.stopPropagation(); // prevent immediate close
+      document
+        .getElementById("fullActivityLogContainer")
+        .classList.toggle("hidden");
+    });
 
   const confirmButton = document.getElementById("btnConfirm");
   confirmButton.addEventListener("click", async (e) => {
