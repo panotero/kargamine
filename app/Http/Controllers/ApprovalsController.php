@@ -6,19 +6,23 @@ use Illuminate\Http\Request;
 use App\Models\Approvals;
 use App\Models\User;
 use App\Models\Document;
+use App\Models\Activity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Activity;
 
 class ApprovalsController extends Controller
 {
+    /* =========================================================
+     * Public Endpoints
+     * ========================================================= */
+
     public function getMyApprovals()
     {
         $user = Auth::user();
 
         if (!$user) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Unauthorized'
             ], 401);
         }
@@ -26,11 +30,11 @@ class ApprovalsController extends Controller
         $approvals = Approvals::with('document')
             ->where('user_id', $user->id)
             ->where('status', 0)
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->get();
 
         return response()->json([
-            'status'    => 'success',
+            'status' => 'success',
             'approvals' => $approvals
         ]);
     }
@@ -44,190 +48,248 @@ class ApprovalsController extends Controller
         }
 
         $validated = $request->validate([
-            'action'       => 'required|in:approved,disapproved,remand',
+            'action'       => 'required|in:approved,disapproved,remand,for-discussion',
             'next_action'  => 'nullable|in:pre-approval,final-approval',
             'next_user_id' => 'nullable|integer|exists:users,id',
             'remarks'      => 'nullable|string|max:500',
         ]);
-
-        $currentOffice = $user->office->office_name ?? null;
 
         $approval = Approvals::with('document')
             ->where('document_id', $document_id)
             ->where('status', 0)
             ->firstOrFail();
 
-        $action = $validated['action'];
-
-
-        switch ($action) {
-            case 'approved':
-                $this->processApproval($approval, $validated, $user, $currentOffice);
-
-                break;
-
-            case 'disapproved':
-                $approval->status  = 1;
-                $approval->remarks = 'Disapproved';
-                break;
-
-            case 'remand':
-                $approval->status  = 1;
-                $approval->remarks = 'Remanded';
-                break;
-        }
-
-        $approval->save();
+        DB::transaction(function () use ($validated, $approval, $user) {
+            match ($validated['action']) {
+                'approved'        => $this->processApproval($approval, $validated, $user),
+                'disapproved'     => $this->processDisapproval($approval, $validated, $user),
+                'remand'          => $this->processRemand($approval, $validated, $user),
+                'for-discussion'  => $this->processForDiscussion($approval, $validated, $user),
+            };
+        });
 
         return response()->json([
             'message' => 'Action completed successfully.',
-            'status'  => $approval->status,
+            'status'  => 1,
         ]);
     }
 
-    private function processApproval($approval, $validated, $user, $currentOffice)
+    /* =========================================================
+     * Action Handlers
+     * ========================================================= */
+
+    private function processDisapproval($approval, $validated, $user)
+    {
+        $this->finalizeApproval($approval, 'Disapproved', $validated['remarks']);
+
+        $this->notifyAdmins(
+            $approval,
+            $user,
+            "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office"
+        );
+
+        $this->notifyUploader(
+            $approval,
+            $user,
+            "{$approval->document->document_code} Has been Disapproved."
+        );
+
+        $this->createActivity('disapproved', $approval, $user, $validated);
+
+        $this->updateDocument($approval, 'Disapproved', true);
+    }
+
+    private function processRemand($approval, $validated, $user)
+    {
+        $this->finalizeApproval($approval, 'Remanded', $validated['remarks']);
+
+        $this->notifyAdmins(
+            $approval,
+            $user,
+            "{$approval->document->document_code} Has been remanded. you may route this to the origin office"
+        );
+
+        $this->notifyUploader(
+            $approval,
+            $user,
+            "{$approval->document->document_code} Has been Remanded."
+        );
+
+        $this->createActivity('remand', $approval, $user, $validated);
+
+        $this->updateDocument($approval, 'Remanded', true);
+    }
+
+    private function processForDiscussion($approval, $validated, $user)
+    {
+        $this->finalizeApproval($approval, 'For Discussion', $validated['remarks']);
+
+        $message = "{$user->id} is requesting discussion for this document {$approval->document->document_code}.";
+
+        $this->notifyAdmins($approval, $user, $message);
+        $this->notifyUploader($approval, $user, $message);
+
+        $this->createActivity('for-discussion', $approval, $user, $validated);
+
+        $this->updateDocument($approval, 'For Discussion');
+    }
+
+    private function processApproval($approval, $validated, $user)
     {
         $approval->remarks = 'Approved';
-        if ($approval->approval_type === "final-approval") {
 
+        if ($approval->approval_type === 'final-approval') {
+            $this->notifyAdmins(
+                $approval,
+                $user,
+                "{$approval->document->document_code} Has been approved. you may route this to the origin office"
+            );
 
-            $admin_users = User::with(['userConfig', 'office'])
-                ->whereHas('userConfig', function ($q) {
-                    $q->where('approval_type', 'routing')
-                        ->where('status', 'active');
-                })
-                ->whereHas('office', function ($q) use ($approval) {
-                    $q->where('office_name', $approval->document->destination_office);
-                })
-                ->get();
+            $this->createActivity('approved', $approval, $user, $validated, true);
+            $this->updateDocument($approval, 'Approved', true);
+            $this->finalizeApproval($approval);
 
+            return;
+        }
 
-            foreach ($admin_users as $admin) {
-                DB::table('notifications')->insert([
-                    'document_id'        => $approval->document->document_id,
-                    'office_origin'      => $approval->document->office_origin,
-                    'destination_office' => $approval->document->destination_office,
-                    'routed_to'          => null,
-                    'from_user_id'       => $user->id,
-                    'user_id'            => $admin->id,
-                    'message'            => "{$approval->document->document_code} Has been approved. you may route this to the origin office",
-                    'is_read'            => 0,
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
-                ]);
+        $nextAction = $validated['next_action'] ?? null;
+
+        if ($nextAction === 'pre-approval') {
+            $this->createNextApproval(
+                $approval->document->document_id,
+                $validated['next_user_id'],
+                $validated['remarks'],
+                'pre-approval'
+            );
+
+            $this->createNotification($approval, $user, $validated['next_user_id']);
+        }
+
+        if ($nextAction === 'final-approval') {
+            $finalApprover = $this->getFinalApprover(
+                $user->office->office_name ?? null,
+                'final-approval'
+            );
+
+            if (!$finalApprover) {
+                throw new \Exception('No final approver found.');
             }
 
-            $activityData = [
-                'action'                  => 'approved',
-                'document_id'             => $approval->document->document_id,
-                'final_approval'          => 1,
-                'document_control_number' => $approval->document->document_control_number,
-                'user_id'                 => $user->id,
-                'from_user_id' => $user->id,
-                'routed_to'               => null,
-                'final_remarks'           => $validated['remarks'] ?? null,
-            ];
-            Activity::create($activityData);
+            $this->createNextApproval(
+                $approval->document->document_id,
+                $finalApprover->id,
+                $validated['remarks'],
+                'final-approval'
+            );
 
+            $this->createNotification($approval, $user, $finalApprover->id);
+        }
 
-            Document::where('document_id', $approval->document->document_id)
-                ->update([
-                    'recipient_id'   => null,
-                    'date_forwarded' => now(),
-                    'status' => "Approved",
-                ]);
+        $this->createActivity('approved', $approval, $user, $validated);
+        $this->finalizeApproval($approval);
+    }
 
-            $approval->status = 1;
-            $approval->updated_at = now();
-        } else {
+    /* =========================================================
+     * Shared Helpers
+     * ========================================================= */
 
+    private function finalizeApproval($approval, $remarks = null, $customRemarks = null)
+    {
+        $approval->status = 1;
+        $approval->remarks = $customRemarks ?? $remarks;
+        $approval->updated_at = now();
+        $approval->save();
+    }
 
-            $nextAction = $validated['next_action'] ?? null;
+    private function notifyAdmins($approval, $user, $message)
+    {
+        $admins = $this->getRoutingAdmins($approval);
 
-            if ($nextAction === 'pre-approval') {
-                $this->createNextApproval(
-                    $approval->document->document_id,
-                    $validated['next_user_id'],
-                    $validated['remarks'],
-                    'pre-approval'
-                );
-                $this->createNotification($approval, $user, $validated['next_user_id']);
-
-
-
-                $activityData = [
-                    'action'                  => 'approved',
-                    'document_id'             => $approval->document->document_id,
-                    'final_approval'          => 0,
-                    'document_control_number' => $approval->document->document_control_number,
-                    'user_id'                 => $user->id,
-                    'from_user_id' => $user->id,
-                    'routed_to'               => $validated['next_user_id'],
-                    'final_remarks'           => $validated['remarks'] ?? null,
-                ];
-                Activity::create($activityData);
-                Document::where('document_id', $approval->document->document_id)
-                    ->update([
-                        'recipient_id'   => $validated['next_user_id'],
-                        'date_forwarded' => now(),
-                    ]);
-            } elseif ($nextAction === 'final-approval') {
-                $finalApprover = $this->getFinalApprover($currentOffice, $nextAction);
-
-                if (!$finalApprover) {
-                    throw new \Exception("No final approver found.");
-                }
-
-                $this->createNextApproval(
-                    $approval->document->document_id,
-                    $finalApprover->id,
-                    $validated['remarks'],
-                    'final-approval'
-                );
-
-                $this->createNotification($approval, $user, $finalApprover->id);
-                $activityData = [
-                    'action'                  => 'approved',
-                    'document_id'             => $approval->document->document_id,
-                    'final_approval'          => 0,
-                    'document_control_number' => $approval->document->document_control_number,
-                    'user_id'                 => $validated['next_user_id'],
-                    'from_user_id' => $approval->document->user_id,
-                    'routed_to'               => $validated['next_user_id'],
-                    'final_remarks'           => $validated['remarks'] ?? null,
-                ];
-                Activity::create($activityData);
-
-
-                Document::where('document_id', $approval->document->document_id)
-                    ->update([
-                        'recipient_id'   => $finalApprover->id,
-                        'date_forwarded' => now(),
-                    ]);
-            }
-            $approval->status = 1;
-            $approval->updated_at = now();
+        foreach ($admins as $admin) {
+            $this->insertNotification($approval, $user->id, $admin->id, $message);
         }
     }
 
-    /**
-     * Gets final approver based on office and approval type
-     */
+    private function notifyUploader($approval, $user, $message)
+    {
+        $this->insertNotification(
+            $approval,
+            $user->id,
+            $approval->document->user_id,
+            $message
+        );
+    }
+
+    private function insertNotification($approval, $fromUserId, $toUserId, $message)
+    {
+        DB::table('notifications')->insert([
+            'document_id'        => $approval->document->document_id,
+            'office_origin'      => $approval->document->office_origin,
+            'destination_office' => $approval->document->destination_office,
+            'from_user_id'       => $fromUserId,
+            'user_id'            => $toUserId,
+            'message'            => $message,
+            'is_read'            => 0,
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ]);
+    }
+
+    private function createActivity($action, $approval, $user, $validated, $final = false)
+    {
+        Activity::create([
+            'action'                  => $action,
+            'document_id'             => $approval->document->document_id,
+            'final_approval'          => $final ? 1 : 0,
+            'document_control_number' => $approval->document->document_control_number,
+            'user_id'                 => $user->id,
+            'from_user_id'            => $user->id,
+            'final_remarks'           => $validated['remarks'] ?? null,
+        ]);
+    }
+
+    private function updateDocument($approval, $status, $resetRecipient = false)
+    {
+        Document::where('document_id', $approval->document->document_id)
+            ->update([
+                'status'         => $status,
+                'recipient_id'   => $resetRecipient ? null : null,
+                'date_forwarded' => now(),
+            ]);
+    }
+
+    private function getRoutingAdmins($approval)
+    {
+        return User::with(['userConfig', 'office'])
+            ->whereHas(
+                'userConfig',
+                fn($q) =>
+                $q->where('approval_type', 'routing')->where('status', 'active')
+            )
+            ->whereHas(
+                'office',
+                fn($q) =>
+                $q->where('office_name', $approval->document->destination_office)
+            )
+            ->get();
+    }
+
     private function getFinalApprover($office, $approvalType)
     {
         return User::with(['userConfig', 'office'])
-            ->whereHas('userConfig', function ($query) use ($approvalType) {
-                $query->where('approval_type', $approvalType);
-            })
-            ->whereHas('office', function ($query) use ($office) {
-                $query->where('office_name', $office);
-            })
+            ->whereHas(
+                'userConfig',
+                fn($q) =>
+                $q->where('approval_type', $approvalType)
+            )
+            ->whereHas(
+                'office',
+                fn($q) =>
+                $q->where('office_name', $office)
+            )
             ->first();
     }
 
-    /**
-     * Creates next approval entry
-     */
     private function createNextApproval($documentId, $userId, $remarks, $approvalType)
     {
         Approvals::create([
@@ -236,26 +298,16 @@ class ApprovalsController extends Controller
             'status'        => 0,
             'remarks'       => $remarks,
             'approval_type' => $approvalType,
-            'created_at'    => now(),
-            'updated_at'    => now(),
         ]);
     }
 
-    /**
-     * Creates notification for final approval routing
-     */
     private function createNotification($approval, $user, $destinationUserId)
     {
-        DB::table('notifications')->insert([
-            'document_id'        => $approval->document->document_id,
-            'office_origin'      => $user->office->office_name,
-            'destination_office' => $user->office->office_name,
-            'from_user_id'       => $user->id,
-            'user_id'            => $destinationUserId,
-            'message'            => "{$approval->document->document_control_number} has been routed to you for approval",
-            'is_read'            => 0,
-            'created_at'         => now(),
-            'updated_at'         => now(),
-        ]);
+        $this->insertNotification(
+            $approval,
+            $user->id,
+            $destinationUserId,
+            "{$approval->document->document_control_number} has been routed to you for approval"
+        );
     }
 }

@@ -199,6 +199,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.loadPage = loadPage;
 
+  window.loadlastpage = async function loadlastpage() {
+    let lastMenu = localStorage.getItem("lastMenu");
+    if (lastMenu) {
+      try {
+        lastMenu = JSON.parse(lastMenu);
+        loadPage(lastMenu);
+        return;
+      } catch (e) {
+        console.warn("Failed to parse lastMenu", e);
+      }
+    }
+  };
   //initialize menu
   (async function initApp() {
     // const authData = await fetchWithRetry("api/debug_auth", {

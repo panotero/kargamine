@@ -138,6 +138,117 @@ class DocumentController extends Controller
 
         return response()->json($document);
     }
+
+    public function revise(Request $request)
+    {
+        $data = $request->validate([
+            'revisedocControlNumber' => 'required|string',
+            'document_form'         => 'required|string',
+            'file'                  => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        //get document info by document control number
+        $document = Document::with(
+            'files',
+            'activities',
+            'activities.user',
+            'activities.fromUser',
+            'activities.routedUser',
+            'approvals',
+        )
+            ->where('document_control_number', $data['revisedocControlNumber'])
+            ->first();
+
+        $revisedocControlNumber = "R-01-" . $data['revisedocControlNumber'];
+        // Split by dash
+        $parts = explode('-', $revisedocControlNumber);
+
+        // Extract and increment ONLY the revision part
+        $revision = (int) $parts[1];           // 01 → 1
+        $parts[1] = str_pad($revision + 1, 2, '0', STR_PAD_LEFT);
+
+        // Rebuild control number
+        $documentControlNumber = implode('-', $parts);
+
+        dd($documentControlNumber);
+        // $involved_office = [
+        //     $request->office_origin,
+        //     $user->office->office_name,
+        // ];
+
+        // if ($request->destination_office !== $request->office_origin) {
+        //     $involved_office[] = $request->destination_office;
+        // }
+
+        // $document = Document::create([
+        //     'document_code'           => $request->document_code,
+        //     'document_control_number' => $documentControlNumber,
+        //     'date_received'           => $request->date_received,
+        //     'particular'              => $request->particular,
+        //     'office_origin'           => $request->office_origin,
+        //     'destination_office'      => $request->destination_office,
+        //     'involved_office'         => $involved_office,
+        //     'user_id'                 => $request->user_id,
+        //     'date_forwarded'          => now(),
+        //     'document_form'           => $request->document_form,
+        //     'document_type'           => $request->document_type,
+        //     'date_of_document'        => $request->date_of_document,
+        //     'due_date'                => $request->due_date,
+        //     'signatory'               => $request->signatory,
+        //     'remarks'                 => $request->remarks,
+        // ]);
+
+        // $admin_users = User::with(['userConfig', 'office'])
+        //     ->whereHas('userConfig', function ($q) {
+        //         $q->where('approval_type', 'routing')
+        //             ->where('status', 'active');
+        //     })
+        //     ->whereHas('office', function ($q) use ($request) {
+        //         $q->where('office_name', $request->destination_office);
+        //     })
+        //     ->get();
+
+
+        // foreach ($admin_users as $admin) {
+        //     DB::table('notifications')->insert([
+        //         'document_id'        => $document->document_id,
+        //         'office_origin'      => $request->office_origin,
+        //         'destination_office' => $request->destination_office,
+        //         'routed_to'          => $request->routed_to,
+        //         'from_user_id'       => $request->user_id,
+        //         'user_id'            => $admin->id,
+        //         'message'            => "New document uploaded: {$document->document_code}",
+        //         'is_read'            => 0,
+        //         'created_at'         => now(),
+        //         'updated_at'         => now(),
+        //     ]);
+        // }
+
+        // Activity::create([
+        //     'action'                  => 'upload',
+        //     'document_id'             => $document->document_id,
+        //     'final_approval'          => 0,
+        //     'document_control_number' => $documentControlNumber,
+        //     'user_id'                 => $request->user_id,
+        //     'from_user_id'            => $request->user_id,
+        //     'routed_to'               => null,
+        //     'final_remarks'           => $request->remarks ?? null,
+        // ]);
+
+
+        // Log::info([
+        //     'message'           => 'Document created successfully',
+        //     'data'              => $document,
+        //     'userlist'          => $admin_users,
+        //     'docControlNumber'  => $documentControlNumber,
+        // ]);
+        // return response()->json([
+        //     'message'           => 'Document created successfully'
+        // ], 201);
+
+        // Debug – remove after confirming
+        dd($document);
+    }
     public function store(Request $request)
     {
         $user = User::with(['userConfig', 'office'])

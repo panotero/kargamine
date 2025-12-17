@@ -19,6 +19,10 @@ window.checkActionButtons = function checkActionButtons(
       name: "routeActions",
       el: document.getElementById("routeDocumentBtn"),
     },
+    {
+      name: "revisionActions",
+      el: document.getElementById("revisionButtons"),
+    },
   ];
 
   actionButtonArray.forEach((item) => {
@@ -33,34 +37,32 @@ window.checkActionButtons = function checkActionButtons(
     status = status.toLowerCase();
   }
 
-  console.log(documentRecepientId);
-  console.log(documentDestinationOffice);
-  console.log(window.authUser.office.office_name);
-
-  if (
+  //   console.log(documentRecepientId);
+  //   console.log(documentDestinationOffice);
+  //   console.log(window.authUser.office.office_name);
+  const canAct =
     documentRecepientId !== false ||
-    documentDestinationOffice === window.authUser.office.office_name
-  ) {
-    if (receiptConfirmation === 0) {
-      const confirmationAction = actionButtonArray.find(
-        (item) => item.name === "confirmationActions"
-      );
-      if (confirmationAction?.el)
-        confirmationAction.el.classList.remove("hidden");
-    } else {
-      if (status && status === "for approval") {
-        const approvalAction = actionButtonArray.find(
-          (item) => item.name === "approvalActions"
-        );
-        if (approvalAction?.el) approvalAction.el.classList.remove("hidden");
-      } else {
-        const routeAction = actionButtonArray.find(
-          (item) => item.name === "routeActions"
-        );
-        if (routeAction?.el) routeAction.el.classList.remove("hidden");
-      }
-    }
+    documentDestinationOffice === window.authUser.office.office_name;
+
+  if (!canAct) return;
+
+  const showAction = (name) => {
+    const action = actionButtonArray.find((item) => item.name === name);
+    if (action?.el) action.el.classList.remove("hidden");
+  };
+
+  if (status === "remanded") {
+    showAction("revisionActions");
+    return;
+  } else if (receiptConfirmation === 0) {
+    showAction("confirmationActions");
+    return;
+  } else if (status === "for approval") {
+    showAction("approvalActions");
+    return;
   }
+
+  showAction("routeActions");
 };
 
 window.clearModalFields = function clearModalFields() {
@@ -125,6 +127,7 @@ window.populateDocumentModal = async function populateDocumentModal(
     // console.log(data);
     document.getElementById("docId").value = data.document_id;
     setText("docControlNumber", data.document_control_number || "N/A");
+    setText("revisedocControlNumber", data.document_control_number || "N/A");
     setText("docStatus", data.status || "N/A");
 
     const confirmationButton = document.getElementById("btnConfirm");
@@ -438,11 +441,13 @@ window.sendApprovalAction = async function sendApprovalAction({
     // Close modals
     document.getElementById("DocumentModal")?.classList.add("hidden");
     document.getElementById("approvalModal")?.classList.add("hidden");
+    document.getElementById("disapprovalModal")?.classList.add("hidden");
+    document.getElementById("forDiscussionModal")?.classList.add("hidden");
     showMessage({
       status: "success",
       message: "Document successfully approved!",
     });
-    loadPage();
+    loadlastpage();
   }
 };
 
@@ -479,7 +484,14 @@ window.populateUsers = async function populateUsers(approvalType) {
 const userSelect = document.getElementById("userSelect");
 const modalApproveBtn = document.getElementById("modalApproveBtn");
 const modalDisapproveBtn = document.getElementById("modalDisapproveBtn");
+const modalForDiscussionBtn = document.getElementById("modalForDiscussionBtn");
+const modalrevisionBtn = document.getElementById("modalrevisionBtn");
 const confirmBtn = document.getElementById("confirmApprovalBtn");
+const confirmDisapprovalBtn = document.getElementById("confirmDisapprovalBtn");
+const submitrevisionBtn = document.getElementById("submitrevisionBtn");
+const confirmForDiscussionBtn = document.getElementById(
+  "confirmForDiscussionBtn"
+);
 const remarksTextarea = document.getElementById("remarksTextarea");
 const document_id = document.getElementById("document_id");
 
@@ -493,11 +505,87 @@ confirmBtn.addEventListener("click", () => {
     nextUserId: userSelect.value,
   });
 });
+confirmDisapprovalBtn.addEventListener("click", () => {
+  const selectedOption = userSelect.options[userSelect.selectedIndex];
+  sendApprovalAction({
+    approvalId: document_id.textContent,
+    action: "disapproved",
+    next_action: selectedOption.dataset.approvaltype,
+    remarks: remarksTextarea.value,
+    nextUserId: userSelect.value,
+  });
+});
+submitrevisionBtn.addEventListener("click", async function () {
+  const reviseformData = new FormData();
+  const revisefileInput = document.getElementById("revisefileInput");
 
-[modalApproveBtn, modalDisapproveBtn].forEach((btn) =>
-  btn.addEventListener("click", () =>
-    initModal({
-      modalId: "approvalModal",
-    })
-  )
+  reviseformData.append(
+    "revisedocControlNumber",
+    document.getElementById("revisedocControlNumber").textContent.trim()
+  );
+  reviseformData.append("document_form", "PDF");
+
+  if (revisefileInput.files.length > 0) {
+    reviseformData.append("file", revisefileInput.files[0]);
+  }
+
+  this.disabled = true;
+  this.textContent = "Submitting...";
+
+  try {
+    const result = await fetchWithRetry("/api/documents/revise", {
+      method: "POST",
+      headers: {
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
+      },
+      body: reviseformData,
+    });
+
+    console.log(result);
+  } catch (error) {
+    console.error("Revision failed:", error);
+  } finally {
+    this.disabled = false;
+    this.textContent = "Submit Revision";
+  }
+});
+confirmForDiscussionBtn.addEventListener("click", () => {
+  const selectedOption = userSelect.options[userSelect.selectedIndex];
+  sendApprovalAction({
+    approvalId: document_id.textContent,
+    action: "for-discussion",
+    next_action: selectedOption.dataset.approvaltype,
+    remarks: remarksTextarea.value,
+    nextUserId: userSelect.value,
+  });
+});
+modalrevisionBtn.addEventListener("click", () => {
+  initPDFDropzone({
+    dropzoneId: "revisedropzone",
+    fileInputId: "revisefileInput",
+    fileInfoId: "revisefileInfo",
+    clearBtnId: "reviseclearSelectionBtn",
+  });
+
+  initModal({
+    modalId: "reviseModal",
+  });
+});
+modalApproveBtn.addEventListener("click", () =>
+  initModal({
+    modalId: "approvalModal",
+  })
+);
+
+modalDisapproveBtn.addEventListener("click", () =>
+  initModal({
+    modalId: "disapprovalModal",
+  })
+);
+
+modalForDiscussionBtn.addEventListener("click", () =>
+  initModal({
+    modalId: "forDiscussionModal",
+  })
 );

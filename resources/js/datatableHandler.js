@@ -29,7 +29,7 @@ window.initDataTables = function initDataTables() {
     const search = document.querySelectorAll(".dt-search");
     const wrapper = document.querySelectorAll(".dt-wrapper");
     pagination.forEach((paginationWrapper) => {
-      console.log(paginationWrapper);
+      //   console.log(paginationWrapper);
       paginationWrapper.classList.add(
         "flex",
         "justify-center",
@@ -39,7 +39,7 @@ window.initDataTables = function initDataTables() {
       );
     });
     search.forEach((searchWrapper) => {
-      console.log(searchWrapper);
+      //   console.log(searchWrapper);
       searchWrapper.classList.add(
         "flex",
         "justify-center",
@@ -49,7 +49,7 @@ window.initDataTables = function initDataTables() {
       );
     });
     wrapper.forEach((Wrapper) => {
-      console.log(Wrapper);
+      //   console.log(Wrapper);
       Wrapper.classList.add("bg-white", "text-black");
     });
   }

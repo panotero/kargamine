@@ -14,7 +14,7 @@
             <x-input-label for="password" :value="__('Password')" />
 
             <div class="relative mt-1">
-                <button type="button" id="togglePassword"
+                <button type="button" id="togglePassword" tabindex="-1"
                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700">
 
                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
