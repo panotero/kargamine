@@ -760,7 +760,7 @@
                     <div class="flex flex-col sm:flex-row sm:justify-end gap-3">
                         <button id="confirmForDiscussionBtn"
                             class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg w-full sm:w-auto">
-                            Confirm
+                            Submit
                         </button>
                         <button
                             class="modal-close w-full sm:w-auto border border-gray-200 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-xl transition">

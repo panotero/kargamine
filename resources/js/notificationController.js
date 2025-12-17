@@ -90,7 +90,10 @@ function populateNotifications(notificationsArray) {
       <!-- Notification content -->
       <div class="flex-1 min-w-0">
           <p class="text-sm text-gray-800 dark:text-gray-200 font-medium">
-              ${formatNotificationMessage(notification.message)}
+              ${formatNotificationMessage(
+                notification.message,
+                notification.document.document_control_number
+              )}
           </p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
               ${formatTimestamp(notification.created_at)}
@@ -108,7 +111,8 @@ function populateNotifications(notificationsArray) {
         notification.document.status,
         notification.document.recepient_id,
         notification.document.destination_office,
-        notification.document.receipt_confirmation
+        notification.document.receipt_confirmation,
+        notification.document.revision_status
       );
 
       clearModalFields();
@@ -130,23 +134,79 @@ function populateNotifications(notificationsArray) {
   });
 }
 
-function formatNotificationMessage(msg) {
+function formatNotificationMessage(msg, docctrlnumber) {
   msg = msg.toLowerCase();
 
-  if (msg.includes("uploaded")) return "Uploaded a file";
-  if (msg.includes("approval")) {
-    return "Routed a document for your approval";
-  } else if (msg.includes("routed")) {
-    return "Routed a document to you";
+  if (msg.includes("uploaded")) {
+    return (
+      "Uploaded a document with control number <b>" +
+      docctrlnumber +
+      "</b> to your office"
+    );
   }
-  if (msg.includes("remanded")) return "Remanded a file";
-  if (msg.includes("signed")) return "Signed a file";
-  if (msg.includes("approved")) return "Approved the file";
-  if (msg.includes("disapproved")) return "Disapproved the file";
-  if (msg.includes("3 days")) return "Document is 3 days before due";
-  if (msg.includes("due today")) return "Document is due today";
-  if (msg.includes("over due") || msg.includes("overdue"))
-    return "Document is overdue";
+
+  if (msg.includes("approval")) {
+    return (
+      "Routed a document with control number <b>" +
+      docctrlnumber +
+      "</b> for your approval"
+    );
+  } else if (msg.includes("routed")) {
+    return (
+      "Routed a document with control number <b>" +
+      docctrlnumber +
+      "</b> to you"
+    );
+  }
+
+  if (msg.includes("remanded")) {
+    return (
+      "Remanded the document with control number <b>" + docctrlnumber + "</b>"
+    );
+  }
+
+  if (msg.includes("signed")) {
+    return (
+      "Signed the document with control number <b>" + docctrlnumber + "</b>"
+    );
+  }
+
+  /* IMPORTANT: order matters here */
+  if (msg.includes("disapproved")) {
+    return (
+      "Disapproved the document with control number <b>" +
+      docctrlnumber +
+      "</b>"
+    );
+  }
+
+  if (msg.includes("approved")) {
+    return (
+      "Approved the document with control number <b>" + docctrlnumber + "</b>"
+    );
+  }
+
+  if (msg.includes("3 days")) {
+    return (
+      "The document with control number <b>" +
+      docctrlnumber +
+      "</b> is due in 3 days"
+    );
+  }
+
+  if (msg.includes("due today")) {
+    return (
+      "The document with control number <b>" +
+      docctrlnumber +
+      "</b> is due today"
+    );
+  }
+
+  if (msg.includes("over due") || msg.includes("overdue")) {
+    return (
+      "The document with control number <b>" + docctrlnumber + "</b> is overdue"
+    );
+  }
 
   return msg;
 }

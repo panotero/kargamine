@@ -44,6 +44,12 @@ function initroute() {
         if (res.ok) {
           //   console.log(data);
           window.getDocs();
+          document.getElementById("routeOfficeSelect").selectedIndex = 0;
+          document.getElementById("routeUserSelect").selectedIndex = 0;
+          document.getElementById("routeApprovalSelect").selectedIndex = 0;
+          document.getElementById("routeStatusSelect").selectedIndex = 0;
+          document.getElementById("routeRemarks").value = "";
+          document.getElementById("routefileInput").value = "";
           const routingmodal = document.getElementById("routingModal");
           routingmodal.classList.add("hidden");
           const documentmodal = document.getElementById("DocumentModal");

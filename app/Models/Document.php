@@ -34,6 +34,7 @@ class Document extends Model
         'receipt_confirmation',
         'receipt_confirmed_by',
         'date_forwarded',
+        'revision_status',
     ];
 
     protected $casts = [

@@ -57,6 +57,7 @@ class DocumentController extends Controller
                 'involved_office' => $doc->involved_office,
                 'action_taken' => $doc->action_taken,
                 'status' => $doc->status,
+                'revision_status' => $doc->revision_status,
                 'remarks' => $doc->remarks,
                 'confidentiality' => $doc->confidentiality,
                 'created_at' => $doc->created_at,
@@ -143,6 +144,8 @@ class DocumentController extends Controller
     {
         $data = $request->validate([
             'revisedocControlNumber' => 'required|string',
+            'user_id' => 'required|integer',
+            'revisedocControlNumber' => 'required|string',
             'document_form'         => 'required|string',
             'file'                  => 'required|file|mimes:pdf|max:10240',
         ]);
@@ -158,96 +161,132 @@ class DocumentController extends Controller
         )
             ->where('document_control_number', $data['revisedocControlNumber'])
             ->first();
+        $originalDocControlNumber = $data['revisedocControlNumber'];
 
-        $revisedocControlNumber = "R-01-" . $data['revisedocControlNumber'];
-        // Split by dash
-        $parts = explode('-', $revisedocControlNumber);
+        if (preg_match('/^R-(\d{2})-(.+)$/', $originalDocControlNumber, $matches)) {
+            // Case 2: Already has R-XX- → increment revision
+            $currentRevision = (int) $matches[1];
+            $newRevision = str_pad($currentRevision + 1, 2, '0', STR_PAD_LEFT);
 
-        // Extract and increment ONLY the revision part
-        $revision = (int) $parts[1];           // 01 → 1
-        $parts[1] = str_pad($revision + 1, 2, '0', STR_PAD_LEFT);
+            $documentControlNumber = 'R-' . $newRevision . '-' . $matches[2];
+        } else {
+            // Case 1: No R-XX- yet → start with R-01-
+            $documentControlNumber = 'R-01-' . $originalDocControlNumber;
+        }
 
-        // Rebuild control number
-        $documentControlNumber = implode('-', $parts);
+        //get office info of sender id
 
-        dd($documentControlNumber);
-        // $involved_office = [
-        //     $request->office_origin,
-        //     $user->office->office_name,
-        // ];
+        $sender = User::with(['userConfig', 'office'])
+            ->findOrFail($document->sender_id);
 
-        // if ($request->destination_office !== $request->office_origin) {
-        //     $involved_office[] = $request->destination_office;
-        // }
+        $involved_office = [
+            $document->office_origin,
+            $sender->office->office_name,
+        ];
 
-        // $document = Document::create([
-        //     'document_code'           => $request->document_code,
-        //     'document_control_number' => $documentControlNumber,
-        //     'date_received'           => $request->date_received,
-        //     'particular'              => $request->particular,
-        //     'office_origin'           => $request->office_origin,
-        //     'destination_office'      => $request->destination_office,
-        //     'involved_office'         => $involved_office,
-        //     'user_id'                 => $request->user_id,
-        //     'date_forwarded'          => now(),
-        //     'document_form'           => $request->document_form,
-        //     'document_type'           => $request->document_type,
-        //     'date_of_document'        => $request->date_of_document,
-        //     'due_date'                => $request->due_date,
-        //     'signatory'               => $request->signatory,
-        //     'remarks'                 => $request->remarks,
-        // ]);
+        if ($request->destination_office !== $request->office_origin) {
+            $involved_office[] = $request->destination_office;
+        }
 
-        // $admin_users = User::with(['userConfig', 'office'])
-        //     ->whereHas('userConfig', function ($q) {
-        //         $q->where('approval_type', 'routing')
-        //             ->where('status', 'active');
-        //     })
-        //     ->whereHas('office', function ($q) use ($request) {
-        //         $q->where('office_name', $request->destination_office);
-        //     })
-        //     ->get();
+        $reviseddocument = Document::create([
+            'document_code'           => $document->document_code,
+            'document_control_number' => $documentControlNumber,
+            'date_received'           => $document->date_received,
+            'particular'              => $document->particular,
+            'office_origin'           => $document->office_origin,
+            'destination_office'      => $sender->office->office_name,
+            'involved_office'         => $involved_office,
+            'user_id'                 => $data['user_id'],
+            'date_forwarded'          => now(),
+            'document_form'           => $document->document_form,
+            'document_type'           => $document->document_type,
+            'date_of_document'        => $document->date_of_document,
+            'signatory'               => $document->signatory,
+            'remarks'                 => $document->remarks,
+        ]);
 
 
-        // foreach ($admin_users as $admin) {
-        //     DB::table('notifications')->insert([
-        //         'document_id'        => $document->document_id,
-        //         'office_origin'      => $request->office_origin,
-        //         'destination_office' => $request->destination_office,
-        //         'routed_to'          => $request->routed_to,
-        //         'from_user_id'       => $request->user_id,
-        //         'user_id'            => $admin->id,
-        //         'message'            => "New document uploaded: {$document->document_code}",
-        //         'is_read'            => 0,
-        //         'created_at'         => now(),
-        //         'updated_at'         => now(),
-        //     ]);
-        // }
+        if ($request->hasFile('file')) {
+            $file          = $request->file('file');
+            $officeFolder  = $document->office_origin ?? 'UnknownOffice';
+            $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
+            $fileName      = uniqid() . '-' . $cleanOriginal;
+            $folder = "storage/assets/documents/$officeFolder/pdf";
+            $folderPath    = public_path($folder);
+            if (!is_dir($folderPath)) {
+                mkdir($folderPath, 0777, true);
+            }
 
-        // Activity::create([
-        //     'action'                  => 'upload',
-        //     'document_id'             => $document->document_id,
-        //     'final_approval'          => 0,
-        //     'document_control_number' => $documentControlNumber,
-        //     'user_id'                 => $request->user_id,
-        //     'from_user_id'            => $request->user_id,
-        //     'routed_to'               => null,
-        //     'final_remarks'           => $request->remarks ?? null,
-        // ]);
+            $file->move($folderPath, $fileName);
+
+            $filePath = "$folder/$fileName";
+
+            DB::table('files')->insert([
+                'document_id'      => $reviseddocument->document_id,
+                'file_name'        => $cleanOriginal,
+                'file_path'        => $filePath,
+                'file_password'    => null,
+                'uploading_office' => $reviseddocument->office_origin,
+                'uploaded_by'      => $reviseddocument->user_id,
+                'uploaded_at'      => now(),
+            ]);
+        }
+        $admin_users = User::with(['userConfig', 'office'])
+            ->whereHas('userConfig', function ($q) {
+                $q->where('approval_type', 'routing')
+                    ->where('status', 'active');
+            })
+            ->whereHas('office', function ($q) use ($sender) {
+                $q->where('office_name', $sender->office->office_name);
+            })
+            ->get();
 
 
-        // Log::info([
-        //     'message'           => 'Document created successfully',
-        //     'data'              => $document,
-        //     'userlist'          => $admin_users,
-        //     'docControlNumber'  => $documentControlNumber,
-        // ]);
-        // return response()->json([
-        //     'message'           => 'Document created successfully'
-        // ], 201);
 
-        // Debug – remove after confirming
-        dd($document);
+        foreach ($admin_users as $admin) {
+            DB::table('notifications')->insert([
+                'document_id'        => $reviseddocument->document_id,
+                'office_origin'      => $reviseddocument->office_origin,
+                'destination_office' => $reviseddocument->destination_office,
+                'routed_to'          => $reviseddocument->routed_to,
+                'from_user_id'       => $reviseddocument->user_id,
+                'user_id'            => $admin->id,
+                'message'            => "New document uploaded: {$document->document_code}",
+                'is_read'            => 0,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+        }
+
+        Activity::create([
+            'action'                  => 'upload',
+            'document_id'             => $reviseddocument->document_id,
+            'final_approval'          => 0,
+            'document_control_number' => $reviseddocument->document_control_number,
+            'user_id'                 => $reviseddocument->user_id,
+            'from_user_id'            => $reviseddocument->user_id,
+            'routed_to'               => null,
+            'final_remarks'           => $reviseddocument->remarks ?? null,
+        ]);
+
+
+        Log::info([
+            'message'           => 'Document created successfully',
+            'data'              => $reviseddocument,
+            'userlist'          => $admin_users,
+            'docControlNumber'  => $reviseddocument->document_control_number,
+        ]);
+        //update document revised status to 1 to prevent multiple revision on a single remanded document
+
+        Document::where('document_control_number', $originalDocControlNumber)
+            ->update([
+                'revision_status' => 1
+            ]);
+
+
+        return response()->json([
+            'message'           => 'Document created successfully'
+        ], 201);
     }
     public function store(Request $request)
     {

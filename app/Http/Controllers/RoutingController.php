@@ -114,6 +114,7 @@ class RoutingController extends Controller
                         ->where('document_id', $document->document_id)
                         ->update([
                             'recipient_id' => null,
+                            'sender_id' => $user->id,
                             'receipt_confirmation' => 0,
                             'receipt_confirmed_by' => 0,
                             'status' => "Signed",
@@ -148,6 +149,7 @@ class RoutingController extends Controller
                         ->where('document_id', $document->document_id)
                         ->update([
                             'recipient_id' => null,
+                            'sender_id' => $user->id,
                             'receipt_confirmation' => 0,
                             'receipt_confirmed_by' => 0,
                             'status' => "Remanded",
@@ -181,7 +183,11 @@ class RoutingController extends Controller
                 ]);
                 DB::table('documents')
                     ->where('document_id', $document->document_id)
-                    ->update(['status' => 'For Approval', 'date_forwarded' => now(),]);
+                    ->update([
+                        'sender_id' => $user->id,
+                        'status' => 'For Approval',
+                        'date_forwarded' => now(),
+                    ]);
                 DB::table('approval_table')
                     ->where('user_id', $user->id)
                     ->update(['status' => 1]);

@@ -274,8 +274,13 @@
 
                 tr.addEventListener("click", (e) => {
                     if (e.target.classList.contains("labeldropdown")) return;
-                    checkActionButtons(doc.status, doc.receipient_id, doc.destination_office, doc
-                        .receipt_confirmation);
+                    checkActionButtons(
+                        doc.status,
+                        doc.receipient_id,
+                        doc.destination_office,
+                        doc.receipt_confirmation,
+                        doc.revision_status,
+                    );
 
                     clearModalFields();
                     showSkeletonLoaders();

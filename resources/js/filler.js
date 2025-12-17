@@ -57,7 +57,6 @@ async function fetchAuthUser() {
     window.authUser = null;
   }
 }
-fetchAuthUser();
 window.fetchAuthUser = fetchAuthUser;
 window.fillOfficeDropdown = fillOfficeDropdown;
 window.fillDocType = fillDocType;

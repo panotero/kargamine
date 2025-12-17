@@ -9,6 +9,7 @@ use App\Models\Document;
 use App\Models\Activity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ApprovalsController extends Controller
 {
@@ -53,6 +54,8 @@ class ApprovalsController extends Controller
             'next_user_id' => 'nullable|integer|exists:users,id',
             'remarks'      => 'nullable|string|max:500',
         ]);
+        // dd($validated);
+
 
         $approval = Approvals::with('document')
             ->where('document_id', $document_id)
@@ -136,9 +139,13 @@ class ApprovalsController extends Controller
 
     private function processApproval($approval, $validated, $user)
     {
+        Log::info("approval has been initialized motherfucker");
+        // dd($validated);
         $approval->remarks = 'Approved';
 
         if ($approval->approval_type === 'final-approval') {
+
+            Log::info("final approval shit");
             $this->notifyAdmins(
                 $approval,
                 $user,
@@ -155,6 +162,14 @@ class ApprovalsController extends Controller
         $nextAction = $validated['next_action'] ?? null;
 
         if ($nextAction === 'pre-approval') {
+
+            Log::info("next action is pre approval shit");
+
+            Document::where('document_id', $approval->document->document_id)
+                ->update([
+                    'recipient_id'   => $validated['next_user_id'],
+                    'date_forwarded' => now(),
+                ]);
             $this->createNextApproval(
                 $approval->document->document_id,
                 $validated['next_user_id'],
@@ -166,6 +181,8 @@ class ApprovalsController extends Controller
         }
 
         if ($nextAction === 'final-approval') {
+
+            Log::info("next action is final approval shit");
             $finalApprover = $this->getFinalApprover(
                 $user->office->office_name ?? null,
                 'final-approval'
@@ -174,6 +191,11 @@ class ApprovalsController extends Controller
             if (!$finalApprover) {
                 throw new \Exception('No final approver found.');
             }
+            Document::where('document_id', $approval->document->document_id)
+                ->update([
+                    'recipient_id'   => $finalApprover->id,
+                    'date_forwarded' => now(),
+                ]);
 
             $this->createNextApproval(
                 $approval->document->document_id,

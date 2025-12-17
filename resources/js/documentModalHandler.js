@@ -3,6 +3,7 @@ window.checkActionButtons = function checkActionButtons(
   documentRecepientId = false,
   documentDestinationOffice = false,
   receiptConfirmation = false,
+  revision_status = false,
   source = false
 ) {
   //   console.log(documentData);
@@ -37,32 +38,39 @@ window.checkActionButtons = function checkActionButtons(
     status = status.toLowerCase();
   }
 
-  //   console.log(documentRecepientId);
-  //   console.log(documentDestinationOffice);
-  //   console.log(window.authUser.office.office_name);
   const canAct =
     documentRecepientId !== false ||
     documentDestinationOffice === window.authUser.office.office_name;
 
   if (!canAct) return;
-
   const showAction = (name) => {
     const action = actionButtonArray.find((item) => item.name === name);
     if (action?.el) action.el.classList.remove("hidden");
   };
 
-  if (status === "remanded") {
+  // 1. Remanded with revision
+  if (status === "remanded" && revision_status === 0) {
     showAction("revisionActions");
     return;
-  } else if (receiptConfirmation === 0) {
+  } else {
+  }
+
+  // 2. Waiting for receipt confirmation
+  if (receiptConfirmation === 0 && status !== "remanded") {
     showAction("confirmationActions");
     return;
-  } else if (status === "for approval") {
+  }
+
+  // 3. For approval
+  if (status === "for approval") {
     showAction("approvalActions");
     return;
   }
 
-  showAction("routeActions");
+  // 4. Default routing case
+  if (receiptConfirmation !== 0 && status !== "remanded") {
+    showAction("routeActions");
+  }
 };
 
 window.clearModalFields = function clearModalFields() {
@@ -453,9 +461,11 @@ window.sendApprovalAction = async function sendApprovalAction({
 
 window.populateUsers = async function populateUsers(approvalType) {
   const data = await fetchAuthUser();
-  //   console.log(data);
-  const currentOffice = data.office?.office_name || null;
+  console.log(data);
+  const currentOffice = data.user.office.office_name || null;
+
   const userSelect = document.getElementById("userSelect");
+
   const users = await fetchWithRetry("/api/users", {
     method: "GET",
     headers: {
@@ -463,22 +473,33 @@ window.populateUsers = async function populateUsers(approvalType) {
       Accept: "application/json",
     },
   });
-  if (!users) return;
 
-  const filtered = users.filter(
-    (u) =>
-      u.office?.office_name === currentOffice &&
-      u.user_config?.approval_type !== approvalType
-  );
+  //   if (!users || !currentOffice) return;
 
-  userSelect.innerHTML =
-    `<option value="">Select User</option>` +
-    filtered
-      .map(
-        (u) =>
-          `<option value="${u.id}" data-approvalType="${u.user_config.approval_type}">${u.name}</option>`
-      )
-      .join("");
+  // Clear existing options
+  userSelect.innerHTML = `<option value="">Select User</option>`;
+
+  users.forEach((u) => {
+    console.log("User office:", u.office?.office_name);
+    console.log("Current office:", currentOffice);
+    console.log("User approval:", u.user_config?.approval_type);
+    console.log("Passed approvalType:", approvalType);
+
+    const officeMatch =
+      u.office?.office_name?.trim().toLowerCase() ===
+      currentOffice?.trim().toLowerCase();
+
+    const approvalMatch = u.user_config?.approval_type !== approvalType;
+
+    if (officeMatch && approvalMatch) {
+      const option = document.createElement("option");
+      option.value = u.id;
+      option.textContent = u.name;
+      option.dataset.approvalType = u.user_config.approval_type;
+
+      userSelect.appendChild(option);
+    }
+  });
 };
 
 const userSelect = document.getElementById("userSelect");
@@ -495,25 +516,56 @@ const confirmForDiscussionBtn = document.getElementById(
 const remarksTextarea = document.getElementById("remarksTextarea");
 const document_id = document.getElementById("document_id");
 
-confirmBtn.addEventListener("click", () => {
-  const selectedOption = userSelect.options[userSelect.selectedIndex];
-  sendApprovalAction({
-    approvalId: document_id.textContent,
-    action: "approved",
-    next_action: selectedOption.dataset.approvaltype,
-    remarks: remarksTextarea.value,
-    nextUserId: userSelect.value,
-  });
+confirmBtn.addEventListener("click", async function () {
+  this.disabled = true;
+  this.textContent = "Confirming...";
+
+  try {
+    const selectedOption = userSelect.options[userSelect.selectedIndex];
+    if (!selectedOption || !selectedOption.value) {
+      console.warn("No user selected");
+      return;
+    }
+
+    sendApprovalAction({
+      approvalId: document_id.textContent,
+      action: "approved",
+      next_action: selectedOption.dataset.approvalType || null, // note the correct camelCase
+      remarks: remarksTextarea.value,
+      nextUserId: userSelect.value,
+    });
+
+    remarksTextarea.value = "";
+    userSelect.selectedIndex = 0;
+  } catch (error) {
+    console.error("Confirmation failed:", error);
+  } finally {
+    this.disabled = false;
+    this.textContent = "Confirm";
+  }
 });
-confirmDisapprovalBtn.addEventListener("click", () => {
-  const selectedOption = userSelect.options[userSelect.selectedIndex];
-  sendApprovalAction({
-    approvalId: document_id.textContent,
-    action: "disapproved",
-    next_action: selectedOption.dataset.approvaltype,
-    remarks: remarksTextarea.value,
-    nextUserId: userSelect.value,
-  });
+confirmDisapprovalBtn.addEventListener("click", async function () {
+  this.disabled = true;
+  this.textContent = "Confirming...";
+
+  try {
+    const selectedOption = userSelect.options[userSelect.selectedIndex];
+    sendApprovalAction({
+      approvalId: document_id.textContent,
+      action: "disapproved",
+      next_action: selectedOption.dataset.approvaltype,
+      remarks: remarksTextarea.value,
+      nextUserId: userSelect.value,
+    });
+
+    remarksTextarea.value = "";
+    userSelect.selectedIndex = 0;
+  } catch (error) {
+    console.error("Disapproval failed:", error);
+  } finally {
+    this.disabled = false;
+    this.textContent = "Confirm";
+  }
 });
 submitrevisionBtn.addEventListener("click", async function () {
   const reviseformData = new FormData();
@@ -523,6 +575,7 @@ submitrevisionBtn.addEventListener("click", async function () {
     "revisedocControlNumber",
     document.getElementById("revisedocControlNumber").textContent.trim()
   );
+  reviseformData.append("user_id", window.authUser.id);
   reviseformData.append("document_form", "PDF");
 
   if (revisefileInput.files.length > 0) {
@@ -543,22 +596,45 @@ submitrevisionBtn.addEventListener("click", async function () {
     });
 
     console.log(result);
+    if (result) {
+      // Close modals
+      document.getElementById("DocumentModal")?.classList.add("hidden");
+      document.getElementById("approvalModal")?.classList.add("hidden");
+      document.getElementById("disapprovalModal")?.classList.add("hidden");
+      document.getElementById("forDiscussionModal")?.classList.add("hidden");
+      document.getElementById("reviseModal")?.classList.add("hidden");
+      showMessage({
+        status: "success",
+        message: "Revised Document has been uploaded",
+      });
+      loadlastpage();
+    }
   } catch (error) {
     console.error("Revision failed:", error);
   } finally {
     this.disabled = false;
-    this.textContent = "Submit Revision";
+    this.textContent = "Submit";
   }
 });
-confirmForDiscussionBtn.addEventListener("click", () => {
-  const selectedOption = userSelect.options[userSelect.selectedIndex];
-  sendApprovalAction({
-    approvalId: document_id.textContent,
-    action: "for-discussion",
-    next_action: selectedOption.dataset.approvaltype,
-    remarks: remarksTextarea.value,
-    nextUserId: userSelect.value,
-  });
+confirmForDiscussionBtn.addEventListener("click", async function () {
+  this.disabled = true;
+  this.textContent = "Confirming...";
+
+  try {
+    const selectedOption = userSelect.options[userSelect.selectedIndex];
+    sendApprovalAction({
+      approvalId: document_id.textContent,
+      action: "for-discussion",
+      next_action: selectedOption.dataset.approvaltype,
+      remarks: remarksTextarea.value,
+      nextUserId: userSelect.value,
+    });
+  } catch (error) {
+    console.error("Discussion request failed:", error);
+  } finally {
+    this.disabled = false;
+    this.textContent = "Submit";
+  }
 });
 modalrevisionBtn.addEventListener("click", () => {
   initPDFDropzone({
@@ -572,11 +648,12 @@ modalrevisionBtn.addEventListener("click", () => {
     modalId: "reviseModal",
   });
 });
-modalApproveBtn.addEventListener("click", () =>
+modalApproveBtn.addEventListener("click", function () {
+  populateUsers("routing");
   initModal({
     modalId: "approvalModal",
-  })
-);
+  });
+});
 
 modalDisapproveBtn.addEventListener("click", () =>
   initModal({

@@ -115,12 +115,14 @@ function initdocumentcontroller() {
     `;
 
     tr.addEventListener("click", (e) => {
+      console.log(item);
       if (e.target.classList.contains("labeldropdown")) return;
       checkActionButtons(
         item.status,
         item.recipient_id,
         item.destination_office,
         item.receipt_confirmation,
+        item.revision_status,
         source
       );
 
@@ -242,6 +244,7 @@ function initdocumentcontroller() {
     submitBtn.addEventListener("click", async () => {
       //   console.log("submitBtn clicked");
       const modal = document.getElementById("modalNewDocument");
+
       if (!modal) return;
 
       clearModalErrors();
@@ -416,6 +419,8 @@ function initdocumentcontroller() {
         resetFormModal("modalNewDocument");
         showControlNumberModal(result.docControlNumber);
         getDocs();
+
+        loadlastpage();
       } catch (err) {
         console.error(err);
         showModalErrors(["Unexpected error occurred."]);
@@ -614,4 +619,3 @@ function initdocumentcontroller() {
 }
 
 window.initdocumentcontroller = initdocumentcontroller;
-window.checkActionButtons = checkActionButtons;
