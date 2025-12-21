@@ -162,4 +162,46 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function reports($officename)
+    {
+        $query = DB::table('users')
+            ->join('office_table', 'office_table.office_id', '=', 'users.office_id')
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+                'office_table.office_name',
+
+                // Current documents (recipient-based)
+                DB::raw('(
+                    SELECT COUNT(*)
+                    FROM documents
+                    WHERE documents.recipient_id = users.id
+                ) AS current_document_count'),
+
+                // Processed documents (activity-based, distinct documents)
+                DB::raw('(
+                    SELECT COUNT(DISTINCT activities.document_id)
+                    FROM activities
+                    WHERE activities.user_id = users.id
+                ) AS processed_document_count')
+            );
+
+        /**
+         * Office filter rule
+         */
+        if ($officename !== 'ODDG-PP') {
+            $query->where('office_table.office_name', $officename);
+        }
+
+        $users = $query->orderBy('users.name')->get();
+
+        return response()->json([
+            'office_filter' => $officename,
+            'total_users'   => $users->count(),
+            'data'          => $users
+        ]);
+        // dd($officename);
+    }
 }

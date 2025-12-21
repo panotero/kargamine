@@ -110,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/save/{id}', [UserController::class, 'save_info']);
         Route::patch('/deactivate/{id}', [UserController::class, 'deactivate']);
         Route::patch('/reactivate/{id}', [UserController::class, 'reactivate']);
+        Route::get('/reports/{officename}', [UserController::class, 'reports']);
     });
 
 

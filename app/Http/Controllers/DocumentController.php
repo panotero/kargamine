@@ -86,6 +86,7 @@ class DocumentController extends Controller
             ->update([
                 'receipt_confirmation' => 1,
                 'receipt_confirmed_by' => $request->user_id,
+                'recipient_id' => $request->user_id,
                 'status' => $status,
             ]);
 
