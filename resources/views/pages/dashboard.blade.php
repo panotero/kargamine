@@ -1,7 +1,9 @@
-<div class="min-h-screen">
-    <div class="w-full  container mx-auto py-5 dark:text-gray-200 text-gray-900">
+<div class="max-h-screen max-md:w-screen w-full overflow-auto bg-gray-50 dark:bg-gray-800 p-5 rounded-lg">
 
-        <div class="grid md:grid-cols-5 grid-cols-1 gap-3">
+
+    <div class="h-full container mx-auto py-5 ">
+
+        <div class="grid md:grid-cols-5 grid-cols-2 gap-3">
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
                 <div>
                     <p class="text-sm">Total Documents</p>

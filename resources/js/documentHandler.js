@@ -115,7 +115,7 @@ function initdocumentcontroller() {
     `;
 
     tr.addEventListener("click", (e) => {
-      console.log(item);
+      //   console.log(item);
       if (e.target.classList.contains("labeldropdown")) return;
       checkActionButtons(
         item.status,
@@ -481,7 +481,7 @@ function initdocumentcontroller() {
 
     const officeSelect = document.getElementById("routeOfficeSelect");
     const userSelect = document.getElementById("routeUserSelect");
-    const approvalSelect = document.getElementById("approvalSelect");
+    const approvalSelect = document.getElementById("routeApprovalSelect");
     const statusSelect = document.getElementById("routeStatusSelect");
     const internalSection = document.getElementById("internalSection");
     const externalSection = document.getElementById("externalSection");

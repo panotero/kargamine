@@ -2,7 +2,9 @@ function initroute() {
   document
     .getElementById("routeSubmitBtn")
     .addEventListener("click", async () => {
-      console.log("routebutton clicked");
+      document.getElementById("routeSubmitBtn").disabled = true;
+      document.getElementById("routeSubmitBtn").textContent = "Submitting...";
+      //   console.log("routebutton clicked");
       const documentId = document.getElementById("docId").value;
       const destinationOffice =
         document.getElementById("routeOfficeSelect").value;

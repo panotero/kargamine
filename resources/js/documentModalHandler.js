@@ -461,7 +461,7 @@ window.sendApprovalAction = async function sendApprovalAction({
 
 window.populateUsers = async function populateUsers(approvalType) {
   const data = await fetchAuthUser();
-  console.log(data);
+  //   console.log(data);
   const currentOffice = data.user.office.office_name || null;
 
   const userSelect = document.getElementById("userSelect");
@@ -480,10 +480,10 @@ window.populateUsers = async function populateUsers(approvalType) {
   userSelect.innerHTML = `<option value="">Select User</option>`;
 
   users.forEach((u) => {
-    console.log("User office:", u.office?.office_name);
-    console.log("Current office:", currentOffice);
-    console.log("User approval:", u.user_config?.approval_type);
-    console.log("Passed approvalType:", approvalType);
+    // console.log("User office:", u.office?.office_name);
+    // console.log("Current office:", currentOffice);
+    // console.log("User approval:", u.user_config?.approval_type);
+    // console.log("Passed approvalType:", approvalType);
 
     const officeMatch =
       u.office?.office_name?.trim().toLowerCase() ===
