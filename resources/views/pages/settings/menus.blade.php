@@ -1,4 +1,4 @@
-<div class="lg:m-5 p-5 rounded-lg bg-white">
+<div class="lg:m-5 p-5 rounded-lg bg-white text-black dark:bg-gray-800 dark:text-white ">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold">Navigation Menus</h2>
         <button id="addMenuBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -23,7 +23,7 @@
 </div>
 
 <div id="menuModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center modal">
-    <div class="bg-white w-full max-w-md rounded shadow p-6 relative">
+    <div class="bg-white text-black w-full max-w-md max-h-[70vh] overflow-auto rounded shadow p-6 relative">
         <h3 id="modalTitle" class="text-lg font-semibold mb-4">Add New Menu</h3>
 
         <form id="menuForm" class="space-y-3">
@@ -140,12 +140,12 @@
         }
 
         async function loadRoles() {
-            const res = await fetch(`api/userconfigs`, {
+            const roles = await fetchWithRetry(`api/userconfigs`, {
                 headers: {
                     Accept: "application/json"
                 }
             });
-            const roles = await res.json();
+            // const roles = await res.json();
             const container = fields.rolesContainer;
             container.innerHTML = "";
 
@@ -175,13 +175,17 @@
         }
 
         async function loadOffices() {
-            const res = await fetch(`api/offices`, {
+            const offices = await fetchWithRetry(`api/offices`, {
+
                 headers: {
-                    Accept: "application/json"
-                }
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                        .content,
+                },
             });
 
-            const offices = await res.json();
+            // const offices = await res.json();
             const container = fields.officeCheckBoxFiller;
             container.innerHTML = "";
 
@@ -199,10 +203,10 @@
 
                 wrapper.innerHTML = `
             <input type="checkbox"
-                   value="${office.office_name}"
-                   data-office-name="${office.office_name}"
+                   value="${office.office_code}"
+                   data-office-name="${office.office_code}"
                    class="officeCheckbox cursor-pointer">
-            <span>${office.office_name}</span>
+            <span>${office.office_code}</span>
         `;
 
                 container.appendChild(wrapper);
@@ -216,13 +220,13 @@
             });
         }
         async function loadMenus() {
-            const res = await fetch(`api/nav_menus/list`, {
+            const menusData = await fetchWithRetry(`api/nav_menus/list`, {
                 credentials: 'include',
                 headers: {
                     Accept: "application/json"
                 }
             });
-            menusData = await res.json();
+            // menusData = await res.json();
             tableBody.innerHTML = "";
 
             const menuMap = {};
@@ -380,11 +384,13 @@
                 method = "PUT";
             }
 
-            const res = await fetch(url, {
+            const res = await fetchWithRetry(url, {
                 method,
                 headers: {
                     "Content-Type": "application/json",
-                    Accept: "application/json"
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                        .content,
                 },
                 body: JSON.stringify(payload)
             });
@@ -417,7 +423,7 @@
 
             if (!swapWith) return;
 
-            await fetch(`api/nav_menus/swap`, {
+            await fetchWithRetry(`api/nav_menus/swap`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -439,7 +445,7 @@
 
             const confirmed = await customConfirm("Delete this menu?");
             if (!confirmed) return;
-            await fetch(`api/nav_menus/${id}`, {
+            await fetchWithRetry(`api/nav_menus/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",

@@ -347,7 +347,7 @@ function initdocumentcontroller() {
     if (!window.authUser) return;
 
     const userId = window.authUser.id;
-    const userOfficeName = window.authUser.office?.office_name || null;
+    const userOfficeName = window.authUser.office?.office_code || null;
     const userApprovalType = window.authUser.user_config?.approval_type || null;
 
     try {
@@ -413,6 +413,7 @@ function initdocumentcontroller() {
     initroute();
 
     fillOfficeDropdown();
+    fillOfficeDropdownCustom();
     fillDocType();
 
     const destinationOfficedropdown =
@@ -611,7 +612,7 @@ function initdocumentcontroller() {
     const internalSection = document.getElementById("internalSection");
     const externalSection = document.getElementById("externalSection");
     const pdfUploadSection = document.getElementById("pdfUploadSection");
-    const currentOffice = window.authUser.office?.office_name || null;
+    const currentOffice = window.authUser.office?.office_code || null;
 
     officeSelect?.addEventListener("change", (e) => {
       const selected = e.target.value;
@@ -628,7 +629,7 @@ function initdocumentcontroller() {
           .then((res) => res.json())
           .then((users) => {
             const filtered = users.filter(
-              (u) => u.office?.office_name === currentOffice
+              (u) => u.office?.office_code === currentOffice
             );
             userSelect.innerHTML =
               `<option value="">Select User</option>` +

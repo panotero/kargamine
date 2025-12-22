@@ -23,7 +23,7 @@ class MenusController extends Controller
             $allowedOffices = json_decode($menu->allowed_office, true) ?? [];
 
             return in_array($user->role, $allowedRoles) &&
-                in_array($user->office->office_name, $allowedOffices);
+                in_array($user->office->office_code, $allowedOffices);
         })->values();
 
         $grouped = $filtered->where('parent_menu', 0)->map(function ($parent) use ($filtered) {

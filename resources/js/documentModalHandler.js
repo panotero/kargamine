@@ -40,7 +40,7 @@ window.checkActionButtons = function checkActionButtons(
 
   const canAct =
     documentRecepientId !== false ||
-    documentDestinationOffice === window.authUser.office.office_name;
+    documentDestinationOffice === window.authUser.office.office_code;
 
   if (!canAct) return;
   const showAction = (name) => {
@@ -462,7 +462,7 @@ window.sendApprovalAction = async function sendApprovalAction({
 window.populateUsers = async function populateUsers(approvalType) {
   const data = await fetchAuthUser();
   //   console.log(data);
-  const currentOffice = data.user.office.office_name || null;
+  const currentOffice = data.user.office.office_code || null;
 
   const userSelect = document.getElementById("userSelect");
 
@@ -480,13 +480,13 @@ window.populateUsers = async function populateUsers(approvalType) {
   userSelect.innerHTML = `<option value="">Select User</option>`;
 
   users.forEach((u) => {
-    // console.log("User office:", u.office?.office_name);
+    // console.log("User office:", u.office?.office_code);
     // console.log("Current office:", currentOffice);
     // console.log("User approval:", u.user_config?.approval_type);
     // console.log("Passed approvalType:", approvalType);
 
     const officeMatch =
-      u.office?.office_name?.trim().toLowerCase() ===
+      u.office?.office_code?.trim().toLowerCase() ===
       currentOffice?.trim().toLowerCase();
 
     const approvalMatch = u.user_config?.approval_type !== approvalType;

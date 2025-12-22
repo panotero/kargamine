@@ -12,6 +12,14 @@
                 </div>
             </div>
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
+
+                <div>
+                    <p class="text-sm">For Signature</p>
+                    <h2 class="mt-2 text-3xl font-bold" id="pending">0</h2>
+                    <p class="mt-1 text-xs">Approved and for signature</p>
+                </div>
+            </div>
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white dark:bg-gray-600">
                 <div>
                     <div>
                         <p class="text-sm">For Discussion</p>
@@ -321,7 +329,7 @@
             const authUser = window.authUser;
             if (!authUser) return;
 
-            const userOffice = authUser.office?.office_name || null;
+            const userOffice = authUser.office?.office_code || null;
 
 
             // Fetch all documents once
@@ -347,7 +355,7 @@
         async function getActivityData() {
             try {
 
-                const data = await fetchWithRetry(`/api/activities/byOffice/${authUser.office.office_name}`, {
+                const data = await fetchWithRetry(`/api/activities/byOffice/${authUser.office.code}`, {
                     method: "GET",
                     headers: {
                         Accept: "application/json",
@@ -366,7 +374,7 @@
             const authUser = window.authUser;
             if (!authUser) return;
 
-            const userOffice = authUser.office?.office_name || null;
+            const userOffice = authUser.office?.office_code || null;
             const docs = filteredDocs || allDocuments;
 
             const filtered = docs.filter(doc => {
@@ -411,7 +419,7 @@
             const authUser = window.authUser;
             if (!authUser) return;
 
-            const userOffice = authUser.office?.office_name || null;
+            const userOffice = authUser.office?.office_code || null;
             const docs = filteredDocs || allDocuments;
             const tableBody = document.querySelector("#reportsocumentsTable tbody");
             if (!tableBody) return;

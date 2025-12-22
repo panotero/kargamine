@@ -41,7 +41,7 @@ class RoutingController extends Controller
             $originOffice      = $document->office_origin;
             $destinationOffice = $validated['destination_office'];
             $recipientUserId   = $validated['recipient_user_id'] ?? null;
-            $sameOffice        = ($destinationOffice === $user->office->office_name);
+            $sameOffice        = ($destinationOffice === $user->office->office_code);
             $backToOrigin      = ($destinationOffice === $originOffice);
 
             if (!$sameOffice) {
@@ -53,7 +53,7 @@ class RoutingController extends Controller
                             ->where('status', 'active');
                     })
                     ->whereHas('office', function ($q) use ($request) {
-                        $q->where('office_name', $request->destination_office);
+                        $q->where('office_code', $request->destination_office);
                     })
                     ->get();
 

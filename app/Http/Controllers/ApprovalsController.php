@@ -184,7 +184,7 @@ class ApprovalsController extends Controller
 
             Log::info("next action is final approval shit");
             $finalApprover = $this->getFinalApprover(
-                $user->office->office_name ?? null,
+                $user->office->office_code ?? null,
                 'final-approval'
             );
 
@@ -291,7 +291,7 @@ class ApprovalsController extends Controller
             ->whereHas(
                 'office',
                 fn($q) =>
-                $q->where('office_name', $approval->document->destination_office)
+                $q->where('office_code', $approval->document->destination_office)
             )
             ->get();
     }
@@ -307,7 +307,7 @@ class ApprovalsController extends Controller
             ->whereHas(
                 'office',
                 fn($q) =>
-                $q->where('office_name', $office)
+                $q->where('office_code', $office)
             )
             ->first();
     }

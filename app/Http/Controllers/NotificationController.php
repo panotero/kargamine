@@ -18,7 +18,7 @@ class NotificationController extends Controller
 
                 ->orWhere(function ($sub) use ($user) {
                     $sub->whereNull('routed_to')
-                        ->where('destination_office', $user->office->office_name);
+                        ->where('destination_office', $user->office->office_code);
                 });
         })
             ->orderBy('created_at', 'desc')

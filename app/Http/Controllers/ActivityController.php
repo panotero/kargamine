@@ -59,13 +59,12 @@ class ActivityController extends Controller
         return response()->json(['message' => 'Activity deleted successfully']);
     }
 
-    public function getActivitiesByOffice($office_name)
+    public function getActivitiesByOffice($office_code)
     {
         $activities = Activity::with(['document', 'user'])
-            ->when($office_name !== "ODDG-PP", function ($query) use ($office_name) {
-                // Only apply this if office_name is NOT ODDG-PP
-                $query->whereHas('document', function ($q) use ($office_name) {
-                    $q->whereJsonContains('involved_office', $office_name);
+            ->when($office_code !== "ODDG-PP", function ($query) use ($office_code) {
+                $query->whereHas('document', function ($q) use ($office_code) {
+                    $q->whereJsonContains('involved_office', $office_code);
                 });
             })
             ->where('action', '!=', "view")

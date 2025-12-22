@@ -1,4 +1,4 @@
-<div class="w-full h-screen p-5 bg-gray-50">
+<div class="w-full h-screen p-5 bg-gray-50 text-black dark:bg-gray-800 dark:text-white ">
     <div class="container mx-auto space-y-6">
         <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4">
             <div class="flex flex-col w-full lg:w-1/3 gap-4">
@@ -78,31 +78,28 @@
             <table id="reportsocumentsTable" class=" text-sm text-left border-collapse">
                 <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                     <tr>
-                        <th class="px-4 py-3">Control #</th>
-                        <th class="px-4 py-3">Document Number</th>
-                        <th class="px-3 py-3">Label</th>
-                        <th class="px-4 py-3">Subject</th>
-                        <th class="px-3 py-3">Origin Office</th>
-                        <th class="px-3 py-3">Destination Office</th>
-                        <th class="px-4 py-3">Due Date</th>
-                        <th class="px-4 py-3">Duration</th>
-                        <th class="px-4 py-3">Date Uploaded</th>
-                        <th class="px-4 py-3">Confidentiality</th>
-                        <th class="px-3 py-3">Status</th>
+                        <th>Control #</th>
+                        <th>Document Code</th>
+                        <th>Label</th>
+                        <th>Subject</th>
+                        <th>Origin Office</th>
+                        <th>Destination Office</th>
+                        <th>Due Date</th>
+                        <th>Duration</th>
+                        <th>Date Uploaded</th>
+                        <th>Confidentiality</th>
+                        <th>Status</th>
 
-                        <!-- Hidden columns for export -->
-                        <th class="hidden">User</th>
-                        <th class="hidden">Recipient</th>
-                        <th class="hidden">Document Form</th>
-                        <th class="hidden">Document Type</th>
-                        <th class="hidden">Date of Document</th>
-                        <th class="hidden">Signatory</th>
-                        <th class="hidden">Receipt Confirmed By</th>
-                        <th class="hidden">Involved Office</th>
-                        <th class="hidden">Action Taken</th>
-                        <th class="hidden">Remarks</th>
-                        <th class="hidden">Created At</th>
-                        <th class="hidden">Updated At</th>
+                        <th>User</th>
+                        <th>Recipient</th>
+                        <th>Document Form</th>
+                        <th>Document Type</th>
+                        <th>Date of Document</th>
+                        <th>Signatory</th>
+                        <th>Confirmed By</th>
+                        <th>Involved Office</th>
+                        <th>Action Taken</th>
+                        <th>Remarks</th>
                     </tr>
                 </thead>
                 <tbody class="bg-gray-100 dark:bg-gray-700 dark:text-white">
@@ -124,7 +121,7 @@
             const authUser = window.authUser;
             if (!authUser) return;
 
-            const userOffice = authUser.office?.office_name || null;
+            const userOffice = authUser.office?.office_code || null;
 
             // Hide office filter if not ODDG-PP
             const officeFilterWrapper = document.querySelector('select:nth-of-type(2)').closest('div');
@@ -159,7 +156,7 @@
             const authUser = window.authUser;
             if (!authUser) return;
 
-            const userOffice = authUser.office?.office_name || null;
+            const userOffice = authUser.office?.office_code || null;
             const docs = filteredDocs || allDocuments;
 
             const filtered = docs.filter(doc => {
@@ -209,7 +206,7 @@
             const authUser = window.authUser;
             if (!authUser) return;
 
-            const userOffice = authUser.office?.office_name || null;
+            const userOffice = authUser.office?.office_code || null;
             const docs = filteredDocs || allDocuments;
             const tableBody = document.querySelector("#reportsocumentsTable tbody");
             if (!tableBody) return;
@@ -239,6 +236,7 @@
                         hour12: true
                     }) : "-";
 
+
                 const duration = doc.date_received && doc.date_forwarded ?
                     Math.ceil((new Date(doc.date_forwarded) - new Date(doc.date_received)) / (1000 * 60 *
                         60 * 24)) + " days" : "-";
@@ -257,19 +255,16 @@
             <td class="px-4 py-2">${doc.confidentiality || "-"}</td>
             <td class="px-4 py-2">${doc.status || "-"}</td>
 
-            <!-- Hidden columns for export -->
-            <td class="hidden">${doc.user_name || ""}</td>
-            <td class="hidden">${doc.recipient_name || ""}</td>
-            <td class="hidden">${doc.document_form || ""}</td>
-            <td class="hidden">${doc.document_type || ""}</td>
-            <td class="hidden">${doc.date_of_document || ""}</td>
-            <td class="hidden">${doc.signatory || ""}</td>
-            <td class="hidden">${doc.confirmed_by_name || ""}</td>
-            <td class="hidden">${JSON.stringify(doc.involved_office) || ""}</td>
-            <td class="hidden">${doc.action_taken || ""}</td>
-            <td class="hidden">${doc.remarks || ""}</td>
-            <td class="hidden">${doc.created_at || ""}</td>
-            <td class="hidden">${doc.updated_at || ""}</td>
+            <td class="px-3 py-3">${doc.user_name || ""}</td>
+            <td class="px-3 py-3">${doc.recipient_name || ""}</td>
+            <td class="px-3 py-3">${doc.document_form || ""}</td>
+            <td class="px-3 py-3">${doc.document_type || ""}</td>
+            <td class="px-3 py-3">${doc.date_of_document || ""}</td>
+            <td class="px-3 py-3">${doc.signatory || ""}</td>
+            <td class="px-3 py-3">${doc.confirmed_by_name || ""}</td>
+            <td class="px-3 py-3">${JSON.stringify(doc.involved_office) || ""}</td>
+            <td class="px-3 py-3">${doc.action_taken || ""}</td>
+            <td class="px-3 py-3">${doc.remarks || ""}</td>
         `;
                 tableBody.appendChild(row);
             });

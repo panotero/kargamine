@@ -145,7 +145,7 @@
                         <td class="px-6 py-3">${u.name}</td>
                         <td class="px-6 py-3">${u.email}</td>
                         <td class="px-6 py-3">${u.role ?? "-"}</td>
-                        <td class="px-6 py-3">${u.office.office_name ?? "-"}</td>
+                        <td class="px-6 py-3">${u.office.office_code ?? "-"}</td>
                         <td class="px-6 py-3 text-center">
                             <button class="text-white px-5 py-2 rounded bg-blue-500 editBtn" data-id="${u.id}">Edit</button> |
                             <button class="text-white px-5 py-2 rounded ${actionClass}" data-id="${u.id}">${actionLabel}</button>
@@ -183,7 +183,7 @@
 
                 officeSelect.innerHTML =
                     '<option value="">Select Office</option>' +
-                    offices.map((o) => `<option value="${o.office_id}">${o.office_name}</option>`).join("");
+                    offices.map((o) => `<option value="${o.office_id}">${o.office_code}</option>`).join("");
 
                 configSelect.innerHTML =
                     '<option value="">Select Config</option>' +

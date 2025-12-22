@@ -84,7 +84,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-96 p-6">
         <h3 class="text-lg font-semibold mb-4">Add New Office</h3>
         <form id="officeForm">
-            <input type="text" name="office_name" placeholder="Office Name"
+            <input type="text" name="office_code" placeholder="Office Name"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
             <input type="text" name="office_code" placeholder="Office Code"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
@@ -166,7 +166,7 @@
                 officeTable.insertAdjacentHTML('beforeend', `
       <tr class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
         <td class="p-3">${o.office_id}</td>
-        <td class="p-3">${o.office_name}</td>
+        <td class="p-3">${o.office_code}</td>
         <td class="p-3">${o.office_code}</td>
         <td class="p-3">${o.created_at}</td>
         <td class="p-3"><a href="#" class="px-5 py-2 my-2  text-white bg-red-500 rounded-md deletebtn" data-mode="office" data-id="${o.office_id}">Delete</a></td>

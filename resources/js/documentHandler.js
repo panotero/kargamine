@@ -145,7 +145,7 @@ function initdocumentcontroller() {
     if (!authUser) return;
 
     const userId = authUser.id;
-    const userOfficeName = authUser.office?.office_name || null;
+    const userOfficeName = authUser.office?.office_code || null;
     const userApprovalType = authUser.user_config?.approval_type || null;
 
     try {
@@ -216,7 +216,7 @@ function initdocumentcontroller() {
 
       if (response) {
         document.getElementById("originOffice").value =
-          authUser.office.office_name;
+          window.authUser.office.office_code;
         fillDocType();
       }
     }
@@ -420,7 +420,7 @@ function initdocumentcontroller() {
         showControlNumberModal(result.docControlNumber);
         getDocs();
 
-        loadlastpage();
+        // loadlastpage();
       } catch (err) {
         console.error(err);
         showModalErrors(["Unexpected error occurred."]);
@@ -486,7 +486,7 @@ function initdocumentcontroller() {
     const internalSection = document.getElementById("internalSection");
     const externalSection = document.getElementById("externalSection");
     const pdfUploadSection = document.getElementById("pdfUploadSection");
-    const currentOffice = window.authUser.office?.office_name || null;
+    const currentOffice = window.authUser.office?.office_code || null;
 
     officeSelect?.addEventListener("change", async (e) => {
       const selected = e.target.value;
@@ -505,7 +505,7 @@ function initdocumentcontroller() {
         });
         const filtered = users.filter(
           (u) =>
-            u.office?.office_name === currentOffice &&
+            u.office?.office_code === currentOffice &&
             u.user_config.approval_type !== "routing"
         );
         userSelect.innerHTML =

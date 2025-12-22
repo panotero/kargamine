@@ -163,7 +163,7 @@ class UserController extends Controller
         }
     }
 
-    public function reports($officename)
+    public function reports($officecode)
     {
         $query = DB::table('users')
             ->join('office_table', 'office_table.office_id', '=', 'users.office_id')
@@ -171,7 +171,7 @@ class UserController extends Controller
                 'users.id',
                 'users.name',
                 'users.email',
-                'office_table.office_name',
+                'office_table.office_code',
 
                 // Current documents (recipient-based)
                 DB::raw('(
@@ -191,14 +191,14 @@ class UserController extends Controller
         /**
          * Office filter rule
          */
-        if ($officename !== 'ODDG-PP') {
-            $query->where('office_table.office_name', $officename);
+        if ($officecode !== 'ODDG-PP') {
+            $query->where('office_table.code', $officecode);
         }
 
         $users = $query->orderBy('users.name')->get();
 
         return response()->json([
-            'office_filter' => $officename,
+            'office_filter' => $officecode,
             'total_users'   => $users->count(),
             'data'          => $users
         ]);

@@ -79,7 +79,7 @@ class DocumentController extends Controller
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
         $status = "Pending";
-        if ($document->office_origin === $user->office->office_name) {
+        if ($document->office_origin === $user->office->office_code) {
             $status = "Complete";
         }
         Document::where('document_id', $request->document_id)
@@ -182,7 +182,7 @@ class DocumentController extends Controller
 
         $involved_office = [
             $document->office_origin,
-            $sender->office->office_name,
+            $sender->office->office_code,
         ];
 
         if ($request->destination_office !== $request->office_origin) {
@@ -195,7 +195,7 @@ class DocumentController extends Controller
             'date_received'           => $document->date_received,
             'particular'              => $document->particular,
             'office_origin'           => $document->office_origin,
-            'destination_office'      => $sender->office->office_name,
+            'destination_office'      => $sender->office->office_code,
             'involved_office'         => $involved_office,
             'user_id'                 => $data['user_id'],
             'date_forwarded'          => now(),
@@ -238,7 +238,7 @@ class DocumentController extends Controller
                     ->where('status', 'active');
             })
             ->whereHas('office', function ($q) use ($sender) {
-                $q->where('office_name', $sender->office->office_name);
+                $q->where('office_code', $sender->office->office_code);
             })
             ->get();
 
@@ -312,14 +312,14 @@ class DocumentController extends Controller
                 'string',
                 'max:100',
                 'regex:/^[a-zA-Z0-9 -]+$/',
-                Rule::exists('office_table', 'office_name')
+                Rule::exists('office_table', 'office_code')
             ],
             'destination_office' => [
                 'nullable',
                 'string',
                 'max:100',
                 'regex:/^[a-zA-Z0-9 -]+$/',
-                Rule::exists('office_table', 'office_name')
+                Rule::exists('office_table', 'office_code')
             ],
             'user_id' => 'required|integer',
             'document_form' => [
@@ -378,7 +378,7 @@ class DocumentController extends Controller
 
         $involved_office = [
             $request->office_origin,
-            $user->office->office_name,
+            $user->office->office_code,
         ];
 
         if ($request->destination_office !== $request->office_origin) {
@@ -438,7 +438,7 @@ class DocumentController extends Controller
                     ->where('status', 'active');
             })
             ->whereHas('office', function ($q) use ($request) {
-                $q->where('office_name', $request->destination_office);
+                $q->where('office_code', $request->destination_office);
             })
             ->get();
 

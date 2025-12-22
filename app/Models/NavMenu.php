@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class NavMenu extends Model
 {
     protected $table = 'nav_menus';
+    // App\Models\NavMenu.php
+
     protected $fillable = [
         'title',
         'icon',

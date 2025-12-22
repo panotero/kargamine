@@ -1,4 +1,4 @@
-<div class="w-full min-h-screen p-5 bg-gray-50">
+<div class="w-full min-h-screen p-5 bg-gray-50  text-black dark:bg-gray-800 dark:text-white ">
     <div class="container mx-auto space-y-6">
 
         <!-- SUMMARY CARDS -->
@@ -84,7 +84,7 @@
          * Office filter logic
          */
         async function setupOfficeFilter() {
-            const userOffice = authUser.office?.office_name;
+            const userOffice = authUser.office?.office_code;
 
             if (userOffice !== 'ODDG-PP') {
                 officeFilter.innerHTML = `<option value="${userOffice}">${userOffice}</option>`;
@@ -92,7 +92,7 @@
                 return;
             }
 
-            const offices = @json(\App\Models\Office::orderBy('office_name')->pluck('office_name'));
+            const offices = @json(\App\Models\Office::orderBy('office_code')->pluck('office_code'));
             officeFilter.innerHTML = offices.map(o =>
                 `<option value="${o}">${o}</option>`
             ).join('');
@@ -127,7 +127,7 @@
                 tr.innerHTML = `
                 <td class="px-4 py-2 text-sm font-medium">${user.name}</td>
                 <td class="px-4 py-2 text-sm">${user.email}</td>
-                <td class="px-4 py-2 text-sm">${user.office_name}</td>
+                <td class="px-4 py-2 text-sm">${user.office_code}</td>
                 <td class="px-4 py-2 text-center font-semibold text-yellow-700">
                     ${user.current_document_count}
                 </td>

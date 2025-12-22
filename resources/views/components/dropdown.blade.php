@@ -61,18 +61,17 @@
 
                     <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->email }}</p>
                     <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->name }}</p>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->office->office_name }}</p>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->office->office_code }}</p>
                 </div>
             </div>
 
-            {{-- Profile --}}
+            {{-- Profile
             @if ($showProfile)
                 <x-dropdown-link :href="route('profile')">
                     {{ __('Profile') }}
                 </x-dropdown-link>
             @endif
 
-            {{-- Settings --}}
             @if ($showSettings)
                 <x-dropdown-link :href="route('settings')">
                     {{ __('Settings') }}
@@ -81,7 +80,7 @@
 
             @if ($showProfile || $showSettings)
                 <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-            @endif
+            @endif --}}
 
             {{-- Logout --}}
             @if ($showLogout)
