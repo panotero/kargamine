@@ -4,22 +4,28 @@ window.initDataTables = function initDataTables() {
       const dt = $(this).DataTable({
         paging: true,
         searching: true,
-        info: true,
-        lengthChange: false, // remove "Show X entries"
-        scrollY: "250px", // table body height
+        info: false, // hide "Showing X of Y" text
+        lengthChange: false,
+        scrollY: "250px",
         scrollCollapse: true,
-        scrollX: true, // allow horizontal scroll
-        dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
-        responsive: true,
+        pageLength: 10,
+        scrollX: $(window).width() < 1024, // horizontal scroll only if screen < lg (1024px)
+        responsive: true, // allows columns to adjust
         autoWidth: false,
+        dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
       });
 
-      // Initial styling
+      // Re-style table
       styleDataTable(this);
 
-      // Re-style after every draw (paging, search, sort, etc.)
       dt.on("draw", () => {
         styleDataTable(this);
+      });
+
+      // Adjust horizontal scroll on window resize
+      $(window).on("resize", () => {
+        dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
+        dt.columns.adjust();
       });
     }
   });

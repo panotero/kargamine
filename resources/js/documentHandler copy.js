@@ -339,8 +339,6 @@ function initdocumentcontroller() {
     });
 
     tableBody.appendChild(tr);
-
-    if (initTable) initDataTables();
   }
 
   window.getDocs = async function getDocs() {

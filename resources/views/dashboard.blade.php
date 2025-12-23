@@ -676,45 +676,6 @@
             </div>
         </div>
     </div>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const select = document.getElementById("routeOfficeSelect");
-            const btn = document.getElementById("dropdownBtn");
-            const menu = document.getElementById("dropdownMenu");
-
-            // Populate dropdown menu from <select> options
-            menu.innerHTML = Array.from(select.options).map(opt => `
-    <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" data-value="${opt.value}">
-      ${opt.text}
-    </li>
-  `).join("");
-
-            // Toggle dropdown visibility
-            btn.addEventListener("click", () => {
-                menu.classList.toggle("hidden");
-            });
-
-            // Handle selection
-            menu.addEventListener("click", e => {
-                const item = e.target.closest("li");
-                if (!item) return;
-
-                btn.textContent = item.textContent;
-                select.value = item.dataset.value;
-                menu.classList.add("hidden");
-
-                // Trigger change event if needed
-                select.dispatchEvent(new Event("change"));
-            });
-
-            // Close dropdown if clicked outside
-            document.addEventListener("click", e => {
-                if (!e.target.closest("#dropdownBtn") && !e.target.closest("#dropdownMenu")) {
-                    menu.classList.add("hidden");
-                }
-            });
-        });
-    </script>
 
 
 </x-app-layout>

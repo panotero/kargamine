@@ -14,47 +14,49 @@
                 </button>
             </div>
             <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
-                <table id="assignedToYouDocumentTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600uppercase text-xs">
+                <table id="assignedToYouDocumentTable"
+                    class="w-full text-sm text-left text-gray-700 dark:text-gray-300 table-auto">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 text-xs uppercase">
                         <tr>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Control Number</span>
+                                <span class="inline-flex items-center">Control Number</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Document Number</span>
+                                <span class="inline-flex items-center">Document Number</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Label</span>
+                                <span class="inline-flex items-center">Label</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Subject</span>
+                                <span class="inline-flex items-center">Subject</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Origin Office</span>
+                                <span class="inline-flex items-center">Origin Office</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Destination Office</span>
+                                <span class="inline-flex items-center">Destination Office</span>
+                            </th>
+                            <th class="px-4 py-6">
+                                <span class="inline-flex items-center">Due Date</span>
+                            </th>
+                            <th class="px-4 py-6">
+                                <span class="inline-flex items-center">Duration</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Due Date</span>
+                                <span class="inline-flex items-center">Date Uploaded</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Duration</span>
+                                <span class="inline-flex items-center">Confidentiality</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Date Uploaded</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="flex items-center">Confidentiality</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="flex items-center">Status</span>
+                                <span class="inline-flex items-center">Status</span>
                             </th>
                         </tr>
                     </thead>
 
                     <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
                         <!-- Rows will be inserted dynamically -->
+
                     </tbody>
                 </table>
             </div>
@@ -68,37 +70,37 @@
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                         <tr>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Control Number</span>
+                                <span class="inline-flex items-center">Control Number</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Document Number</span>
+                                <span class="inline-flex items-center">Document Number</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Label</span>
+                                <span class="inline-flex items-center">Label</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Subject</span>
+                                <span class="inline-flex items-center">Subject</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Origin Office</span>
+                                <span class="inline-flex items-center">Origin Office</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Destination Office</span>
+                                <span class="inline-flex items-center">Destination Office</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Due Date</span>
+                                <span class="inline-flex items-center">Due Date</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Duration</span>
+                                <span class="inline-flex items-center">Duration</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Date Uploaded</span>
+                                <span class="inline-flex items-center">Date Uploaded</span>
                             </th>
                             <th class="px-4 py-3">
-                                <span class="flex items-center">Confidentiality</span>
+                                <span class="inline-flex items-center">Confidentiality</span>
                             </th>
-                            <th class="px-4 py-3">
-                                <span class="flex items-center">Status</span>
+                            <th class="px-4 py-auto">
+                                <span class="inline-flex items-center">Status</span>
                             </th>
                         </tr>
                     </thead>
@@ -109,11 +111,13 @@
                 </table>
             </div>
         </div>
+        <div id="assignedToYouGrid"></div>
 
     </div>
 
 
-    <div id="modalNewDocument" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden modal p-5">
+    <div id="modalNewDocument"
+        class="fixed inset-0 bg-black/40 inline-flex items-center justify-center z-50 hidden modal p-5">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
             <div class="max-h-[60vh] overflow-y-auto p-3 ">
 
@@ -230,5 +234,6 @@
 <script>
     (function() {
         initdocumentcontroller();
+
     })();
 </script>

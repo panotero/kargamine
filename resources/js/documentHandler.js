@@ -32,12 +32,105 @@ function initdocumentcontroller() {
   function safeDate(d) {
     return new Date(d.replace(" ", "T"));
   }
+  // ---------------------- GET DOCUMENTS ----------------------
+  window.getDocs = async function getDocs() {
+    const authUser = window.authUser;
+    if (!authUser) return;
 
-  function appendDocumentRow(tableBody, item, source = null, initTable = true) {
+    const userId = authUser.id;
+    const userOfficeName = authUser.office?.office_code || null;
+    const userApprovalType = authUser.user_config?.approval_type || null;
+
+    const allDocsBody = document.querySelector("#allDocumentTable tbody");
+    const assignedBody = document.querySelector(
+      "#assignedToYouDocumentTable tbody"
+    );
+    if (!allDocsBody || !assignedBody) return;
+
+    initDataTables();
+    showDocsLoader(allDocsBody);
+    showDocsLoader(assignedBody);
+
+    try {
+      const documents = await fetchWithRetry("/api/documents", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      clearTable("#allDocumentTable");
+      clearTable("#assignedToYouDocumentTable");
+
+      documents.forEach((doc) => {
+        const involvedOffices = Array.isArray(doc.involved_office)
+          ? doc.involved_office
+          : [];
+        const canSeeAllDocs =
+          !userOfficeName ||
+          userOfficeName === "ODDG-PP" ||
+          involvedOffices.includes(userOfficeName);
+
+        if (canSeeAllDocs) appendDocumentRow(allDocsBody, doc, "all");
+
+        const showAssigned =
+          doc.recipient_id !== null
+            ? doc.recipient_id == userId
+            : userApprovalType === "routing" &&
+              userOfficeName === doc.destination_office;
+
+        if (showAssigned) appendDocumentRow(assignedBody, doc, "assigned");
+      });
+
+      redrawTable("#allDocumentTable");
+      redrawTable("#assignedToYouDocumentTable");
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    }
+  };
+
+  // ---------------------- LOADER ----------------------
+  function getDocsLoaderRow(colCount = 11) {
+    const tr = document.createElement("tr");
+    tr.id = "docsLoaderRow";
+    tr.innerHTML = `
+    <td colspan="${colCount}" class="py-6">
+      <div class="flex justify-center items-center">
+        <div class="animate-spin h-8 w-8 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>
+        <span class="ml-3 text-sm text-gray-500">Loading documents…</span>
+      </div>
+    </td>
+  `;
+    return tr;
+  }
+
+  function showDocsLoader(tableBody) {
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+    tableBody.appendChild(getDocsLoaderRow());
+  }
+
+  // ---------------------- DATA TABLE HELPERS ----------------------
+  function clearTable(selector) {
+    if ($.fn.DataTable.isDataTable(selector)) {
+      $(selector).DataTable().clear();
+    } else {
+      const tbody = document.querySelector(`${selector} tbody`);
+      if (tbody) tbody.innerHTML = "";
+    }
+  }
+
+  function redrawTable(selector) {
+    if ($.fn.DataTable.isDataTable(selector)) {
+      $(selector).DataTable().draw(false);
+    }
+  }
+
+  // ---------------------- APPEND ROW ----------------------
+  function appendDocumentRow(tableBody, item, source = null) {
     if (!tableBody || !item) return;
 
-    const routeBtn = document.getElementById("routeDocumentBtn");
-    const approvalButtons = document.getElementById("approvalButtons");
+    const table = tableBody.closest("table");
+    const dt =
+      table && $.fn.DataTable.isDataTable(table) ? $(table).DataTable() : null;
 
     const {
       document_id,
@@ -48,74 +141,82 @@ function initdocumentcontroller() {
       office_origin,
       destination_office,
       date_forwarded,
-      date_of_document,
       created_at,
       confidentiality,
       status,
-      recipient_id,
     } = item;
 
-    const tr = document.createElement("tr");
-    tr.classList.add("border-t", "hover:bg-gray-50", "cursor-pointer");
-
-    tr.dataset.documentId = document_id;
-    tr.dataset.documentControlNumber = document_control_number;
-    tr.dataset.userId = item.user_id || "";
-    tr.dataset.status = status;
-    tr.dataset.source = source;
-    let statuscolor = "";
-    switch (status.toLowerCase()) {
+    let statuscolor = "bg-gray-100";
+    switch (status?.toLowerCase()) {
       case "pending":
-        statuscolor = "bg-yellow-200"; // soft yellow for pending
+        statuscolor = "bg-yellow-200";
         break;
       case "for approval":
-        statuscolor = "bg-yellow-100"; // lighter yellow for in-review
+        statuscolor = "bg-yellow-100";
         break;
       case "complete":
-        statuscolor = "bg-green-200"; // soft green for completed
+        statuscolor = "bg-green-200";
         break;
       case "remanded":
-        statuscolor = "bg-red-200"; // soft red for remanded
+        statuscolor = "bg-red-200";
         break;
       case "overdue":
-        statuscolor = "bg-red-300"; // slightly stronger red for urgency
+        statuscolor = "bg-red-300";
         break;
       case "approved":
-        statuscolor = "bg-blue-200"; // soft blue for approved
+        statuscolor = "bg-blue-200";
         break;
-      default:
-        statuscolor = "bg-gray-100"; // fallback neutral color
     }
 
-    tr.innerHTML = `
-        <td class="px-4 py-2">${document_control_number}</td>
-        <td class="px-4 py-2">${document_code}</td>
-        <td class="px-4 py-2">
-            <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
-                <option ${
-                  document_type === "General" ? "selected" : ""
-                }>General</option>
-                <option ${
-                  document_type === "Confidential" ? "selected" : ""
-                }>Confidential</option>
-            </select>
-        </td>
-        <td class="px-4 py-2">${particular}</td>
-        <td class="px-4 py-2">${office_origin}</td>
-        <td class="px-4 py-2">${destination_office}</td>
-        <td class="px-4 py-2">${date_forwarded || "-"}</td>
-        <td class="px-4 py-2">${calculateDuration(date_forwarded)}</td>
-        <td class="px-4 py-2">${
-          created_at ? created_at.split("T")[0] : "-"
-        }</td>
-        <td class="px-4 py-2">${confidentiality || "-"}</td>
-        <td class="px-4 py-2"><div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">${
-      status || "-"
-    }</div></td>
-    `;
+    const rowHtml = `
+    <tr class="border-t hover:bg-gray-50 cursor-pointer"
+        data-document-id="${document_id}"
+        data-document-control-number="${document_control_number}"
+        data-user-id="${item.user_id || ""}"
+        data-status="${status}"
+        data-source="${source}">
+      <td class="px-4 py-2">${document_control_number}</td>
+      <td class="px-4 py-2">${document_code}</td>
+      <td class="px-4 py-2">
+        <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
+          <option ${
+            document_type === "General" ? "selected" : ""
+          }>General</option>
+          <option ${
+            document_type === "Confidential" ? "selected" : ""
+          }>Confidential</option>
+        </select>
+      </td>
+      <td class="px-2 py-2 max-w-[150px] truncate" title="${particular}">
+  ${particular}
+</td>
+      <td class="px-4 py-2">${office_origin}</td>
+      <td class="px-4 py-2">${destination_office}</td>
+      <td class="px-4 py-2">${date_forwarded || "-"}</td>
+      <td class="px-4 py-2">${calculateDuration(date_forwarded)}</td>
+      <td class="px-4 py-2">${created_at ? created_at.split("T")[0] : "-"}</td>
+      <td class="px-4 py-2">${confidentiality || "-"}</td>
+      <td class="px-4 py-2">
+        <div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">
+          ${status || "-"}
+        </div>
+      </td>
+    </tr>
+  `;
 
-    tr.addEventListener("click", (e) => {
-      //   console.log(item);
+    let rowNode;
+    if (dt) {
+      const row = dt.row.add($(rowHtml));
+      rowNode = row.node();
+      dt.draw(false);
+    } else {
+      const temp = document.createElement("tbody");
+      temp.innerHTML = rowHtml;
+      rowNode = temp.firstElementChild;
+      tableBody.appendChild(rowNode);
+    }
+
+    rowNode.addEventListener("click", (e) => {
       if (e.target.classList.contains("labeldropdown")) return;
       checkActionButtons(
         item.status,
@@ -125,83 +226,14 @@ function initdocumentcontroller() {
         item.revision_status,
         source
       );
-
       clearModalFields();
       showSkeletonLoaders();
-
       initModal({ modalId: "DocumentModal" });
       populateDocumentModal(document_id);
-
-      const lowerStatus = status?.toLowerCase() || "";
-
       logActivity("view", document_id, document_control_number);
     });
-
-    tableBody.appendChild(tr);
   }
 
-  window.getDocs = async function getDocs() {
-    const authUser = window.authUser;
-    if (!authUser) return;
-
-    const userId = authUser.id;
-    const userOfficeName = authUser.office?.office_code || null;
-    const userApprovalType = authUser.user_config?.approval_type || null;
-
-    try {
-      const documents = await fetchWithRetry("/api/documents", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      const allDocsTableBody = document.querySelector(
-        "#allDocumentTable tbody"
-      );
-      const assignedTableBody = document.querySelector(
-        "#assignedToYouDocumentTable tbody"
-      );
-      if (!allDocsTableBody || !assignedTableBody) return;
-
-      allDocsTableBody.innerHTML = "";
-      assignedTableBody.innerHTML = "";
-
-      documents.forEach((doc) => {
-        const involvedOffices = Array.isArray(doc.involved_office)
-          ? doc.involved_office
-          : [];
-
-        const canSeeAllDocs =
-          !userOfficeName ||
-          userOfficeName === "ODDG-PP" ||
-          involvedOffices.includes(userOfficeName);
-
-        if (canSeeAllDocs) {
-          appendDocumentRow(allDocsTableBody, doc, "all", false);
-        }
-
-        let showAssigned = false;
-        const recipientId = doc.recipient_id;
-
-        if (recipientId !== null) {
-          showAssigned = recipientId == userId;
-        } else {
-          const isRoutingUser = userApprovalType === "routing";
-          const sameOffice = userOfficeName === doc.destination_office;
-          showAssigned = isRoutingUser && sameOffice;
-        }
-
-        if (showAssigned) {
-          appendDocumentRow(assignedTableBody, doc, "assigned", false);
-        }
-      });
-    } catch (error) {
-      console.error("Error fetching documents:", error);
-    }
-
-    initDataTables();
-  };
   function initEventListeners() {
     initPDFDropzone({
       dropzoneId: "dropzone",
