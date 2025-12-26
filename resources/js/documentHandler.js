@@ -80,10 +80,14 @@ function initdocumentcontroller() {
         if (showAssigned) appendDocumentRow(assignedBody, doc, "assigned");
       });
 
-      redrawTable("#allDocumentTable");
-      redrawTable("#assignedToYouDocumentTable");
+      //   redrawTable("#allDocumentTable");
+      //   redrawTable("#assignedToYouDocumentTable");
     } catch (error) {
       console.error("Error fetching documents:", error);
+    } finally {
+      // Remove loaders
+      removeDocsLoader(allDocsBody);
+      removeDocsLoader(assignedBody);
     }
   };
 
@@ -106,6 +110,23 @@ function initdocumentcontroller() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
     tableBody.appendChild(getDocsLoaderRow());
+  }
+
+  function getNoDocsRow(colCount = 11, message = "No documents found.") {
+    const tr = document.createElement("tr");
+    tr.className = "no-docs-row";
+    tr.innerHTML = `
+    <td colspan="${colCount}" class="py-6 text-center text-sm text-gray-500">
+      ${message}
+    </td>
+  `;
+    return tr;
+  }
+
+  function removeDocsLoader(tableBody) {
+    if (!tableBody) return;
+    const loader = tableBody.querySelector("#docsLoaderRow");
+    if (loader) loader.remove();
   }
 
   // ---------------------- DATA TABLE HELPERS ----------------------
@@ -241,7 +262,6 @@ function initdocumentcontroller() {
       fileInfoId: "fileInfo",
       clearBtnId: "clearSelectionBtn",
     });
-    initroute();
     init();
     async function init() {
       const response = await fillOfficeDropdown();
@@ -369,6 +389,9 @@ function initdocumentcontroller() {
 
         if (id === "subject") formData.append("particular", value);
         else if (id === "documentType") formData.append("document_type", value);
+        else if (id === "document_date")
+          formData.append("document_date", value);
+        else if (id === "due_date") formData.append("due_date", value);
         else formData.append(id, value);
       });
 
@@ -498,65 +521,6 @@ function initdocumentcontroller() {
           initModal({ modalId: "pdfPreviewModal" })
         )
       );
-
-    document.querySelectorAll(".routeBtn").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        initPDFDropzone({
-          dropzoneId: "routedropzone",
-          fileInputId: "routefileInput",
-          fileInfoId: "routefileInfo",
-          clearBtnId: "clearrouteSelectionBtn",
-        });
-        initModal({ modalId: "routingModal" });
-      })
-    );
-
-    const officeSelect = document.getElementById("routeOfficeSelect");
-    const userSelect = document.getElementById("routeUserSelect");
-    const approvalSelect = document.getElementById("routeApprovalSelect");
-    const statusSelect = document.getElementById("routeStatusSelect");
-    const internalSection = document.getElementById("internalSection");
-    const externalSection = document.getElementById("externalSection");
-    const pdfUploadSection = document.getElementById("pdfUploadSection");
-    const currentOffice = window.authUser.office?.office_code || null;
-
-    officeSelect?.addEventListener("change", async (e) => {
-      const selected = e.target.value;
-      internalSection?.classList.toggle("hidden", selected !== currentOffice);
-      externalSection?.classList.toggle(
-        "hidden",
-        selected === currentOffice || !selected
-      );
-
-      if (selected === currentOffice) {
-        const users = await fetchWithRetry("/api/users", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-        const filtered = users.filter(
-          (u) =>
-            u.office?.office_code === currentOffice &&
-            u.user_config.approval_type !== "routing"
-        );
-        userSelect.innerHTML =
-          `<option value="">Select User</option>` +
-          filtered
-            .map((u) => `<option value="${u.id}">${u.name}</option>`)
-            .join("");
-        approvalSelect.innerHTML = `<option value="">Select Approval Type</option>
-                 <option value="pre-approval">Pre-approval</option>
-                 <option value="final-approval">Final-approval</option>`;
-      }
-    });
-
-    statusSelect?.addEventListener("change", (e) => {
-      pdfUploadSection?.classList.toggle(
-        "hidden",
-        e.target.value !== "approved"
-      );
-    });
 
     function resetFormModal(modalId) {
       const modal = document.getElementById(modalId);

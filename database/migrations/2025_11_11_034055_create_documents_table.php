@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('involved_office', 255)->nullable(); // JSON array of office names
             $table->text('action_taken')->nullable();
             $table->string('status', 50)->default('Pending');
-            $table->string('confidentiality', 50)->default('Normal');
+            $table->string('confidentiality', 50)->default('None');
             $table->timestamps();
         });
     }

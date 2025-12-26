@@ -1,6 +1,6 @@
 <div class="w-full h-screen p-5 bg-gray-50 text-black dark:bg-gray-800 dark:text-white ">
     <div class="container mx-auto space-y-6">
-        <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4">
+        <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4 text-black">
             <div class="flex flex-col w-full lg:w-1/3 gap-4">
                 <!-- Dashboard HTML IDs for easier targeting -->
                 <div class="flex gap-4">
@@ -14,7 +14,7 @@
                     </div>
                 </div>
 
-                <div class="flex gap-4">
+                <div class="flex lg:gap-4 gap-1">
                     <div id="pending" class="flex-1 border rounded-lg p-2 bg-gray-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Pending</div>
                         <div class="text-xl font-bold mt-1">0</div>
@@ -44,15 +44,20 @@
 
                 </div>
                 <div class="flex flex-col flex-1 gap-2">
-                    <label class="text-gray-700 font-medium ">Status</label>
-                    <select class="border rounded-lg p-2 w-full " id="filter_status">
-                        <option>All</option>
-                        <option>Pending</option>
-                        <option>Processed</option>
-                    </select>
-                    <label class="text-gray-700 font-medium office">Office</label>
-                    <select class="border rounded-lg p-2 w-full  officeSelect" id="filter_office">
-                    </select>
+                    <div>
+
+                        <label class="text-gray-700 font-medium ">Status</label>
+                        <select class="border rounded-lg p-2 w-full " id="filter_status">
+                            <option>All</option>
+                            <option>Pending</option>
+                            <option>Processed</option>
+                        </select>
+                    </div>
+                    <div id="office_filter" class="hidden">
+                        <label class="text-gray-700 font-medium office">Office</label>
+                        <select class="border rounded-lg p-2 w-full  officeSelect" id="filter_office">
+                        </select>
+                    </div>
                 </div>
                 <div class="flex flex-col flex-1 gap-2">
                     <label class="text-gray-700 font-medium">Label</label>
@@ -74,9 +79,9 @@
 
             </div>
         </div>
-        <div class="w-full bg-white dark:bg-gray-800  rounded-xl shadow">
-            <table id="reportsocumentsTable" class=" text-sm text-left border-collapse">
-                <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+        <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
+            <table id="reportsocumentsTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                     <tr>
                         <th>Control #</th>
                         <th>Document Code</th>
@@ -97,12 +102,10 @@
                         <th>Date of Document</th>
                         <th>Signatory</th>
                         <th>Confirmed By</th>
-                        <th>Involved Office</th>
-                        <th>Action Taken</th>
                         <th>Remarks</th>
                     </tr>
                 </thead>
-                <tbody class="bg-gray-100 dark:bg-gray-700 dark:text-white">
+                <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
                 </tbody>
             </table>
 
@@ -116,10 +119,26 @@
 
 
         let allDocuments = []; // store all fetched documents
-
+        const fromDateEl = document.getElementById("filter_datefrom");
+        const toDateEl = document.getElementById("filter_dateto");
+        const statusFilter = document.getElementById("filter_status");
+        const officeFilterEl = document.getElementById("filter_office");
+        const labelFilter = document.getElementById("filter_label");
         async function initDashboard() {
+
+            // Set default dates to today
+            const today = new Date().toISOString().split("T")[0];
+
+            if (fromDateEl) fromDateEl.value = today;
+            if (toDateEl) toDateEl.value = today;
             const authUser = window.authUser;
             if (!authUser) return;
+            if (authUser.office.office_code === "ODDG-PP") {
+                document.getElementById("office_filter").classList.remove("hidden");
+            } else {
+                document.getElementById("office_filter").classList.add("hidden");
+
+            }
 
             const userOffice = authUser.office?.office_code || null;
 
@@ -129,49 +148,244 @@
                 officeFilterWrapper.style.display = "none";
             }
 
-            // Fetch all documents once
             try {
-                const response = await fetch("/api/documents");
-                if (!response.ok) throw new Error("Failed to fetch documents");
-                allDocuments = await response.json();
+                initDataTables();
+                const documents = await fetchWithRetry("/api/documents", {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                });
+                const filteredDocuments =
+                    userOffice === "ODDG-PP" ?
+                    documents :
+                    documents.filter((row) =>
+                        Array.isArray(row.involved_office) &&
+                        row.involved_office.includes(userOffice)
+                    );
+                allDocuments = filteredDocuments;
+                updateDocumentCounts(filteredDocuments);
+                filteredDocuments.forEach((doc) => {
+                    updaterow(doc);
+                });
+
+
+
             } catch (err) {
                 console.error(err);
                 return;
             }
 
-            // Initially populate table
-            updateDocumentCounts();
-            updateReportDocuments();
+        }
 
-            // Attach filter events
-            document.querySelectorAll('.datetimepicker, select').forEach(el => {
-                el.addEventListener('input', applyFilters);
-            });
+
+        const filterElements = [fromDateEl, toDateEl, statusFilter, officeFilterEl, labelFilter];
+
+        filterElements.forEach(el => {
+            if (el) {
+                let oldfrom = fromDateEl.value;
+                let oldto = toDateEl.value;
+                el.addEventListener("change", () => {
+                    const fromVal = fromDateEl.value;
+                    const toVal = toDateEl.value;
+                    const statusVal = statusFilter.value;
+                    const officeVal = officeFilterEl.value;
+                    const labelVal = labelFilter.value;
+
+                    const fromDate = fromVal ? new Date(fromVal + "T00:00:00") : null;
+                    const toDate = toVal ? new Date(toVal + "T23:59:59") : null;
+
+                    /* ---- Date validation ---- */
+                    if (fromDate && toDate && fromDate > toDate) {
+                        alert("Invalid From and To date");
+                        return;
+                    }
+
+                    /* ---- FILTER DOCUMENTS ---- */
+                    const filteredDocuments = allDocuments.filter(doc => {
+                        // DATE
+                        if (fromDate || toDate) {
+                            if (!doc.date_forwarded) return false;
+
+                            const docDate = new Date(doc.date_forwarded.replace(" ", "T"));
+                            if (fromDate && docDate < fromDate) return false;
+                            if (toDate && docDate > toDate) return false;
+                        }
+
+                        // STATUS
+                        if (statusVal && statusVal !== "All") {
+                            if ((doc.status || "").toLowerCase() !== statusVal
+                                .toLowerCase()) {
+                                return false;
+                            }
+                        }
+
+                        // OFFICE
+                        if (officeVal && officeVal !== "All") {
+                            const involved = Array.isArray(doc.involved_office) ?
+                                doc.involved_office : [];
+
+                            if (
+                                doc.destination_office !== officeVal &&
+                                !involved.includes(officeVal)
+                            ) {
+                                return false;
+                            }
+                        }
+
+                        // LABEL
+                        if (labelVal && labelVal !== "All") {
+                            if ((doc.label || "") !== labelVal) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    });
+
+                    console.log("Filtered Documents:", filteredDocuments);
+
+                    /* ---- UPDATE COUNTS + TABLE ---- */
+                    updateDocumentCounts(filteredDocuments);
+                    const table = document.getElementById("reportsocumentsTable");
+                    if ($.fn.DataTable.isDataTable(table)) {
+                        $(table).DataTable().clear().draw();
+                    }
+                    filteredDocuments.forEach(doc => {
+                        updaterow(doc);
+                    });
+                });
+            }
+        });
+
+        function updaterow(doc) {
+
+            const table = document.getElementById("reportsocumentsTable");
+            if (!table) return;
+            const tableBody = table.querySelector("tbody");
+            let dt = null;
+            if ($.fn.DataTable.isDataTable(table)) {
+                dt = $(table).DataTable();
+            }
+            const dueDate = doc.due_date ?
+                new Date(doc.due_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                }) :
+                "-";
+
+            const dateUploaded = doc.date_forwarded ?
+                new Date(doc.date_forwarded).toLocaleString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                }) :
+                "-";
+
+            const duration =
+                doc.date_received && doc.date_forwarded ?
+                Math.ceil(
+                    (new Date(doc.date_forwarded) - new Date(doc.date_received)) /
+                    (1000 * 60 * 60 * 24)
+                ) + " days" :
+                "-";
+
+            let statuscolor = "bg-gray-100";
+            switch (doc.status?.toLowerCase()) {
+                case "pending":
+                    statuscolor = "bg-yellow-200";
+                    break;
+                case "for approval":
+                    statuscolor = "bg-yellow-100";
+                    break;
+                case "complete":
+                    statuscolor = "bg-green-200";
+                    break;
+                case "remanded":
+                    statuscolor = "bg-red-200";
+                    break;
+                case "overdue":
+                    statuscolor = "bg-red-300";
+                    break;
+                case "approved":
+                    statuscolor = "bg-blue-200";
+                    break;
+            }
+
+            const rowHtml = `
+        <td class="px-4 py-2">${doc.document_control_number}</td>
+        <td class="px-4 py-2">${doc.document_code}</td>
+        <td class="px-4 py-2">${doc.label || "-"}</td>
+        <td class="px-4 py-2">${doc.particular || "-"}</td>
+        <td class="px-4 py-2">${doc.office_origin || "-"}</td>
+        <td class="px-4 py-2">${doc.destination_office || "-"}</td>
+        <td class="px-4 py-2">${dueDate}</td>
+        <td class="px-4 py-2">${duration}</td>
+        <td class="px-4 py-2">${dateUploaded}</td>
+        <td class="px-4 py-2">${doc.confidentiality || "-"}</td>
+        <td class="px-4 py-2">
+            <div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">
+                ${doc.status || "-"}
+            </div>
+        </td>
+        <td class="px-3 py-3">${doc.user_name || ""}</td>
+        <td class="px-3 py-3">${doc.recipient_name || ""}</td>
+        <td class="px-3 py-3">${doc.document_form || ""}</td>
+        <td class="px-3 py-3">${doc.document_type || ""}</td>
+        <td class="px-3 py-3">${doc.date_of_document || ""}</td>
+        <td class="px-3 py-3">${doc.signatory || ""}</td>
+        <td class="px-3 py-3">${doc.confirmed_by_name || ""}</td>
+        <td class="px-3 py-3">${doc.remarks || ""}</td>
+    `;
+
+            if (dt) {
+                dt.row.add([
+                    doc.document_control_number,
+                    doc.document_code,
+                    doc.label || "-",
+                    doc.particular || "-",
+                    doc.office_origin || "-",
+                    doc.destination_office || "-",
+                    dueDate,
+                    duration,
+                    dateUploaded,
+                    doc.confidentiality || "-",
+                    `<div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">${doc.status || "-"}</div>`,
+                    doc.user_name || "",
+                    doc.recipient_name || "",
+                    doc.document_form || "",
+                    doc.document_type || "",
+                    doc.date_of_document || "",
+                    doc.signatory || "",
+                    doc.confirmed_by_name || "",
+                    JSON.stringify(doc.involved_office) || "",
+                    doc.action_taken || "",
+                    doc.remarks || "",
+                ]).draw(false);
+            } else {
+                const tr = document.createElement("tr");
+                tr.innerHTML = rowHtml;
+                tableBody.appendChild(tr);
+            }
         }
 
         // -----------------------------
         // Update Counts
         // -----------------------------
         function updateDocumentCounts(filteredDocs = null) {
-            const authUser = window.authUser;
-            if (!authUser) return;
 
-            const userOffice = authUser.office?.office_code || null;
-            const docs = filteredDocs || allDocuments;
-
-            const filtered = docs.filter(doc => {
-                if (userOffice === "ODDG-PP") return true;
-                return doc.destination_office === userOffice;
-            });
-
-            let total = filtered.length;
+            let total = filteredDocs.length;
             let forDiscussion = 0;
             let pending = 0;
             let processed = 0;
             let overdue = 0;
             let remanded = 0;
 
-            filtered.forEach(doc => {
+            filteredDocs.forEach(doc => {
                 switch ((doc.status || "").toLowerCase()) {
                     case "pending":
                         pending++;
@@ -197,159 +411,6 @@
             document.querySelector("#processed .text-xl").textContent = processed.toLocaleString();
             document.querySelector("#overdue .text-xl").textContent = overdue.toLocaleString();
             document.querySelector("#remanded .text-xl").textContent = remanded.toLocaleString();
-        }
-
-        // -----------------------------
-        // Populate Table
-        // -----------------------------
-        function updateReportDocuments(filteredDocs = null) {
-            const authUser = window.authUser;
-            if (!authUser) return;
-
-            const userOffice = authUser.office?.office_code || null;
-            const docs = filteredDocs || allDocuments;
-            const tableBody = document.querySelector("#reportsocumentsTable tbody");
-            if (!tableBody) return;
-
-            tableBody.innerHTML = "";
-
-            const filtered = docs.filter(doc => {
-                if (userOffice === "ODDG-PP") return true;
-                return doc.destination_office === userOffice;
-            });
-
-            filtered.forEach(doc => {
-                const dueDate = doc.due_date ?
-                    new Date(doc.due_date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "2-digit",
-                        year: "numeric"
-                    }) : "-";
-
-                const dateUploaded = doc.date_forwarded ?
-                    new Date(doc.date_forwarded).toLocaleString("en-US", {
-                        month: "short",
-                        day: "2-digit",
-                        year: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true
-                    }) : "-";
-
-
-                const duration = doc.date_received && doc.date_forwarded ?
-                    Math.ceil((new Date(doc.date_forwarded) - new Date(doc.date_received)) / (1000 * 60 *
-                        60 * 24)) + " days" : "-";
-
-                const row = document.createElement("tr");
-                row.innerHTML = `
-            <td class="px-4 py-2">${doc.document_control_number}</td>
-            <td class="px-4 py-2">${doc.document_code}</td>
-            <td class="px-4 py-2">${doc.label || "-"}</td>
-            <td class="px-4 py-2">${doc.particular || "-"}</td>
-            <td class="px-4 py-2">${doc.office_origin || "-"}</td>
-            <td class="px-4 py-2">${doc.destination_office || "-"}</td>
-            <td class="px-4 py-2">${dueDate}</td>
-            <td class="px-4 py-2">${duration}</td>
-            <td class="px-4 py-2">${dateUploaded}</td>
-            <td class="px-4 py-2">${doc.confidentiality || "-"}</td>
-            <td class="px-4 py-2">${doc.status || "-"}</td>
-
-            <td class="px-3 py-3">${doc.user_name || ""}</td>
-            <td class="px-3 py-3">${doc.recipient_name || ""}</td>
-            <td class="px-3 py-3">${doc.document_form || ""}</td>
-            <td class="px-3 py-3">${doc.document_type || ""}</td>
-            <td class="px-3 py-3">${doc.date_of_document || ""}</td>
-            <td class="px-3 py-3">${doc.signatory || ""}</td>
-            <td class="px-3 py-3">${doc.confirmed_by_name || ""}</td>
-            <td class="px-3 py-3">${JSON.stringify(doc.involved_office) || ""}</td>
-            <td class="px-3 py-3">${doc.action_taken || ""}</td>
-            <td class="px-3 py-3">${doc.remarks || ""}</td>
-        `;
-                tableBody.appendChild(row);
-            });
-
-            initDataTables();
-        }
-        let prevFromDate = "";
-        let prevToDate = "";
-        // apply filters
-        function applyFilters() {
-            const fromDateEl = document.getElementById("filter_datefrom");
-            const toDateEl = document.getElementById("filter_dateto");
-
-            const statusFilter = document.getElementById("filter_status").value.toLowerCase();
-            const officeFilterEl = document.getElementById("filter_office");
-            const officeFilter = officeFilterEl ? officeFilterEl.value.toLowerCase() : null;
-            const labelFilter = document.getElementById("filter_label").value.toLowerCase();
-
-
-            // Convert dd-mm-yyyy → Date object
-            function parseDMY(dateStr) {
-                if (!dateStr) return null;
-                const [day, month, year] = dateStr.split("-").map(Number);
-                return new Date(year, month - 1, day);
-            }
-
-            const fromDate = parseDMY(fromDateEl.value);
-            const toDate = parseDMY(toDateEl.value);
-
-            // Create full-day end for "to date"
-            let toDateEnd = null;
-            if (toDate) {
-                toDateEnd = new Date(toDate);
-                toDateEnd.setHours(23, 59, 59, 999);
-            }
-
-            let filtered = [...allDocuments];
-
-            // ---------------------
-            // Filter by created_at
-            // ---------------------
-            filtered = filtered.filter(d => {
-                if (!d.created_at) return false;
-
-                // created_at timestamp → Date object
-                const createdDate = new Date(d.created_at);
-
-                // Compare
-                if (fromDate && createdDate < fromDate) return false;
-                if (toDateEnd && createdDate > toDateEnd) return false;
-
-                return true;
-            });
-
-            // ---------------------
-            // Status filter
-            // ---------------------
-            if (statusFilter && statusFilter !== "all") {
-                filtered = filtered.filter(d =>
-                    (d.status || "").toLowerCase() === statusFilter
-                );
-            }
-
-            // ---------------------
-            // Office filter
-            // ---------------------
-            if (officeFilter && officeFilter !== "all") {
-                filtered = filtered.filter(d =>
-                    (d.destination_office || "").toLowerCase() === officeFilter
-                );
-            }
-
-            // ---------------------
-            // Label filter
-            // ---------------------
-            if (labelFilter && labelFilter !== "all") {
-                filtered = filtered.filter(d =>
-                    (d.label || "").toLowerCase().includes(labelFilter)
-                );
-            }
-
-            updateDocumentCounts(filtered);
-            updateReportDocuments(filtered);
-
-            initDataTables();
         }
 
 
@@ -382,11 +443,9 @@
         // Attach export buttons
         // -----------------------------
         document.querySelector('button.bg-red-500').addEventListener('click', exportTableToPDF);
-        document.querySelector('button.bg-green-500').addEventListener('click', exportTableToExcel);
+        document.querySelector(
+            'button.bg-green-500').addEventListener('click', exportTableToExcel);
 
-        // -----------------------------
-        // Initialize dashboard
-        // -----------------------------
         initDashboard();
 
         fillOfficeDropdown();

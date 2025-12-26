@@ -61,9 +61,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            initNotificationStream();
             fetchAuthUser();
             // console.log("all content has been loaded");
-            initNotificationStream();
             populateUsers("routing");
 
 

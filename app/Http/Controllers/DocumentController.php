@@ -398,7 +398,7 @@ class DocumentController extends Controller
             'date_forwarded'          => now(),
             'document_form'           => $request->document_form,
             'document_type'           => $request->document_type,
-            'date_of_document'        => $request->date_of_document,
+            'date_of_document'        => $request->document_date,
             'due_date'                => $request->due_date,
             'signatory'               => $request->signatory,
             'remarks'                 => $request->remarks,

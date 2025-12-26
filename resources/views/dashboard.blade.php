@@ -1,28 +1,34 @@
 <x-app-layout>
     <div class="flex h-screen dark:bg-gray-900">
         <aside id="sidebar-wrapper"
-            class="bg-white dark:bg-gray-900 shadow-lg w-64 fixed left-0 top-0 h-full flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0 z-40">
+            class="bg-white dark:bg-gray-900 shadow-lg w-64
+           fixed lg:static inset-y-0 left-0
+           h-full flex flex-col
+           transform -translate-x-full lg:translate-x-0
+           transition-transform duration-300
+           z-40">
             <div class="w-full p-5 dark:text-white">
                 <h1 class="font-semibold text-sm">ODDG-PP</h1>
                 <h1 class="text-md md:text-md font-bold">Document Monitoring Tool</h1>
             </div>
+
             <div class="w-full flex flex-col justify-between flex-grow">
                 <nav id="sidebar-menu" class="p-4 space-y-2 text-black dark:text-white font-semibold">
                 </nav>
-                <div class="w-full p-5 flex justify-center dark:bg-gray-800">
-                    <img class="h-10 w-auto mx-auto" src="{{ asset('/assets/images/TESDA_Logo.png') }}" alt="Logo">
-                    <img class="h-12 w-auto mx-auto" src="{{ asset('/assets/images/bagong_pilipinas.png') }}"
-                        alt="Logo">
-                    <img class="h-5 w-auto m-auto" src="{{ asset('/assets/images/tesda_kayang_kaya.png') }}"
-                        alt="Logo">
+
+                <div class="w-full p-5 flex justify-center dark:bg-gray-800 gap-3">
+                    <img class="h-10 w-auto" src="{{ asset('/assets/images/TESDA_Logo.png') }}">
+                    <img class="h-12 w-auto" src="{{ asset('/assets/images/bagong_pilipinas.png') }}">
+                    <img class="h-5 w-auto" src="{{ asset('/assets/images/tesda_kayang_kaya.png') }}">
                 </div>
             </div>
         </aside>
 
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-30 lg:hidden"></div>
 
-        <div class="flex-1 flex flex-col lg:ml-64 transition-all duration-300">
-            <button id="sidebar-toggle" class="lg:hidden absolute top-2 left-2 p-2 bg-gray-800 text-white rounded z-10">
+        <div class="flex-1 flex flex-col min-w-0">
+            <button id="sidebar-toggle"
+                class="lg:hidden absolute top-2 left-2  px-2 py-4 bg-gray-800 text-white rounded z-10">
                 ☰
             </button>
             <header class="bg-white dark:bg-gray-800 shadow px-6 py-4 flex justify-between items-center">
@@ -47,7 +53,18 @@
                             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-75"
                             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute right-0 mt-2 w-96 max-h-[32rem] overflow-y-auto rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50"
+                            class="
+    fixed lg:absolute
+    inset-x-4 top-20 lg:inset-auto lg:right-0 lg:top-auto
+    lg:mt-2
+    w-auto lg:w-96
+    max-h-[32rem]
+    overflow-y-auto
+    rounded-xl shadow-lg
+    bg-white dark:bg-gray-800
+    border border-gray-200 dark:border-gray-700
+    z-50
+"
                             style="display: none;" id="notificationWrapper">
                             <div
                                 class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -88,7 +105,7 @@
                     </x-dropdown>
                 </div>
             </header>
-            <main id="content" class="flex-1 overflow-y-auto  text-gray-800 dark:text-gray-200">
+            <main id="content" class="flex-1 w-full overflow-y-auto  text-gray-800 dark:text-gray-200">
             </main>
 
             <div id="DocumentModal"
@@ -148,20 +165,12 @@
                                     <span id="docDueDate" class="text-gray-900 dark:text-gray-100"></span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Status:</span>
-                                    <span id="docStatus" class="text-gray-900 dark:text-gray-100"></span>
-                                </div>
-                                <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">Remarks:</span>
                                     <span id="docRemarks" class="text-gray-900 dark:text-gray-100"></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">Uploaded At:</span>
                                     <span id="created_at" class="text-gray-900 dark:text-gray-100"></span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Date Received:</span>
-                                    <span id="date_received" class="text-gray-900 dark:text-gray-100"></span>
                                 </div>
                             </div>
                         </div>
@@ -287,7 +296,7 @@
                 class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
 
                 <div
-                    class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] lg:flex lg:flex-col">
+                    class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-auto lg:flex lg:flex-col">
                     <div
                         class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 px-6 py-3">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">PDF Preview</h3>
@@ -299,7 +308,7 @@
                     </div>
                     <div class="lg:flex w-full max-h-[70vh] overflow-y-auto">
                         <div
-                            class="lg:w-2/3 w-full flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
+                            class="w-full flex items-center justify-center relative border-r border-gray-200 dark:border-gray-700">
                             <div id="galleryLoading"
                                 class="absolute inset-0 flex items-center justify-center bg-white/70 hidden z-50">
                                 {{-- <div
@@ -307,18 +316,19 @@
                                 </div> --}}
                             </div>
                             {{-- swiper carousel --}}
+
+                            <button
+                                class="swiper-button-prev slide-previous absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3">
+
+                            </button>
+
+                            <button
+                                class="swiper-button-next slide-next absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3">
+
+                            </button>
                             <div id="gallerySwiper" class="swiper w-full max-w-xl mx-auto relative">
                                 <div class="swiper-wrapper h-[80vh]" id="swiperSlides"></div>
 
-                                <button
-                                    class="swiper-button-prev slide-previous absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3">
-
-                                </button>
-
-                                <button
-                                    class="swiper-button-next slide-next absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 border border-gray-300 shadow rounded-full p-3">
-
-                                </button>
 
                                 <div class="swiper-pagination"></div>
                             </div>
@@ -360,7 +370,7 @@
                                 </div>
                             </div> --}}
                         </div>
-                        <div class="w-1/3 p-6 overflow-y-auto">
+                        <div class="w-1/3 p-6 overflow-y-auto hidden">
 
                             <h4 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">File Information
                             </h4>
@@ -474,6 +484,11 @@
                     <input type="hidden" id="docId" value="">
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Route Document</h2>
+
+                        <div id="routingmodalErrorMessage"
+                            class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm errorbox">
+                            <ul id="routingmodalErrorList" class="list-disc list-inside errorlist"></ul>
+                        </div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Select office and user for routing</p>
                     </div>
                     <div class="space-y-2">
@@ -482,24 +497,6 @@
                             class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 officeSelect">
                             <option value="">Loading offices...</option>
                         </select>
-                        <div class="relative w-64 custom-dropdown">
-                            <select class="officeSelect hidden">
-                                <option value="">Loading offices...</option>
-                            </select>
-
-                            <button
-                                class="dropdownBtn w-full border rounded-lg px-4 py-2 text-left bg-white dark:bg-gray-800 dark:text-gray-100 flex justify-between items-center">
-                                Select Office
-                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-
-                            <ul
-                                class="dropdownMenu absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow max-h-60 overflow-y-auto hidden">
-                            </ul>
-                        </div>
 
                     </div>
                     <div id="internalSection" class="hidden space-y-2">
@@ -571,7 +568,7 @@
 
 
             <div id="approvalModal"
-                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6">
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6 modal">
 
                 <div
                     class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative">
@@ -611,7 +608,7 @@
                 </div>
             </div>
             <div id="disapprovalModal"
-                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6">
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6 modal">
 
                 <div
                     class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative">
@@ -643,7 +640,7 @@
                 </div>
             </div>
             <div id="forDiscussionModal"
-                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6">
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/30 px-4 sm:px-6 modal">
 
                 <div
                     class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative">

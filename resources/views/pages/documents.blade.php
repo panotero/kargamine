@@ -1,4 +1,4 @@
-<div class="max-h-screen max-md:w-screen w-full overflow-auto bg-gray-50 dark:bg-gray-800 p-5 rounded-lg">
+<div class="max-h-screen max-w-screen w-full overflow-auto bg-gray-50 dark:bg-gray-800 p-5 rounded-lg">
 
 
     <div class="h-full container mx-auto py-5 ">
@@ -111,7 +111,6 @@
                 </table>
             </div>
         </div>
-        <div id="assignedToYouGrid"></div>
 
     </div>
 

@@ -85,7 +85,7 @@ function initModal({ modalId }) {
 
   // Show modal
   modal.classList.remove("hidden");
-
+  let openmodalcount = checkopenmodal();
   // Disable background scrolling
   document.body.style.position = "fixed";
   document.body.style.top = `-${scrollY}px`;
@@ -96,14 +96,30 @@ function initModal({ modalId }) {
   closeBtn.addEventListener("click", () => {
     modal.classList.add("hidden");
 
-    // Restore scroll position and allow scrolling
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.left = "";
-    document.body.style.right = "";
-    document.body.style.overflow = "";
-    window.scrollTo(0, scrollY);
+    openmodalcount = checkopenmodal();
+    if (openmodalcount > 0) {
+      return;
+    } else {
+      // Restore scroll position and allow scrolling
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+    }
   });
+}
+
+function checkopenmodal() {
+  const opennedmodal = document.querySelectorAll(".modal");
+  let openmodalcount = 0;
+  opennedmodal.forEach((mdl) => {
+    if (!mdl.classList.contains("hidden")) {
+      openmodalcount++;
+    }
+  });
+  return openmodalcount;
 }
 
 window.initModal = initModal;
