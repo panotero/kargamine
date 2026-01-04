@@ -6,7 +6,7 @@ window.initDataTables = function initDataTables() {
         searching: true,
         info: false, // hide "Showing X of Y" text
         lengthChange: false,
-        scrollY: "250px",
+        scrollY: "550px",
         scrollCollapse: true,
         pageLength: 10,
         scrollX: $(window).width() < 1024, // horizontal scroll only if screen < lg (1024px)

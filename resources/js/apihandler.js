@@ -44,10 +44,12 @@ window.fetchWithRetry = async function fetchWithRetry(
   retries = 3,
   delay = 500
 ) {
+  let response = null;
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, options);
-
+      const text = await res.text();
+      response = text ? JSON.parse(text) : null;
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
@@ -58,7 +60,6 @@ window.fetchWithRetry = async function fetchWithRetry(
         return null; // or return true if DELETE success
       }
 
-      const text = await res.text();
       return text ? JSON.parse(text) : null;
     } catch (err) {
       console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err);
@@ -67,7 +68,7 @@ window.fetchWithRetry = async function fetchWithRetry(
         await new Promise((r) => setTimeout(r, delay));
       } else {
         console.error(`All fetch attempts failed for ${url}`);
-        return null;
+        return { response: response, success: false };
       }
     }
   }

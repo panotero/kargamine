@@ -1,3 +1,4 @@
+let approvalmode = null;
 window.checkActionButtons = function checkActionButtons(
   status = false,
   documentRecepientId = false,
@@ -6,7 +7,7 @@ window.checkActionButtons = function checkActionButtons(
   revision_status = false,
   source = false
 ) {
-  //   console.log(documentData);
+  //   console.log(window.authUser.id + "->" + documentRecepientId);
   const actionButtonArray = [
     {
       name: "approvalActions",
@@ -37,11 +38,10 @@ window.checkActionButtons = function checkActionButtons(
   if (status) {
     status = status.toLowerCase();
   }
-
-  const canAct =
-    documentRecepientId !== false ||
-    documentDestinationOffice === window.authUser.office.office_code;
-
+  const userOfficeCode = window.authUser.office.office_code;
+  const userAuth = window.authUser;
+  const canAct = userOfficeCode === documentDestinationOffice;
+  console.log(userAuth.user_config);
   if (!canAct) return;
   const showAction = (name) => {
     const action = actionButtonArray.find((item) => item.name === name);
@@ -52,23 +52,29 @@ window.checkActionButtons = function checkActionButtons(
   if (status === "remanded" && revision_status === 0) {
     showAction("revisionActions");
     return;
-  } else {
   }
 
-  // 2. Waiting for receipt confirmation
-  if (receiptConfirmation === 0 && status !== "remanded") {
-    showAction("confirmationActions");
-    return;
-  }
-
-  // 3. For approval
-  if (status === "for approval") {
+  // 2. For approval (MUST come before receiptConfirmation)
+  if (
+    status === "for approval" &&
+    Number(window.authUser.id) === Number(documentRecepientId)
+  ) {
     showAction("approvalActions");
     return;
   }
 
+  // 3. Waiting for receipt confirmation
+  if (receiptConfirmation === 0) {
+    showAction("confirmationActions");
+    return;
+  }
+
   // 4. Default routing case
-  if (receiptConfirmation !== 0 && status !== "remanded") {
+  if (
+    receiptConfirmation !== 0 &&
+    status !== "remanded" &&
+    userAuth.user_config.approval_type === "routing"
+  ) {
     showAction("routeActions");
   }
 };
@@ -533,15 +539,27 @@ confirmBtn.addEventListener("click", async function () {
 
   try {
     const selectedOption = userSelect.options[userSelect.selectedIndex];
-    if (!selectedOption || !selectedOption.value) {
+    const finalapproval = document
+      .getElementById("preApproval")
+      .classList.contains("hidden");
+    // console.log(finalapproval);
+    let approvaltype = "final-approval";
+    if (
+      (!finalapproval && !selectedOption) ||
+      (!finalapproval && !selectedOption.value)
+    ) {
       console.warn("No user selected");
       return;
+    } else {
+      approvaltype = selectedOption.dataset.approvalType;
     }
 
+    // console.log(approvaltype);
+    // return;
     sendApprovalAction({
       approvalId: document_id.textContent,
       action: "approved",
-      next_action: selectedOption.dataset.approvalType || null, // note the correct camelCase
+      next_action: approvaltype || null, // note the correct camelCase
       remarks: remarksTextarea.value,
       nextUserId: userSelect.value,
     });
@@ -668,7 +686,7 @@ submitrevisionBtn.addEventListener("click", async function () {
       body: reviseformData,
     });
 
-    console.log(result);
+    // console.log(result);
     if (result) {
       // Close modals
       document.getElementById("DocumentModal")?.classList.add("hidden");
@@ -703,7 +721,7 @@ routeDocumentBtn.addEventListener("click", () => {
   const externalSection = document.getElementById("externalSection");
   const pdfUploadSection = document.getElementById("pdfUploadSection");
   const currentOffice = window.authUser.office?.office_code || null;
-  console.log(currentOffice);
+  //   console.log(currentOffice);
 
   officeSelect?.addEventListener("change", async (e) => {
     const selected = e.target.value;
@@ -843,6 +861,7 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     if (res) {
       window.getDocs();
       document.getElementById("routingModal").classList.add("hidden");
+      document.getElementById("DocumentModal").classList.add("hidden");
       showMessage({ status: "success", message: "Routing Success" });
 
       // Reset form

@@ -349,12 +349,15 @@ function initdocumentcontroller() {
     const userApprovalType = window.authUser.user_config?.approval_type || null;
 
     try {
-      const documents = await fetchWithRetry("/api/documents", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
+      const documents = await fetchWithRetry(
+        `/api/documents/getdocs/${window.authUser.office.office_code}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
 
       const allDocsTableBody = document.querySelector(
         "#allDocumentTable tbody"
@@ -521,7 +524,7 @@ function initdocumentcontroller() {
         submitBtn.disabled = true;
         submitBtn.textContent = "Submitting...";
         //4.
-        const response = await fetchWithRetry("/api/documents", {
+        const response = await fetchWithRetry("/api/documents/getdocs", {
           method: "POST",
           body: formData,
         });

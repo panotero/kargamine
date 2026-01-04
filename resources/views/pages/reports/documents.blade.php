@@ -79,8 +79,8 @@
 
             </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
-            <table id="reportsocumentsTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+        <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow p-3">
+            <table id="reportsdocumentsTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
                 <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                     <tr>
                         <th>Control #</th>
@@ -150,12 +150,13 @@
 
             try {
                 initDataTables();
-                const documents = await fetchWithRetry("/api/documents", {
-                    method: "GET",
-                    headers: {
-                        Accept: "application/json"
-                    },
-                });
+                const documents = await fetchWithRetry(
+                    `/api/documents/getdocs/${window.authUser.office.office_code}`, {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json"
+                        },
+                    });
                 const filteredDocuments =
                     userOffice === "ODDG-PP" ?
                     documents :
@@ -178,79 +179,81 @@
 
         }
 
-
         const filterElements = [fromDateEl, toDateEl, statusFilter, officeFilterEl, labelFilter];
 
         filterElements.forEach(el => {
             if (el) {
-                let oldfrom = fromDateEl.value;
-                let oldto = toDateEl.value;
-                el.addEventListener("change", () => {
-                    const fromVal = fromDateEl.value;
-                    const toVal = toDateEl.value;
-                    const statusVal = statusFilter.value;
-                    const officeVal = officeFilterEl.value;
-                    const labelVal = labelFilter.value;
+                el.addEventListener("change", (event) => {
+                    const table = document.getElementById("reportsdocumentsTable");
+                    let filteredDocuments = allDocuments; // start with all documents
 
-                    const fromDate = fromVal ? new Date(fromVal + "T00:00:00") : null;
-                    const toDate = toVal ? new Date(toVal + "T23:59:59") : null;
+                    switch (event.target) {
+                        case fromDateEl:
+                        case toDateEl:
+                            const fromVal = fromDateEl.value;
+                            const toVal = toDateEl.value;
+                            const fromDate = fromVal ? new Date(fromVal + "T00:00:00") : null;
+                            const toDate = toVal ? new Date(toVal + "T23:59:59") : null;
 
-                    /* ---- Date validation ---- */
-                    if (fromDate && toDate && fromDate > toDate) {
-                        alert("Invalid From and To date");
-                        return;
+                            // Validate date range
+                            if (fromDate && toDate && fromDate > toDate) {
+                                alert("Invalid From and To date");
+                                return;
+                            }
+
+                            // Filter by date range only
+                            filteredDocuments = allDocuments.filter(doc => {
+                                if (!doc.date_forwarded) return false;
+                                const docDate = new Date(doc.date_forwarded.replace(" ",
+                                    "T"));
+                                if (fromDate && docDate < fromDate) return false;
+                                if (toDate && docDate > toDate) return false;
+                                return true;
+                            });
+                            break;
+
+                        case statusFilter:
+                            const statusVal = statusFilter.value.toLowerCase();
+                            if (statusVal && statusVal !== "all") {
+                                filteredDocuments = allDocuments.filter(doc =>
+                                    (doc.status || "").toLowerCase() === statusVal
+                                );
+                            }
+                            break;
+
+                        case officeFilterEl:
+                            const officeVal = officeFilterEl.value.toLowerCase();
+                            if (officeVal && officeVal !== "all") {
+                                filteredDocuments = allDocuments.filter(doc => {
+                                    const involved = Array.isArray(doc.involved_office) ?
+                                        doc.involved_office : [];
+                                    return doc.destination_office.toLowerCase() ===
+                                        officeVal ||
+                                        involved.map(o => o.toLowerCase()).includes(
+                                            officeVal);
+                                });
+                            }
+                            break;
+
+                        case labelFilter:
+                            const labelVal = labelFilter.value.toLowerCase();
+                            if (labelVal && labelVal !== "all") {
+                                filteredDocuments = allDocuments.filter(doc =>
+                                    (doc.label || "").toLowerCase() === labelVal
+                                );
+                            }
+                            break;
                     }
-
-                    /* ---- FILTER DOCUMENTS ---- */
-                    const filteredDocuments = allDocuments.filter(doc => {
-                        // DATE
-                        if (fromDate || toDate) {
-                            if (!doc.date_forwarded) return false;
-
-                            const docDate = new Date(doc.date_forwarded.replace(" ", "T"));
-                            if (fromDate && docDate < fromDate) return false;
-                            if (toDate && docDate > toDate) return false;
-                        }
-
-                        // STATUS
-                        if (statusVal && statusVal !== "All") {
-                            if ((doc.status || "").toLowerCase() !== statusVal
-                                .toLowerCase()) {
-                                return false;
-                            }
-                        }
-
-                        // OFFICE
-                        if (officeVal && officeVal !== "All") {
-                            const involved = Array.isArray(doc.involved_office) ?
-                                doc.involved_office : [];
-
-                            if (
-                                doc.destination_office !== officeVal &&
-                                !involved.includes(officeVal)
-                            ) {
-                                return false;
-                            }
-                        }
-
-                        // LABEL
-                        if (labelVal && labelVal !== "All") {
-                            if ((doc.label || "") !== labelVal) {
-                                return false;
-                            }
-                        }
-
-                        return true;
-                    });
 
                     console.log("Filtered Documents:", filteredDocuments);
 
                     /* ---- UPDATE COUNTS + TABLE ---- */
                     updateDocumentCounts(filteredDocuments);
-                    const table = document.getElementById("reportsocumentsTable");
+
                     if ($.fn.DataTable.isDataTable(table)) {
                         $(table).DataTable().clear().draw();
                     }
+
                     filteredDocuments.forEach(doc => {
                         updaterow(doc);
                     });
@@ -258,9 +261,10 @@
             }
         });
 
+
         function updaterow(doc) {
 
-            const table = document.getElementById("reportsocumentsTable");
+            const table = document.getElementById("reportsdocumentsTable");
             if (!table) return;
             const tableBody = table.querySelector("tbody");
             let dt = null;
@@ -324,7 +328,7 @@
         <td class="px-4 py-2">${doc.office_origin || "-"}</td>
         <td class="px-4 py-2">${doc.destination_office || "-"}</td>
         <td class="px-4 py-2">${dueDate}</td>
-        <td class="px-4 py-2">${duration}</td>
+        <td class="px-4 py-2">${calculateDuration(doc.date_forwarded)}</td>
         <td class="px-4 py-2">${dateUploaded}</td>
         <td class="px-4 py-2">${doc.confidentiality || "-"}</td>
         <td class="px-4 py-2">
@@ -351,7 +355,7 @@
                     doc.office_origin || "-",
                     doc.destination_office || "-",
                     dueDate,
-                    duration,
+                    calculateDuration(doc.date_forwarded),
                     dateUploaded,
                     doc.confidentiality || "-",
                     `<div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">${doc.status || "-"}</div>`,
@@ -362,8 +366,6 @@
                     doc.date_of_document || "",
                     doc.signatory || "",
                     doc.confirmed_by_name || "",
-                    JSON.stringify(doc.involved_office) || "",
-                    doc.action_taken || "",
                     doc.remarks || "",
                 ]).draw(false);
             } else {
@@ -414,15 +416,54 @@
         }
 
 
+
+        //flatten array function
+
+        function flattenObject(obj, parentKey = "", result = {}) {
+            for (const key in obj) {
+                if (!obj.hasOwnProperty(key)) continue;
+
+                const newKey = parentKey ? `${parentKey}.${key}` : key;
+                const value = obj[key];
+
+                if (Array.isArray(value)) {
+                    // Convert array to string
+                    result[newKey] = value
+                        .map(v => typeof v === "object" ? JSON.stringify(v) : v)
+                        .join(" | ");
+                } else if (value !== null && typeof value === "object") {
+                    flattenObject(value, newKey, result);
+                } else {
+                    result[newKey] = value;
+                }
+            }
+            return result;
+        }
+
         // -----------------------------
         // Export Excel
         // -----------------------------
         function exportTableToExcel() {
-            const table = document.querySelector("#reportsocumentsTable");
-            const wb = XLSX.utils.table_to_book(table, {
-                sheet: "Documents"
-            });
-            XLSX.writeFile(wb, "documents.xlsx");
+            if (!Array.isArray(allDocuments) || allDocuments.length === 0) {
+                alert("No documents to export");
+                return;
+            }
+            const cleanedData = allDocuments.map(
+                ({
+                    files,
+                    activities,
+                    involved_office,
+                    ...rest
+                }) => rest
+            );
+
+            const flattenedData = cleanedData.map(doc => flattenObject(doc));
+
+            const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+            const workbook = XLSX.utils.book_new();
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, "All Documents");
+            XLSX.writeFile(workbook, "all_documents.xlsx");
         }
 
         // -----------------------------
@@ -434,9 +475,17 @@
             } = window.jspdf;
             const doc = new jsPDF();
             doc.autoTable({
-                html: "#reportsocumentsTable"
+                html: "#reportsdocumentsTable"
             });
-            doc.save("documents.pdf");
+            const today = new Date();
+
+            // Format as DDMMYYYY
+            const formattedDate =
+                String(today.getDate()).padStart(2, '0') + // Day
+                String(today.getMonth() + 1).padStart(2, '0') + // Month (0-indexed)
+                today.getFullYear(); // Year
+
+            doc.save("users_reports" + formattedDate + ".pdf");
         }
 
         // -----------------------------

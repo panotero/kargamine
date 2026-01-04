@@ -122,43 +122,91 @@
         const userId = document.getElementById("userId");
         const officeSelect = document.getElementById("officeSelect");
         const configSelect = document.getElementById("configSelect");
-
+        const table = document.getElementById("userTable");
+        initDataTables();
         async function loadUsers() {
             try {
-                const res = await fetch(apiUsers);
-                const users = await res.json();
 
-                userTableBody.innerHTML = "";
+                if ($.fn.DataTable.isDataTable(table)) {
+                    $(table).DataTable().clear();
+                }
+                const users = await fetchWithRetry(
+                    apiUsers, {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json"
+                        },
+                    });
 
-                users.forEach((u) => {
-                    const actionLabel = u.status === "deactivated" ? "Reactivate" : "Deactivate";
-                    const actionClass =
-                        u.status === "deactivated" ?
-                        "reactivateBtn bg-green-400" :
-                        "deactivateBtn bg-red-500";
 
-                    userTableBody.insertAdjacentHTML(
-                        "beforeend",
-                        `
-                    <tr class="border-t hover:bg-gray-50 transition ">
-                        <td class="px-6 py-3">${u.id}</td>
-                        <td class="px-6 py-3">${u.name}</td>
-                        <td class="px-6 py-3">${u.email}</td>
-                        <td class="px-6 py-3">${u.role ?? "-"}</td>
-                        <td class="px-6 py-3">${u.office.office_code ?? "-"}</td>
-                        <td class="px-6 py-3 text-center">
-                            <button class="text-white px-5 py-2 rounded bg-blue-500 editBtn" data-id="${u.id}">Edit</button> |
-                            <button class="text-white px-5 py-2 rounded ${actionClass}" data-id="${u.id}">${actionLabel}</button>
-                        </td>
-                    </tr>
-                `
-                    );
+                users.forEach((user) => {
+                    updateRow(user)
                 });
 
-                logTableContent();
-                initDataTables();
+                // logTableContent();
             } catch (error) {
                 console.error("Error loading users:", error);
+            }
+        }
+
+        function updateRow(users) {
+
+
+            if (!table) return;
+            const tableBody = table.querySelector("tbody");
+            let dt = null;
+            if ($.fn.DataTable.isDataTable(table)) {
+                dt = $(table).DataTable();
+            }
+            const actionLabel = users.status === "deactivated" ? "Reactivate" : "Deactivate";
+            const actionClass =
+                users.status === "deactivated" ?
+                "reactivateBtn bg-green-400" :
+                "deactivateBtn bg-red-500";
+
+
+
+            // Build one table row matching the column headers
+            const rowHtml = `
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.id ?? '-'}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.name ?? '-'}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.email ?? '-'}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.role ?? '-'}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.office.office_code?? '-'}
+                    </td>
+
+                        <td class="px-6 py-3 text-center">
+                            <button class="text-white px-5 py-2 rounded bg-blue-500 editBtn" data-id="${users.id}">Edit</button> |
+                            <button class="text-white px-5 py-2 rounded ${actionClass}" data-id="${users.id}">${actionLabel}</button>
+                        </td>`;
+
+
+
+            if (dt) {
+                dt.row.add([
+                    users.id ?? "-", // Name
+                    users.name ?? "-", // Name
+                    users.email ?? "-", // Email
+                    users.role ?? "-", // Designation
+                    users.office?.office_name ?? "-", // Office
+                    `<td class="px-6 py-3 text-center">
+                            <button class="text-white px-5 py-2 rounded bg-blue-500 editBtn" data-id="${users.id}">Edit</button> |
+                            <button class="text-white px-5 py-2 rounded ${actionClass}" data-id="${users.id}">${actionLabel}</button>
+                        </td>`,
+                ]).draw(false);
+            } else {
+                const tr = document.createElement("tr");
+                tr.innerHTML = rowHtml;
+                table.appendChild(tr);
             }
         }
 

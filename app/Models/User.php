@@ -63,6 +63,11 @@ class User extends Authenticatable
 
         return $this->belongsTo(UserConfig::class, 'role_id', 'id');
     }
+    public function documents()
+    {
+
+        return $this->hasMany(Document::class, 'recipient_id', 'id');
+    }
 
     public function user_designation() {}
 }

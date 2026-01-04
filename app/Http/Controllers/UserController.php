@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Office;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -203,5 +204,18 @@ class UserController extends Controller
             'data'          => $users
         ]);
         // dd($officename);
+    }
+
+    public function getUsersWithDocs($office_code)
+    {
+        $query = User::with('office', 'userConfig', 'documents');
+        $office = Office::where('office_code', $office_code)->firstOrFail();
+
+
+        if ($office_code !== 'ODDG-PP') {
+            $query->where('office_id', $office->office_id);
+        }
+        $userslist = $query->get();
+        return response()->json($userslist);
     }
 }

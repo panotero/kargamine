@@ -2,7 +2,7 @@
     <div class="container mx-auto space-y-6">
 
         <!-- SUMMARY CARDS -->
-        <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4">
+        <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4 text-black">
             <div class="flex flex-col w-full lg:w-1/3 gap-4">
                 <div class="flex gap-4">
                     <div class="flex-1 border rounded-lg p-4 bg-blue-50 text-center">
@@ -11,44 +11,85 @@
                     </div>
                     <div class="flex-1 border rounded-lg p-4 bg-green-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Total Current Documents</div>
-                        <div id="totalCurrentDocs" class="text-2xl font-bold mt-2">0</div>
+                        <div id="totalDocuments" class="text-2xl font-bold mt-2">0</div>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1 border rounded-lg p-4 bg-blue-50 text-center">
+                        <div class="text-sm font-medium text-gray-700">Active Users</div>
+                        <div id="totalActive" class="text-2xl font-bold mt-2">0</div>
+                    </div>
+                    <div class="flex-1 border rounded-lg p-4 bg-green-50 text-center">
+                        <div class="text-sm font-medium text-gray-700">Deactivated Users</div>
+                        <div id="totalDeactive" class="text-2xl font-bold mt-2">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- FILTERS + EXPORT -->
+
             <div class="flex flex-1 w-full gap-4 flex-wrap items-end">
+                <div class="flex flex-col flex-1 gap-2 hidden">
+                    <label class="text-gray-700 font-medium">From</label>
+
+                    <input type="date" class="border rounded-lg p-2 datetimepicker dateFrom" id="filter_datefrom" />
+                    <label class="text-gray-700 font-medium">To</label>
+                    <input type="date" class="border rounded-lg p-2 datetimepicker dateTo" id="filter_dateto" />
+
+                </div>
                 <div class="flex flex-col flex-1 gap-2">
-                    <label class="text-gray-700 font-medium">Office</label>
-                    <select id="officeFilter" class="border rounded-lg p-2 w-full"></select>
+                    <div class="hidden">
+
+                        <label class="text-gray-700 font-medium ">Status</label>
+                        <select class="border rounded-lg p-2 w-full " id="filter_status">
+                            <option>All</option>
+                            <option>Pending</option>
+                            <option>Processed</option>
+                        </select>
+                    </div>
+                    <div id="office_filter">
+                        <label class="text-gray-700 font-medium office">Office</label>
+                        <select class="border rounded-lg p-2 w-full  officeSelect" id="filter_office">
+                        </select>
+                    </div>
+                </div>
+                <div class="flex flex-col flex-1 gap-2 hidden">
+                    <label class="text-gray-700 font-medium">Label</label>
+                    <select class="border rounded-lg p-2 w-full" id="filter_label">
+                        <option>All</option>
+                    </select>
                 </div>
 
                 <div class="flex flex-col flex-1 gap-2 justify-end">
-                    <button id="exportPdf"
-                        class="w-full border rounded-lg p-2 bg-red-500 text-white font-medium hover:bg-red-600">
+                    <button
+                        class="w-full border border-gray-300 rounded-lg p-2 bg-red-500 text-white font-medium hover:bg-red-600 transition">
                         Export PDF
                     </button>
-                    <button id="exportExcel"
-                        class="w-full border rounded-lg p-2 bg-green-500 text-white font-medium hover:bg-green-600">
+                    <button
+                        class="w-full border border-gray-300 rounded-lg p-2 bg-green-500 text-white font-medium hover:bg-green-600 transition">
                         Export Excel
                     </button>
                 </div>
+
             </div>
         </div>
 
         <!-- USER REPORT TABLE -->
-        <div class="w-full bg-white border rounded-lg shadow overflow-auto">
-            <table id="userReportTable" class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="w-full border rounded-lg shadow overflow-auto p-5">
+            <table id="userReportTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                     <tr>
-                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">User</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Email</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Designation</th>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-500">Office</th>
-                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">Current Documents</th>
-                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">Processed Documents</th>
+                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">Pending</th>
+                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">For Discussion</th>
+                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">For Approval</th>
+                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">Overdue</th>
+                        <th class="px-4 py-2 text-center text-sm font-medium text-gray-500">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100"></tbody>
+                <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
             </table>
         </div>
     </div>
@@ -56,127 +97,303 @@
 
 <script>
     (function() {
+        let usersList = []; // store all fetched documents
+        fillOfficeDropdown();
+        getusers();
+        async function getusers() {
 
-        const authUser = window.authUser;
-        if (!authUser) return;
+            try {
+                initDataTables();
+                const response = await fetchWithRetry(
+                    `/api/users/reports/${window.authUser.office.office_code}`, {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json"
+                        },
+                    });
 
-        const officeFilter = document.getElementById('officeFilter');
-        const tableBody = document.querySelector('#userReportTable tbody');
 
-        const totalUsersEl = document.getElementById('totalUsers');
-        const totalCurrentDocsEl = document.getElementById('totalCurrentDocs');
+                usersList = response;
+                // console.log(response);
 
-        let tableInstance = null;
+                // updateDocumentCounts(filteredDocuments);
+                response.forEach((users) => {
+                    updaterow(users);
+                });
+                updateUserCounts(response);
 
-        async function init() {
-            await setupOfficeFilter();
-            await loadReport(officeFilter.value);
 
-            officeFilter.addEventListener('change', () => {
-                loadReport(officeFilter.value);
-            });
 
-            document.getElementById('exportPdf').onclick = exportPDF;
-            document.getElementById('exportExcel').onclick = exportExcel;
-        }
-
-        /**
-         * Office filter logic
-         */
-        async function setupOfficeFilter() {
-            const userOffice = authUser.office?.office_code;
-
-            if (userOffice !== 'ODDG-PP') {
-                officeFilter.innerHTML = `<option value="${userOffice}">${userOffice}</option>`;
-                officeFilter.disabled = true;
+            } catch (err) {
+                console.error(err);
                 return;
             }
-
-            const offices = @json(\App\Models\Office::orderBy('office_code')->pluck('office_code'));
-            officeFilter.innerHTML = offices.map(o =>
-                `<option value="${o}">${o}</option>`
-            ).join('');
         }
 
-        /**
-         * Load API data
-         */
-        async function loadReport(officeName) {
-            tableBody.innerHTML = '';
-            totalUsersEl.textContent = '0';
-            totalCurrentDocsEl.textContent = '0';
 
-            if (tableInstance) {
-                tableInstance.destroy();
-                tableInstance = null;
+
+        function updaterow(users) {
+
+            const table = document.getElementById("userReportTable");
+            if (!table) return;
+            const tableBody = table.querySelector("tbody");
+            let dt = null;
+            if ($.fn.DataTable.isDataTable(table)) {
+                dt = $(table).DataTable();
             }
+            // console.log(users);
 
-            const res = await fetch(`/api/reports/users/${officeName}`);
-            const payload = await res.json();
+            //count all documents
+            let pendingCount = 0;
+            let forDiscussionCount = 0;
+            let forApprovalCount = 0;
+            let overdueCount = 0;
+            const documents = users.documents;
 
-            totalUsersEl.textContent = payload.total_users.toLocaleString();
-
-            let totalCurrentDocs = 0;
-
-            payload.data.forEach(user => {
-                totalCurrentDocs += user.current_document_count;
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50';
-
-                tr.innerHTML = `
-                <td class="px-4 py-2 text-sm font-medium">${user.name}</td>
-                <td class="px-4 py-2 text-sm">${user.email}</td>
-                <td class="px-4 py-2 text-sm">${user.office_code}</td>
-                <td class="px-4 py-2 text-center font-semibold text-yellow-700">
-                    ${user.current_document_count}
-                </td>
-                <td class="px-4 py-2 text-center font-semibold text-green-700">
-                    ${user.processed_document_count}
-                </td>
-            `;
-                tableBody.appendChild(tr);
-            });
-
-            totalCurrentDocsEl.textContent = totalCurrentDocs.toLocaleString();
-            initDataTables();
-        }
-
-        /**
-         * DataTables
-         */
-        function initDataTables() {
-            tableInstance = $('#userReportTable').DataTable({
-                paging: true,
-                searching: true,
-                info: true,
-                lengthChange: false
-            });
-        }
-
-        /**
-         * Export
-         */
-        function exportExcel() {
-            const wb = XLSX.utils.table_to_book(
-                document.getElementById('userReportTable'), {
-                    sheet: 'User Report'
+            documents.forEach(docs => {
+                const status = docs.status.toLowerCase();
+                console.log(status);
+                switch (status) {
+                    case "pending":
+                        pendingCount++;
+                        break;
+                    case "for discussion":
+                        forDiscussionCount++;
+                        break;
+                    case "for approval":
+                        forApprovalCount++;
+                        break;
                 }
-            );
-            XLSX.writeFile(wb, 'user-report.xlsx');
+                // Create Date objects
+                if (docs.dueDate === null || docs.due_date === "") return;
+                const dueDate = new Date(docs.due_date);
+                const now = new Date();
+
+                // Normalize both dates to start of day (00:00:00)
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const startOfDueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate
+                    .getDate());
+
+                // Compare dates
+                if (startOfDueDate < startOfToday) {
+                    overdueCount++
+                }
+            })
+
+
+            let statuscolor = "bg-gray-100";
+            switch (users.status.toLowerCase()) {
+                case "active":
+                    statuscolor = "bg-green-200";
+                    break;
+                case "deactivated":
+                    statuscolor = "bg-red-200";
+                    break;
+            }
+            // Build one table row matching the column headers
+            const rowHtml = `
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.name ?? '-'} <!-- Name -->
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.email ?? '-'} <!-- Email -->
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.role ?? '-'} <!-- Designation -->
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${users.office.office_name?? '-'} <!-- Office -->
+                    </td>
+                    <td class="px-4 py-2 text-center text-sm font-medium">
+                        ${pendingCount?? 0} <!-- Pending -->
+                    </td>
+                    <td class="px-4 py-2 text-center text-sm font-medium">
+                        ${forDiscussionCount ?? 0} <!-- For Discussion -->
+                    </td>
+                    <td class="px-4 py-2 text-center text-sm font-medium">
+                        ${forApprovalCount ?? 0} <!-- For Discussion -->
+                    </td>
+                    <td class="px-4 py-2 text-center text-sm font-medium">
+                        ${overdueCount ?? 0} <!-- Overdue -->
+                    </td>
+        <td class="px-4 py-2">
+            <div class="px-3 py-1 bg-white rounded-full text-gray-800 font-semibold text-center ${statuscolor}">
+                ${users.status  || "-"}
+            </div>
+        </td>
+                `;
+
+
+            if (dt) {
+                dt.row.add([
+                    users.name ?? "-", // Name
+                    users.email ?? "-", // Email
+                    users.role ?? "-", // Designation
+                    users.office?.office_name ?? "-", // Office
+                    pendingCount ?? 0, // Pending
+                    forDiscussionCount ?? 0, // For Discussion
+                    forApprovalCount ?? 0, // For Approval
+                    overdueCount ?? 0, // Overdue
+                    `<div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">${users.status || "-"}</div>`,
+                ]).draw(false);
+            } else {
+                const tr = document.createElement("tr");
+                tr.innerHTML = rowHtml;
+                table.appendChild(tr);
+            }
         }
 
-        function exportPDF() {
+        const officeFilterEl = document.getElementById("filter_office");
+
+        const filterElements = [officeFilterEl];
+
+        filterElements.forEach(el => {
+            if (el) {
+                el.addEventListener("change", (event) => {
+                    const table = document.getElementById("userReportTable");
+                    let filteredDocuments = usersList; // start with all documents
+
+                    switch (event.target) {
+
+
+                        case officeFilterEl:
+                            const officeVal = officeFilterEl.value.toLowerCase();
+                            if (officeVal && officeVal !== "all") {
+                                filteredDocuments = usersList.filter(doc => {
+                                    const involved = Array.isArray(doc.involved_office) ?
+                                        doc.involved_office : [];
+                                    return doc.office.office_code.toLowerCase() ===
+                                        officeVal ||
+                                        involved.map(o => o.toLowerCase()).includes(
+                                            officeVal);
+                                });
+                            }
+                            break;
+                    }
+
+                    console.log("Filtered Documents:", filteredDocuments);
+
+                    /* ---- UPDATE COUNTS + TABLE ---- */
+                    updateUserCounts(filteredDocuments);
+
+                    if ($.fn.DataTable.isDataTable(table)) {
+                        $(table).DataTable().clear().draw();
+                    }
+
+                    filteredDocuments.forEach(doc => {
+                        updaterow(doc);
+                    });
+                });
+            }
+        });
+
+        function updateUserCounts(userslist) {
+            let totalUsers = userslist.length;
+            let deactivated = 0;
+            let active = 0;
+            let totalDocs = 0;
+
+
+
+            userslist.forEach(user => {
+                user.documents.forEach(docs => {
+                    totalDocs++
+                });
+                switch ((user.status || "").toLowerCase()) {
+                    case "active":
+                        active++;
+                        break;
+                    case "deactivated":
+                        deactivated++;
+                        break;
+                }
+            });
+            document.getElementById("totalUsers").textContent = totalUsers.toLocaleString();
+            document.getElementById("totalActive").textContent = active.toLocaleString();
+            document.getElementById("totalDeactive").textContent = deactivated.toLocaleString();
+            document.getElementById("totalDocuments").textContent = totalDocs.toLocaleString();
+        }
+
+        //flatten array function
+
+        function flattenObject(obj, parentKey = "", result = {}) {
+            for (const key in obj) {
+                if (!obj.hasOwnProperty(key)) continue;
+
+                const newKey = parentKey ? `${parentKey}.${key}` : key;
+                const value = obj[key];
+
+                if (Array.isArray(value)) {
+                    // Convert array to string
+                    result[newKey] = value
+                        .map(v => typeof v === "object" ? JSON.stringify(v) : v)
+                        .join(" | ");
+                } else if (value !== null && typeof value === "object") {
+                    flattenObject(value, newKey, result);
+                } else {
+                    result[newKey] = value;
+                }
+            }
+            return result;
+        }
+        // -----------------------------
+        // Export Excel
+        // -----------------------------
+        function exportTableToExcel() {
+            if (!Array.isArray(usersList) || usersList.length === 0) {
+                alert("No documents to export");
+                return;
+            }
+            const cleanedData = usersList.map(
+                ({
+                    files,
+                    activities,
+                    involved_office,
+                    ...rest
+                }) => rest
+            );
+
+            const flattenedData = cleanedData.map(doc => flattenObject(doc));
+
+            const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+            const workbook = XLSX.utils.book_new();
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, "All Documents");
+            XLSX.writeFile(workbook, "user_reports" + datetoday() + ".xlsx ");
+        }
+
+        // -----------------------------
+        // Export PDF
+        // -----------------------------
+        function exportTableToPDF() {
             const {
                 jsPDF
             } = window.jspdf;
             const doc = new jsPDF();
             doc.autoTable({
-                html: '#userReportTable'
+                html: "#userReportTable"
             });
-            doc.save('user-report.pdf');
+
+            doc.save("users_reports" + datetoday() + ".pdf");
         }
 
-        init();
+        function datetoday() {
+
+            const today = new Date();
+
+            // Format as DDMMYYYY
+            const formattedDate =
+                String(today.getDate()).padStart(2, '0') + // Day
+                String(today.getMonth() + 1).padStart(2, '0') + // Month (0-indexed)
+                today.getFullYear(); // Year
+            return formattedDate;
+        }
+
+        // -----------------------------
+        // Attach export buttons
+        // -----------------------------
+        document.querySelector('button.bg-red-500').addEventListener('click', exportTableToPDF);
+        document.querySelector(
+            'button.bg-green-500').addEventListener('click', exportTableToExcel);
     })();
 </script>

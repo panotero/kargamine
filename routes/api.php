@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [NotificationController::class, 'getNotifications']);
     });
 
+
     Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
     Route::prefix('approvals')->group(function () {
@@ -69,7 +70,7 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);
     Route::prefix('documents')->group(function () {
-        Route::get('/', [DocumentController::class, 'index']);
+        Route::get('/getdocs/{office_name}', [DocumentController::class, 'index']);
         Route::get('/{ControlNumber}', [DocumentController::class, 'show']);
         Route::post('/', [DocumentController::class, 'store']);
         Route::post('/revise', [DocumentController::class, 'revise']);
@@ -106,6 +107,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{id}', [UserController::class, 'show']);
+        Route::get('/reports/{office_code}', [UserController::class, 'getUsersWithDocs']);
         Route::post('/', [UserController::class, 'store']);
         Route::patch('/save/{id}', [UserController::class, 'save_info']);
         Route::patch('/deactivate/{id}', [UserController::class, 'deactivate']);

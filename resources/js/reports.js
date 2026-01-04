@@ -17,10 +17,13 @@ window.initdocumentreport = function initdocumentreport() {
     showDocsLoader(reportsocumentsTable);
 
     try {
-      const documents = await fetchWithRetry("/api/documents", {
-        method: "GET",
-        headers: { Accept: "application/json" },
-      });
+      const documents = await fetchWithRetry(
+        `/api/documents/getdocs/${window.authUser.office.office_code}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
 
       clearTable("#allDocumentTable");
       clearTable("#assignedToYouDocumentTable");

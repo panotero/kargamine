@@ -19,16 +19,26 @@ use Illuminate\Validation\Rule;
 class DocumentController extends Controller
 {
 
-    public function index()
+    public function index($office_name)
     {
-        // Eager load files, activities, and related users
-        $documents = Document::with([
+
+        $documentsQuery = Document::with([
             'files',
             'activities',
-            'user',           // user who uploaded/created
-            'recipient',      // recipient user
-            'confirmedBy'     // user who confirmed
-        ])->get();
+            'user',          // user who uploaded/created
+            'recipient',     // recipient user
+            'confirmedBy'    // user who confirmed
+        ]);
+
+        if ($office_name !== 'ODDG-PP') {
+            $documentsQuery->where(function ($q) use ($office_name) {
+                $q->where('office_origin', $office_name)
+                    ->orWhere('destination_office', $office_name)
+                    ->orWhereJsonContains('involved_office', $office_name);
+            });
+        }
+
+        $documents = $documentsQuery->get();
 
         // Optionally map extra info if needed
         $documents->transform(function ($doc) {
@@ -355,6 +365,7 @@ class DocumentController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'success' => false,
                 'message' => 'Invalid input detected.',
                 'invalid_fields' => $validator->errors(),
             ], 422);
@@ -402,6 +413,7 @@ class DocumentController extends Controller
             'due_date'                => $request->due_date,
             'signatory'               => $request->signatory,
             'remarks'                 => $request->remarks,
+            'status'                 => "Routed",
         ]);
 
 

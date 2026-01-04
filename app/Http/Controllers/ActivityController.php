@@ -72,5 +72,21 @@ class ActivityController extends Controller
             ->get();
         // dd($activities->all());
         return response()->json($activities);
+
+
+        // $ActivitiesQuery = Activity::with(['document', 'user']);
+        // $ActivitiesQuery->where('action', '!=', "view");
+        // $ActivitiesQuery->where('action', '!=', "view");
+
+        // // if ($office_code !== 'ODDG-PP') {
+        // //     $ActivitiesQuery->where(function ($q) use ($office_code) {
+        // //         $q->where('office_origin', $office_code)
+        // //             ->orWhere('destination_office', $office_code)
+        // //             ->orWhereJsonContains('involved_office', $office_code);
+        // //     });
+        // // }
+
+
+        // $activities = $ActivitiesQuery->get();
     }
 }

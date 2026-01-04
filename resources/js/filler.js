@@ -18,6 +18,39 @@ async function fillOfficeDropdown(otherofficetb = null) {
   return true;
 }
 
+function parseDateSafe(dateString) {
+  return new Date(dateString.replace(" ", "T"));
+}
+
+function safeDate(d) {
+  return new Date(d.replace(" ", "T"));
+}
+window.calculateDuration = function calculateDuration(dateForwarded) {
+  const start = parseDateSafe(dateForwarded);
+  const end = new Date();
+
+  if (isNaN(start.getTime())) {
+    console.error("Invalid date:", dateForwarded);
+    return "Invalid date";
+  }
+
+  let diffMs = end.getTime() - start.getTime();
+  if (diffMs < 0) diffMs = 0;
+
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  const minutes = totalMinutes % 60;
+
+  let result = [];
+  if (days > 0) result.push(`${days} day${days > 1 ? "s" : ""}`);
+  if (hours > 0) result.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+  result.push(`${minutes} min`);
+
+  return result.join(" ");
+};
+
 window.fillOfficeDropdownCustom = async function fillOfficeDropdownCustom() {
   const dropdownContainers = document.querySelectorAll(".custom-dropdown");
 
@@ -132,3 +165,19 @@ async function fetchAuthUser() {
 window.fetchAuthUser = fetchAuthUser;
 window.fillOfficeDropdown = fillOfficeDropdown;
 window.fillDocType = fillDocType;
+
+// ---------------------- DATA TABLE HELPERS ----------------------
+window.clearTable = function clearTable(selector) {
+  if ($.fn.DataTable.isDataTable(selector)) {
+    $(selector).DataTable().clear();
+  } else {
+    const tbody = document.querySelector(`${selector} tbody`);
+    if (tbody) tbody.innerHTML = "";
+  }
+};
+
+function redrawTable(selector) {
+  if ($.fn.DataTable.isDataTable(selector)) {
+    $(selector).DataTable().draw(false);
+  }
+}

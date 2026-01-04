@@ -141,7 +141,7 @@
                 <p id="fileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
                 <button id="clearSelectionBtn"
                     class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition">Clear</button>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 text-black">
                     <div class="space-y-4">
                         <div>
                             <label class="text-sm text-gray-600">Document Number</label>

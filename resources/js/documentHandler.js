@@ -1,37 +1,4 @@
 function initdocumentcontroller() {
-  function calculateDuration(dateForwarded) {
-    const start = parseDateSafe(dateForwarded);
-    const end = new Date();
-
-    if (isNaN(start.getTime())) {
-      console.error("Invalid date:", dateForwarded);
-      return "Invalid date";
-    }
-
-    let diffMs = end.getTime() - start.getTime();
-    if (diffMs < 0) diffMs = 0;
-
-    const totalMinutes = Math.floor(diffMs / 60000);
-    const totalHours = Math.floor(totalMinutes / 60);
-    const days = Math.floor(totalHours / 24);
-    const hours = totalHours % 24;
-    const minutes = totalMinutes % 60;
-
-    let result = [];
-    if (days > 0) result.push(`${days} day${days > 1 ? "s" : ""}`);
-    if (hours > 0) result.push(`${hours} hour${hours > 1 ? "s" : ""}`);
-    result.push(`${minutes} min`);
-
-    return result.join(" ");
-  }
-
-  function parseDateSafe(dateString) {
-    return new Date(dateString.replace(" ", "T"));
-  }
-
-  function safeDate(d) {
-    return new Date(d.replace(" ", "T"));
-  }
   // ---------------------- GET DOCUMENTS ----------------------
   window.getDocs = async function getDocs() {
     const authUser = window.authUser;
@@ -52,10 +19,13 @@ function initdocumentcontroller() {
     showDocsLoader(assignedBody);
 
     try {
-      const documents = await fetchWithRetry("/api/documents", {
-        method: "GET",
-        headers: { Accept: "application/json" },
-      });
+      const documents = await fetchWithRetry(
+        `/api/documents/getdocs/${window.authUser.office.office_code}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
 
       clearTable("#allDocumentTable");
       clearTable("#assignedToYouDocumentTable");
@@ -127,22 +97,6 @@ function initdocumentcontroller() {
     if (!tableBody) return;
     const loader = tableBody.querySelector("#docsLoaderRow");
     if (loader) loader.remove();
-  }
-
-  // ---------------------- DATA TABLE HELPERS ----------------------
-  function clearTable(selector) {
-    if ($.fn.DataTable.isDataTable(selector)) {
-      $(selector).DataTable().clear();
-    } else {
-      const tbody = document.querySelector(`${selector} tbody`);
-      if (tbody) tbody.innerHTML = "";
-    }
-  }
-
-  function redrawTable(selector) {
-    if ($.fn.DataTable.isDataTable(selector)) {
-      $(selector).DataTable().draw(false);
-    }
   }
 
   // ---------------------- APPEND ROW ----------------------
@@ -441,10 +395,13 @@ function initdocumentcontroller() {
           },
           body: formData,
         });
-        // console.log(result);
-        if (!result) {
-          if (result.status === 422) {
-            const invalid = result.invalid_fields;
+        console.log(result);
+        if (result.response && !result.success) {
+          if (
+            result.response.invalid_fields &&
+            Object.keys(result.response.invalid_fields).length > 0
+          ) {
+            const invalid = result.response.invalid_fields;
 
             let messages = ["Invalid input detected:"];
 
