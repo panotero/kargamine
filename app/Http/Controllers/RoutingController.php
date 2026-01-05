@@ -119,6 +119,7 @@ class RoutingController extends Controller
                             'receipt_confirmed_by' => 0,
                             'status' => "Signed",
                             'date_forwarded' => now(),
+                            'updated_at' => now(),
                         ]);
                 } else {
                     $activityData = [
@@ -154,6 +155,7 @@ class RoutingController extends Controller
                             'receipt_confirmed_by' => 0,
                             'status' => "Remanded",
                             'date_forwarded' => now(),
+                            'updated_at' => now(),
                         ]);
                 }
             } else {
@@ -187,10 +189,14 @@ class RoutingController extends Controller
                         'sender_id' => $user->id,
                         'status' => 'For Approval',
                         'date_forwarded' => now(),
+                        'updated_at' => now(),
                     ]);
                 DB::table('approval_table')
                     ->where('user_id', $user->id)
-                    ->update(['status' => 1]);
+                    ->update([
+                        'status' => 1,
+                        'updated_at' => now(),
+                    ]);
 
                 Approvals::create([
                     'document_id' => $document->document_id,
@@ -205,6 +211,8 @@ class RoutingController extends Controller
             $document->update([
                 'destination_office' => $destinationOffice,
                 'recipient_id'       => $recipientUserId,
+
+                'updated_at' => now(),
             ]);
             if ($sameOffice) {
                 return response()->json([

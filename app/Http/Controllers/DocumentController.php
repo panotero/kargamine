@@ -38,7 +38,9 @@ class DocumentController extends Controller
             });
         }
 
-        $documents = $documentsQuery->get();
+        $documents = $documentsQuery
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
         // Optionally map extra info if needed
         $documents->transform(function ($doc) {
@@ -98,6 +100,7 @@ class DocumentController extends Controller
                 'receipt_confirmed_by' => $request->user_id,
                 'recipient_id' => $request->user_id,
                 'status' => $status,
+                'updated_at' => now(),
             ]);
 
 
@@ -291,7 +294,9 @@ class DocumentController extends Controller
 
         Document::where('document_control_number', $originalDocControlNumber)
             ->update([
-                'revision_status' => 1
+                'revision_status' => 1,
+
+                'updated_at' => now(),
             ]);
 
 
@@ -502,7 +507,7 @@ class DocumentController extends Controller
             return response()->json(['error' => 'Document not found'], 404);
         }
 
-        $document->update($request->all());
+        $document->update($request->all(),);
         return response()->json(['message' => 'Document updated successfully', 'data' => $document]);
     }
 

@@ -50,7 +50,10 @@
                         <select class="border rounded-lg p-2 w-full " id="filter_status">
                             <option>All</option>
                             <option>Pending</option>
-                            <option>Processed</option>
+                            <option>For Discussion</option>
+                            <option>Routed</option>
+                            <option>Confirmed</option>
+                            <option>Complete</option>
                         </select>
                     </div>
                     <div id="office_filter" class="hidden">

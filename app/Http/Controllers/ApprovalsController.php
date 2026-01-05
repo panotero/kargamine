@@ -169,6 +169,7 @@ class ApprovalsController extends Controller
                 ->update([
                     'recipient_id'   => $validated['next_user_id'],
                     'date_forwarded' => now(),
+                    'updated_at' => now(),
                 ]);
             $this->createNextApproval(
                 $approval->document->document_id,
@@ -195,6 +196,8 @@ class ApprovalsController extends Controller
                 ->update([
                     'recipient_id'   => $finalApprover->id,
                     'date_forwarded' => now(),
+
+                    'updated_at' => now(),
                 ]);
 
             $this->createNextApproval(
@@ -277,6 +280,7 @@ class ApprovalsController extends Controller
                 'status'         => $status,
                 'recipient_id'   => $resetRecipient ? null : null,
                 'date_forwarded' => now(),
+                'updated_at' => now(),
             ]);
     }
 
