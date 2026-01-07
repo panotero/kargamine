@@ -383,7 +383,7 @@
                     month: buildMonthlyData(activities),
                     year: buildYearlyData(activities)
                 };
-                console.log(sampleData);
+                // console.log(sampleData);
 
 
                 const ctx = document.getElementById('fileGraph').getContext('2d');
@@ -528,7 +528,7 @@
 
             const userOffice = authUser.office?.office_code || null;
             const userApprovalType = authUser?.user_config.approval_type
-            console.log(userApprovalType);
+            // console.log(userApprovalType);
 
 
             // Fetch all documents once

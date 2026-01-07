@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <link rel="icon" type="image/x-icon" href="{{ asset('/assets/images/TESDA_Logo.png') }}">
     <meta charset="utf-8">
     <title>Email</title>
     <style>

@@ -53,7 +53,12 @@
                             <option>For Discussion</option>
                             <option>Routed</option>
                             <option>Confirmed</option>
-                            <option>Complete</option>
+                            <option>Completed</option>
+                            <option>For Approval</option>
+                            <option>Approved</option>
+                            <option>Signed</option>
+                            <option>Disapproved</option>
+                            <option>Remanded</option>
                         </select>
                     </div>
                     <div id="office_filter" class="hidden">

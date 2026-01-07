@@ -1,8 +1,8 @@
-<div class="w-full h-screen bg-white">
+<div class="w-full h-screen bg-white dark:bg-gray-800">
     <div class=" container mx-auto py-5 rounded-lg">
         <div>
 
-            <div class="flex flex-wrap gap-3 mb-4">
+            <div class="flex flex-wrap gap-3 mb-4 hidden">
                 <select class="rounded-full border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                     <option>Filter by Office</option>
                 </select>
@@ -16,9 +16,9 @@
                     class="rounded-full border-gray-300 px-4 py-2 text-sm w-64 focus:ring-blue-500 focus:border-blue-500" />
             </div>
 
-            <div class="overflow-x-auto bg-white rounded-xl shadow">
+            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow">
                 <table id="approvaltable" class="w-full text-sm text-left border-collapse responsive-table  p-5">
-                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                    <thead class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-white uppercase text-xs">
                         <tr>
                             <th class="px-4 py-3">Control #</th>
                             <th class="px-4 py-3">Label</th>
@@ -32,7 +32,7 @@
                             <th class="px-4 py-3">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-white ">
                     </tbody>
                 </table>
             </div>
@@ -205,12 +205,44 @@
     </div>
 </div>
 
+{{-- <script>
+    let approvalList = [];
+    getApprovals();
+    async function getApprovals() {
+        try {
+            initDataTables();
+            const response = await fetchWithRetry(
+                `/api/approvals/`, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                });
 
+
+            // usersList = response;
+            console.log(response);
+
+            // updateDocumentCounts(filteredDocuments);
+            // response.forEach((users) => {
+            //     updaterow(users);
+            // });
+            // updateUserCounts(response);
+
+
+
+        } catch (err) {
+            console.error(err);
+            return;
+        }
+    }
+</script> --}}
 <script>
     (function() {
         const tableBody = document.querySelector("#approvaltable tbody");
         const baseApiUrl = "/api/approvals";
         const baseUrl = window.location.origin;
+        initDataTables();
 
         // =========================
         // Helper Functions
@@ -281,6 +313,7 @@
                         doc.receipt_confirmation,
                         doc.revision_status,
                     );
+
 
                     clearModalFields();
                     showSkeletonLoaders();

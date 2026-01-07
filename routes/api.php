@@ -103,6 +103,13 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{id}', [DocumentTypeController::class, 'update']);
         Route::delete('/{id}', [DocumentTypeController::class, 'destroy']);
     });
+    Route::prefix('labeltypes')->group(function () {
+        Route::get('/', [DocumentTypeController::class, 'getlabel']);
+        Route::post('/', [DocumentTypeController::class, 'storelabel']);
+        Route::get('/{id}', [DocumentTypeController::class, 'showlabel']);
+        Route::patch('/{id}', [DocumentTypeController::class, 'updatelabel']);
+        Route::delete('/{id}', [DocumentTypeController::class, 'destroylabel']);
+    });
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);

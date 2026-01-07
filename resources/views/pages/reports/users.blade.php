@@ -152,7 +152,7 @@
 
             documents.forEach(docs => {
                 const status = docs.status.toLowerCase();
-                console.log(status);
+                // console.log(status);
                 switch (status) {
                     case "pending":
                         pendingCount++;
@@ -271,7 +271,7 @@
                             break;
                     }
 
-                    console.log("Filtered Documents:", filteredDocuments);
+                    // console.log("Filtered Documents:", filteredDocuments);
 
                     /* ---- UPDATE COUNTS + TABLE ---- */
                     updateUserCounts(filteredDocuments);

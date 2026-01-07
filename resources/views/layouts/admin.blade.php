@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+
+    <link rel="icon" type="image/x-icon" href="{{ asset('/assets/images/TESDA_Logo.png') }}">
     <meta charset="UTF-8">
     <title>Admin Panel</title>
     @vite('resources/css/app.css')

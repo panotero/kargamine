@@ -145,6 +145,14 @@
                                     <span id="docDept" class="text-gray-900 dark:text-gray-100"></span>
                                 </div>
                                 <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Destination Office:</span>
+                                    <span id="docDest" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Uploaded by:</span>
+                                    <span id="docUploadBy" class="text-gray-900 dark:text-gray-100"></span>
+                                </div>
+                                <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">Created By / User ID:</span>
                                     <span id="docSignatory" class="text-gray-900 dark:text-gray-100"></span>
                                 </div>

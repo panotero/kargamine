@@ -112,6 +112,7 @@ function initdocumentcontroller() {
       document_code,
       document_control_number,
       document_type,
+      label,
       particular,
       office_origin,
       destination_office,
@@ -142,7 +143,15 @@ function initdocumentcontroller() {
         statuscolor = "bg-blue-200";
         break;
     }
+    const labelValue = label && label.trim() !== "" ? label.trim() : null;
 
+    let labelOptionHtml = "";
+
+    if (labelValue) {
+      labelOptionHtml = `<option selected value="${labelValue}">${labelValue}</option>`;
+    } else {
+      labelOptionHtml = `<option selected disabled value="">Set Label</option>`;
+    }
     const rowHtml = `
     <tr class="border-t hover:bg-gray-50 cursor-pointer"
         data-document-id="${document_id}"
@@ -153,15 +162,16 @@ function initdocumentcontroller() {
       <td class="px-4 py-2">${document_control_number}</td>
       <td class="px-4 py-2">${document_code}</td>
       <td class="px-4 py-2">
-        <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
-          <option ${
-            document_type === "General" ? "selected" : ""
-          }>General</option>
-          <option ${
-            document_type === "Confidential" ? "selected" : ""
-          }>Confidential</option>
-        </select>
-      </td>
+  <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
+    ${labelOptionHtml}
+    <option value="General" ${
+      labelValue === "General" ? "selected" : ""
+    }>General</option>
+    <option value="Confidential" ${
+      labelValue === "Confidential" ? "selected" : ""
+    }>Confidential</option>
+  </select>
+</td>
       <td class="px-2 py-2 max-w-[150px] truncate" title="${particular}">
   ${particular}
 </td>

@@ -41,7 +41,7 @@ window.checkActionButtons = function checkActionButtons(
   const userOfficeCode = window.authUser.office.office_code;
   const userAuth = window.authUser;
   const canAct = userOfficeCode === documentDestinationOffice;
-  console.log(userAuth.user_config);
+  //   console.log(userAuth.user_config);
   if (!canAct) return;
   const showAction = (name) => {
     const action = actionButtonArray.find((item) => item.name === name);
@@ -85,6 +85,8 @@ window.clearModalFields = function clearModalFields() {
     "docStatus",
     "docTitle",
     "docDept",
+    "docDest",
+    "docUploadBy",
     "docAuthor",
     "docDate",
     "docCode",
@@ -162,6 +164,8 @@ window.populateDocumentModal = async function populateDocumentModal(
     setText("docCode", data.document_code || "N/A");
     setText("docTitle", data.particular || "N/A");
     setText("docDept", data.office_origin || "N/A");
+    setText("docDest", data.destination_office || "N/A");
+    setText("docUploadBy", data.user_id || "N/A");
     setText("docSignatory", data.signatory || "N/A");
     setText("docType", data.document_type || "N/A");
     setText("docDate", data.date_of_document || "N/A");

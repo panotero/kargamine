@@ -77,6 +77,30 @@
             </table>
         </div>
     </div>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
+
+        <div class="w-full flex justify-between p-5">
+
+            <h2 class="text-xl font-semibold mb-4">Document Type List</h2>
+            <button data-modal-name = "labelModal"
+                class="px-5 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-2xl shadow-sm modal">
+                Add Label Type
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm border-collapse  p-5" id="labelTable">
+                <thead>
+                    <tr class="bg-gray-100 dark:bg-gray-700 text-left">
+                        <th class="p-3">ID</th>
+                        <th class="p-3">Label</th>
+                        <th class="p-3">Created At</th>
+                        <th class="p-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div id="officeModal"
@@ -144,23 +168,50 @@
         </form>
     </div>
 </div>
+<div id="labelModal"
+    class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 modal-overlay modal">
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-96 p-6">
+        <h3 class="text-lg font-semibold mb-4">Add New Document Type</h3>
+
+        <form id="labelTypeForm">
+            <input type="text" name="label_type" placeholder="Label"
+                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
+                          dark:bg-gray-900 p-2"
+                required>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 closemodalbutton">
+                    Cancel
+                </button>
+
+                <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
     (function() {
         const base = '/api';
         async function loadData() {
-            const [offices, users, documentTypes] = await Promise.all([
+            const [offices, users, documentTypes, labelTypes] = await Promise.all([
                 fetch(`${base}/offices`).then(res => res.json()),
                 fetch(`${base}/userconfigs`).then(res => res.json()),
-                fetch(`${base}/documenttypes`).then(res => res.json())
+                fetch(`${base}/documenttypes`).then(res => res.json()),
+                fetch(`${base}/labeltypes`).then(res => res.json()),
             ]);
 
             const officeTable = document.querySelector('#officeTable tbody');
             const userTable = document.querySelector('#userTable tbody');
             const documentTable = document.querySelector('#documentTable tbody');
+            const labelTable = document.querySelector('#labelTable tbody');
             officeTable.innerHTML = '';
             userTable.innerHTML = '';
             documentTable.innerHTML = '';
+            labelTable.innerHTML = '';
 
             offices.forEach(o => {
                 officeTable.insertAdjacentHTML('beforeend', `
@@ -183,6 +234,23 @@
                     class="px-5 py-2 text-white bg-red-500 rounded-md deletebtn"
                     data-mode="documenttype"
                     data-id="${d.id}">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `);
+            });
+            labelTypes.forEach(l => {
+                labelTable.insertAdjacentHTML('beforeend', `
+        <tr class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="p-3">${l.id}</td>
+            <td class="p-3">${l.label}</td>
+            <td class="p-3">${l.created_at}</td>
+            <td class="p-3">
+                <button
+                    class="px-5 py-2 text-white bg-red-500 rounded-md deletebtn"
+                    data-mode="labeltype"
+                    data-id="${l.id}">
                     Delete
                 </button>
             </td>
@@ -213,6 +281,8 @@
                         deleteUser(id);
                     } else if (mode === "documenttype") {
                         deleteDocType(id);
+                    } else if (mode === "labeltype") {
+                        deleteLabelType(id);
                     } else {
                         console.warn("Unknown delete mode:", mode);
                     }
@@ -251,10 +321,46 @@
             closeModal('documentModal');
             loadData();
         };
+        document.getElementById('labelTypeForm').onsubmit = async e => {
+            e.preventDefault();
+            const payload = {
+                label_name: e.target.label_type.value
+            };
+            console.log(payload);
+
+            // return;
+            const response =
+                await fetchWithRetry("/api/labeltypes", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                            .content,
+                    },
+                    body: payload,
+                });
+            // console.log(response);
+            closeModal('labelModal');
+            loadData();
+        };
         async function deleteOffice(id) {
             await fetch(`${base}/offices/${id}`, {
                 method: 'DELETE'
             });
+
+
+            // const payload = {
+            //     id: id
+            // };
+            // const result = await fetchWithRetry(`${base}/offices/${id}`, {
+            //     method: "DELETE",
+            //     headers: {
+            //         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+            //             .content,
+            //     },
+            //     body: payload,
+            // });
             loadData();
         }
 
@@ -268,6 +374,25 @@
             await fetch(`${base}/documenttypes/${id}`, {
                 method: 'DELETE'
             });
+
+            loadData();
+        }
+        async function deleteLabelType(id) {
+            // await fetch(`${base}/labeltypes/${id}`, {
+            //     method: 'DELETE'
+            // });
+
+            // const payload = {
+            //     id: id
+            // };
+            const result = await fetchWithRetry(`${base}/labeltypes/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                        .content,
+                },
+            });
+
             loadData();
         }
 
