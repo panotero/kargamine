@@ -3,7 +3,7 @@
 
     <div class="h-full container mx-auto py-5 ">
 
-        <div class="w-full p-5 rounded-md drop-shadow-md mb-5 bg-white text-black">
+        <div class="w-full p-5 rounded-md drop-shadow-md mb-5 bg-white text-black statusButton" data-status="all">
             <div>
                 <p class="text-sm">Total Documents</p>
                 <h2 class="mt-2 text-2xl font-bold" id="totalDocuments">0</h2>
@@ -11,7 +11,8 @@
             </div>
         </div>
         <div class="grid md:grid-cols-5 grid-cols-2 gap-3">
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="approved">
 
                 <div>
                     <p class="text-sm">For Signature</p>
@@ -19,7 +20,8 @@
                     <p class="mt-1 text-xs">Approved and for signature</p>
                 </div>
             </div>
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="for discussion">
                 <div>
                     <div>
                         <p class="text-sm">For Discussion</p>
@@ -28,7 +30,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="pending">
 
                 <div>
                     <p class="text-sm">Pending</p>
@@ -36,28 +39,32 @@
                     <p class="mt-1 text-xs">Waiting for processing</p>
                 </div>
             </div>
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="remanded">
                 <div>
                     <p class="text-sm">Remanded</p>
                     <h2 class="mt-2 text-3xl font-bold" id="remanded">0</h2>
                     <p class="mt-1 text-xs">Returned for revision</p>
                 </div>
             </div>
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="for approval">
                 <div>
                     <p class="text-sm">For Approval</p>
                     <h2 class="mt-2 text-3xl font-bold text-orange-300" id="forApproval">0</h2>
                     <p class="mt-1 text-xs">documents for approval</p>
                 </div>
             </div>
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="completed">
                 <div>
                     <p class="text-sm">Completed</p>
                     <h2 class="mt-2 text-3xl font-bold text-green-600" id="completed">0</h2>
                     <p class="mt-1 text-xs">documents for approval</p>
                 </div>
             </div>
-            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black">
+            <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton"
+                data-status="overdue">
 
                 <div>
                     <p class="text-sm">Overdue</p>
@@ -166,7 +173,8 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-2 col-span-1 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
+            <div
+                class="lg:col-span-2 col-span-1 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-medium ">Top 5 Priority</h3>
                     <span class="text-xs ">By priority</span>
@@ -187,6 +195,49 @@
             </div>
         </div>
 
+    </div>
+
+    <div id="countModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80 w-[60vw]  relative">
+            <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Document Created</h2>
+            <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
+                <table id="countmodaltable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">
+                                <span class="inline-flex items-center">Control Number</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="inline-flex items-center">Document Number</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="inline-flex items-center">Subject</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="inline-flex items-center">Origin Office</span>
+                            </th>
+                            <th class="px-4 py-3">
+                                <span class="inline-flex items-center">Destination Office</span>
+                            </th>
+                            <th class="px-4 py-auto">
+                                <span class="inline-flex items-center">Status</span>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
+                        <!-- Rows will be inserted dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="w-full flex justify-end">
+                <button
+                    class="modal-close px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+                    Close
+                </button>
+
+            </div>
+        </div>
     </div>
 </div>
 <script>
@@ -520,6 +571,7 @@
 
         getActivityData();
 
+        initDashboard();
         let allDocuments = []; // store all fetched documents
 
         async function initDashboard() {
@@ -536,10 +588,13 @@
                 // getActivitiesCounts();
                 getDocsCounts();
 
+
             } catch (err) {
                 console.error(err);
                 return;
             }
+
+
         }
 
         async function getActivityData() {
@@ -568,6 +623,8 @@
                         },
                     }
                 );
+                allDocuments = documents;
+                // console.log(documents);
                 const userOffice = authUser.office.office_code;
                 let total = documents.length;
                 let forDiscussion = 0;
@@ -600,16 +657,12 @@
                             completed++;
                             break;
                         case "approved":
-                            if (doc.destination_office === userOffice)
-                                forSignature++;
+                            forSignature++;
                             break;
                     }
                 });
 
-                //counnt all overdue
-                documents.forEach(doc => {
-                    // console.log(doc.status);
-                });
+                overdue = checkOverDue(documents);
 
 
 
@@ -668,7 +721,156 @@
         }
 
 
-        initDashboard();
+
+        const statusbtn = document.querySelectorAll('.statusButton');
+        const modalcounttable = document.getElementById('countmodaltable');
+        statusbtn.forEach(e => {
+            e.addEventListener("click", function(func) {
+                initDataTables();
+                console.log(e.dataset.status);
+                initModal({
+                    modalId: "countModal"
+                });
+                let filteredDocuments = [];
+                const status = e.dataset.status;
+                switch (status) {
+
+                    case "pending":
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc.status && doc.status.toLowerCase() === status
+                        );
+                        break;
+                    case "for approval":
+                        break;
+                    case "completed":
+                        break;
+                    case "remanded":
+                        break;
+                    case "overdue":
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc.status && doc.status.toLowerCase() === status
+                        );
+                        break;
+                    case "approved":
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc.status && doc.status.toLowerCase() === status
+                        );
+                        break;
+                    case "completed":
+                        break;
+                    case "all":
+                        filteredDocuments = allDocuments;
+                        break;
+
+                }
+
+
+                if ($.fn.DataTable.isDataTable(modalcounttable)) {
+                    const dt = $(modalcounttable).DataTable();
+                    dt.clear().draw();
+                }
+                console.log(filteredDocuments);
+                //update alldocuments to mutated array based on the status
+                filteredDocuments.forEach(doc => {
+                    updaterow(doc);
+
+                });
+                //populate countmodaltable based on the status
+            })
+
+        });
+
+
+
+        function updaterow(doc) {
+
+            if (!modalcounttable) return;
+            const tableBody = modalcounttable.querySelector("tbody");
+            let dt = null;
+            if ($.fn.DataTable.isDataTable(modalcounttable)) {
+                dt = $(modalcounttable).DataTable();
+            }
+
+
+
+            let statuscolor = "bg-gray-100";
+            switch (doc.status.toLowerCase()) {
+
+                case "pending":
+                    statuscolor = "bg-yellow-200";
+                    break;
+                case "for approval":
+                    statuscolor = "bg-yellow-100";
+                    break;
+                case "completed":
+                    statuscolor = "bg-green-200";
+                    break;
+                case "remanded":
+                    statuscolor = "bg-red-200";
+                    break;
+                case "overdue":
+                    statuscolor = "bg-red-300";
+                    break;
+                case "approved":
+                    statuscolor = "bg-blue-200";
+                    break;
+            }
+            // Build one table row matching the column headers
+            const rowHtml = `
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${doc.document_control_number ?? '-'} <!-- Name -->
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${doc.document_code ?? '-'} <!-- Email -->
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${doc.particular ?? '-'} <!-- Designation -->
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${doc.office_origin} <!-- Office -->
+                    </td>
+                    <td class="px-4 py-2 text-center text-sm font-medium">
+                        ${doc.destination_office} <!-- Pending -->
+                    </td>
+                    <td class="px-4 py-2">
+                        <div class="px-3 py-1 bg-white rounded-full text-gray-800 font-semibold text-center ${statuscolor}">
+                            ${doc.status  || "-"}
+                        </div>
+                    </td>
+                `;
+
+
+            if (dt) {
+                const newRow = dt.row.add([
+                    doc.document_control_number ?? "-", // Name
+                    doc.document_code ?? "-", // Email
+                    doc.particular ?? "-", // Designation
+                    doc.office_origin ?? "-", // Office
+                    doc.destination_office,
+                    `<div class="px-3 py-1 bg-white rounded-full text-gray-800 font-semibold text-center ${statuscolor}">
+                            ${doc.status  || "-"}
+                        </div>`,
+                ]).draw(false);
+
+
+                const rowNode = newRow.node();
+                rowNode.addEventListener("click", function() {
+
+                    clearModalFields();
+                    showSkeletonLoaders();
+                    initModal({
+                        modalId: "DocumentModal"
+                    });
+                    populateDocumentModal(doc.document_id);
+                    logActivity("view", doc.document_id, doc.document_control_number);
+                });
+            } else {
+                const tr = document.createElement("tr");
+                tr.innerHTML = rowHtml;
+                modalcounttable.appendChild(tr);
+            }
+        }
+
         initDataTables();
     })();
 </script>

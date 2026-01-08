@@ -11,7 +11,7 @@ window.initDataTables = function initDataTables() {
         pageLength: 10,
         scrollX: $(window).width() < 1024, // horizontal scroll only if screen < lg (1024px)
         responsive: true, // allows columns to adjust
-        autoWidth: false,
+        autoWidth: true,
         dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
       });
 
@@ -27,6 +27,9 @@ window.initDataTables = function initDataTables() {
         dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
         dt.columns.adjust();
       });
+    } else {
+      styleDataTable();
+      return;
     }
   });
   function styleDataTable(table) {

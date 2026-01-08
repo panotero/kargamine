@@ -92,7 +92,7 @@ class DocumentController extends Controller
             ->findOrFail($request->user_id);
         $status = "Pending";
         if ($document->office_origin === $user->office->office_code) {
-            $status = "Complete";
+            $status = "Completed";
         }
         Document::where('document_id', $request->document_id)
             ->update([
@@ -428,7 +428,7 @@ class DocumentController extends Controller
             $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
             $fileName      = uniqid() . '-' . $cleanOriginal;
             $folder = "storage/assets/documents/$officeFolder/pdf";
-            $folderPath    = public_path($folder);
+            $folderPath    = $folder;
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0777, true);
             }
@@ -509,6 +509,31 @@ class DocumentController extends Controller
 
         $document->update($request->all(),);
         return response()->json(['message' => 'Document updated successfully', 'data' => $document]);
+    }
+
+    public function update_status(Request $request)
+    {
+
+        $validated = $request->validate([
+            'document_id' => 'required|integer',
+            'status' => 'required|string',
+        ]);
+        if ($validated['status'] === "overdue") {
+
+            Document::where('document_id', $validated['document_id'])
+                ->update([
+                    'status' => "Overdue",
+
+                    'updated_at' => now(),
+                ]);
+        } else {
+            Document::where('document_id', $validated['document_id'])
+                ->update([
+                    'status' => "Due Today",
+
+                    'updated_at' => now(),
+                ]);
+        }
     }
 
     public function destroy($id)

@@ -130,7 +130,7 @@ function initdocumentcontroller() {
       case "for approval":
         statuscolor = "bg-yellow-100";
         break;
-      case "complete":
+      case "completed":
         statuscolor = "bg-green-200";
         break;
       case "remanded":

@@ -314,7 +314,7 @@
                 case "for approval":
                     statuscolor = "bg-yellow-100";
                     break;
-                case "complete":
+                case "completed":
                     statuscolor = "bg-green-200";
                     break;
                 case "remanded":
@@ -415,6 +415,7 @@
                 }
             });
 
+            overdue = checkOverDue(filteredDocs);
             document.querySelector("#totalDocuments .text-2xl").textContent = total.toLocaleString();
             document.querySelector("#forDiscussion .text-2xl").textContent = forDiscussion.toLocaleString();
             document.querySelector("#pending .text-xl").textContent = pending.toLocaleString();
@@ -422,6 +423,7 @@
             document.querySelector("#overdue .text-xl").textContent = overdue.toLocaleString();
             document.querySelector("#remanded .text-xl").textContent = remanded.toLocaleString();
         }
+
 
 
 
