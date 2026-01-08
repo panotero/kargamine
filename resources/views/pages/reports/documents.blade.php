@@ -355,7 +355,7 @@
     `;
 
             if (dt) {
-                dt.row.add([
+                const newRow = dt.row.add([
                     doc.document_control_number,
                     doc.document_code,
                     doc.label || "-",
@@ -376,6 +376,11 @@
                     doc.confirmed_by_name || "",
                     doc.remarks || "",
                 ]).draw(false);
+
+                const rowNode = newRow.node();
+                rowNode.classList.add(
+                    "transition-colors", "duration-300",
+                    "hover:dark:bg-white", "hover:dark:text-black");
             } else {
                 const tr = document.createElement("tr");
                 tr.innerHTML = rowHtml;

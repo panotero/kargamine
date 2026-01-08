@@ -518,6 +518,8 @@ class DocumentController extends Controller
             'document_id' => 'required|integer',
             'status' => 'required|string',
         ]);
+        // dd($validated);
+        // return;
         if ($validated['status'] === "overdue") {
 
             Document::where('document_id', $validated['document_id'])

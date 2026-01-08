@@ -182,7 +182,7 @@ function redrawTable(selector) {
   }
 }
 
-window.checkOverDue = async function checkOverDue(documents) {
+window.checkOverDue = function checkOverDue(documents) {
   let overdue = 0;
   const now = new Date();
   const today =
@@ -191,19 +191,13 @@ window.checkOverDue = async function checkOverDue(documents) {
     String(now.getMonth() + 1).padStart(2, "0") +
     "-" +
     String(now.getDate()).padStart(2, "0");
+
+  window.today = today;
   //counting of overdue
   const activeStatuses = ["pending", "routed", "for review", "for approval"];
   documents.forEach(async (docs) => {
-    if (
-      docs.due_date > today &&
-      activeStatuses.includes(docs.status.toLowerCase())
-    ) {
+    if (today > docs.due_date) {
       overdue++;
-      updateStatus(docs.document_id, "overdue");
-      //   return;
-      //update doc status to overdue
-    } else {
-      updateStatus(docs.document_id, "due today");
     }
   });
   return overdue;
@@ -216,7 +210,7 @@ async function updateStatus(document_id, status) {
       status: status,
     };
     const data = await fetchWithRetry("/api/documents/update_status", {
-      method: "PATCH",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

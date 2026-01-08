@@ -77,7 +77,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/confirm', [DocumentController::class, 'confirm']);
         Route::patch('/{id}', [DocumentController::class, 'update']);
         Route::delete('/{id}', [DocumentController::class, 'destroy']);
-        Route::patch('/update_status', [DocumentController::class, 'update_status']);
+        Route::post('/update_status', [DocumentController::class, 'update_status']);
     });
 
 

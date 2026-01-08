@@ -50,6 +50,8 @@ function initdocumentcontroller() {
         if (showAssigned) appendDocumentRow(assignedBody, doc, "assigned");
       });
 
+      initDataTables();
+
       //   redrawTable("#allDocumentTable");
       //   redrawTable("#assignedToYouDocumentTable");
     } catch (error) {
@@ -153,7 +155,7 @@ function initdocumentcontroller() {
       labelOptionHtml = `<option selected disabled value="">Set Label</option>`;
     }
     const rowHtml = `
-    <tr class="border-t hover:bg-gray-50 cursor-pointer"
+    <tr class="border-t hover:dark:bg-gray-50 hover:dark:text-black cursor-pointer"
         data-document-id="${document_id}"
         data-document-control-number="${document_control_number}"
         data-user-id="${item.user_id || ""}"

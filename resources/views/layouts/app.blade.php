@@ -70,6 +70,13 @@
 
         });
     </script>
+    <style>
+        /* Disable DataTables odd/even row background */
+        /* table.dataTable tbody tr.odd,
+        table.dataTable tbody tr.even {
+            background-color: transparent !important;
+        } */
+    </style>
 
 </body>
 

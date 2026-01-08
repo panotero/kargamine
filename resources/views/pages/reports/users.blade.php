@@ -117,10 +117,10 @@
                 // console.log(response);
 
                 // updateDocumentCounts(filteredDocuments);
+                updateUserCounts(response);
                 response.forEach((users) => {
                     updaterow(users);
                 });
-                updateUserCounts(response);
 
 
 
@@ -225,7 +225,7 @@
 
 
             if (dt) {
-                dt.row.add([
+                const newRow = dt.row.add([
                     users.name ?? "-", // Name
                     users.email ?? "-", // Email
                     users.role ?? "-", // Designation
@@ -236,6 +236,11 @@
                     overdueCount ?? 0, // Overdue
                     `<div class="px-3 py-1 rounded-full text-gray-800 font-semibold text-center ${statuscolor}">${users.status || "-"}</div>`,
                 ]).draw(false);
+
+                const rowNode = newRow.node();
+                rowNode.classList.add(
+                    "transition-colors", "duration-300",
+                    "hover:dark:bg-white", "hover:dark:text-black");
             } else {
                 const tr = document.createElement("tr");
                 tr.innerHTML = rowHtml;

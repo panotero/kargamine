@@ -192,7 +192,7 @@
 
 
             if (dt) {
-                dt.row.add([
+                const newRow = dt.row.add([
                     users.id ?? "-", // Name
                     users.name ?? "-", // Name
                     users.email ?? "-", // Email
@@ -203,6 +203,11 @@
                             <button class="text-white px-5 py-2 rounded ${actionClass}" data-id="${users.id}">${actionLabel}</button>
                         </td>`,
                 ]).draw(false);
+
+                const rowNode = newRow.node();
+                rowNode.classList.add(
+                    "transition-colors", "duration-300",
+                    "hover:dark:bg-white", "hover:dark:text-black");
             } else {
                 const tr = document.createElement("tr");
                 tr.innerHTML = rowHtml;

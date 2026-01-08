@@ -20,6 +20,7 @@ import "./datatableHandler";
 import "./apihandler";
 import "./filler";
 import "./activityLogger";
+import "./graph";
 import "./dragdropzone";
 import "./documentHandler";
 import "./reports";

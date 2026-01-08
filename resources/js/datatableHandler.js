@@ -27,12 +27,25 @@ window.initDataTables = function initDataTables() {
         dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
         dt.columns.adjust();
       });
-    } else {
-      styleDataTable();
-      return;
     }
   });
   function styleDataTable(table) {
+    table.querySelectorAll("tbody").forEach((tbody) => {
+      tbody.classList.remove(
+        "divide-y",
+        "divide-gray-200",
+        "dark:divide-gray-700"
+      );
+      tbody.querySelectorAll("tr").forEach((row) => {
+        row.classList.remove("even:bg-gray-50", "dark:even:bg-gray-900/50");
+        row.classList.add(
+          "transition-colors",
+          "duration-300",
+          "hover:border-white",
+          "hover:border-3"
+        );
+      });
+    });
     const pagination = document.querySelectorAll(".pagination");
     // console.log(pagination);
     const search = document.querySelectorAll(".dt-search");

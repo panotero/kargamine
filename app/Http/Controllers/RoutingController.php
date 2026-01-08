@@ -57,7 +57,7 @@ class RoutingController extends Controller
                     })
                     ->get();
 
-                if ($document->status === "Approved") {
+                if ($validated['status'] === "approved") {
                     if ($request->hasFile('pdf_file') && $request->file('pdf_file')->isValid()) {
 
                         $file = $request->file('pdf_file');
