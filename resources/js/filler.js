@@ -185,6 +185,8 @@ function redrawTable(selector) {
 window.checkOverDue = function checkOverDue(documents) {
   let overdue = 0;
   const now = new Date();
+
+  const statuses = ["signed", "approved", "completed"];
   const today =
     now.getFullYear() +
     "-" +
@@ -196,7 +198,10 @@ window.checkOverDue = function checkOverDue(documents) {
   //counting of overdue
   const activeStatuses = ["pending", "routed", "for review", "for approval"];
   documents.forEach(async (docs) => {
-    if (today > docs.due_date) {
+    if (
+      today > docs.due_date &&
+      activeStatuses.includes(docs.status.toLowerCase())
+    ) {
       overdue++;
     }
   });

@@ -53,7 +53,7 @@
                 <div>
                     <p class="text-sm">For Approval</p>
                     <h2 class="mt-2 text-3xl font-bold text-orange-300" id="forApproval">0</h2>
-                    <p class="mt-1 text-xs">documents for approval</p>
+                    <p class="mt-1 text-xs">Documents for approval</p>
                 </div>
             </div>
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
@@ -61,7 +61,7 @@
                 <div>
                     <p class="text-sm">Completed</p>
                     <h2 class="mt-2 text-3xl font-bold text-green-600" id="completed">0</h2>
-                    <p class="mt-1 text-xs">documents for approval</p>
+                    <p class="mt-1 text-xs">Documents for approval</p>
                 </div>
             </div>
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
@@ -246,10 +246,11 @@
     (function() {
 
         initGraph()
-        getActivityData();
-
+        fillOfficeDropdown();
         initDashboard();
         let allDocuments = []; // store all fetched documents
+
+        const statuses = ["signed", "approved", "completed"];
 
         async function initDashboard() {
             const authUser = window.authUser;
@@ -264,6 +265,7 @@
             try {
                 // getActivitiesCounts();
                 getDocsCounts();
+                getActivityData();
 
 
             } catch (err) {
@@ -425,7 +427,7 @@
                         break;
                     case "overdue":
                         filteredDocuments = allDocuments.filter(doc =>
-                            doc.due_date < today
+                            doc.due_date < today && statuses.includes(doc.status.toLowerCase())
                         );
                         break;
                     case "approved":
@@ -538,6 +540,14 @@
                 rowNode.classList.add("cursor-pointer");
                 rowNode.addEventListener("click", function() {
 
+
+                    checkActionButtons(
+                        doc.status,
+                        doc.recipient_id,
+                        doc.destination_office,
+                        doc.receipt_confirmation,
+                        doc.revision_status
+                    );
                     clearModalFields();
                     showSkeletonLoaders();
                     initModal({

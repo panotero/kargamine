@@ -306,12 +306,14 @@
 
                 tr.addEventListener("click", (e) => {
                     if (e.target.classList.contains("labeldropdown")) return;
+                    console.log(doc);
+
                     checkActionButtons(
                         doc.status,
-                        doc.receipient_id,
+                        doc.recipient_id,
                         doc.destination_office,
                         doc.receipt_confirmation,
-                        doc.revision_status,
+                        doc.revision_status
                     );
 
 
