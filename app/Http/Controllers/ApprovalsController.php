@@ -83,8 +83,16 @@ class ApprovalsController extends Controller
 
     private function processDisapproval($approval, $validated, $user)
     {
-        $this->finalizeApproval($approval, 'Disapproved', $validated['remarks']);
+        $this->finalizeApproval($approval);
 
+        //get the last approval row on the approval table to get the id of the last sender
+        $lastSender = Approvals::where('id', $approval->id)
+            ->orderByDesc('id')   // or orderByDesc('created_at')
+            ->first();
+        // dd($lastSender);
+
+
+        //notify the last
         $this->notifyAdmins(
             $approval,
             $user,
@@ -139,14 +147,14 @@ class ApprovalsController extends Controller
 
     private function processApproval($approval, $validated, $user)
     {
-        Log::info("approval has been initialized motherfucker");
-        // dd($validated);
+        Log::info("approval has been initialized");
+        // dd($user->id);
         $approval->remarks = 'Approved';
 
         if ($approval->approval_type === 'final-approval') {
 
             Log::info("final approval shit");
-            $this->notifyAdmins(
+            $this->notifyAuthorizedSignatory(
                 $approval,
                 $user,
                 "{$approval->document->document_code} Has been approved. you may route this to the origin office"
@@ -175,7 +183,8 @@ class ApprovalsController extends Controller
                 $approval->document->document_id,
                 $validated['next_user_id'],
                 $validated['remarks'],
-                'pre-approval'
+                'pre-approval',
+                $user->id
             );
 
             $this->createNotification($approval, $user, $validated['next_user_id']);
@@ -204,7 +213,8 @@ class ApprovalsController extends Controller
                 $approval->document->document_id,
                 $finalApprover->id,
                 $validated['remarks'],
-                'final-approval'
+                'final-approval',
+                $user->id
             );
 
             $this->createNotification($approval, $user, $finalApprover->id);
@@ -218,12 +228,15 @@ class ApprovalsController extends Controller
      * Shared Helpers
      * ========================================================= */
 
-    private function finalizeApproval($approval, $remarks = null, $customRemarks = null)
+    private function finalizeApproval($approval)
     {
-        $approval->status = 1;
-        $approval->remarks = $customRemarks ?? $remarks;
-        $approval->updated_at = now();
-        $approval->save();
+
+        return Approvals::where('id', $approval->id)
+            ->where('status', 0) // only if still pending
+            ->update([
+                'status'     => 1,
+                'updated_at' => now(),
+            ]);
     }
 
     private function notifyAdmins($approval, $user, $message)
@@ -232,6 +245,14 @@ class ApprovalsController extends Controller
 
         foreach ($admins as $admin) {
             $this->insertNotification($approval, $user->id, $admin->id, $message);
+        }
+    }
+    private function notifyAuthorizedSignatory($approval, $user, $message)
+    {
+        $authorizedSignatory = $this->getAuthorizedSignatory($approval);
+
+        foreach ($authorizedSignatory as $authSignatory) {
+            $this->insertNotification($approval, $user->id, $authSignatory->id, $message);
         }
     }
 
@@ -299,6 +320,20 @@ class ApprovalsController extends Controller
             )
             ->get();
     }
+    private function getAuthorizedSignatory($approval)
+    {
+        return User::with(['userConfig', 'office'])
+            ->where(
+                'authorize_signatory',
+                '1'
+            )
+            ->whereHas(
+                'office',
+                fn($q) =>
+                $q->where('office_code', $approval->document->destination_office)
+            )
+            ->get();
+    }
 
     private function getFinalApprover($office, $approvalType)
     {
@@ -316,11 +351,16 @@ class ApprovalsController extends Controller
             ->first();
     }
 
-    private function createNextApproval($documentId, $userId, $remarks, $approvalType)
+    private function createNextApproval($documentId, $userId, $remarks, $approvalType, $userAuthid)
     {
+
+        $user = User::with(['office', 'userConfig'])->find(Auth::id());
+        // dd($userAuthid);
+
         Approvals::create([
             'document_id'   => $documentId,
             'user_id'       => $userId,
+            'from_user' => $user->id,
             'status'        => 0,
             'remarks'       => $remarks,
             'approval_type' => $approvalType,

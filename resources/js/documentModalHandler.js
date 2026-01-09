@@ -25,6 +25,10 @@ window.checkActionButtons = function checkActionButtons(
       name: "revisionActions",
       el: document.getElementById("revisionButtons"),
     },
+    {
+      name: "eSignAction",
+      el: document.getElementById("eSignAction"),
+    },
   ];
 
   actionButtonArray.forEach((item) => {
@@ -41,7 +45,7 @@ window.checkActionButtons = function checkActionButtons(
   const userOfficeCode = window.authUser.office.office_code;
   const userAuth = window.authUser;
   const canAct = userOfficeCode === documentDestinationOffice;
-  //   console.log(userAuth.user_config);
+  //   console.log(userAuth);
   if (!canAct) return;
   const showAction = (name) => {
     const action = actionButtonArray.find((item) => item.name === name);
@@ -51,6 +55,11 @@ window.checkActionButtons = function checkActionButtons(
   // 1. Remanded with revision
   if (status === "remanded" && revision_status === 0) {
     showAction("revisionActions");
+    return;
+  }
+  // 1. Remanded with revision
+  if (status === "approved" && userAuth.authorize_signatory === 1) {
+    showAction("eSignAction");
     return;
   }
 
@@ -154,6 +163,8 @@ window.populateDocumentModal = async function populateDocumentModal(
     // console.log(data);
     document.getElementById("docId").value = data.document_id;
     setText("docControlNumber", data.document_control_number || "N/A");
+    document.getElementById("eSignBtn").dataset.docControlNumber =
+      data.document_control_number;
     setText("revisedocControlNumber", data.document_control_number || "N/A");
     setText("docStatus", data.status || "N/A");
 
@@ -698,6 +709,7 @@ submitrevisionBtn.addEventListener("click", async function () {
       document.getElementById("disapprovalModal")?.classList.add("hidden");
       document.getElementById("forDiscussionModal")?.classList.add("hidden");
       document.getElementById("reviseModal")?.classList.add("hidden");
+      document.getElementById("esignModal")?.classList.add("hidden");
       showMessage({
         status: "success",
         message: "Revised Document has been uploaded",
@@ -878,6 +890,93 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     }
   } catch (error) {
     console.error("Routing request failed:", error);
+  } finally {
+    this.disabled = false;
+    this.textContent = "Submit";
+  }
+});
+
+//esigning
+const submitesignBtn = document.getElementById("submitesignBtn");
+const modalesignBtn = document.getElementById("eSignBtn");
+const esignmodal = document.getElementById("esignModal");
+const remarks = document.getElementById("esignRemarks").value;
+let ControlNumber = "";
+modalesignBtn.addEventListener("click", () => {
+  ControlNumber = modalesignBtn.dataset.docControlNumber;
+  console.log(ControlNumber);
+  initPDFDropzone({
+    dropzoneId: "esigndropzone",
+    fileInputId: "esignfileInput",
+    fileInfoId: "esignfileInfo",
+    clearBtnId: "clearesignSelectionBtn",
+  });
+
+  initModal({
+    modalId: "esignModal",
+  });
+});
+
+submitesignBtn.addEventListener("click", async function () {
+  clearModalErrors();
+  const esignformData = new FormData();
+  const esignfileInput = document.getElementById("esignfileInput");
+
+  let errors = [];
+  console.log(ControlNumber);
+
+  esignformData.append("docControlNumber", ControlNumber);
+  esignformData.append("user_id", window.authUser.id);
+  esignformData.append("document_form", "PDF");
+
+  if (esignfileInput.files.length > 0) {
+    esignformData.append("file", esignfileInput.files[0]);
+  }
+  esignformData.append("remarks", remarks);
+
+  this.disabled = true;
+  this.textContent = "Submitting...";
+
+  //   console.table([...esignformData.entries()]);
+  //   return;
+  try {
+    // Validate PDF if status is approved and upload section is visible
+    if (esignfileInput.files.length === 0) {
+      errors.push("PDF file is required.");
+    }
+
+    // Stop submission if errors exist
+    if (errors.length > 0) {
+      showModalErrors(errors, "esignmodalErrorMessage", "esignmodalErrorList");
+      esignmodal.scrollTop = 0;
+      return;
+    }
+    // return;
+    const result = await fetchWithRetry("/api/documents/esign", {
+      method: "POST",
+      headers: {
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
+      },
+      body: esignformData,
+    });
+
+    if (result) {
+      // Close modals
+      document.getElementById("DocumentModal")?.classList.add("hidden");
+      document.getElementById("approvalModal")?.classList.add("hidden");
+      document.getElementById("disapprovalModal")?.classList.add("hidden");
+      document.getElementById("forDiscussionModal")?.classList.add("hidden");
+      document.getElementById("reviseModal")?.classList.add("hidden");
+      document.getElementById("esignModal")?.classList.add("hidden");
+      showMessage({
+        status: "success",
+        message: "eSigned Document has been uploaded",
+      });
+      loadlastpage();
+    }
+  } catch (error) {
+    console.error("Revision failed:", error);
   } finally {
     this.disabled = false;
     this.textContent = "Submit";

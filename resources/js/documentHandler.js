@@ -2,11 +2,13 @@ function initdocumentcontroller() {
   // ---------------------- GET DOCUMENTS ----------------------
   window.getDocs = async function getDocs() {
     const authUser = window.authUser;
+    // console.log(authUser);
     if (!authUser) return;
 
     const userId = authUser.id;
     const userOfficeName = authUser.office?.office_code || null;
     const userApprovalType = authUser.user_config?.approval_type || null;
+    const isAuthSignatory = authUser.authorize_signatory;
 
     const allDocsBody = document.querySelector("#allDocumentTable tbody");
     const assignedBody = document.querySelector(
@@ -40,12 +42,23 @@ function initdocumentcontroller() {
           involvedOffices.includes(userOfficeName);
 
         if (canSeeAllDocs) appendDocumentRow(allDocsBody, doc, "all");
-
+        const adminStatuses = [
+          "signed",
+          "routed",
+          "pending",
+          "remanded",
+          "completed",
+        ];
+        const authSginatureStatuses = ["approved", "disapproved"];
         const showAssigned =
-          doc.recipient_id !== null
-            ? doc.recipient_id == userId
-            : userApprovalType === "routing" &&
-              userOfficeName === doc.destination_office;
+          (doc.recipient_id !== null && doc.recipient_id == userId) ||
+          (doc.recipient_id === null &&
+            userApprovalType === "routing" &&
+            userOfficeName === doc.destination_office &&
+            adminStatuses.includes(doc.status.toLowerCase())) ||
+          (doc.recipient_id === null &&
+            authSginatureStatuses.includes(doc.status.toLowerCase()) &&
+            isAuthSignatory === 1);
 
         if (showAssigned) appendDocumentRow(assignedBody, doc, "assigned");
       });
@@ -407,7 +420,7 @@ function initdocumentcontroller() {
           },
           body: formData,
         });
-        console.log(result);
+        // console.log(result);
         if (result.response && !result.success) {
           if (
             result.response.invalid_fields &&

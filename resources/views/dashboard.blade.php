@@ -270,6 +270,13 @@
                             class="hidden bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium routeBtn">
                             Route Document
                         </button>
+                        <div class="eSignAction hidden" id="eSignAction">
+                            <button id="eSignBtn"
+                                class=" bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium eSignBtn">
+                                eSign
+                            </button>
+
+                        </div>
                         <div class="approvalButtons hidden" id="approvalButtons">
                             <button id="modalApproveBtn"
                                 class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto modal-open">
@@ -566,6 +573,62 @@
                             Cancel
                         </button>
                         <button id="routeSubmitBtn"
+                            class="px-5 py-2 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700 transition">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="esignModal"
+                class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal z-50">
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6">
+                    <input type="hidden" id="docId" value="">
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">eSign Document</h2>
+
+                        <div id="esignmodalErrorMessage"
+                            class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm errorbox">
+                            <ul id="esignmodalErrorList" class="list-disc list-inside errorlist"></ul>
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Select office and user for routing</p>
+                    </div>
+                    <div id="" class=" space-y-4">
+                        <div id="pdfUploadSection" class="">
+
+                            <div id="esigndropzone"
+                                class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 dark:text-gray-400 cursor-pointer hover:border-blue-400 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16V4m0 0L3 8m4-4l4 4m-4 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3" />
+                                </svg>
+                                <p class="text-sm">
+                                    Drag & drop a PDF file here or
+                                    <span class="text-blue-600 dark:text-blue-400 underline">click to browse</span>
+                                </p>
+                                <input type="file" accept="application/pdf" class="" id="esignfileInput" />
+                            </div>
+                            <div id="esignfileInfo" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></div>
+                            <button id="clearesignSelectionBtn"
+                                class="mt-2 text-xs text-gray-500 hover:text-red-500 transition">Clear
+                                Selection</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Remarks</label>
+                        <textarea id="esignRemarks"
+                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                            rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                            class="modal-close px-5 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            Cancel
+                        </button>
+                        <button id="submitesignBtn"
                             class="px-5 py-2 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700 transition">
                             Submit
                         </button>

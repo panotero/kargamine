@@ -74,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{ControlNumber}', [DocumentController::class, 'show']);
         Route::post('/', [DocumentController::class, 'store']);
         Route::post('/revise', [DocumentController::class, 'revise']);
+        Route::post('/esign', [DocumentController::class, 'esign']);
         Route::post('/confirm', [DocumentController::class, 'confirm']);
         Route::patch('/{id}', [DocumentController::class, 'update']);
         Route::delete('/{id}', [DocumentController::class, 'destroy']);

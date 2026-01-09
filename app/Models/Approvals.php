@@ -14,6 +14,7 @@ class Approvals extends Model
         'document_id',
         'user_id',
         'approval_type',
+        'from_user',
 
         'remarks',
         'status',

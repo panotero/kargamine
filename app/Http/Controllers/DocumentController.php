@@ -304,6 +304,110 @@ class DocumentController extends Controller
             'message'           => 'Document created successfully'
         ], 201);
     }
+
+
+
+    public function esign(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'docControlNumber' => 'required|string',
+            'remarks' => 'nullable|string',
+            'document_form'         => 'required|string',
+            'file'                  => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        // dd($validated);
+        $document = Document::where('document_control_number', $validated['docControlNumber'])->first();
+        if (!$document) {
+            return response()->json(['message' => 'Invalid document control number.'], 404);
+        }
+        //upload file
+
+        if ($request->hasFile('file')) {
+            $file          = $request->file('file');
+            $officeFolder  = $document->office_origin ?? 'UnknownOffice';
+            $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
+            $fileName      = uniqid() . '-' . $cleanOriginal;
+            $folder = "storage/assets/documents/$officeFolder/pdf";
+            $folderPath    = public_path($folder);
+            if (!is_dir($folderPath)) {
+                mkdir($folderPath, 0777, true);
+            }
+
+            $file->move($folderPath, $fileName);
+
+            $filePath = "$folder/$fileName";
+
+            DB::table('files')->insert([
+                'document_id'      => $document->document_id,
+                'file_name'        => $cleanOriginal,
+                'file_path'        => $filePath,
+                'file_password'    => null,
+                'uploading_office' => $document->office_origin,
+                'uploaded_by'      => $user->id,
+                'uploaded_at'      => now(),
+            ]);
+        }
+        //update status to Signed
+
+        Document::where('document_control_number', $validated['docControlNumber'])
+            ->update([
+                'status' => "Signed",
+                'updated_at' => now(),
+                'recipient_id' => null
+            ]);
+
+        //create notification for internal admins
+
+
+        $admin_users = User::with(['userConfig', 'office'])
+            ->whereHas('userConfig', function ($q) {
+                $q->where('approval_type', 'routing')
+                    ->where('status', 'active');
+            })
+            ->whereHas('office', function ($q) use ($request) {
+                $q->where('office_code', $request->destination_office);
+            })
+            ->get();
+
+        //create activity
+
+        Activity::create([
+            'action'                  => 'sign',
+            'document_id'             => $document->document_id,
+            'final_approval'          => 0,
+            'document_control_number' => $validated['docControlNumber'],
+            'user_id'                 => $user->id,
+            'from_user_id'            => $user->id,
+            'routed_to'               => null,
+            'final_remarks'           => $request->remarks ?? null,
+        ]);
+
+
+        foreach ($admin_users as $admin) {
+            DB::table('notifications')->insert([
+                'document_id'        => $document->document_id,
+                'office_origin'      => $document->office_origin,
+                'destination_office' => $document->destination_office,
+                'routed_to'          => $document->routed_to,
+                'from_user_id'       => $user->id,
+                'user_id'            => $admin->id,
+                'message'            => "New document uploaded: {$document->document_code}",
+                'is_read'            => 0,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+        }
+
+        //remove recepient if it has recepient id
+
+
+        return response()->json([
+            'message'           => 'Document eSigned successfully'
+        ], 201);
+    }
     public function store(Request $request)
     {
         $user = User::with(['userConfig', 'office'])
