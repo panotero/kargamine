@@ -530,37 +530,6 @@
                             <option value="final-approval">Final-approval</option>
                         </select>
                     </div>
-                    <div id="externalSection" class="hidden space-y-4">
-                        <div class="space-y-2">
-                            <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Select Status</label>
-                            <select id="routeStatusSelect"
-                                class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Select Status</option>
-                                <option value="approved">Approved</option>
-                                <option value="remand">Remand</option>
-                            </select>
-                        </div>
-                        <div id="pdfUploadSection" class="hidden">
-
-                            <div id="routedropzone"
-                                class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 dark:text-gray-400 cursor-pointer hover:border-blue-400 transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M7 16V4m0 0L3 8m4-4l4 4m-4 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3" />
-                                </svg>
-                                <p class="text-sm">
-                                    Drag & drop a PDF file here or
-                                    <span class="text-blue-600 dark:text-blue-400 underline">click to browse</span>
-                                </p>
-                                <input type="file" accept="application/pdf" class="" id="routefileInput" />
-                            </div>
-                            <div id="routefileInfo" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></div>
-                            <button id="clearrouteSelectionBtn"
-                                class="mt-2 text-xs text-gray-500 hover:text-red-500 transition">Clear
-                                Selection</button>
-                        </div>
-                    </div>
                     <div class="space-y-2">
                         <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Remarks</label>
                         <textarea id="routeRemarks"

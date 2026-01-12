@@ -54,7 +54,6 @@ class ApprovalsController extends Controller
             'next_user_id' => 'nullable|integer|exists:users,id',
             'remarks'      => 'nullable|string|max:500',
         ]);
-        // dd($validated);
 
 
         $approval = Approvals::with('document')
@@ -83,31 +82,47 @@ class ApprovalsController extends Controller
 
     private function processDisapproval($approval, $validated, $user)
     {
-        $this->finalizeApproval($approval);
+        // dd([
+        //     $validated,
+        //     $approval,
+        //     $user,
+        // ]);
 
         //get the last approval row on the approval table to get the id of the last sender
-        $lastSender = Approvals::where('id', $approval->id)
-            ->orderByDesc('id')   // or orderByDesc('created_at')
-            ->first();
-        // dd($lastSender);
+        // $lastSender = Approvals::where('id', $approval->id)
+        //     ->first();
+        //check if document is for final approval from the approval table
+        if ($approval['approval_type'] === "final-approval") {
+            //notify last sender
+
+            Document::where('document_id', $approval->document_id)
+                ->update([
+                    'status'         => "Disapproved",
+                    'recipient_id'   => $validated['from_user'] ? null : null,
+                    'date_forwarded' => now(),
+                    'updated_at' => now(),
+                ]);
+        } else {
+            $this->updateDocument($approval, 'Disapproved', true);
+        }
 
 
-        //notify the last
-        $this->notifyAdmins(
-            $approval,
-            $user,
-            "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office"
-        );
 
-        $this->notifyUploader(
-            $approval,
-            $user,
-            "{$approval->document->document_code} Has been Disapproved."
-        );
+
+        // //notify the last
+        // $this->notifyAdmins(
+        //     $approval,
+        //     $user,
+        //     "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office"
+        // );
+
+        // $this->notifyUploader(
+        //     $approval,
+        //     $user,
+        //     "{$approval->document->document_code} Has been Disapproved."
+        // );
 
         $this->createActivity('disapproved', $approval, $user, $validated);
-
-        $this->updateDocument($approval, 'Disapproved', true);
     }
 
     private function processRemand($approval, $validated, $user)

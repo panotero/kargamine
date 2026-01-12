@@ -355,6 +355,7 @@ class DocumentController extends Controller
         Document::where('document_control_number', $validated['docControlNumber'])
             ->update([
                 'status' => "Signed",
+                'date_forwarded' => now(),
                 'updated_at' => now(),
                 'recipient_id' => null
             ]);

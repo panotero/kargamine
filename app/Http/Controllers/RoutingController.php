@@ -35,6 +35,7 @@ class RoutingController extends Controller
                 'status'             => 'nullable|string',
                 'remarks'            => 'nullable|string',
             ]);
+            // dd($validated);
 
             $document = Document::findOrFail($validated['document_id']);
 
@@ -57,107 +58,105 @@ class RoutingController extends Controller
                     })
                     ->get();
 
-                if ($validated['status'] === "approved") {
-                    if ($request->hasFile('pdf_file') && $request->file('pdf_file')->isValid()) {
+                // if ($validated['status'] === "approved") {
+                //     if ($request->hasFile('pdf_file') && $request->file('pdf_file')->isValid()) {
 
-                        $file = $request->file('pdf_file');
-                        $officeFolder = $document->office_origin ?: 'UnknownOffice';
-                        $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
-                        $fileName = uniqid() . '-' . $cleanOriginal;
-                        $publicPath = public_path("assets/documents/{$officeFolder}/pdf");
+                //         $file = $request->file('pdf_file');
+                //         $officeFolder = $document->office_origin ?: 'UnknownOffice';
+                //         $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
+                //         $fileName = uniqid() . '-' . $cleanOriginal;
+                //         $publicPath = public_path("assets/documents/{$officeFolder}/pdf");
 
-                        if (!is_dir($publicPath)) {
-                            mkdir($publicPath, 0777, true);
-                        }
+                //         if (!is_dir($publicPath)) {
+                //             mkdir($publicPath, 0777, true);
+                //         }
 
-                        $file->move($publicPath, $fileName);
-                        $filePath = "assets/documents/{$officeFolder}/pdf/{$fileName}";
-                    } else {
-                        return "no pdf available";
-                    }
-                    DB::table('files')->insert([
-                        'document_id'      => $document->document_id,
-                        'file_name'        => $cleanOriginal,
-                        'file_path'        => $filePath,
-                        'file_password'    => null,
-                        'uploading_office' => $destinationOffice,
-                        'uploaded_by'      => $user->id,
-                        'uploaded_at'      => now(),
-                    ]);
+                //         $file->move($publicPath, $fileName);
+                //         $filePath = "assets/documents/{$officeFolder}/pdf/{$fileName}";
+                //     } else {
+                //         return "no pdf available";
+                //     }
+                //     DB::table('files')->insert([
+                //         'document_id'      => $document->document_id,
+                //         'file_name'        => $cleanOriginal,
+                //         'file_path'        => $filePath,
+                //         'file_password'    => null,
+                //         'uploading_office' => $destinationOffice,
+                //         'uploaded_by'      => $user->id,
+                //         'uploaded_at'      => now(),
+                //     ]);
 
-                    foreach ($admin_users as $adminuser) {
+                //     foreach ($admin_users as $adminuser) {
 
-                        $activityData = [
-                            'action'                  => 'signed',
-                            'document_id'             => $document->document_id,
-                            'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
-                            'document_control_number' => $document->document_control_number,
-                            'user_id'                 => $user->id,
-                            'from_user_id' => $user->id,
-                            'routed_to'               => $recipientUserId,
-                            'to_external' => 1,
-                            'final_remarks'           => $validated['remarks'] ?? null,
-                        ];
-                        DB::table('notifications')->insert([
-                            'document_id'        => $document->document_id,
-                            'office_origin'      => $originOffice,
-                            'destination_office' => $destinationOffice,
-                            'from_user_id' => $user->id,
-                            'user_id'            => $adminuser->id,
-                            'message'            => "$document->document_control_number has been signed ",
-                            'is_read'            => 0,
-                            'created_at'         => now(),
-                            'updated_at'         => now(),
-                        ]);
-                    }
-                    DB::table('documents')
-                        ->where('document_id', $document->document_id)
-                        ->update([
-                            'recipient_id' => null,
-                            'sender_id' => $user->id,
-                            'receipt_confirmation' => 0,
-                            'receipt_confirmed_by' => 0,
-                            'status' => "Signed",
-                            'date_forwarded' => now(),
-                            'updated_at' => now(),
-                        ]);
-                } else {
-                    $activityData = [
-                        'action'                  => 'route',
-                        'document_id'             => $document->document_id,
-                        'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
-                        'document_control_number' => $document->document_control_number,
-                        'user_id'                 => $user->id,
+                //         $activityData = [
+                //             'action'                  => 'signed',
+                //             'document_id'             => $document->document_id,
+                //             'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
+                //             'document_control_number' => $document->document_control_number,
+                //             'user_id'                 => $user->id,
+                //             'from_user_id' => $user->id,
+                //             'routed_to'               => $recipientUserId,
+                //             'to_external' => 1,
+                //             'final_remarks'           => $validated['remarks'] ?? null,
+                //         ];
+                //         DB::table('notifications')->insert([
+                //             'document_id'        => $document->document_id,
+                //             'office_origin'      => $originOffice,
+                //             'destination_office' => $destinationOffice,
+                //             'from_user_id' => $user->id,
+                //             'user_id'            => $adminuser->id,
+                //             'message'            => "$document->document_control_number has been signed ",
+                //             'is_read'            => 0,
+                //             'created_at'         => now(),
+                //             'updated_at'         => now(),
+                //         ]);
+                //     }
+                //     DB::table('documents')
+                //         ->where('document_id', $document->document_id)
+                //         ->update([
+                //             'recipient_id' => null,
+                //             'sender_id' => $user->id,
+                //             'receipt_confirmation' => 0,
+                //             'receipt_confirmed_by' => 0,
+                //             'date_forwarded' => now(),
+                //             'updated_at' => now(),
+                //         ]);
+                // } else {
+                $activityData = [
+                    'action'                  => 'route',
+                    'document_id'             => $document->document_id,
+                    // 'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
+                    'document_control_number' => $document->document_control_number,
+                    'user_id'                 => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_external' => 1,
+                    'routed_to'               => $recipientUserId,
+                    'final_remarks'           => $validated['remarks'] ?? null,
+                ];
+                foreach ($admin_users as $adminuser) {
+                    DB::table('notifications')->insert([
+                        'document_id'        => $document->document_id,
+                        'office_origin'      => $originOffice,
+                        'destination_office' => $destinationOffice,
                         'from_user_id' => $user->id,
-                        'to_external' => 1,
-                        'routed_to'               => $recipientUserId,
-                        'final_remarks'           => $validated['remarks'] ?? null,
-                    ];
-                    foreach ($admin_users as $adminuser) {
-                        DB::table('notifications')->insert([
-                            'document_id'        => $document->document_id,
-                            'office_origin'      => $originOffice,
-                            'destination_office' => $destinationOffice,
-                            'from_user_id' => $user->id,
-                            'user_id'            => $adminuser->id,
-                            'message'            => "$document->document_control_number has been routed to $destinationOffice by  $user->name",
-                            'is_read'            => 0,
-                            'created_at'         => now(),
-                            'updated_at'         => now(),
-                        ]);
-                    }
-                    DB::table('documents')
-                        ->where('document_id', $document->document_id)
-                        ->update([
-                            'recipient_id' => null,
-                            'sender_id' => $user->id,
-                            'receipt_confirmation' => 0,
-                            'receipt_confirmed_by' => 0,
-                            'status' => "Remanded",
-                            'date_forwarded' => now(),
-                            'updated_at' => now(),
-                        ]);
+                        'user_id'            => $adminuser->id,
+                        'message'            => "$document->document_control_number has been routed to $destinationOffice by  $user->name",
+                        'is_read'            => 0,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
+                    ]);
                 }
+                DB::table('documents')
+                    ->where('document_id', $document->document_id)
+                    ->update([
+                        'recipient_id' => null,
+                        'sender_id' => $user->id,
+                        'receipt_confirmation' => 0,
+                        'receipt_confirmed_by' => 0,
+                        'date_forwarded' => now(),
+                        'updated_at' => now(),
+                    ]);
+                // }
             } else {
                 $activityData = [
                     'action'                  => 'route',
@@ -183,14 +182,26 @@ class RoutingController extends Controller
                     'created_at'         => now(),
                     'updated_at'         => now(),
                 ]);
-                DB::table('documents')
-                    ->where('document_id', $document->document_id)
-                    ->update([
-                        'sender_id' => $user->id,
-                        'status' => 'For Approval',
-                        'date_forwarded' => now(),
-                        'updated_at' => now(),
-                    ]);
+                if ($validated['status'] === 'disapproved') {
+                    DB::table('documents')
+                        ->where('document_id', $document->document_id)
+                        ->update([
+                            'sender_id' => $user->id,
+                            'status' => 'Remanded',
+                            'date_forwarded' => now(),
+                            'updated_at' => now(),
+                        ]);
+                } else {
+
+                    DB::table('documents')
+                        ->where('document_id', $document->document_id)
+                        ->update([
+                            'sender_id' => $user->id,
+                            'status' => 'For Approval',
+                            'date_forwarded' => now(),
+                            'updated_at' => now(),
+                        ]);
+                }
                 DB::table('approval_table')
                     ->where('user_id', $user->id)
                     ->update([

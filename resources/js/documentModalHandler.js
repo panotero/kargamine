@@ -82,7 +82,7 @@ window.checkActionButtons = function checkActionButtons(
   if (
     receiptConfirmation !== 0 &&
     status !== "remanded" &&
-    userAuth.user_config.approval_type === "routing"
+    userAuth.user_config.approval_type !== "final-approval"
   ) {
     showAction("routeActions");
   }
@@ -732,33 +732,44 @@ routeDocumentBtn.addEventListener("click", () => {
   const officeSelect = document.getElementById("routeOfficeSelect");
   const userSelect = document.getElementById("routeUserSelect");
   const approvalSelect = document.getElementById("routeApprovalSelect");
-  const statusSelect = document.getElementById("routeStatusSelect");
   const internalSection = document.getElementById("internalSection");
-  const externalSection = document.getElementById("externalSection");
-  const pdfUploadSection = document.getElementById("pdfUploadSection");
   const currentOffice = window.authUser.office?.office_code || null;
   //   console.log(currentOffice);
 
   officeSelect?.addEventListener("change", async (e) => {
     const selected = e.target.value;
     internalSection?.classList.toggle("hidden", selected !== currentOffice);
-    externalSection?.classList.toggle(
-      "hidden",
-      selected === currentOffice || !selected
-    );
+    const status = document
+      .getElementById("docStatus")
+      .textContent.toLowerCase();
+    console.log(status);
 
+    const users = await fetchWithRetry("/api/users", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
     if (selected === currentOffice) {
-      const users = await fetchWithRetry("/api/users", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      const filtered = users.filter(
-        (u) =>
-          u.office?.office_code === currentOffice &&
-          u.user_config.approval_type !== "routing"
-      );
+      let filtered = [];
+      if (status !== "disapproved") {
+        filtered = users.filter(
+          (u) =>
+            u.office?.office_code === currentOffice &&
+            u.user_config.approval_type !== "routing"
+        );
+        if (approvalSelect.classList.contains("hidden")) {
+          approvalSelect.classList.remove("hidden");
+        }
+      } else {
+        filtered = users.filter(
+          (u) =>
+            u.office?.office_code === currentOffice &&
+            u.user_config.approval_type !== "final-approval"
+        );
+        approvalSelect.classList.add("hidden");
+      }
+      //   if()
       userSelect.innerHTML =
         `<option value="">Select User</option>` +
         filtered
@@ -770,15 +781,6 @@ routeDocumentBtn.addEventListener("click", () => {
     }
   });
 
-  statusSelect?.addEventListener("change", (e) => {
-    pdfUploadSection?.classList.toggle("hidden", e.target.value !== "approved");
-  });
-  initPDFDropzone({
-    dropzoneId: "routedropzone",
-    fileInputId: "routefileInput",
-    fileInfoId: "routefileInfo",
-    clearBtnId: "clearrouteSelectionBtn",
-  });
   initModal({ modalId: "routingModal" });
 });
 routeSubmitBtnBtn.addEventListener("click", async function () {
@@ -795,15 +797,12 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
       document.getElementById("routeOfficeSelect").value;
     const recipientUserId = document.getElementById("routeUserSelect").value;
     const approvalType = document.getElementById("routeApprovalSelect").value;
-    const routeStatusSelect =
-      document.getElementById("routeStatusSelect").value;
     const remarks = document.getElementById("routeRemarks").value;
-    const routedPdfFile = document.getElementById("routefileInput");
-
+    const status = document
+      .getElementById("docStatus")
+      .textContent.toLowerCase();
     const internalSection = document.getElementById("internalSection");
-    const externalSection = document.getElementById("externalSection");
-    const pdfUploadSection = document.getElementById("pdfUploadSection");
-
+    console.log(status);
     // ---- Validation ----
     const errors = [];
 
@@ -816,21 +815,9 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     }
 
     // Validate approval type if internal section is visible
-    if (!internalSection.classList.contains("hidden") && !approvalType) {
-      errors.push("Approval type is required for internal routing.");
-    }
-    // Validate approval type if internal section is visible
-    if (!externalSection.classList.contains("hidden") && !routeStatusSelect) {
-      errors.push("Approval type is required for internal routing.");
-    }
-
-    // Validate PDF if status is approved and upload section is visible
-    if (
-      !externalSection.classList.contains("hidden") &&
-      !pdfUploadSection.classList.contains("hidden") &&
-      routedPdfFile.files.length === 0
-    ) {
-      errors.push("PDF file is required when status is approved.");
+    if (status !== "disapproved") {
+      if (!internalSection.classList.contains("hidden") && !approvalType)
+        errors.push("Approval type is required for internal routing.");
     }
 
     // Stop submission if errors exist
@@ -850,17 +837,12 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     formData.append("destination_office", destinationOffice);
     if (!internalSection.classList.contains("hidden")) {
       formData.append("recipient_user_id", recipientUserId);
-      formData.append("approval_type", approvalType);
+      if (status !== "disapproved") {
+        formData.append("approval_type", approvalType);
+      }
+      formData.append("status", status);
     }
-    formData.append("status", routeStatusSelect);
     formData.append("remarks", remarks);
-
-    if (
-      !pdfUploadSection.classList.contains("hidden") &&
-      routedPdfFile.files.length > 0
-    ) {
-      formData.append("pdf_file", routedPdfFile.files[0]);
-    }
 
     console.log("FormData to submit:", Array.from(formData.entries()));
     // return;
@@ -884,9 +866,7 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
       document.getElementById("routeOfficeSelect").selectedIndex = 0;
       document.getElementById("routeUserSelect").selectedIndex = 0;
       document.getElementById("routeApprovalSelect").selectedIndex = 0;
-      document.getElementById("routeStatusSelect").selectedIndex = 0;
       document.getElementById("routeRemarks").value = "";
-      document.getElementById("routefileInput").value = "";
     }
   } catch (error) {
     console.error("Routing request failed:", error);
