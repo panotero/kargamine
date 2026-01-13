@@ -220,7 +220,7 @@
             });
         }
         async function loadMenus() {
-            const menusData = await fetchWithRetry(`api/nav_menus/list`, {
+            menusData = await fetchWithRetry(`api/nav_menus/list`, {
                 credentials: 'include',
                 headers: {
                     Accept: "application/json"
@@ -420,6 +420,9 @@
             let swapWith = null;
             if (direction === "up" && index > 0) swapWith = siblings[index - 1];
             if (direction === "down" && index < siblings.length - 1) swapWith = siblings[index + 1];
+
+            console.log(menusData);
+            // return;
 
             if (!swapWith) return;
 

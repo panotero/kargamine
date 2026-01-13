@@ -54,6 +54,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/page_approvals', [PageController::class, 'page_approvals']);
     Route::get('/page_reports_documents', [PageController::class, 'page_reports_documents']);
     Route::get('/page_reports_users', [PageController::class, 'page_reports_users']);
+    Route::get('/page_finance_tracker', [PageController::class, 'page_finance_tracker']);
     Route::get('/profile', [PageController::class, 'profile'])->name('profile');
     Route::get('/settings', [PageController::class, 'settings'])->name('settings');
 

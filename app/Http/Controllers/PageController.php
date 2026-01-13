@@ -78,6 +78,11 @@ class PageController extends Controller
     {
         return view('pages.reports.users');
     }
+    public function page_finance_tracker()
+    {
+
+        return view('pages.finance');
+    }
 
     public function profile()
     {
