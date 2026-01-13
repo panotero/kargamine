@@ -19,7 +19,7 @@
                 <div class="w-full p-5 flex justify-center dark:bg-gray-800 gap-3">
                     <img class="h-10 w-auto" src="{{ asset('/assets/images/TESDA_Logo.png') }}">
                     <img class="h-12 w-auto" src="{{ asset('/assets/images/bagong_pilipinas.png') }}">
-                    <img class="h-5 w-auto" src="{{ asset('/assets/images/tesda_kayang_kaya.png') }}">
+                    <img class="h-5 w-auto my-auto" src="{{ asset('/assets/images/tesda_kayang_kaya.png') }}">
                 </div>
             </div>
         </aside>

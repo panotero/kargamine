@@ -27,7 +27,7 @@
                 <div class="text-center">
                     <img class="h-28 w-28 mx-auto mb-3" src="{{ asset('/assets/images/TESDA_Logo.png') }}"
                         {{ $attributes }} alt="Logo">
-                    <h1 class="font-semibold text-xl">ODDG-PP</h1>
+                    <h1 class="font-semibold text-xl">ODDG-Policies and Planning</h1>
                     <h1 class="text-2xl md:text-3xl font-semibold">Document Monitoring Tool</h1>
                 </div>
 
