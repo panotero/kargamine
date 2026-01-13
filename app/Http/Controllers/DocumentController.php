@@ -226,7 +226,7 @@ class DocumentController extends Controller
             $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
             $fileName      = uniqid() . '-' . $cleanOriginal;
             $folder = "storage/assets/documents/$officeFolder/pdf";
-            $folderPath    = public_path($folder);
+            $folderPath    = $folder;
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0777, true);
             }
@@ -331,7 +331,7 @@ class DocumentController extends Controller
             $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
             $fileName      = uniqid() . '-' . $cleanOriginal;
             $folder = "storage/assets/documents/$officeFolder/pdf";
-            $folderPath    = public_path($folder);
+            $folderPath    = $folder;
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0777, true);
             }

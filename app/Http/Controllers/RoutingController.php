@@ -188,6 +188,7 @@ class RoutingController extends Controller
                         ->update([
                             'sender_id' => $user->id,
                             'status' => 'Remanded',
+                            'recipient_id'   =>  null,
                             'date_forwarded' => now(),
                             'updated_at' => now(),
                         ]);

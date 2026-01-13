@@ -54,6 +54,9 @@ window.checkActionButtons = function checkActionButtons(
 
   // 1. Remanded with revision
   if (status === "remanded" && revision_status === 0) {
+    if (canAct) {
+      showAction("routeActions");
+    }
     showAction("revisionActions");
     return;
   }

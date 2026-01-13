@@ -82,9 +82,10 @@ class ApprovalsController extends Controller
 
     private function processDisapproval($approval, $validated, $user)
     {
+        $user = Auth::user();
         // dd([
         //     $validated,
-        //     $approval,
+        //     $approval->from_user,
         //     $user,
         // ]);
 
@@ -98,31 +99,70 @@ class ApprovalsController extends Controller
             Document::where('document_id', $approval->document_id)
                 ->update([
                     'status'         => "Disapproved",
-                    'recipient_id'   => $validated['from_user'] ? null : null,
+                    'recipient_id'   => $approval->from_user,
                     'date_forwarded' => now(),
                     'updated_at' => now(),
                 ]);
+
+            //notify the last sender
+
+            DB::table('notifications')->insert([
+                'document_id'        => $approval->document->document_id,
+                'office_origin'      => $approval->document->office_origin,
+                'destination_office' => $approval->document->destination_office,
+                'from_user_id'       => $user->id,
+                'user_id'            => $approval->from_user,
+                'message'            => "{$approval->document->document_code} Has been Disapproved.",
+                'is_read'            => 0,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+            $this->createActivity('disapproved', $approval, $user, $validated);
         } else {
-            $this->updateDocument($approval, 'Disapproved', true);
+
+            //check if validated from_user is equal to 0
+            if ($approval->from_user === 0 || $approval->from_user === "0") {
+
+                Document::where('document_id', $approval->document->document_id)
+                    ->update([
+                        'status'         => "Remanded",
+                        'recipient_id'   =>  null,
+                        'date_forwarded' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                $this->notifyAdmins(
+                    $approval,
+                    $user,
+                    "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office"
+                );
+                $this->createActivity('remand', $approval, $user, $validated);
+            } else {
+
+                Document::where('document_id', $approval->document_id)
+                    ->update([
+                        'status'         => "Disapproved",
+                        'recipient_id'   => $approval->from_user,
+                        'date_forwarded' => now(),
+                        'updated_at' => now(),
+                    ]);
+                DB::table('notifications')->insert([
+                    'document_id'        => $approval->document->document_id,
+                    'office_origin'      => $approval->document->office_origin,
+                    'destination_office' => $approval->document->destination_office,
+                    'from_user_id'       => $user->id,
+                    'user_id'            => $approval->from_user,
+                    'message'            => "{$approval->document->document_code} Has been Disapproved.",
+                    'is_read'            => 0,
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
+                ]);
+                $this->createActivity('disapproved', $approval, $user, $validated);
+            }
         }
 
 
-
-
-        // //notify the last
-        // $this->notifyAdmins(
-        //     $approval,
-        //     $user,
-        //     "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office"
-        // );
-
-        // $this->notifyUploader(
-        //     $approval,
-        //     $user,
-        //     "{$approval->document->document_code} Has been Disapproved."
-        // );
-
-        $this->createActivity('disapproved', $approval, $user, $validated);
+        $this->finalizeApproval($approval);
     }
 
     private function processRemand($approval, $validated, $user)

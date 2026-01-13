@@ -13,6 +13,8 @@ window.initDataTables = function initDataTables() {
         responsive: true, // allows columns to adjust
         autoWidth: true,
         dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
+        // Disable initial auto-sort
+        order: [],
       });
 
       // Re-style table
