@@ -18,12 +18,12 @@
                     <div class="relative z-10 pointer-events-none text-gray-900">
                         <p class="text-sm">Available Budget</p>
                         <h2 class="mt-2 text-2xl font-bold" id="totalAvailableBudgetCount">₱0</h2>
-                        <p class="mt-1 text-xs">All files in the system</p>
+                        <p class="mt-1 text-xs">Office Total Available Budget</p>
                     </div>
                     <div class="text-right relative z-10 pointer-events-none text-gray-900">
-                        <p class="text-sm">Available Budget</p>
+                        <p class="text-sm">Expenses</p>
                         <h2 class="mt-2 text-2xl font-bold" id="totalExpenseCount">₱0</h2>
-                        <p class="mt-1 text-xs">All files in the system</p>
+                        <p class="mt-1 text-xs">Office Total Expense</p>
                     </div>
 
                 </div>
@@ -45,9 +45,9 @@
                 data-status="for discussion">
                 <div>
                     <div>
-                        <p class="text-sm">Procured</p>
+                        <p class="text-sm">Procurement Expense</p>
                         <h2 class="mt-2 text-3xl font-bold text-blue-600" id="forDiscussion">₱0</h2>
-                        <p class="mt-1 text-xs">Needs attention</p>
+                        <p class="mt-1 text-xs">Procured items and services</p>
                     </div>
                 </div>
             </div>
@@ -57,16 +57,16 @@
                 <div>
                     <p class="text-sm">Reimbursed</p>
                     <h2 class="mt-2 text-3xl font-bold text-orange-400" id="pending">₱0</h2>
-                    <p class="mt-1 text-xs">Waiting for processing</p>
+                    <p class="mt-1 text-xs">Reimbursements</p>
                 </div>
             </div>
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
                 data-status="pending">
 
                 <div>
-                    <p class="text-sm">Travel Expense</p>
+                    <p class="text-sm">Other Expense</p>
                     <h2 class="mt-2 text-3xl font-bold text-orange-400" id="pending">₱0</h2>
-                    <p class="mt-1 text-xs">Waiting for processing</p>
+                    <p class="mt-1 text-xs">Purchase, Service and other expenses</p>
                 </div>
             </div>
         </div>
@@ -245,7 +245,7 @@
 
 
         //get total expenses per year
-        const totalExpense = 0;
+        const totalExpense = 75682;
 
         const availableBudget = totalBudget - totalExpense;
 

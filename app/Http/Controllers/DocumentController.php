@@ -414,6 +414,7 @@ class DocumentController extends Controller
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
 
+
         $validator = Validator::make($request->all(), [
             'document_code' => [
                 'required',
