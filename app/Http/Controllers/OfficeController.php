@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Office;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class OfficeController extends Controller
 {
@@ -16,6 +17,31 @@ class OfficeController extends Controller
 
     public function store(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'office_name' => [
+                'required',
+                'string',
+                'max:100',
+                'safe_text'
+            ],
+            'office_code' => [
+                'required',
+                'string',
+                'max:20',
+                'unique:office_table',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $validated = $request->validate([
             'office_name' => 'required|string|max:100',
             'office_code' => 'required|string|max:20|unique:office_table',

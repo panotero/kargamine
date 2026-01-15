@@ -31,12 +31,37 @@ class ActivityController extends Controller
 
     public function store(Request $request)
     {
+        //BUG ID: 7
         $validator = Validator::make($request->all(), [
-            'action' => 'required|string|max:100',
-            'document_id' => 'nullable|integer',
-            'document_control_number' => 'required|string|max:100',
-            'user_id' => 'nullable|integer',
+            'action' => [
+                'required',
+                'string',
+                'max:100',
+                'safe_text'
+            ],
+            'document_id' => [
+                'nullable',
+                'integer'
+            ],
+            'document_control_number' => [
+                'required',
+                'string',
+                'max:100',
+                'safe_text'
+            ],
+            'user_id' => [
+                'nullable',
+                'integer'
+            ],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);

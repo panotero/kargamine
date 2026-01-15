@@ -11,6 +11,7 @@ use App\Models\ListingPhoto;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use League\Config\Exception\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class ListingController extends Controller
 {
@@ -53,6 +54,58 @@ class ListingController extends Controller
     }
     public function store(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'propertyName' => [
+                'required',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+            'address' => [
+                'required',
+                'string',
+                'max:500',
+                'safe_text'
+            ],
+            'description' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'price' => [
+                'nullable',
+                'string',
+                'max:100',
+                'safe_text'
+            ],
+            'link' => [
+                'nullable',
+                'url',
+                'max:1000'
+            ],
+            'status' => [
+                'required',
+                'string',
+                'in:Active,Pending,Sold',
+                'safe_text'
+            ],
+            'images.*' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif,webp',
+                'max:5120'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         try {
             $request->validate([
                 'propertyName' => 'required|string|max:255',

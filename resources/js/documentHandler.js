@@ -1,4 +1,24 @@
 function initdocumentcontroller() {
+  //BUG ID: 10
+  const now = new Date();
+  const today =
+    now.getFullYear() +
+    "-" +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(now.getDate()).padStart(2, "0");
+  const duedate = document.getElementById("due_date");
+
+  duedate.min = now.toISOString().split("T")[0];
+
+  // Force calendar open when clicking anywhere on input
+  document.querySelectorAll('input[type="date"]').forEach((inpt) => {
+    inpt.addEventListener("click", function () {
+      this.showPicker();
+    });
+    inpt.addEventListener("keydown", (e) => e.preventDefault());
+  });
+
   // ---------------------- GET DOCUMENTS ----------------------
   window.getDocs = async function getDocs() {
     const authUser = window.authUser;
@@ -130,6 +150,7 @@ function initdocumentcontroller() {
       label,
       particular,
       office_origin,
+      due_date,
       destination_office,
       date_forwarded,
       created_at,
@@ -192,7 +213,7 @@ function initdocumentcontroller() {
 </td>
       <td class="px-4 py-2">${office_origin}</td>
       <td class="px-4 py-2">${destination_office}</td>
-      <td class="px-4 py-2">${date_forwarded || "-"}</td>
+      <td class="px-4 py-2">${due_date || "-"}</td>
       <td class="px-4 py-2">${calculateDuration(date_forwarded)}</td>
       <td class="px-4 py-2">${created_at ? created_at.split("T")[0] : "-"}</td>
       <td class="px-4 py-2">${confidentiality || "-"}</td>

@@ -8,6 +8,7 @@ use App\Models\MailerSetting;
 use Illuminate\Support\Facades\Log;
 use App\Mail\GenericMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class MailerController extends Controller
 {
@@ -20,6 +21,55 @@ class MailerController extends Controller
 
     public function save(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'mail_mailer' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'mail_host' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'mail_port' => [
+                'required'
+            ],
+            'mail_username' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'mail_password' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'mail_encryption' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'mail_from_address' => [
+                'required',
+                'email'
+            ],
+            'mail_from_name' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         try {
             $validated = $request->validate([
                 'mail_mailer' => 'required|string',
@@ -52,6 +102,37 @@ class MailerController extends Controller
     // Example API endpoint for sending mail
     public function send(Request $request, DynamicMailerService $mailer)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'to' => [
+                'nullable',
+                'email'
+            ],
+            'subject' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'title' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'body' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         try {
             Log::channel('mail_logs')->info('📩 Test mail send requested', [
                 'input' => $request->all(),

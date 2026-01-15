@@ -7,6 +7,13 @@ window.checkActionButtons = function checkActionButtons(
   revision_status = false,
   source = false
 ) {
+  // Force calendar open when clicking anywhere on input
+  document.querySelectorAll('input[type="date"]').forEach((inpt) => {
+    inpt.addEventListener("click", function () {
+      this.showPicker();
+    });
+    inpt.addEventListener("keydown", (e) => e.preventDefault());
+  });
   //   console.log(window.authUser.id + "->" + documentRecepientId);
   const actionButtonArray = [
     {

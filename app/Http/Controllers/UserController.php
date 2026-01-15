@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -82,6 +83,49 @@ class UserController extends Controller
 
     public function save_info($id = false, Request $request)
     {
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'name' => [
+                'nullable',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                'unique:users,email,' . $id
+            ],
+            'password' => [
+                'nullable',
+                'string',
+                'min:6',
+                'safe_text'
+            ],
+            'role' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'office_id' => [
+                'nullable',
+                'integer'
+            ],
+            'role_id' => [
+                'nullable',
+                'integer'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $id,
@@ -129,6 +173,49 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+            'email' => [
+                'required',
+                'email',
+                'unique:users,email'
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+                'safe_text'
+            ],
+            'role' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'office_id' => [
+                'nullable',
+                'integer'
+            ],
+            'role_id' => [
+                'nullable',
+                'integer'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',

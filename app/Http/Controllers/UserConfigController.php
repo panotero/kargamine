@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\UserConfig;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class UserConfigController extends Controller
 {
@@ -16,7 +17,29 @@ class UserConfigController extends Controller
 
     public function store(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'designation' => [
+                'required',
+                'string',
+                'max:100',
+                'safe_text'
+            ],
+            'approval_type' => [
+                'required',
+                'string',
+                'in:pre-approval,final-approval,routing',
+                'safe_text'
+            ],
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
         $validated = $request->validate([
             'designation' => 'required|string|max:100',
             'approval_type' => 'required|in:pre-approval,final-approval,routing',

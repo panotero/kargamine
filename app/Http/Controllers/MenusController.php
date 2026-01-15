@@ -7,6 +7,7 @@ use App\Models\NavMenu;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class MenusController extends Controller
 {
@@ -53,6 +54,47 @@ class MenusController extends Controller
 
     public function store(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'title' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'icon' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'link' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'allowed_roles' => [
+                'nullable'
+            ],
+            'allowed_offices' => [
+                'nullable'
+            ],
+            'parent_menu' => [
+                'nullable',
+                'integer'
+            ],
+            'menu_order' => [
+                'nullable',
+                'integer'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         Log::info('STORE request received', [
             'payload' => $request->all()
         ]);
@@ -108,6 +150,44 @@ class MenusController extends Controller
             'id' => $id,
             'payload' => $request->all()
         ]);
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'title' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'icon' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'link' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'allowed_roles' => [
+                'nullable'
+            ],
+            'allowed_office' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'parent_menu' => [
+                'nullable',
+                'integer'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
 
         try {
             $menu = NavMenu::findOrFail($id);

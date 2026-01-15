@@ -13,13 +13,53 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Validator;
 use function Laravel\Prompts\error;
 
 class RoutingController extends Controller
 {
     public function routeDocument(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'document_id' => [
+                'required',
+                'integer'
+            ],
+            'destination_office' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'recipient_user_id' => [
+                'nullable',
+                'integer'
+            ],
+            'approval_type' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'status' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'remarks' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         try {
 
             $user = Auth::user();

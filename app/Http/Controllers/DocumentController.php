@@ -156,12 +156,45 @@ class DocumentController extends Controller
 
     public function revise(Request $request)
     {
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'revisedocControlNumber' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'user_id' => [
+                'required',
+                'integer'
+            ],
+            'document_form' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'file' => [
+                'required',
+                'file',
+                'mimes:pdf',
+                'max:50240'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $data = $request->validate([
             'revisedocControlNumber' => 'required|string',
             'user_id' => 'required|integer',
             'revisedocControlNumber' => 'required|string',
             'document_form'         => 'required|string',
-            'file'                  => 'required|file|mimes:pdf|max:10240',
+            'file'                  => 'required|file|mimes:pdf|max:50240',
         ]);
 
         //get document info by document control number
@@ -309,13 +342,47 @@ class DocumentController extends Controller
 
     public function esign(Request $request)
     {
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'docControlNumber' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'remarks' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+            'document_form' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+            'file' => [
+                'required',
+                'file',
+                'mimes:pdf',
+                'max:50240'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $user = Auth::user();
 
         $validated = $request->validate([
             'docControlNumber' => 'required|string',
             'remarks' => 'nullable|string',
             'document_form'         => 'required|string',
-            'file'                  => 'required|file|mimes:pdf|max:10240',
+            'file'                  => 'required|file|mimes:pdf|max:50240',
         ]);
 
         // dd($validated);
@@ -414,32 +481,32 @@ class DocumentController extends Controller
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
 
-
+        //BUG ID: 7
         $validator = Validator::make($request->all(), [
             'document_code' => [
                 'required',
                 'string',
                 'max:25',
-                'regex:/^[a-zA-Z0-9 _-]+$/'
+                'safe_text'
             ],
             'date_received' => 'required|date',
             'particular' => [
                 'required',
                 'string',
-                'regex:/^[a-zA-Z0-9 ,.\'-]+$/'
+                'safe_text',
             ],
             'office_origin' => [
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[a-zA-Z0-9 -]+$/',
+                'safe_text',
                 Rule::exists('office_table', 'office_code')
             ],
             'destination_office' => [
                 'nullable',
                 'string',
                 'max:100',
-                'regex:/^[a-zA-Z0-9 -]+$/',
+                'safe_text',
                 Rule::exists('office_table', 'office_code')
             ],
             'user_id' => 'required|integer',
@@ -447,13 +514,13 @@ class DocumentController extends Controller
                 'required',
                 'string',
                 'max:50',
-                'regex:/^[a-zA-Z0-9 ,.-]+$/'
+                'safe_text',
             ],
             'document_type' => [
                 'required',
                 'string',
                 'max:50',
-                'regex:/^[a-zA-Z0-9 &,-]+$/',
+                'safe_text',
                 Rule::exists('document_types', 'document_type')
             ],
             'date_of_document' => 'nullable|date',
@@ -462,14 +529,14 @@ class DocumentController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[a-zA-Z0-9 .,-]+$/'
+                'safe_text',
             ],
             'remarks' => [
                 'nullable',
                 'string',
-                'regex:/^[a-zA-Z0-9 ,.\'-]+$/'
+                'safe_text',
             ],
-            'file' => 'required|file|mimes:pdf|max:20480',
+            'file' => 'required|file|mimes:pdf|max:50480',
         ]);
 
 
@@ -619,6 +686,26 @@ class DocumentController extends Controller
 
     public function update_status(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'document_id' => [
+                'required',
+                'integer'
+            ],
+            'status' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
 
         $validated = $request->validate([
             'document_id' => 'required|integer',

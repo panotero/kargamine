@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\DocumentType;
 use App\Models\LabelType;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class DocumentTypeController extends Controller
 {
@@ -16,6 +17,30 @@ class DocumentTypeController extends Controller
 
     public function store(Request $request)
     {
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'document_type' => [
+                'required',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+            'description' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $request->validate([
             'document_type' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -33,6 +58,30 @@ class DocumentTypeController extends Controller
 
     public function update(Request $request, string $id)
     {
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'document_type' => [
+                'required',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+            'description' => [
+                'nullable',
+                'string',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $request->validate([
             'document_type' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -56,6 +105,23 @@ class DocumentTypeController extends Controller
     }
     public function storelabel(Request $request)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'label_name' => [
+                'required',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
 
         $validated = $request->validate([
             'label_name' => 'required|string|max:255',
@@ -80,6 +146,24 @@ class DocumentTypeController extends Controller
 
     public function updatelabel(Request $request, string $id)
     {
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'label' => [
+                'required',
+                'string',
+                'max:255',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
         $request->validate([
             'label' => 'required|string|max:255',
         ]);

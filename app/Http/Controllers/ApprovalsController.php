@@ -10,6 +10,7 @@ use App\Models\Activity;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ApprovalsController extends Controller
 {
@@ -42,6 +43,42 @@ class ApprovalsController extends Controller
 
     public function handleApprovalAction(Request $request, $document_id)
     {
+
+
+        //BUG ID: 7
+        $validator = Validator::make($request->all(), [
+            'action' => [
+                'required',
+                'string',
+                'in:approved,disapproved,remand,for-discussion',
+                'safe_text'
+            ],
+            'next_action' => [
+                'nullable',
+                'string',
+                'in:pre-approval,final-approval',
+                'safe_text'
+            ],
+            'next_user_id' => [
+                'nullable',
+                'integer',
+                'exists:users,id'
+            ],
+            'remarks' => [
+                'nullable',
+                'string',
+                'max:500',
+                'safe_text'
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
         $user = User::with(['office', 'userConfig'])->find(Auth::id());
 
         if (!$user) {

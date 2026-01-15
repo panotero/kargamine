@@ -184,9 +184,9 @@ function redrawTable(selector) {
 
 window.checkOverDue = function checkOverDue(documents) {
   let overdue = 0;
-  const now = new Date();
 
   const statuses = ["signed", "approved", "completed"];
+  const now = new Date();
   const today =
     now.getFullYear() +
     "-" +

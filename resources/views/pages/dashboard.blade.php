@@ -320,9 +320,6 @@
                         case "pending":
                             pending++;
                             break;
-                        case "overdue":
-                            overdue++;
-                            break;
                         case "for approval":
                             forApproval++;
                             break;
@@ -420,14 +417,24 @@
                         );
                         break;
                     case "for approval":
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc.status && doc.status.toLowerCase() === status
+                        );
                         break;
                     case "completed":
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc.status && doc.status.toLowerCase() === status
+                        );
                         break;
                     case "remanded":
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc.status && doc.status.toLowerCase() === status
+                        );
                         break;
                     case "overdue":
                         filteredDocuments = allDocuments.filter(doc =>
-                            doc.due_date < today && statuses.includes(doc.status.toLowerCase())
+                            doc.due_date < today && !statuses.includes(doc.status
+                        .toLowerCase()) //BUG ID: 8 reversed the statuses to negative clause
                         );
                         break;
                     case "approved":
@@ -435,13 +442,12 @@
                             doc.status && doc.status.toLowerCase() === status
                         );
                         break;
-                    case "completed":
-                        break;
                     case "all":
                         filteredDocuments = allDocuments;
                         break;
 
                 }
+                //u
 
 
                 if ($.fn.DataTable.isDataTable(modalcounttable)) {
