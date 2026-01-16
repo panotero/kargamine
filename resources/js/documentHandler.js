@@ -303,18 +303,23 @@ function initdocumentcontroller() {
       const errors = [];
 
       if (!fileInput?.files[0]) {
-        errors.push("Please upload a PDF file.");
+        errors.push("pdf");
+      }
+      const documentCode = document.getElementById("document_code");
+      const subject = document.getElementById("subject");
+      const signatory = document.getElementById("signatory");
+
+      if (!documentCode || !documentCode.value.trim()) {
+        errors.push("document_code");
       }
 
-      const requiredFields = ["document_code", "subject", "signatory"];
-      requiredFields.forEach((id) => {
-        const el = document.getElementById(id);
-        if (!el || !el.value.trim()) {
-          errors.push(
-            `${el?.previousElementSibling?.textContent || id} is required.`
-          );
-        }
-      });
+      if (!subject || !subject.value.trim()) {
+        errors.push("particular");
+      }
+
+      if (!signatory || !signatory.value.trim()) {
+        errors.push("signatory");
+      }
 
       const originDropdown = document.getElementById("originOffice");
       const destinationDropdown = document.getElementById("destinationOffice");
@@ -331,12 +336,12 @@ function initdocumentcontroller() {
         originDropdown.value.trim() === "" ||
         originDropdown.value === "Select..."
       ) {
-        errors.push("Please select an Origin Office.");
+        errors.push("office_origin");
       } else if (
         originDropdown.value === "Other" &&
         (!otherOriginInput || !otherOriginInput.value.trim())
       ) {
-        errors.push("Please specify the Origin Office.");
+        errors.push("office_origin");
       }
 
       if (
@@ -344,12 +349,12 @@ function initdocumentcontroller() {
         destinationDropdown.value.trim() === "" ||
         destinationDropdown.value === "Select..."
       ) {
-        errors.push("Please select a Destination Office.");
+        errors.push("destination_office");
       } else if (
         destinationDropdown.value === "Other" &&
         (!otherDestinationInput || !otherDestinationInput.value.trim())
       ) {
-        errors.push("Please specify the Destination Office.");
+        errors.push("destination_office");
       }
 
       if (
@@ -357,16 +362,18 @@ function initdocumentcontroller() {
         documentDropdown.value.trim() === "" ||
         documentDropdown.value === "Select..."
       ) {
-        errors.push("Please select a Document Type.");
+        errors.push("document_type");
       } else if (
         documentDropdown.value === "Other" &&
         (!otherDocumentInput || !otherDocumentInput.value.trim())
       ) {
-        errors.push("Please specify the Document Type.");
+        errors.push("document_type");
       }
 
       if (errors.length > 0) {
-        showModalErrors(errors);
+        // showModalErrors(errors);
+        styleerrors(errors);
+        console.log(errors);
         modal.scrollTop = 0;
         return;
       }
@@ -453,10 +460,13 @@ function initdocumentcontroller() {
 
             Object.keys(invalid).forEach((field) => {
               invalid[field].forEach((msg) => {
-                messages.push(`${field}: ${msg}`);
+                messages.push(`${field}`);
               });
             });
-
+            console.log(messages);
+            //fucntion to update border where there are errors
+            let method = "invalids";
+            styleerrors(messages, method);
             showModalErrors(messages);
             return;
           }
@@ -480,13 +490,84 @@ function initdocumentcontroller() {
 
         // loadlastpage();
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         showModalErrors(["Unexpected error occurred."]);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "Submit";
       }
     });
+    function styleerrors(messages, method) {
+      const fieldMap = {
+        document_code: "document_code",
+        particular: "subject",
+        signatory: "signatory",
+        remarks: "remarks",
+        office_origin: "originOffice",
+        destination_office: "destinationOffice",
+        document_type: "documentType",
+        pdf: "dropzone",
+      };
+
+      Object.values(fieldMap).forEach((elementId) => {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        el.classList.add("border-gray-300");
+        el.classList.remove("border-red-500");
+        removeError(el);
+      });
+
+      messages.forEach((e) => {
+        const elementId = fieldMap[e];
+        if (!elementId) return; // message not in fieldMap → ignore
+
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        el.classList.add("border-red-500");
+        el.classList.remove("border-gray-300");
+
+        if (method === "invalids") {
+          showError(el);
+        } else {
+          showError(el, "field required");
+        }
+      });
+    }
+
+    function showError(inputEl, message = "Invalid input") {
+      // Avoid duplicate messages
+      if (inputEl.nextElementSibling?.classList.contains("error-text")) return;
+
+      const p = document.createElement("p");
+      p.textContent = message;
+      p.className = "error-text text-red-500 text-xs mt-1";
+
+      inputEl.insertAdjacentElement("afterend", p);
+    }
+    function showError(inputEl, message = "Invalid input") {
+      // Avoid duplicate messages
+      if (inputEl.nextElementSibling?.classList.contains("error-text")) return;
+
+      const p = document.createElement("p");
+      p.textContent = message;
+      p.className = "error-text text-red-500 text-xs mt-1";
+
+      inputEl.insertAdjacentElement("afterend", p);
+    }
+
+    function removeError(inputEl) {
+      if (inputEl.nextElementSibling?.classList.contains("error-text")) {
+        inputEl.nextElementSibling.remove();
+      }
+    }
+
+    function removeError(inputEl) {
+      if (inputEl.nextElementSibling?.classList.contains("error-text")) {
+        inputEl.nextElementSibling.remove();
+      }
+    }
 
     function sanitizeInput(str) {
       if (typeof str !== "string") return "";

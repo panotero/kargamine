@@ -500,7 +500,7 @@
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Route Document</h2>
 
-                        <div id="routingmodalErrorMessage"
+                        <div id="modalErrorMessage"
                             class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm errorbox">
                             <ul id="routingmodalErrorList" class="list-disc list-inside errorlist"></ul>
                         </div>
@@ -533,7 +533,7 @@
                     <div class="space-y-2">
                         <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Remarks</label>
                         <textarea id="routeRemarks"
-                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="no-special-chars w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                             rows="3" placeholder="Enter remarks..."></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -558,7 +558,7 @@
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">eSign Document</h2>
 
-                        <div id="esignmodalErrorMessage"
+                        <div id="modalErrorMessage"
                             class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm errorbox">
                             <ul id="esignmodalErrorList" class="list-disc list-inside errorlist"></ul>
                         </div>
@@ -589,7 +589,7 @@
                     <div class="space-y-2">
                         <label class="text-gray-700 dark:text-gray-300 font-medium text-sm">Remarks</label>
                         <textarea id="esignRemarks"
-                            class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="no-special-chars w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                             rows="3" placeholder="Enter remarks..."></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -630,7 +630,7 @@
                     <div id="remarksWrapper" class="mb-5">
                         <label for="remarksTextarea" class="block text-gray-700 font-medium mb-2">Remarks</label>
                         <textarea id="remarksTextarea"
-                            class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            class="no-special-chars w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
                             rows="4" placeholder="Enter remarks..."></textarea>
                     </div>
 
@@ -662,7 +662,7 @@
                         <label for="remarksTextarea"
                             class="block text-gray-700 font-medium mb-2">Remarks/Instructions</label>
                         <textarea id="remarksTextarea"
-                            class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            class="no-special-chars w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
                             rows="4" placeholder="Enter remarks..."></textarea>
                     </div>
 
@@ -694,7 +694,7 @@
                         <label for="remarksTextarea"
                             class="block text-gray-700 font-medium mb-2">Remarks/Instructions</label>
                         <textarea id="remarksTextarea"
-                            class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                            class="no-special-chars w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-300"
                             rows="4" placeholder="Enter remarks..."></textarea>
                     </div>
 

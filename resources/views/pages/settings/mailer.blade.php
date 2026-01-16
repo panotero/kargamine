@@ -107,7 +107,8 @@
 
             <div>
                 <label class="block font-semibold">Subject</label>
-                <input type="text" name="subject" class="w-full border p-2 rounded text-black" required>
+                <input type="text" name="subject" class="no-special-chars w-full border p-2 rounded text-black"
+                    required>
             </div>
             <div>
                 <label class="block font-semibold">Title</label>
@@ -116,7 +117,7 @@
 
             <div>
                 <label class="block font-semibold">Message</label>
-                <textarea name="body" class="w-full border p-2 rounded text-black" rows="3" required></textarea>
+                <textarea name="body" class="no-special-chars w-full border p-2 rounded text-black" rows="3" required></textarea>
             </div>
 
             <div class="flex justify-end">

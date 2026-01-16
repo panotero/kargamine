@@ -88,6 +88,13 @@
                         <option value="">Select Config</option>
                     </select>
                 </div>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="authorizedSginatory"
+                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="agreeTerms" class="text-gray-700 dark:text-gray-300 text-sm">
+                        Authorized signatory
+                    </label>
+                </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
                     <button type="button" id="cancelBtn"
@@ -122,6 +129,7 @@
         const userId = document.getElementById("userId");
         const officeSelect = document.getElementById("officeSelect");
         const configSelect = document.getElementById("configSelect");
+        const authorizedSginatory = document.getElementById("authorizedSginatory");
         const table = document.getElementById("userTable");
         initDataTables();
         async function loadUsers() {
@@ -259,6 +267,12 @@
                 userEmail.value = user.email;
                 officeSelect.value = user.office_id ?? "";
                 configSelect.value = user.role_id ?? "";
+                if (user.authorize_signatory === 1) {
+
+                    authorizedSginatory.checked = true;
+                } else {
+                    authorizedSginatory.checked = false;
+                }
             } else {
                 modalTitle.textContent = "Add New User";
                 userForm.reset();
@@ -278,7 +292,10 @@
 
         userForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-
+            let authSignatory = 0;
+            if (authorizedSginatory.checked) {
+                authSignatory = 0;
+            }
             const data = {
                 name: userName.value,
                 email: userEmail.value,
@@ -286,6 +303,7 @@
                 office_id: officeSelect.value,
                 role_id: configSelect.value,
                 role: configSelect.selectedOptions[0]?.text ?? "",
+                authSignatory: authSignatory,
             };
 
             const method = userId.value ? "PATCH" : "POST";

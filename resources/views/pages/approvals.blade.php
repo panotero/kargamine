@@ -13,7 +13,7 @@
                     <option>Filter by File Type</option>
                 </select>
                 <input type="text" placeholder="Search..."
-                    class="rounded-full border-gray-300 px-4 py-2 text-sm w-64 focus:ring-blue-500 focus:border-blue-500" />
+                    class="no-special-chars rounded-full border-gray-300 px-4 py-2 text-sm w-64 focus:ring-blue-500 focus:border-blue-500" />
             </div>
 
             <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow">

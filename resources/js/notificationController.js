@@ -30,12 +30,12 @@ window.initNotificationStream = function initNotificationStream() {
     // }));
     if (unreadCount !== lastUnreadCount) {
       if (typeof window.getDocs === "function") {
-        window.getDocs();
+        getDocs();
       } else {
         console.warn("getDocs() not available yet.");
       }
       if (typeof window.updatetable === "function") {
-        window.updatetable();
+        updatetable();
       } else {
         console.warn("updatetable() not available yet.");
       }
@@ -95,7 +95,7 @@ function populateNotifications(notificationsArray) {
 
     if (notification.document.sender_id !== 0) {
       sendarName = notification.sender.name;
-      console.log(sendarName);
+      //   console.log(sendarName);
     }
 
     li.className =

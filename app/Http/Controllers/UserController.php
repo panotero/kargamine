@@ -116,6 +116,10 @@ class UserController extends Controller
                 'nullable',
                 'integer'
             ],
+            'authSignatory' => [
+                'nullable',
+                'integer'
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -133,6 +137,7 @@ class UserController extends Controller
             'role' => 'nullable|string',
             'office_id' => 'nullable|integer',
             'role_id' => 'nullable|integer',
+            'authSignatory' => 'nullable|integer',
         ]);
 
         Log::info('save user info triggered', [
@@ -206,6 +211,10 @@ class UserController extends Controller
                 'nullable',
                 'integer'
             ],
+            'authSignatory' => [
+                'nullable',
+                'integer'
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -223,6 +232,7 @@ class UserController extends Controller
             'role' => 'nullable|string',
             'office_id' => 'nullable|integer',
             'role_id' => 'nullable|integer',
+            'authSignatory' => 'nullable|integer',
         ]);
 
         try {
@@ -233,6 +243,7 @@ class UserController extends Controller
                 'role' => $validated['role'] ?? null,
                 'office_id' => $validated['office_id'] ?? null,
                 'role_id' => $validated['role_id'] ?? null,
+                'authorize_signatory' => $validated['authSignatory'] ?? null,
                 'status' => 'active',
             ]);
 

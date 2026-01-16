@@ -25,6 +25,7 @@ class User extends Authenticatable
         'role_id',
         'role',
         'office_id',
+        'authorize_signatory',
 
     ];
 

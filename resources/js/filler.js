@@ -235,3 +235,13 @@ async function updateStatus(document_id, status) {
     console.error(error);
   }
 }
+// Prevent special characters on all elements with class "no-special-chars"
+document.querySelectorAll(".no-special-chars").forEach((el) => {
+  // Only allow letters, numbers, space, dot, comma, dash, underscore
+  const regex = /[^a-zA-Z0-9 .,\-_]/g;
+
+  // Sanitize on input (typing, paste, etc.)
+  el.addEventListener("input", () => {
+    el.value = el.value.replace(regex, "");
+  });
+});

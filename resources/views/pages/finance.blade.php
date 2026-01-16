@@ -207,7 +207,7 @@
                 </div>
                 <div>
                     <label class="text-sm text-gray-600">Remarks</label>
-                    <textarea id="remarks" class="w-full border-gray-300 rounded-lg px-3 py-2"></textarea>
+                    <textarea id="remarks" class="no-special-chars w-full border-gray-300 rounded-lg px-3 py-2"></textarea>
                 </div>
             </div>
 

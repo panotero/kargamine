@@ -108,9 +108,9 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-96 p-6">
         <h3 class="text-lg font-semibold mb-4">Add New Office</h3>
         <form id="officeForm">
-            <input type="text" name="office_code" placeholder="Office Name"
+            <input type="text" name="office_code" placeholder="Office Name" class="no-special-chars"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
-            <input type="text" name="office_code" placeholder="Office Code"
+            <input type="text" name="office_code" placeholder="Office Code" class="no-special-chars"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
             <div class="flex justify-end gap-3">
                 <button type="button"
@@ -153,7 +153,7 @@
                           dark:bg-gray-900 p-2"
                 required>
             <textarea name="description" placeholder="Description (optional)"
-                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
+                class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
                              dark:bg-gray-900 p-2 h-24"></textarea>
 
             <div class="flex justify-end gap-3">

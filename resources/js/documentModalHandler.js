@@ -92,7 +92,14 @@ window.checkActionButtons = function checkActionButtons(
   if (
     receiptConfirmation !== 0 &&
     status !== "remanded" &&
-    userAuth.user_config.approval_type !== "final-approval"
+    userAuth.user_config.approval_type !== "final-approval" &&
+    userAuth.user_config.approval_type !== "routing"
+  ) {
+    showAction("routeActions");
+  }
+  if (
+    status === "pending" &&
+    userAuth.user_config.approval_type === "routing"
   ) {
     showAction("routeActions");
   }
@@ -389,7 +396,7 @@ function populateActivityLog(data) {
     let fullText = "";
     const fullUserName = act.user?.name || `User ${act.user_id || "Unknown"}`;
     let fullActionText = "";
-    console.log(act);
+    // console.log(act);
     switch (act.action) {
       case "route":
         const routeTargetFull =
@@ -775,7 +782,7 @@ routeDocumentBtn.addEventListener("click", () => {
     const status = document
       .getElementById("docStatus")
       .textContent.toLowerCase();
-    console.log(status);
+    // console.log(status);
 
     const users = await fetchWithRetry("/api/users", {
       method: "GET",
@@ -835,7 +842,7 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
       .getElementById("docStatus")
       .textContent.toLowerCase();
     const internalSection = document.getElementById("internalSection");
-    console.log(status);
+    // console.log(status);
     // ---- Validation ----
     const errors = [];
 
@@ -851,17 +858,6 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     if (status !== "disapproved") {
       if (!internalSection.classList.contains("hidden") && !approvalType)
         errors.push("Approval type is required for internal routing.");
-    }
-
-    // Stop submission if errors exist
-    if (errors.length > 0) {
-      showModalErrors(
-        errors,
-        "routingmodalErrorMessage",
-        "routingmodalErrorList"
-      );
-      modal.scrollTop = 0;
-      return;
     }
 
     // ---- Build FormData ----
@@ -888,15 +884,14 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
       },
       body: formData,
     });
-
     if (res) {
       if (typeof window.getDocs === "function") {
-        window.getDocs();
+        getDocs();
       } else {
         console.warn("getDocs() not available yet.");
       }
       if (typeof window.updatetable === "function") {
-        window.updatetable();
+        updatetable();
       } else {
         console.warn("updatetable() not available yet.");
       }
@@ -916,6 +911,17 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     this.disabled = false;
     this.textContent = "Submit";
   }
+
+  // Stop submission if errors exist
+  if (errors.length > 0) {
+    showModalErrors(
+      errors,
+      "routingmodalErrorMessage",
+      "routingmodalErrorList"
+    );
+    modal.scrollTop = 0;
+    return;
+  }
 });
 
 //esigning
@@ -926,7 +932,7 @@ const remarks = document.getElementById("esignRemarks").value;
 let ControlNumber = "";
 modalesignBtn.addEventListener("click", () => {
   ControlNumber = modalesignBtn.dataset.docControlNumber;
-  console.log(ControlNumber);
+  //   console.log(ControlNumber);
   initPDFDropzone({
     dropzoneId: "esigndropzone",
     fileInputId: "esignfileInput",
@@ -945,7 +951,7 @@ submitesignBtn.addEventListener("click", async function () {
   const esignfileInput = document.getElementById("esignfileInput");
 
   let errors = [];
-  console.log(ControlNumber);
+  //   console.log(ControlNumber);
 
   esignformData.append("docControlNumber", ControlNumber);
   esignformData.append("user_id", window.authUser.id);
@@ -1012,7 +1018,7 @@ const document_id = document.getElementById("document_id");
 function clearModalErrors() {
   const errorBox = document.querySelectorAll(".errorbox");
   const errorList = document.querySelectorAll(".errorlist");
-  console.log(errorBox);
+  //   console.log(errorBox);
   errorBox.forEach((errbox) => {
     if (errbox.classList.contains("hidden")) return;
     errbox.classList.add("hidden");
