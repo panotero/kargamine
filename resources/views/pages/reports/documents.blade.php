@@ -1,53 +1,67 @@
 <div class="w-full h-screen p-5 bg-gray-50 text-black dark:bg-gray-800 dark:text-white ">
     <div class="container mx-auto space-y-6">
         <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4 text-black">
+            {{-- BUG ID: 2 --}}
             <div class="flex flex-col w-full lg:w-1/3 gap-4">
                 <!-- Dashboard HTML IDs for easier targeting -->
-                <div class="flex gap-4">
+                <!-- Top summary cards -->
+                <div class="flex flex-col sm:flex-row gap-4">
                     <div id="totalDocuments" class="flex-1 border rounded-lg p-4 bg-blue-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Total Documents</div>
                         <div class="text-2xl font-bold mt-2">0</div>
                     </div>
+
                     <div id="forDiscussion" class="flex-1 border rounded-lg p-4 bg-yellow-50 text-center">
                         <div class="text-sm font-medium text-gray-700">For Discussion</div>
                         <div class="text-2xl font-bold mt-2">0</div>
                     </div>
                 </div>
 
-                <div class="flex lg:gap-4 gap-1">
-                    <div id="pending" class="flex-1 border rounded-lg p-2 bg-gray-50 text-center">
+                <!-- Status grid -->
+                <div class="grid grid-cols-2 lg:flex gap-2 lg:gap-4">
+                    <div id="pending" class="border rounded-lg p-3 bg-gray-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Pending</div>
                         <div class="text-xl font-bold mt-1">0</div>
                     </div>
-                    <div id="processed" class="flex-1 border rounded-lg p-2 bg-gray-50 text-center">
+
+                    <div id="processed" class="border rounded-lg p-3 bg-gray-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Processed</div>
                         <div class="text-xl font-bold mt-1">0</div>
                     </div>
-                    <div id="overdue" class="flex-1 border rounded-lg p-2 bg-gray-50 text-center">
+
+                    <div id="overdue" class="border rounded-lg p-3 bg-gray-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Overdue</div>
                         <div class="text-xl font-bold mt-1">0</div>
                     </div>
-                    <div id="remanded" class="flex-1 border rounded-lg p-2 bg-gray-50 text-center">
+
+                    <div id="remanded" class="border rounded-lg p-3 bg-gray-50 text-center">
                         <div class="text-sm font-medium text-gray-700">Remanded</div>
                         <div class="text-xl font-bold mt-1">0</div>
                     </div>
                 </div>
 
             </div>
-            <div class="flex flex-1 w-full gap-4 flex-wrap items-end">
-                <div class="flex flex-col flex-1 gap-2">
-                    <label class="text-gray-700 font-medium">From</label>
+            <div class="flex flex-1 w-full gap-4 flex-wrap items-end
+            flex-col sm:flex-row">
 
-                    <input type="date" class="border rounded-lg p-2 datetimepicker dateFrom" id="filter_datefrom" />
-                    <label class="text-gray-700 font-medium">To</label>
-                    <input type="date" class="border rounded-lg p-2 datetimepicker dateTo" id="filter_dateto" />
+                <!-- Date Filters -->
+                <div class="flex flex-col flex-1 gap-2 w-full">
+                    <div class="flex flex-col sm:flex-col gap-2">
+                        <label class="text-gray-700 font-medium">From</label>
+                        <input type="date" class="border rounded-lg p-2 datetimepicker dateFrom w-full"
+                            id="filter_datefrom" />
 
+                        <label class="text-gray-700 font-medium">To</label>
+                        <input type="date" class="border rounded-lg p-2 datetimepicker dateTo w-full"
+                            id="filter_dateto" />
+                    </div>
                 </div>
-                <div class="flex flex-col flex-1 gap-2">
-                    <div>
 
-                        <label class="text-gray-700 font-medium ">Status</label>
-                        <select class="border rounded-lg p-2 w-full " id="filter_status">
+                <!-- Status / Office -->
+                <div class="flex flex-col flex-1 gap-2 w-full">
+                    <div>
+                        <label class="text-gray-700 font-medium">Status</label>
+                        <select class="border rounded-lg p-2 w-full" id="filter_status">
                             <option>All</option>
                             <option>Pending</option>
                             <option>For Discussion</option>
@@ -61,24 +75,28 @@
                             <option>Remanded</option>
                         </select>
                     </div>
+
                     <div id="office_filter" class="hidden">
                         <label class="text-gray-700 font-medium office">Office</label>
-                        <select class="border rounded-lg p-2 w-full  officeSelect" id="filter_office">
-                        </select>
+                        <select class="border rounded-lg p-2 w-full officeSelect" id="filter_office"></select>
                     </div>
                 </div>
-                <div class="flex flex-col flex-1 gap-2">
+
+                <!-- Label -->
+                <div class="flex flex-col flex-1 gap-2 w-full">
                     <label class="text-gray-700 font-medium">Label</label>
                     <select class="border rounded-lg p-2 w-full" id="filter_label">
                         <option>All</option>
                     </select>
                 </div>
 
-                <div class="flex flex-col flex-1 gap-2 justify-end">
+                <!-- Actions -->
+                <div class="flex flex-col flex-1 gap-2 w-full">
                     <button
                         class="w-full border border-gray-300 rounded-lg p-2 bg-red-500 text-white font-medium hover:bg-red-600 transition">
                         Export PDF
                     </button>
+
                     <button
                         class="w-full border border-gray-300 rounded-lg p-2 bg-green-500 text-white font-medium hover:bg-green-600 transition">
                         Export Excel
@@ -86,6 +104,7 @@
                 </div>
 
             </div>
+
         </div>
         <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow p-3">
             <table id="reportsdocumentsTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
@@ -378,6 +397,7 @@
                 ]).draw(false);
 
                 const rowNode = newRow.node();
+                if (rowNode === null) return;
                 rowNode.classList.add(
                     "transition-colors", "duration-300",
                     "hover:dark:bg-white", "hover:dark:text-black");
@@ -420,7 +440,7 @@
                 }
             });
 
-            overdue = checkOverDue(filteredDocs);
+            overdue = checkOverDue(filteredDocs).length;
             document.querySelector("#totalDocuments .text-2xl").textContent = total.toLocaleString();
             document.querySelector("#forDiscussion .text-2xl").textContent = forDiscussion.toLocaleString();
             document.querySelector("#pending .text-xl").textContent = pending.toLocaleString();

@@ -130,13 +130,13 @@
                 if ($.fn.DataTable.isDataTable(table)) {
                     $(table).DataTable().clear();
                 }
-                const users = await fetchWithRetry(
-                    apiUsers, {
-                        method: "GET",
-                        headers: {
-                            Accept: "application/json"
-                        },
-                    });
+                const users = await fetchWithRetry(`/api/users`, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                });
+                console.log(users);
 
 
                 users.forEach((user) => {
@@ -205,6 +205,8 @@
                 ]).draw(false);
 
                 const rowNode = newRow.node();
+                // console.log(rowNode);
+                if (rowNode === null) return;
                 rowNode.classList.add(
                     "transition-colors", "duration-300",
                     "hover:dark:bg-white", "hover:dark:text-black");
@@ -290,13 +292,25 @@
             const url = userId.value ? `${patchsaveinfo}/${userId.value}` : apiUsers;
 
             try {
-                await fetch(url, {
+                $response = await fetch(url, {
                     method,
+                    //BUG ID: 1
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                            .content,
                     },
                     body: JSON.stringify(data),
                 });
+                if ($response) {
+                    resetUserForm();
+
+                    showMessage({
+                        status: "success",
+                        message: "User created successfully",
+                    });
+                }
 
                 closeModal();
                 loadUsers();
@@ -379,5 +393,27 @@
 
         loadUsers();
         loadDropdowns();
+
+        function resetUserForm() {
+            // Clear hidden ID (important for edit/create switching)
+            document.getElementById('userId').value = '';
+
+            // Clear text inputs
+            document.getElementById('userName').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userPassword').value = '';
+
+            // Reset selects to default option
+            document.getElementById('officeSelect').selectedIndex = 0;
+            document.getElementById('configSelect').selectedIndex = 0;
+
+            // Hide save button if your form switches between edit/create
+            document.getElementById('saveBtn').classList.add('hidden');
+
+            // Optional: remove validation states if you add any later
+            document.querySelectorAll('#userForm input, #userForm select').forEach(el => {
+                el.classList.remove('border-red-500', 'border-green-500');
+            });
+        }
     })();
 </script>

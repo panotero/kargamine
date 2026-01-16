@@ -75,4 +75,8 @@ class Document extends Model
 
         return $this->belongsTo(Approvals::class, 'document_id', 'document_id');
     }
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
 }

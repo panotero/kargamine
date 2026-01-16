@@ -45,4 +45,14 @@ class Activity extends Model
     {
         return $this->belongsTo(Document::class, 'document_id', 'document_id');
     }
+
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'from_user_id', 'id');
+    }
+    public function recipient()
+    {
+
+        return $this->belongsTo(User::class, 'routed_to', 'id');
+    }
 }

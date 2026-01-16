@@ -11,7 +11,7 @@ class ActivityController extends Controller
 
     public function index()
     {
-        $activities = Activity::with(['document', 'user'])
+        $activities = Activity::with(['document', 'user', 'sender', 'recipient'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -20,7 +20,7 @@ class ActivityController extends Controller
 
     public function show($id)
     {
-        $activity = Activity::with(['document', 'user'])->find($id);
+        $activity = Activity::with(['document', 'user', 'sender'])->find($id);
 
         if (!$activity) {
             return response()->json(['error' => 'Activity not found'], 404);

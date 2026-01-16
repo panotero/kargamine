@@ -213,7 +213,7 @@
 
                                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
 
-                                        <div class="flex items-center justify-between">
+                                        <div class="flex justify-between w-full relative">
                                             <button id="toggleFullLogBtn"
                                                 class="text-gray-600 dark:text-gray-300 hover:text-blue-600">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
@@ -226,16 +226,16 @@
                                                 </svg>
                                             </button>
                                         </div>
-
+                                        {{-- BUG ID:  --}}
                                         <!-- DROPDOWN -->
                                         <div id="fullActivityLogContainer"
                                             class="hidden absolute z-50
-                       bottom-0
-                       left-1/2 -translate-x-1/2
-                       sm:left-auto sm:right-full sm:translate-x-0 sm:mr-3
-                       w-[90vw] sm:w-96
-                       border border-gray-300 dark:border-gray-700
-                       rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl">
+           bottom-full mb-2
+           left-1/2 -translate-x-1/2
+           sm:left-auto sm:right-0 sm:translate-x-0
+           w-[90vw] sm:w-96
+           border border-gray-300 dark:border-gray-700
+           rounded-lg p-3 bg-white dark:bg-gray-800 shadow-xl">
 
                                             <h4 class="text-md font-medium mb-2 text-gray-700 dark:text-gray-200">
                                                 Full Activity Log

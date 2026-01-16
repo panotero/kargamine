@@ -36,9 +36,20 @@ class NotificationController extends Controller
             while (true) {
 
                 $notifications = Notification::where('user_id', $user->id)
-                    ->with('document', 'approvals')
+                    ->with([
+                        'document.sender', // sender of the document
+                        'approvals',
+                        'sender',          // sender of the notification itself
+                    ])
                     ->orderBy('created_at', 'desc')
-                    ->get(['id', 'document_id', 'message', 'is_read', 'created_at']);
+                    ->get([
+                        'id',
+                        'document_id',
+                        'message',
+                        'is_read',
+                        'from_user_id',   // make sure you select this!
+                        'created_at'
+                    ]);
 
                 echo "data: " . json_encode($notifications) . "\n\n";
                 ob_flush();

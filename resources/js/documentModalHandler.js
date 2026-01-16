@@ -366,13 +366,21 @@ function populateActivityLog(data) {
     const timeAgo = time.replace(/, /, " ").replace(":00", "");
     const remarks = act.final_remarks;
 
-    const mainActions = ["route", "upload", "approved", "signed", "confirm"];
+    const mainActions = [
+      "route",
+      "upload",
+      "approved",
+      "signed",
+      "confirm",
+      "for approval",
+    ];
     const importantActions = [
-      "approve",
+      "approved",
       "reject",
-      "receive",
-      "returned",
-      "review",
+      "signed",
+      "confirm",
+      "for approval",
+      "route",
     ];
 
     // --------------------------
@@ -381,16 +389,19 @@ function populateActivityLog(data) {
     let fullText = "";
     const fullUserName = act.user?.name || `User ${act.user_id || "Unknown"}`;
     let fullActionText = "";
-
+    console.log(act);
     switch (act.action) {
       case "route":
         const routeTargetFull =
           act.to_external === 1
             ? data.destination_office || "Unknown Office"
-            : act.routed_to
-            ? `User ${act.routed_to}`
+            : act.routed_user.name
+            ? `User ${act.routed_user.name}`
             : "Unknown Recipient";
-        fullActionText = `routed the document to <span class="font-semibold">${routeTargetFull}</span>`;
+        fullActionText =
+          act.sender?.name ??
+          "" +
+            ` routed the document to <span class="font-semibold">${routeTargetFull}</span>`;
         break;
       case "upload":
         const uploadTargetFull =
@@ -398,14 +409,17 @@ function populateActivityLog(data) {
             ? data.destination_office || "Unknown Office"
             : act.routed_to
             ? `User ${act.routed_to}`
-            : "";
-        fullActionText = `<span class="font-semibold">${fullUserName}</span> uploaded a document${
-          uploadTargetFull
-            ? ` for <span class="font-semibold">${
-                act.from_user?.name || "Unknown"
-              }</span>`
-            : ""
-        }`;
+            : " ";
+        fullActionText =
+          act.sender?.name ??
+          " " +
+            `<span class="font-semibold">${fullUserName}</span> uploaded a document${
+              uploadTargetFull
+                ? ` for <span class="font-semibold">${
+                    act.from_user?.name || "Unknown"
+                  }</span>`
+                : ""
+            }`;
         break;
       case "approved":
         const approvedTargetFull =
@@ -414,17 +428,26 @@ function populateActivityLog(data) {
             : act.routed_to
             ? `User ${act.routed_to}`
             : "";
-        fullActionText = `approved the document${
-          approvedTargetFull
-            ? ` for <span class="font-semibold">${approvedTargetFull}</span>`
-            : ""
-        }`;
+        fullActionText =
+          act.sender?.name ??
+          " " +
+            `approved the document${
+              approvedTargetFull
+                ? ` for <span class="font-semibold">${approvedTargetFull}</span>`
+                : ""
+            }`;
         break;
       case "confirm":
-        fullActionText = `<span class="font-semibold">${fullUserName}</span> confirmed receipt of document number: <span class="font-semibold">${act.document_control_number}</span>`;
+        fullActionText =
+          act.sender?.name ??
+          " " +
+            `<span class="font-semibold">${fullUserName}</span> confirmed receipt of document number: <span class="font-semibold">${act.document_control_number}</span>`;
         break;
       case "signed":
-        fullActionText = `<span class="font-semibold">${fullUserName}</span> signed the document`;
+        fullActionText =
+          act.sender?.name ??
+          " " +
+            `<span class="font-semibold">${fullUserName}</span> signed the document`;
         break;
       default:
         fullActionText = `<span class="font-semibold">${fullUserName}</span> ${act.action} the document`;
@@ -867,7 +890,16 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     });
 
     if (res) {
-      window.getDocs();
+      if (typeof window.getDocs === "function") {
+        window.getDocs();
+      } else {
+        console.warn("getDocs() not available yet.");
+      }
+      if (typeof window.updatetable === "function") {
+        window.updatetable();
+      } else {
+        console.warn("updatetable() not available yet.");
+      }
       document.getElementById("routingModal").classList.add("hidden");
       document.getElementById("DocumentModal").classList.add("hidden");
       showMessage({ status: "success", message: "Routing Success" });
@@ -1001,3 +1033,56 @@ function showModalErrors(errors, modal, errorlist) {
   });
   errorBox.classList.remove("hidden");
 }
+
+//BUG ID: 4
+const confirmButton = document.getElementById("btnConfirm");
+confirmButton.addEventListener("click", async (e) => {
+  const post = {
+    document_id: confirmButton.dataset.documentId,
+    user_id: window.authUser.id,
+  };
+  const result = await fetchWithRetry("/api/documents/confirm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+    },
+    body: JSON.stringify(post),
+  });
+  if (result) {
+    document.getElementById("routeDocumentBtn").classList.remove("hidden");
+    confirmButton.classList.add("hidden");
+    ["getDocs", "updatetable"].forEach((fn) => {
+      if (typeof window[fn] === "function") {
+        window[fn]();
+      } else {
+        console.warn(`Function "${fn}" is not available on this page.`);
+      }
+    });
+  }
+});
+
+document.addEventListener("click", function (e) {
+  const btn = document.getElementById("toggleFullLogBtn");
+  const dropdown = document.getElementById("fullActivityLogContainer");
+
+  if (!btn || !dropdown) return;
+
+  const isClickInside = btn.contains(e.target) || dropdown.contains(e.target);
+
+  if (!isClickInside) {
+    dropdown.classList.add("hidden");
+  }
+});
+window.addEventListener("scroll", () => {
+  const dropdown = document.getElementById("fullActivityLogContainer");
+  dropdown?.classList.add("hidden");
+});
+document
+  .getElementById("toggleFullLogBtn")
+  .addEventListener("click", function (e) {
+    e.stopPropagation(); // prevent immediate close
+    document
+      .getElementById("fullActivityLogContainer")
+      .classList.toggle("hidden");
+  });

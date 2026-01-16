@@ -566,53 +566,6 @@ function initdocumentcontroller() {
     }
   }
 
-  document.addEventListener("click", function (e) {
-    const btn = document.getElementById("toggleFullLogBtn");
-    const dropdown = document.getElementById("fullActivityLogContainer");
-
-    if (!btn || !dropdown) return;
-
-    const isClickInside = btn.contains(e.target) || dropdown.contains(e.target);
-
-    if (!isClickInside) {
-      dropdown.classList.add("hidden");
-    }
-  });
-  window.addEventListener("scroll", () => {
-    const dropdown = document.getElementById("fullActivityLogContainer");
-    dropdown?.classList.add("hidden");
-  });
-  document
-    .getElementById("toggleFullLogBtn")
-    .addEventListener("click", function (e) {
-      e.stopPropagation(); // prevent immediate close
-      document
-        .getElementById("fullActivityLogContainer")
-        .classList.toggle("hidden");
-    });
-
-  const confirmButton = document.getElementById("btnConfirm");
-  confirmButton.addEventListener("click", async (e) => {
-    const post = {
-      document_id: confirmButton.dataset.documentId,
-      user_id: window.authUser.id,
-    };
-    const result = await fetchWithRetry("/api/documents/confirm", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-          .content,
-      },
-      body: JSON.stringify(post),
-    });
-    if (result) {
-      document.getElementById("routeDocumentBtn").classList.remove("hidden");
-      confirmButton.classList.add("hidden");
-      getDocs();
-    }
-  });
-
   getDocs();
   initEventListeners();
 }

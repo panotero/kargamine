@@ -34,6 +34,11 @@ window.initNotificationStream = function initNotificationStream() {
       } else {
         console.warn("getDocs() not available yet.");
       }
+      if (typeof window.updatetable === "function") {
+        window.updatetable();
+      } else {
+        console.warn("updatetable() not available yet.");
+      }
 
       lastUnreadCount = unreadCount;
     }
@@ -67,16 +72,31 @@ window.initNotificationStream = function initNotificationStream() {
     }
   });
 };
+async function getuser(user_id) {
+  const documents = await fetchWithRetry(`/api/users/${user_id}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+}
 
 function populateNotifications(notificationsArray) {
   const container = document.getElementById("notificationsContainer");
   if (!container) return;
 
+  const authUser = window.authUser;
   container.innerHTML = "";
   const additionalMessage = "";
 
-  notificationsArray.forEach((notification) => {
+  notificationsArray.forEach(async (notification) => {
     const li = document.createElement("div");
+    let sendarName = "";
+
+    if (notification.document.sender_id !== 0) {
+      sendarName = notification.sender.name;
+      console.log(sendarName);
+    }
 
     li.className =
       "cursor-pointer px-4 py-3 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600";
@@ -92,7 +112,8 @@ function populateNotifications(notificationsArray) {
           <p class="text-sm text-gray-800 dark:text-gray-200 font-medium">
               ${formatNotificationMessage(
                 notification.message,
-                notification.document.document_control_number
+                notification.document.document_control_number,
+                sendarName
               )}
           </p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -134,12 +155,21 @@ function populateNotifications(notificationsArray) {
   });
 }
 
-function formatNotificationMessage(msg, docctrlnumber) {
+function formatNotificationMessage(msg, docctrlnumber, sendName) {
   msg = msg.toLowerCase();
 
+  if (msg.includes("confirmed")) {
+    return (
+      sendName +
+      " confirmed a document with control number <b>" +
+      docctrlnumber +
+      "</b> to your office"
+    );
+  }
   if (msg.includes("uploaded")) {
     return (
-      "Uploaded a document with control number <b>" +
+      sendName +
+      " uploaded a document with control number <b>" +
       docctrlnumber +
       "</b> to your office"
     );
@@ -147,13 +177,15 @@ function formatNotificationMessage(msg, docctrlnumber) {
 
   if (msg.includes("approval")) {
     return (
-      "Routed a document with control number <b>" +
+      sendName +
+      " routed a document with control number <b>" +
       docctrlnumber +
       "</b> for your approval"
     );
   } else if (msg.includes("routed")) {
     return (
-      "Routed a document with control number <b>" +
+      sendName +
+      " routed a document with control number <b>" +
       docctrlnumber +
       "</b> to you"
     );
@@ -161,20 +193,27 @@ function formatNotificationMessage(msg, docctrlnumber) {
 
   if (msg.includes("remanded")) {
     return (
-      "Remanded the document with control number <b>" + docctrlnumber + "</b>"
+      sendName +
+      " remanded the document with control number <b>" +
+      docctrlnumber +
+      "</b>"
     );
   }
 
   if (msg.includes("signed")) {
     return (
-      "Signed the document with control number <b>" + docctrlnumber + "</b>"
+      sendName +
+      " signed the document with control number <b>" +
+      docctrlnumber +
+      "</b>"
     );
   }
 
   /* IMPORTANT: order matters here */
   if (msg.includes("disapproved")) {
     return (
-      "Disapproved the document with control number <b>" +
+      sendName +
+      " Disapproved the document with control number <b>" +
       docctrlnumber +
       "</b>"
     );
@@ -182,7 +221,10 @@ function formatNotificationMessage(msg, docctrlnumber) {
 
   if (msg.includes("approved")) {
     return (
-      "Approved the document with control number <b>" + docctrlnumber + "</b>"
+      sendName +
+      " approved the document with control number <b>" +
+      docctrlnumber +
+      "</b>"
     );
   }
 

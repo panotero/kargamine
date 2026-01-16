@@ -1,6 +1,6 @@
 window.initdocumentreport = function initdocumentreport() {
   // ---------------------- GET DOCUMENTS ----------------------
-  window.getDocs = async function getDocs() {
+  async function getDoc() {
     const authUser = window.authUser;
     if (!authUser) return;
 
@@ -48,7 +48,7 @@ window.initdocumentreport = function initdocumentreport() {
       // Remove loaders
       removeDocsLoader(reportsocumentsTable);
     }
-  };
+  }
 
   // ---------------------- LOADER ----------------------
   function getDocsLoaderRow(colCount = 11) {
@@ -277,5 +277,5 @@ window.initdocumentreport = function initdocumentreport() {
 
     return result.join(" ");
   }
-  getDocs();
+  getDoc();
 };

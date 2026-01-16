@@ -184,7 +184,7 @@ function redrawTable(selector) {
 
 window.checkOverDue = function checkOverDue(documents) {
   let overdue = 0;
-
+  let filterdoc = [];
   const statuses = ["signed", "approved", "completed"];
   const now = new Date();
   const today =
@@ -204,8 +204,14 @@ window.checkOverDue = function checkOverDue(documents) {
     ) {
       overdue++;
     }
+
+    filterdoc = documents.filter(
+      (doc) =>
+        today > doc.due_date &&
+        activeStatuses.includes(doc.status.toLowerCase())
+    );
   });
-  return overdue;
+  return filterdoc;
 };
 
 async function updateStatus(document_id, status) {
