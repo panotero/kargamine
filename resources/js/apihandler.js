@@ -16,7 +16,7 @@ window.apiRequest = async function apiRequest(url, method = null, data = null) {
       },
     };
 
-    // ✅ Force POST data to be an array
+    //  Force POST data to be an array
     if (options.method === "POST" && data !== null) {
       options.body = JSON.stringify(Array.isArray(data) ? data : [data]);
     }
@@ -29,7 +29,7 @@ window.apiRequest = async function apiRequest(url, method = null, data = null) {
 
     const result = await response.json();
 
-    // ✅ Always return array
+    //  Always return array
     return Array.isArray(result) ? result : [result];
   } catch (error) {
     console.error("API Error:", error);
@@ -42,7 +42,7 @@ window.fetchWithRetry = async function fetchWithRetry(
   url,
   options = {},
   retries = 3,
-  delay = 500
+  delay = 500,
 ) {
   let response = null;
   for (let i = 0; i < retries; i++) {

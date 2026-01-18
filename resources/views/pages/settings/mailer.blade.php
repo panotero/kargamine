@@ -2,21 +2,21 @@
     <div class="p-6 w-full mx-auto bg-white rounded-lg">
         <h1 class="text-xl font-semibold mb-4">Mailer Configuration</h1>
 
-        {{-- ✅ Success Message --}}
+        {{--  Success Message --}}
         @if (session('success'))
             <div id="alert-success" class="bg-green-100 text-green-800 p-3 mb-3 rounded transition-opacity duration-500">
                 {{ session('success') }}
             </div>
         @endif
 
-        {{-- ✅ Error Message --}}
+        {{--  Error Message --}}
         @if (session('error'))
             <div id="alert-error" class="bg-red-100 text-red-700 p-3 mb-3 rounded transition-opacity duration-500">
                 {{ session('error') }}
             </div>
         @endif
 
-        {{-- ✅ Validation Errors --}}
+        {{--  Validation Errors --}}
         @if ($errors->any())
             <div id="alert-validation" class="bg-red-100 text-red-700 p-3 mb-3 rounded transition-opacity duration-500">
                 <ul class="list-disc pl-5 text-sm">

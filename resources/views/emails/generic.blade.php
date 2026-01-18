@@ -95,20 +95,21 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <img src="https://via.placeholder.com/100x36?text=Logo" alt="Logo">
+            <img src="{{ config('app.url') }}/assets/images/TESDA_Logo.png" alt="TESDA Logo"
+                style="height:40px; width:auto; display:block;">
+            <h1> Document Monitoring Tool </h1>
         </div>
 
         <div class="content">
 
             <h1>{{ $body['title'] ?? 'Hello!' }}</h1>
+
+            <h1>{{ $body['docControlNumber'] ?? '' }}</h1>
             <p>{{ $body['message'] ?? 'This is a test email.' }}</p>
 
             <br />
             <br />
 
-            <p> @php
-                dump($mailArray);
-            @endphp</p>
 
             @if (isset($body['button']))
                 <a href="{{ $body['button']['url'] }}" class="btn">

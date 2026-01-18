@@ -70,7 +70,7 @@ window.initSwiper = function initSwiper() {
   }
 
   swiperInstance = new Swiper("#gallerySwiper", {
-    modules: [Navigation, Pagination, Zoom], // ✅ CORRECT
+    modules: [Navigation, Pagination, Zoom], //  CORRECT
     slidesPerView: 1,
     spaceBetween: 10,
     zoom: {
@@ -92,7 +92,7 @@ async function extractPdfImages(
   pdfUrl,
   scale = 1,
   maxWidth = 800,
-  maxHeight = 800
+  maxHeight = 800,
 ) {
   const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
 

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ApplicationMailer;
 
 class ApprovalsController extends Controller
 {
@@ -18,6 +19,12 @@ class ApprovalsController extends Controller
      * Public Endpoints
      * ========================================================= */
 
+    protected ApplicationMailer $mailer;
+
+    public function __construct(ApplicationMailer $mailer)
+    {
+        $this->mailer = $mailer;
+    }
     public function getMyApprovals()
     {
         $user = Auth::user();
@@ -117,7 +124,7 @@ class ApprovalsController extends Controller
      * Action Handlers
      * ========================================================= */
 
-    private function processDisapproval($approval, $validated, $user)
+    private function processDisapproval($approval, $validated, $user, ApplicationMailer $mailer)
     {
         $user = Auth::user();
         // dd([
@@ -154,6 +161,21 @@ class ApprovalsController extends Controller
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
+
+
+            $this->mailer->send(
+                [
+                    'subject' => 'Disapproved document',
+                    'title'   => 'Below document control number has been disapproved',
+                    'message' => "",
+                    'docControlNumber' => $approval->document->document_control_number,
+                    'button'  => [
+                        'url'  => url('/dashboard'),
+                        'text' => 'Go to Dashboard',
+                    ],
+                ],
+                $approval->from_user
+            );
             $this->createActivity('disapproved', $approval, $user, $validated);
         } else {
 
@@ -171,7 +193,8 @@ class ApprovalsController extends Controller
                 $this->notifyAdmins(
                     $approval,
                     $user,
-                    "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office"
+                    "{$approval->document->document_code} Has been Disapproved. you may route this to the origin office",
+                    "disapproval"
                 );
                 $this->createActivity('remand', $approval, $user, $validated);
             } else {
@@ -194,6 +217,20 @@ class ApprovalsController extends Controller
                     'created_at'         => now(),
                     'updated_at'         => now(),
                 ]);
+
+                $this->mailer->send(
+                    [
+                        'subject' => 'Disapproved document',
+                        'title'   => 'Below document control number has been disapproved',
+                        'message' => "",
+                        'docControlNumber' => $approval->document->document_control_number,
+                        'button'  => [
+                            'url'  => url('/dashboard'),
+                            'text' => 'Go to Dashboard',
+                        ],
+                    ],
+                    $approval->from_user
+                );
                 $this->createActivity('disapproved', $approval, $user, $validated);
             }
         }
@@ -209,13 +246,15 @@ class ApprovalsController extends Controller
         $this->notifyAdmins(
             $approval,
             $user,
-            "{$approval->document->document_code} Has been remanded. you may route this to the origin office"
+            "{$approval->document->document_code} Has been remanded. you may route this to the origin office",
+            "remanded"
         );
 
         $this->notifyUploader(
             $approval,
             $user,
-            "{$approval->document->document_code} Has been Remanded."
+            "{$approval->document->document_code} Has been Remanded.",
+            "remanded"
         );
 
         $this->createActivity('remand', $approval, $user, $validated);
@@ -229,8 +268,8 @@ class ApprovalsController extends Controller
 
         $message = "{$user->id} is requesting discussion for this document {$approval->document->document_code}.";
 
-        $this->notifyAdmins($approval, $user, $message);
-        $this->notifyUploader($approval, $user, $message);
+        $this->notifyAdmins($approval, $user, $message, "for discussion");
+        $this->notifyUploader($approval, $user, $message, "for discussion");
 
         $this->createActivity('for-discussion', $approval, $user, $validated);
 
@@ -331,12 +370,42 @@ class ApprovalsController extends Controller
             ]);
     }
 
-    private function notifyAdmins($approval, $user, $message)
+    private function notifyAdmins($approval, $user, $message, $subject)
     {
         $admins = $this->getRoutingAdmins($approval);
+        $title = "";
+        $subj = $subject;
+        switch ($subject) {
+            case "for discussion":
+                $subj = "Document For Discussion";
+                $title = "Recepient office is requesting discussion for the document with control number";
+                break;
+            case "disapproval":
+                $subj = "Document For Discussion";
+                $title = "The document with below control number has been disapproved";
+                break;
+            case "remanded":
+                $subj = "Document has been remanded";
+                $title = "The document with below control number has been remanded";
+                break;
+        }
 
         foreach ($admins as $admin) {
             $this->insertNotification($approval, $user->id, $admin->id, $message);
+
+            $this->mailer->send(
+                [
+                    'subject' => $subj,
+                    'title'   => $title,
+                    'message' => "",
+                    'docControlNumber' => $approval->document->document_control_number,
+                    'button'  => [
+                        'url'  => url('/dashboard'),
+                        'text' => 'Go to Dashboard',
+                    ],
+                ],
+                $admin->id
+            );
         }
     }
     private function notifyAuthorizedSignatory($approval, $user, $message)
@@ -348,13 +417,43 @@ class ApprovalsController extends Controller
         }
     }
 
-    private function notifyUploader($approval, $user, $message)
+    private function notifyUploader($approval, $user, $message, $subject)
     {
         $this->insertNotification(
             $approval,
             $user->id,
             $approval->document->user_id,
             $message
+        );
+        $title = "";
+        $subj = $subject;
+
+        switch ($subject) {
+            case "for discussion":
+                $subj = "Document For Discussion";
+                $title = "Recepient office is requesting discussion for the document with control number";
+                break;
+            case "disapproval":
+                $subj = "Document For Discussion";
+                $title = "The document with below control number has been disapproved";
+                break;
+            case "remanded":
+                $subj = "Document has been remanded";
+                $title = "The document with below control number has been remanded";
+                break;
+        }
+        $this->mailer->send(
+            [
+                'subject' => $subj,
+                'title'   => $title,
+                'message' => "",
+                'docControlNumber' => $approval->document->document_control_number,
+                'button'  => [
+                    'url'  => url('/dashboard'),
+                    'text' => 'Go to Dashboard',
+                ],
+            ],
+            $approval->document->user_id
         );
     }
 
@@ -466,6 +565,20 @@ class ApprovalsController extends Controller
             $user->id,
             $destinationUserId,
             "{$approval->document->document_control_number} has been routed to you for approval"
+        );
+
+        $this->mailer->send(
+            [
+                'subject' => "Document Approval",
+                'title'   => 'Below document control number has been approved',
+                'message' => "",
+                'docControlNumber' => $approval->document->document_control_number,
+                'button'  => [
+                    'url'  => url('/dashboard'),
+                    'text' => 'Go to Dashboard',
+                ],
+            ],
+            $destinationUserId
         );
     }
 }

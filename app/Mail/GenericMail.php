@@ -7,19 +7,21 @@ use Illuminate\Mail\Mailable;
 class GenericMail extends Mailable
 {
 
-    public $body;
-    public $mailArray;
+    public string $subjectText;
+    public array $body;
 
-    public function __construct($subject, $body, $mailArray)
+    public function __construct(string $subject, string $message, array $body)
     {
-        $this->subject($subject);
+        $this->subjectText = $subject;
         $this->body = $body;
-        $this->mailArray = $mailArray;
     }
 
     public function build()
     {
-        return $this->view('emails.generic')
-            ->with(['body' => $this->body, 'mailArray' => $this->mailArray]);
+        return $this->subject($this->subjectText)
+            ->view('emails.generic')
+            ->with([
+                'body' => $this->body,
+            ]);
     }
 }

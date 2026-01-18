@@ -58,6 +58,8 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/profile', [PageController::class, 'profile'])->name('profile');
     Route::get('/settings', [PageController::class, 'settings'])->name('settings');
 
+    Route::get('/testmail', [MailerController::class, 'test']);
+
 
     Route::get('/page_mailer', [PageController::class, 'page_Mailer']);
     Route::post('/mailer_save', [MailerController::class, 'save'])->name('mailer_save');

@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\Log;
 use App\Mail\GenericMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ApplicationMailer;
+
 
 class MailerController extends Controller
 {
-    //
     public function index()
     {
         $config = MailerSetting::latest()->first();
@@ -150,12 +151,12 @@ class MailerController extends Controller
                 'title' => $validated['title'],
             ];
 
-            // ✅ Use Mailable instead of raw body
+            //  Use Mailable instead of raw body
             Mail::to($validated['to'])->send(
                 new GenericMail($validated['subject'], $validated['body'], $mailArray)
             );
 
-            Log::channel('mail_logs')->info('✅ Mail send result', [
+            Log::channel('mail_logs')->info(' Mail send result', [
                 'to'        => $validated['to'],
                 'subject'   => $validated['subject'],
                 'success'   => true,
@@ -183,5 +184,27 @@ class MailerController extends Controller
                 'message' => 'Unexpected error while sending mail.',
             ], 500);
         }
+    }
+    public function test(ApplicationMailer $mailer)
+    {
+        $mailer->send(
+            [
+                'to'      => 'panoterominton@gmail.com',
+                'subject' => 'Test Subject',
+                'title'   => 'Your request was approved',
+                'message' => 'You may now proceed to the next step.',
+                'docControlNumber' => '123123123',
+                'button'  => [
+                    'url'  => url('/dashboard'),
+                    'text' => 'Go to Dashboard',
+                ],
+            ],
+            17
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mail sent successfully',
+        ]);
     }
 }

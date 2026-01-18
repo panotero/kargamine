@@ -15,13 +15,20 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use App\Services\ApplicationMailer;
 
 class DocumentController extends Controller
 {
 
+    protected ApplicationMailer $mailer;
+
+    public function __construct(ApplicationMailer $mailer)
+    {
+        $this->mailer = $mailer;
+    }
+
     public function index($office_name)
     {
-
         $documentsQuery = Document::with([
             'files',
             'activities',
@@ -117,6 +124,20 @@ class DocumentController extends Controller
             'created_at'         => now(),
             'updated_at'         => now(),
         ]);
+
+        $this->mailer->send(
+            [
+                'subject' => 'Document Confirmation',
+                'title'   => 'Below document control number has been confirmed',
+                'message' => "",
+                'docControlNumber' => $document->document_control_number,
+                'button'  => [
+                    'url'  => url('/dashboard'),
+                    'text' => 'Go to Dashboard',
+                ],
+            ],
+            $document->user_id
+        );
 
         $activityData = [
             'action'                  => 'confirm',
@@ -298,11 +319,26 @@ class DocumentController extends Controller
                 'routed_to'          => $reviseddocument->routed_to,
                 'from_user_id'       => $reviseddocument->user_id,
                 'user_id'            => $admin->id,
-                'message'            => "New document uploaded: {$document->document_code}",
+                'message'            => "Revision for docoument with control number: {$document->document_control_number} has been uploaded",
                 'is_read'            => 0,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
+
+
+            $this->mailer->send(
+                [
+                    'subject' => 'Revised document has been uploaded',
+                    'title'   => 'Below document control number has been revised',
+                    'message' => "Revision for docoument with control number: {$document->document_control_number} has been uploaded",
+                    'docControlNumber' => $document->document_control_number,
+                    'button'  => [
+                        'url'  => url('/dashboard'),
+                        'text' => 'Go to Dashboard',
+                    ],
+                ],
+                $admin->id
+            );
         }
 
         Activity::create([
@@ -462,11 +498,26 @@ class DocumentController extends Controller
                 'routed_to'          => $document->routed_to,
                 'from_user_id'       => $user->id,
                 'user_id'            => $admin->id,
-                'message'            => "New document uploaded: {$document->document_code}",
+                'message'            => "document with control numbber: {$document->document_code} has been signed",
                 'is_read'            => 0,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
+
+            $this->mailer->send(
+                [
+                    'to'      => 'panoterominton@gmail.com',
+                    'subject' => 'Document has been signed',
+                    'title'   => 'Below document control number has been signed',
+                    'message' => 'check your documnent by clicking button below',
+                    'docControlNumber' => $document->document_control_number,
+                    'button'  => [
+                        'url'  => url('/dashboard'),
+                        'text' => 'Go to Dashboard',
+                    ],
+                ],
+                $admin->id
+            );
         }
 
         //remove recepient if it has recepient id
@@ -646,6 +697,20 @@ class DocumentController extends Controller
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
+
+            $this->mailer->send(
+                [
+                    'subject' => 'Document Uploade',
+                    'title'   => 'Below document control number has been uploaded and routed to your office',
+                    'message' => "",
+                    'docControlNumber' => $document->document_control_number,
+                    'button'  => [
+                        'url'  => url('/dashboard'),
+                        'text' => 'Go to Dashboard',
+                    ],
+                ],
+                $admin->id
+            );
         }
 
         Activity::create([

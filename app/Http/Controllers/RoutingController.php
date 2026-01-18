@@ -15,9 +15,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use function Laravel\Prompts\error;
+use App\Services\ApplicationMailer;
 
 class RoutingController extends Controller
 {
+
+    protected ApplicationMailer $mailer;
+
+    public function __construct(ApplicationMailer $mailer)
+    {
+        $this->mailer = $mailer;
+    }
     public function routeDocument(Request $request)
     {
         //BUG ID: 7
@@ -187,6 +195,20 @@ class RoutingController extends Controller
                         'created_at'         => now(),
                         'updated_at'         => now(),
                     ]);
+
+                    $this->mailer->send(
+                        [
+                            'subject' => 'Document Route',
+                            'title'   => "Below document control number has been routed to $destinationOffice by  $user->name",
+                            'message' => "",
+                            'docControlNumber' => $document->document_control_number,
+                            'button'  => [
+                                'url'  => url('/dashboard'),
+                                'text' => 'Go to Dashboard',
+                            ],
+                        ],
+                        $adminuser->id
+                    );
                 }
                 DB::table('documents')
                     ->where('document_id', $document->document_id)
@@ -224,6 +246,21 @@ class RoutingController extends Controller
                     'created_at'         => now(),
                     'updated_at'         => now(),
                 ]);
+
+
+                $this->mailer->send(
+                    [
+                        'subject' => 'Document Route',
+                        'title'   => "Below document control number has been routed you by  $user->name for approval",
+                        'message' => "",
+                        'docControlNumber' => $document->document_control_number,
+                        'button'  => [
+                            'url'  => url('/dashboard'),
+                            'text' => 'Go to Dashboard',
+                        ],
+                    ],
+                    $recipientUserId
+                );
                 if ($validated['status'] === 'disapproved') {
                     DB::table('documents')
                         ->where('document_id', $document->document_id)
