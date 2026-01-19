@@ -12,7 +12,7 @@ class UserConfigController extends Controller
 
     public function index()
     {
-        return response()->json(UserConfig::all());
+        return response()->json(UserConfig::orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request)

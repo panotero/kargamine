@@ -12,7 +12,7 @@ class DocumentTypeController extends Controller
 {
     public function index()
     {
-        return DocumentType::all();
+        return DocumentType::orderBy('created_at', 'desc')->get();
     }
 
     public function store(Request $request)
@@ -101,7 +101,7 @@ class DocumentTypeController extends Controller
 
     public function getlabel()
     {
-        return LabelType::all();
+        return LabelType::orderBy('created_at', 'desc')->get();
     }
     public function storelabel(Request $request)
     {

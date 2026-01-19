@@ -160,7 +160,7 @@ window.initdashboard = function initdashboard() {
   }
 
   const statusbtn = document.querySelectorAll(".statusButton");
-  const modalcounttable = document.getElementById("countmodaltable");
+  const financeTable = document.getElementById("financeTable");
   window.selectedStatus = "all";
   window.getDocsByStatus = function getDocsByStatus() {
     getDocsCounts();
@@ -232,8 +232,8 @@ window.initdashboard = function initdashboard() {
     }
     //u
 
-    if ($.fn.DataTable.isDataTable(modalcounttable)) {
-      const dt = $(modalcounttable).DataTable();
+    if ($.fn.DataTable.isDataTable(financeTable)) {
+      const dt = $(financeTable).DataTable();
       dt.clear().draw();
     }
     // console.log(filteredDocuments);
@@ -244,11 +244,11 @@ window.initdashboard = function initdashboard() {
   };
 
   function updaterow(doc) {
-    if (!modalcounttable) return;
-    const tableBody = modalcounttable.querySelector("tbody");
+    if (!financeTable) return;
+    const tableBody = financeTable.querySelector("tbody");
     let dt = null;
-    if ($.fn.DataTable.isDataTable(modalcounttable)) {
-      dt = $(modalcounttable).DataTable();
+    if ($.fn.DataTable.isDataTable(financeTable)) {
+      dt = $(financeTable).DataTable();
     }
 
     let statuscolor = "bg-gray-100";
@@ -337,9 +337,9 @@ window.initdashboard = function initdashboard() {
         logActivity("view", doc.document_id, doc.document_control_number);
       });
     } else {
-      const tr = document.createElement("tr");
-      tr.innerHTML = rowHtml;
-      modalcounttable.appendChild(tr);
+      console.error(
+        "selected table is not datatable please initiate datatable"
+      );
     }
   }
 

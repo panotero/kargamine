@@ -18,7 +18,7 @@ class ApplicationMailer
             ->findOrFail($recipient_id);
 
         if (!$config) {
-            throw new \RuntimeException('Mailer configuration not found.');
+            return;
         }
 
         Config::set('mail.default', 'smtp');

@@ -67,6 +67,7 @@
                     <input id="userEmail" type="email"
                         class="w-full border rounded-lg px-3 py-2 focus:ring focus:ring-blue-200"
                         placeholder="Email address" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="email"></p>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">Password</label>
@@ -294,7 +295,7 @@
             e.preventDefault();
             let authSignatory = 0;
             if (authorizedSginatory.checked) {
-                authSignatory = 0;
+                authSignatory = 1;
             }
             const data = {
                 name: userName.value,
@@ -310,28 +311,42 @@
             const url = userId.value ? `${patchsaveinfo}/${userId.value}` : apiUsers;
 
             try {
-                $response = await fetch(url, {
+                const response = await fetch(url, {
                     method,
-                    //BUG ID: 1
                     headers: {
                         "Content-Type": "application/json",
                         Accept: "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                        "X-CSRF-TOKEN": document
+                            .querySelector('meta[name="csrf-token"]')
                             .content,
                     },
                     body: JSON.stringify(data),
                 });
-                if ($response) {
-                    resetUserForm();
 
-                    showMessage({
-                        status: "success",
-                        message: "User created successfully",
-                    });
+                // Clear old errors
+                clearValidationErrors();
+
+                if (!response.ok) {
+                    const result = await response.json();
+
+                    if (result.success === false && result.invalid_fields) {
+                        clearValidationErrors();
+                        showValidationErrors(result.invalid_fields);
+                        return;
+                    }
+
+                    throw new Error(result.message || "Request failed");
                 }
+
+                resetUserForm();
+                showMessage({
+                    status: "success",
+                    message: "User created successfully",
+                });
 
                 closeModal();
                 loadUsers();
+
             } catch (error) {
                 console.error("Error saving user:", error);
             }
@@ -433,5 +448,41 @@
                 el.classList.remove('border-red-500', 'border-green-500');
             });
         }
+
+        function showValidationErrors(errors) {
+            if (!errors) return;
+
+            Object.keys(errors).forEach((field) => {
+                const input = document.querySelector(`[name="${field}"]`);
+                const errorTag = document.querySelector(
+                    `[data-error-for="${field}"]`
+                );
+
+                if (input) {
+                    input.classList.add(
+                        "border-red-500",
+                        "focus:ring-red-500"
+                    );
+                }
+
+                if (errorTag) {
+                    errorTag.textContent = errors[field][0];
+                    errorTag.classList.remove("hidden");
+                }
+            });
+        }
+
+
+
+        function clearValidationErrors() {
+            document.querySelectorAll(".is-invalid").forEach((el) => {
+                el.classList.remove("is-invalid");
+            });
+
+            document.querySelectorAll(".error-message").forEach((el) => {
+                el.textContent = "";
+            });
+        }
+
     })();
 </script>

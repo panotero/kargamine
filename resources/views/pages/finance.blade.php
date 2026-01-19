@@ -83,27 +83,23 @@
                     </button>
                 </div>
                 <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
-                    <table id="countmodaltable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+                    <table id="financeTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                             <tr>
-                                <th class="px-4 py-3">
-                                    <span class="inline-flex items-center">Control Number</span>
-                                </th>
-                                <th class="px-4 py-3">
-                                    <span class="inline-flex items-center">Document Number</span>
-                                </th>
-                                <th class="px-4 py-3">
-                                    <span class="inline-flex items-center">Subject</span>
-                                </th>
-                                <th class="px-4 py-3">
-                                    <span class="inline-flex items-center">Origin Office</span>
-                                </th>
-                                <th class="px-4 py-3">
-                                    <span class="inline-flex items-center">Destination Office</span>
-                                </th>
-                                <th class="px-4 py-auto">
-                                    <span class="inline-flex items-center">Status</span>
-                                </th>
+                                <th class="px-4 py-3">Transaction</th>
+                                <th class="px-4 py-3">Date Processed</th>
+                                <th class="px-4 py-3">Uploading Office</th>
+                                <th class="px-4 py-3">Uploaded By</th>
+                                <th class="px-4 py-3">Payee</th>
+                                <th class="px-4 py-3">Particular</th>
+                                <th class="px-4 py-3">Responsibility Center</th>
+                                <th class="px-4 py-3">MFO/PAP</th>
+                                <th class="px-4 py-3">UACS Object Code</th>
+                                <th class="px-4 py-3">Amount</th>
+                                <th class="px-4 py-3">Fund Cluster</th>
+                                <th class="px-4 py-3">Date Signed</th>
+                                <th class="px-4 py-3">File Name</th>
+                                <th class="px-4 py-3">File Path</th>
                             </tr>
                         </thead>
 
@@ -162,16 +158,18 @@
     </div>
 </div>
 <div id="newfinanceModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
-    <div class="bg-white rounded-xl p-6 w-80 w-[60vw]  relative">
+    <div class="bg-white rounded-xl p-6 w-80 w-[60vw] relative">
 
-        <div class="max-h-[60vh] overflow-y-auto p-3 ">
+        <div class="max-h-[60vh] overflow-y-auto p-3">
 
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Upload New Document</h2>
             <div id="modalErrorMessage"
                 class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
                 <ul id="modalErrorList" class="list-disc list-inside"></ul>
             </div>
-            <div id="dropzone"
+
+            <!-- Dropzone -->
+            <div id="financedropzone"
                 class="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-6 text-gray-500 cursor-pointer hover:border-blue-400 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
@@ -182,52 +180,117 @@
                     Drag & drop a PDF file here or
                     <span class="text-blue-600 underline">click to browse</span>
                 </p>
-                <input type="file" accept="application/pdf" class="hidden" id="fileInput" required />
+                <input type="file" accept="application/pdf" class="hidden" id="financefileInput" required />
+                <p class="mt-1 text-sm text-red-600 hidden" data-error-for="financefileInput"></p>
             </div>
-            <p id="fileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
-            <button id="clearSelectionBtn"
+            <p id="financefileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
+            <button id="clearfinanceSelectionBtn"
                 class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition">Clear</button>
-            <div class="mt-6 text-black">
-                <div>
-                    <label class="text-sm text-gray-600">Document Number</label>
-                    <input id="document_code" type="text" maxlength="25" pattern="^[a-zA-Z0-9\-_'\]+$"
-                        title="Only letters, numbers, hyphen (-), underscore (_), single quote ('), and double quote (\") are allowed."
-                        class="w-full border-gray-300 rounded-lg px-3 py-2" required />
 
-                </div>
+            <!-- Form Fields -->
+            <div class="mt-6 text-black grid grid-cols-1 md:grid-cols-2 gap-4">
+
                 <div>
-                    <label class="text-sm text-gray-600">Subject</label>
-                    <input id="subject" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
-                        required />
+                    <label class="text-sm text-gray-600">Transaction</label>
+                    <select id="transaction" class="w-full border-gray-300 rounded-lg px-3 py-2" required>
+                        <option value="">Select</option>
+                        <option value="ORS">Obligation Request and Status (ORS)</option>
+                        <option value="DV">Disbursement Voucher (DV)</option>
+                    </select>
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="transaction"></p>
                 </div>
+
                 <div>
-                    <label class="text-sm text-gray-600">Signatory</label>
-                    <input id="signatory" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
-                        required />
+                    <label class="text-sm text-gray-600">Date Processed</label>
+                    <input id="date_processed" type="date" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="date_processed"></p>
                 </div>
+
                 <div>
-                    <label class="text-sm text-gray-600">Remarks</label>
-                    <textarea id="remarks" class="no-special-chars w-full border-gray-300 rounded-lg px-3 py-2"></textarea>
+                    <label class="text-sm text-gray-600">Payee</label>
+                    <input id="payee" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="payee"></p>
                 </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Particular</label>
+                    <textarea id="particular" class="w-full border-gray-300 rounded-lg px-3 py-2" required></textarea>
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="particular"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Responsibility Center</label>
+                    <input id="responsibility_center" type="text"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="responsibility_center"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Expenditure Type</label>
+                    <select id="expenditure" class="w-full border-gray-300 rounded-lg px-3 py-2" required>
+                        <option value="">Select</option>
+                        <option value="ORS">Obligation Request and Status (ORS)</option>
+                        <option value="DV">Disbursement Voucher (DV)</option>
+                    </select>
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="expenditure"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">UACS Object Code</label>
+                    <input id="uacs_object_code" type="text"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="uacs_object_code"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Amount</label>
+                    <input id="amount" type="number" step="0.01"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="amount"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Fund Cluster</label>
+                    <input id="fund_cluster" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="fund_cluster"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Date Signed</label>
+                    <input id="date_signed" type="date" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="date_signed"></p>
+                </div>
+
             </div>
 
         </div>
+
+        <!-- Modal Buttons -->
         <div class="flex justify-end mt-8 space-x-3">
             <button id="btnCancelModal"
                 class="px-4 py-2 rounded-lg border text-black border-gray-300 hover:bg-gray-100 modal-close">
                 Cancel
             </button>
-            <button class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 submitbtn">
+            <button id="submitFinanceBtn"
+                class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 submitbtn">
                 Submit
             </button>
         </div>
+
     </div>
+
 </div>
 </div>
 
 <script>
     (function() {
 
+        initPDFDropzone({
+            dropzoneId: "financedropzone",
+            fileInputId: "financefileInput",
+            fileInfoId: "financefileInfo",
+            clearBtnId: "clearfinanceSelectionBtn",
+        });
         initDataTables();
         // console.log(e.dataset.status);
         const newfinancedoc = document.getElementById("btnNewFinanceDoc");
@@ -238,40 +301,295 @@
             });
         })
 
+        getFinanceData();
+
+        async function getFinanceData() {
+
+            //BUG ID: 1 refactored getActivityData function
+            try {
+                const documents = await fetchWithRetry(
+                    `/api/finance/getdata`, {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json",
+                        },
+                    }
+                );
+                updateRow(documents);
+                updateCounts(documents);
+                // console.log(documents);
+            } catch (error) {
+                console.error(error);
+            }
+            //get total budget per year.
 
 
-        //get total budget per year.
-        const totalBudget = 1000000;
+        }
 
+        function updateRow(documents) {
+            const financeTable = document.getElementById("financeTable");
+            if (!financeTable) return;
 
-        //get total expenses per year
-        const totalExpense = 75682;
+            const tableBody = financeTable.querySelector("tbody");
+            let dt = null;
+            if ($.fn.DataTable.isDataTable(financeTable)) {
+                dt = $(financeTable).DataTable();
+            }
 
-        const availableBudget = totalBudget - totalExpense;
+            documents.forEach((doc) => {
+                // Format status if you have some logic for colors
+                const statusColor = "bg-gray-200"; // Example, replace with real logic
 
+                if (dt) {
+                    const newRow = dt.row.add([
+                        doc.transaction ?? "-", // Transaction
+                        doc.date_processed ?? "-", // Date Processed
+                        doc.uploading_office ?? "-", // Uploading Office
+                        doc.uploaded_by ?? "-", // Uploaded By
+                        doc.payee ?? "-", // Payee
+                        doc.particular ?? "-", // Particular
+                        doc.responsibility_center ?? "-", // Responsibility Center
+                        doc.mfo_pap ?? "-", // MFO/PAP
+                        doc.uacs_object_code ?? "-", // UACS Object Code
+                        doc.amount ?? "-", // Amount
+                        doc.fund_cluster ?? "-", // Fund Cluster
+                        doc.date_signed ?? "-", // Date Signed
+                        doc.file_name ?? "-", // File Name
+                        `<a href="${doc.file_path ?? '#'}" target="_blank" class="text-blue-500 underline">
+                    View
+                </a>` // File Path as clickable link
+                    ]).draw(false);
 
-        //update dashboardcount
-        UpdateCounts();
+                    const rowNode = newRow.node();
+                    if (!rowNode) return;
 
-        function UpdateCounts() {
-            const totalavailableBudget = document.getElementById("totalAvailableBudgetCount");
-            const totalExpenseCount = document.getElementById("totalExpenseCount");
+                    rowNode.classList.add(
+                        "transition-colors",
+                        "duration-300",
+                        "hover:dark:bg-white",
+                        "hover:dark:text-black",
+                        "cursor-pointer"
+                    );
 
-            totalavailableBudget.textContent = "₱" + availableBudget.toLocaleString('en-US');
-            totalExpenseCount.textContent = "₱" + totalExpense.toLocaleString('en-US');
+                    // rowNode.addEventListener("click", function() {
+                    //     checkActionButtons(
+                    //         doc.status,
+                    //         doc.recipient_id,
+                    //         doc.destination_office,
+                    //         doc.receipt_confirmation,
+                    //         doc.revision_status
+                    //     );
+                    //     clearModalFields();
+                    //     showSkeletonLoaders();
+                    //     initModal({
+                    //         modalId: "DocumentModal"
+                    //     });
+                    //     populateDocumentModal(doc.id); // Use doc.id as document_id
+                    //     logActivity("view", doc.id, doc.transaction); // Example
+                    // });
+                } else {
+                    // Fallback if DataTable not initialized
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                <td>${doc.transaction ?? "-"}</td>
+                <td>${doc.date_processed ?? "-"}</td>
+                <td>${doc.uploading_office ?? "-"}</td>
+                <td>${doc.uploaded_by ?? "-"}</td>
+                <td>${doc.payee ?? "-"}</td>
+                <td>${doc.particular ?? "-"}</td>
+                <td>${doc.responsibility_center ?? "-"}</td>
+                <td>${doc.mfo_pap ?? "-"}</td>
+                <td>${doc.uacs_object_code ?? "-"}</td>
+                <td>${doc.amount ?? "-"}</td>
+                <td>${doc.fund_cluster ?? "-"}</td>
+                <td>${doc.date_signed ?? "-"}</td>
+                <td>${doc.file_name ?? "-"}</td>
+                <td><a href="${doc.file_path ?? '#'}" target="_blank" class="text-blue-500 underline">View</a></td>
+            `;
+                    tableBody.appendChild(tr);
+                }
+            });
         }
 
 
-        //calculate the utilization percentage
-        const percentage = (totalExpense / totalBudget) * 100;
-        console.log(percentage);
-        setBudgetPercent(100 - percentage);
+        function updateCounts(document) {
+            let totalBudget = 1000000;
+            let totalExpense = 0;
+            // availableBudget = totalBudget - totalExpense;
+            // document.forEach(() => {
+
+            // })
 
 
 
-        function setBudgetPercent(percent) {
-            percent = Math.max(0, Math.min(100, percent));
-            document.getElementById('budgetFill').style.width = percent + '%';
+
+            //update dashboardcount
+            UpdateCounts();
+
+            function UpdateCounts() {
+                const totalavailableBudget = document.getElementById("totalAvailableBudgetCount");
+                const totalExpenseCount = document.getElementById("totalExpenseCount");
+
+                totalavailableBudget.textContent = "₱" + availableBudget.toLocaleString('en-US');
+                totalExpenseCount.textContent = "₱" + totalExpense.toLocaleString('en-US');
+            }
+
+
+            //calculate the utilization percentage
+            const percentage = (totalExpense / totalBudget) * 100;
+            console.log(percentage);
+            setBudgetPercent(100 - percentage);
+
+
+
+            function setBudgetPercent(percent) {
+                percent = Math.max(0, Math.min(100, percent));
+                document.getElementById('budgetFill').style.width = percent + '%';
+            }
         }
+
+
+        async function submitDocumentForm() {
+            const fileInput = document.getElementById("financefileInput");
+
+            if (!fileInput.files.length) {
+                alert("Please select a PDF file.");
+                return;
+            }
+
+            // Build FormData
+            const formData = new FormData();
+            formData.append('transaction', document.getElementById("transaction").value);
+            formData.append('date_processed', document.getElementById("date_processed").value);
+            formData.append('payee', document.getElementById("payee").value);
+            formData.append('particular', document.getElementById("particular").value);
+            formData.append('responsibility_center', document.getElementById("responsibility_center").value);
+            formData.append('expenditure', document.getElementById("expenditure").value);
+            formData.append('uacs_object_code', document.getElementById("uacs_object_code").value);
+            formData.append('amount', parseFloat(document.getElementById("amount").value) || 0);
+            formData.append('fund_cluster', document.getElementById("fund_cluster").value);
+            formData.append('date_signed', document.getElementById("date_signed").value);
+            formData.append('file', fileInput.files[0]);
+            const submitBtn = document.getElementById("submitFinanceBtn");
+
+            try {
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
+                const response = await fetchWithRetry("/api/finance/document", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                });
+
+                if (!response.success) {
+                    showValidationErrors(response.response.invalid_fields);
+                    showMessage({
+                        status: "error",
+                        message: "error uploading document",
+                    });
+                    return;
+                }
+                hideModal('newfinanceModal');
+
+                clearDocumentForm();
+
+                showMessage({
+                    status: "success",
+                    message: "Upload success",
+                });
+
+            } catch (error) {
+                console.error("Error uploading document:", error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit";
+            }
+        }
+
+
+        function showValidationErrors(errors) {
+            if (!errors) return;
+
+            document.querySelectorAll("[data-error-for]").forEach(el => {
+                el.textContent = "";
+                el.classList.add("hidden");
+            });
+
+            document.querySelectorAll("input, textarea, select").forEach(el => {
+                el.classList.remove("border-red-500", "focus:ring-red-500");
+            });
+
+            Object.keys(errors).forEach((field) => {
+                const input = document.querySelector(`[name="${field}"]`);
+                const errorTag = document.querySelector(
+                    `[data-error-for="${field}"]`
+                );
+
+                if (input) {
+                    input.classList.add("border-red-500", "focus:ring-red-500");
+                }
+
+                if (errorTag) {
+                    const message = errors[field][0];
+
+                    if (message.includes("safe_text")) {
+                        errorTag.textContent = "Invalid input";
+                    } else {
+                        errorTag.textContent = message;
+                    }
+                    errorTag.classList.remove("hidden");
+                }
+            });
+        }
+
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add("hidden");
+        }
+
+        function clearDocumentForm() {
+            // Clear text, number, date, textarea, select inputs
+            const fields = [
+                "transaction",
+                "date_processed",
+                "payee",
+                "particular",
+                "responsibility_center",
+                "expenditure",
+                "uacs_object_code",
+                "amount",
+                "fund_cluster",
+                "date_signed"
+            ];
+
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                if (el.tagName === "SELECT") {
+                    el.selectedIndex = 0; // reset select
+                } else {
+                    el.value = ""; // clear text, textarea, date, number
+                }
+            });
+
+            // Clear file input
+            const fileInput = document.getElementById("financefileInput");
+            if (fileInput) {
+                fileInput.value = "";
+            }
+
+            // Optional: clear file info text
+            const fileInfo = document.getElementById("financefileInfo");
+            if (fileInfo) fileInfo.textContent = "";
+        }
+
+        // Attach the submit handler
+        document.getElementById("submitFinanceBtn").addEventListener("click", submitDocumentForm);
+
     })();
 </script>

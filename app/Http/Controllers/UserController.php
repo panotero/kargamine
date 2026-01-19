@@ -15,7 +15,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        return response()->json(User::with('office', 'userConfig')->get());
+        return response()->json(User::with('office', 'userConfig')->orderBy('created_at', 'desc')->get());
     }
 
     public function create()
@@ -96,6 +96,9 @@ class UserController extends Controller
                 'nullable',
                 'email',
                 'unique:users,email,' . $id
+            ],
+            [
+                'email.exists' => 'The provided email does not exist in our records.',
             ],
             'password' => [
                 'nullable',

@@ -12,7 +12,7 @@ class OfficeController extends Controller
 
     public function index()
     {
-        return response()->json(Office::all());
+        return response()->json(Office::orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request)
@@ -46,6 +46,7 @@ class OfficeController extends Controller
             'office_name' => 'required|string|max:100',
             'office_code' => 'required|string|max:20|unique:office_table',
         ]);
+        // dd($validated);
 
         Log::info('Creating new office record', $validated);
 

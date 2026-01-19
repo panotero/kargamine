@@ -18,6 +18,7 @@ use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\ApprovalsController;
+use App\Http\Controllers\FinanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -122,6 +123,10 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/deactivate/{id}', [UserController::class, 'deactivate']);
         Route::patch('/reactivate/{id}', [UserController::class, 'reactivate']);
         Route::get('/reports/{officename}', [UserController::class, 'reports']);
+    });
+    Route::prefix('finance')->group(function () {
+        Route::post('/document', [FinanceController::class, 'store']);
+        Route::get('/getdata', [FinanceController::class, 'get']);
     });
 
 
