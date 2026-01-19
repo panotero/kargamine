@@ -19,6 +19,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\FinanceBudgetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,6 +140,14 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::post('/send-mail', [MailerController::class, 'send']);
+
+    Route::prefix('finance/budget')->group(function () {
+
+        Route::get('/', [FinanceBudgetController::class, 'index']);
+        Route::get('/{year}', [FinanceBudgetController::class, 'show']);
+        Route::post('/', [FinanceBudgetController::class, 'store']);
+        Route::put('/{year}', [FinanceBudgetController::class, 'update']);
+    });
 
     Route::prefix('nav_menus')->group(function () {
         Route::get('/list', [MenusController::class, 'menulist']);

@@ -1,7 +1,7 @@
 async function logActivity(
   action,
   documentId = null,
-  documentControlNumber = null
+  documentControlNumber = null,
 ) {
   try {
     const userId = window.authUser ? window.authUser.id : null;

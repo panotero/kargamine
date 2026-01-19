@@ -25,6 +25,8 @@ class FinanceController extends Controller
     {
 
         $user = Auth::user();
+        $office = Office::findOrFail($user->office_id);
+        $officeFolder = $office->office_name;
         // dd($user);
         // dd($request->all());
         $validator = Validator::make($request->all(), [
@@ -55,7 +57,8 @@ class FinanceController extends Controller
             $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
             $fileName = uniqid() . '-' . $cleanOriginal;
 
-            $folderPath = storage_path("app/public/assets/finance/pdf");
+            $folder = "storage/assets/finance/$officeFolder/pdf";
+            $folderPath    = $folder;
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0777, true);
             }

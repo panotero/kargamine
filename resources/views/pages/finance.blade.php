@@ -3,6 +3,25 @@
 
     <div class="h-full container mx-auto py-5 ">
 
+        <div class="w-full py-5 flex justify-between">
+
+            <div class="w-96 text-black ">
+                <label class="text-sm text-gray-600 dark:text-white">Year</label>
+                <select id="year" class="w-full border-gray-300 rounded-lg px-3 py-2" required>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+                <p class="mt-1 text-sm text-red-600 hidden" data-error-for="transaction"></p>
+            </div>
+            <div class="my-auto">
+
+                <button id="btnNewFinanceDoc"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition modal-open">
+                    + New Document
+                </button>
+            </div>
+        </div>
         <div class="relative w-full mb-5 statusButton cursor-pointer" data-status="all">
 
             <div class="relative p-5 rounded-xl border border-gray-300 bg-white drop-shadow-sm overflow-hidden">
@@ -77,10 +96,6 @@
 
                 <div class="w-full flex justify-between mb-5">
 
-                    <button id="btnNewFinanceDoc"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition modal-open">
-                        + New Document
-                    </button>
                 </div>
                 <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
                     <table id="financeTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
@@ -292,7 +307,6 @@
             clearBtnId: "clearfinanceSelectionBtn",
         });
         initDataTables();
-        // console.log(e.dataset.status);
         const newfinancedoc = document.getElementById("btnNewFinanceDoc");
         newfinancedoc.addEventListener("click", () => {
 
@@ -315,9 +329,9 @@
                         },
                     }
                 );
+                // insertBudget();
                 updateRow(documents);
                 updateCounts(documents);
-                // console.log(documents);
             } catch (error) {
                 console.error(error);
             }
@@ -330,10 +344,14 @@
             const financeTable = document.getElementById("financeTable");
             if (!financeTable) return;
 
-            const tableBody = financeTable.querySelector("tbody");
             let dt = null;
             if ($.fn.DataTable.isDataTable(financeTable)) {
                 dt = $(financeTable).DataTable();
+                dt.clear().draw(); // THIS is the key line
+            } else {
+                // fallback if DataTable was never initialized
+                const tableBody = financeTable.querySelector("tbody");
+                if (tableBody) tableBody.innerHTML = "";
             }
 
             documents.forEach((doc) => {
@@ -412,27 +430,89 @@
         }
 
 
-        function updateCounts(document) {
-            let totalBudget = 1000000;
+        async function insertBudget() {
+            const payload = {
+                year: 2026,
+                amount: 1500000,
+            };
+
+            const data = await fetchWithRetry("/api/finance/budget", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify(payload),
+            });
+        }
+
+        async function updateBudget() {
+            const year = 2025;
+
+            const payload = {
+                amount: 1800000,
+            };
+
+            const data = await fetchWithRetry(`/api/finance/budget/${year}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify(payload),
+            });
+        }
+        async function getCurrentBudget(customYear = 2025) {
+
+            const year = customYear;
+            const data = await fetchWithRetry(`/api/finance/budget?year=${year}`, {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                },
+            });
+
+            return data;
+        }
+
+
+        async function updateCounts(docs) {
+
+
+            const currentYear = new Date().getFullYear();
+            const budget = await getCurrentBudget(currentYear);
+            let totalBudget = budget.data[0].amount;
+            let availableBudget = 0;
+            console.log(totalBudget);
+            // return;
+            //get current year's budget 
+
+
+
             let totalExpense = 0;
-            // availableBudget = totalBudget - totalExpense;
-            // document.forEach(() => {
+            docs.forEach((doc) => {
 
-            // })
+                const amount = Number(doc.amount);
+                totalExpense += amount;
+            });
+            availableBudget = totalBudget - totalExpense;
+            console.log(totalExpense);
+
+            // return;
 
 
 
 
-            //update dashboardcount
-            UpdateCounts();
+            const totalavailableBudget = document.getElementById("totalAvailableBudgetCount");
+            const totalExpenseCount = document.getElementById("totalExpenseCount");
 
-            function UpdateCounts() {
-                const totalavailableBudget = document.getElementById("totalAvailableBudgetCount");
-                const totalExpenseCount = document.getElementById("totalExpenseCount");
+            totalavailableBudget.textContent = "₱" + availableBudget.toLocaleString('en-US');
+            totalExpenseCount.textContent = "₱" + totalExpense.toLocaleString('en-US');
 
-                totalavailableBudget.textContent = "₱" + availableBudget.toLocaleString('en-US');
-                totalExpenseCount.textContent = "₱" + totalExpense.toLocaleString('en-US');
-            }
 
 
             //calculate the utilization percentage
@@ -500,6 +580,7 @@
                     status: "success",
                     message: "Upload success",
                 });
+                getFinanceData();
 
             } catch (error) {
                 console.error("Error uploading document:", error);
