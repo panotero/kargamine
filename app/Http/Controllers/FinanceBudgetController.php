@@ -60,9 +60,23 @@ class FinanceBudgetController extends Controller
     /**
      * Update budget by year
      */
-    public function update(Request $request, $year)
+    public function update(Request $request)
     {
-        $budget = FinanceBudget::where('year', $year)->first();
+        // dd($request->all());
+
+        $validator = Validator::make($request->all(), [
+            'amount' => [
+                'required',
+                'numeric',
+                'safe_text'
+            ],
+            'year' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+        ]);
+        $budget = FinanceBudget::where('year', $request->year)->first();
 
         if (!$budget) {
             return response()->json([
@@ -71,19 +85,15 @@ class FinanceBudgetController extends Controller
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:0',
-        ]);
-
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'errors'  => $validator->errors(),
             ], 422);
         }
-
+        $amount = str_replace(',', '', $request->amount);
         $budget->update([
-            'amount' => $request->amount,
+            'amount' => $amount,
         ]);
 
         return response()->json([

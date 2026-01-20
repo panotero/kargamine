@@ -32,7 +32,7 @@ function initdocumentcontroller() {
 
     const allDocsBody = document.querySelector("#allDocumentTable tbody");
     const assignedBody = document.querySelector(
-      "#assignedToYouDocumentTable tbody"
+      "#assignedToYouDocumentTable tbody",
     );
     if (!allDocsBody || !assignedBody) return;
 
@@ -46,7 +46,7 @@ function initdocumentcontroller() {
         {
           method: "GET",
           headers: { Accept: "application/json" },
-        }
+        },
       );
 
       clearTable("#allDocumentTable");
@@ -78,7 +78,8 @@ function initdocumentcontroller() {
             adminStatuses.includes(doc.status.toLowerCase())) ||
           (doc.recipient_id === null &&
             authSginatureStatuses.includes(doc.status.toLowerCase()) &&
-            isAuthSignatory === 1);
+            isAuthSignatory === 1 &&
+            userOfficeName === doc.destination_office);
 
         if (showAssigned) appendDocumentRow(assignedBody, doc, "assigned");
       });
@@ -245,7 +246,7 @@ function initdocumentcontroller() {
         item.destination_office,
         item.receipt_confirmation,
         item.revision_status,
-        source
+        source,
       );
       clearModalFields();
       showSkeletonLoaders();
@@ -327,7 +328,7 @@ function initdocumentcontroller() {
 
       const otherOriginInput = document.getElementById("otheroriginoffice");
       const otherDestinationInput = document.getElementById(
-        "otherdestinationoffice"
+        "otherdestinationoffice",
       );
       const otherDocumentInput = document.getElementById("otherdocument");
 
@@ -405,7 +406,7 @@ function initdocumentcontroller() {
       if (originDropdown.value === "Other") {
         formData.append(
           "office_origin",
-          "OTHER - " + sanitizeInput(otherOriginInput.value)
+          "OTHER - " + sanitizeInput(otherOriginInput.value),
         );
       } else {
         formData.append("office_origin", sanitizeInput(originDropdown.value));
@@ -414,19 +415,19 @@ function initdocumentcontroller() {
       if (destinationDropdown.value === "Other") {
         formData.append(
           "destination_office",
-          "OTHER - " + sanitizeInput(otherDestinationInput.value)
+          "OTHER - " + sanitizeInput(otherDestinationInput.value),
         );
       } else {
         formData.append(
           "destination_office",
-          sanitizeInput(destinationDropdown.value)
+          sanitizeInput(destinationDropdown.value),
         );
       }
 
       if (documentDropdown.value === "Other") {
         formData.append(
           "document_type",
-          "OTHER - " + sanitizeInput(otherDocumentInput.value)
+          "OTHER - " + sanitizeInput(otherDocumentInput.value),
         );
       } else {
         formData.append("document_type", sanitizeInput(documentDropdown.value));
@@ -602,8 +603,8 @@ function initdocumentcontroller() {
       .querySelectorAll(".fileInfoButton")
       .forEach((btn) =>
         btn.addEventListener("click", () =>
-          initModal({ modalId: "pdfPreviewModal" })
-        )
+          initModal({ modalId: "pdfPreviewModal" }),
+        ),
       );
 
     function resetFormModal(modalId) {

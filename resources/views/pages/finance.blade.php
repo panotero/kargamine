@@ -7,7 +7,7 @@
 
             <div class="w-96 text-black ">
                 <label class="text-sm text-gray-600 dark:text-white">Year</label>
-                <select id="year" class="w-full border-gray-300 rounded-lg px-3 py-2" required>
+                <select id="year" class="year w-full border-gray-300 rounded-lg px-3 py-2" required>
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
                     <option value="2024">2024</option>
@@ -23,7 +23,16 @@
             </div>
         </div>
         <div class="relative w-full mb-5 statusButton cursor-pointer" data-status="all">
+            <p class="flex items-center gap-2">
+                <b id="currentYear">YEAR</b> budget: <b>₱</b>
+                <b id="yearBudget">1,000,000</b>
 
+                <!-- Edit Icon -->
+                <button type="button" id="editYearBudget"
+                    class="ml-1 text-gray-500 hover:text-gray-700 focus:outline-none" aria-label="Edit budget">
+                    ✎
+                </button>
+            </p>
             <div class="relative p-5 rounded-xl border border-gray-300 bg-white drop-shadow-sm overflow-hidden">
 
                 <!-- Battery Charge Fill -->
@@ -295,11 +304,129 @@
     </div>
 
 </div>
+<div id="BudgetModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
+    <div class="bg-white rounded-xl p-6 w-80 w-[60vw] relative">
+
+        <div class="max-h-[60vh] overflow-y-auto p-3">
+
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Add or Edit this year's budget</h2>
+            <div id="modalErrorMessage"
+                class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                <ul id="modalErrorList" class="list-disc list-inside"></ul>
+            </div>
+            <div class="mt-6 text-black grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div class="w-96 text-black ">
+                    <label class="text-sm text-gray-600 dark:text-white">Year</label>
+                    <select id="budgetYear" class="year w-full border-gray-300 rounded-lg px-3 py-2" required>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="transaction"></p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600">Budget Amount</label>
+                    <input id="budgetAmount" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="fund_cluster"></p>
+                </div>
+
+
+            </div>
+
+        </div>
+
+        <!-- Modal Buttons -->
+        <div class="flex justify-end mt-8 space-x-3">
+            <button id="btnCancelModal"
+                class="px-4 py-2 rounded-lg border text-black border-gray-300 hover:bg-gray-100 modal-close">
+                Cancel
+            </button>
+            <button id="submitBudgetBtn"
+                class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 submitbtn">
+                Submit
+            </button>
+        </div>
+
+    </div>
+
 </div>
 
 <script>
     (function() {
 
+        document.getElementById('editYearBudget').addEventListener('click', async function(e) {
+            e.stopPropagation(); // prevent parent click if any
+            //get that years amount
+            const year = document.getElementById("budgetYear").value;
+            const customYearsBudget = await getCurrentBudget(year);
+            if (customYearsBudget.data.length > 0) {
+                document.getElementById("budgetAmount").value = Number(customYearsBudget.data[0].amount)
+                    .toLocaleString();
+                document.getElementById("submitBudgetBtn").textContent = "Save";
+
+            } else {
+
+                document.getElementById("budgetAmount").value = 0;
+                document.getElementById("submitBudgetBtn").textContent = "Submit";
+            }
+            initModal({
+                modalId: "BudgetModal"
+            });
+        });
+        document.getElementById("budgetYear").addEventListener("change", async function() {
+            const customYearsBudget = await getCurrentBudget(this.value);
+            if (customYearsBudget.data.length > 0) {
+                document.getElementById("budgetAmount").value = Number(customYearsBudget.data[0].amount)
+                    .toLocaleString();
+                document.getElementById("submitBudgetBtn").textContent = "Save";
+
+            } else {
+
+                document.getElementById("budgetAmount").value = 0;
+                document.getElementById("submitBudgetBtn").textContent = "Submit";
+            }
+        });
+
+
+        document.getElementById("submitBudgetBtn").addEventListener("click", async function() {
+            const submitbtn = this;
+            const amount = document.getElementById("budgetAmount");
+            const year = document.getElementById("budgetYear");
+            if (this.textContent.toLowerCase() === "save") {
+                const response = await updateBudget(year.value, amount.value);
+                if (response.success) {
+                    amount.value = "";
+                    showMessage({
+                        status: "success",
+                        message: "budget updated",
+                    });
+
+                    getFinanceData();
+                    hideModal('BudgetModal');
+                }
+            } else {
+                const response = await insertBudget(year.value, amount.value);
+                if (response.success) {
+
+                    amount.value = "";
+                    showMessage({
+                        status: "success",
+                        message: "budget inserted",
+                    });
+
+                    getFinanceData();
+                    hideModal('BudgetModal');
+                }
+            }
+
+        });
+
+
+
+
+        populateYearDropDowm();
         initPDFDropzone({
             dropzoneId: "financedropzone",
             fileInputId: "financefileInput",
@@ -314,11 +441,17 @@
                 modalId: "newfinanceModal"
             });
         })
+        const selectedYear = document.getElementById("year");
+        selectedYear.addEventListener("change", function() {
+            getFinanceData(this.value);
+        });
+
 
         getFinanceData();
 
-        async function getFinanceData() {
-
+        async function getFinanceData(year = null) {
+            year = document.getElementById("year").value;
+            let filteredDocs = [];
             //BUG ID: 1 refactored getActivityData function
             try {
                 const documents = await fetchWithRetry(
@@ -329,9 +462,20 @@
                         },
                     }
                 );
+                if (year) {
+                    if (year) {
+                        filteredDocs = documents.filter(doc => {
+                            const createdYear = new Date(doc.created_at).getFullYear();
+                            return createdYear === Number(year);
+                        });
+                    }
+
+                } else {
+                    filteredDocs = documents;
+                }
                 // insertBudget();
-                updateRow(documents);
-                updateCounts(documents);
+                updateRow(filteredDocs);
+                updateCounts(filteredDocs, year);
             } catch (error) {
                 console.error(error);
             }
@@ -369,7 +513,7 @@
                         doc.responsibility_center ?? "-", // Responsibility Center
                         doc.mfo_pap ?? "-", // MFO/PAP
                         doc.uacs_object_code ?? "-", // UACS Object Code
-                        doc.amount ?? "-", // Amount
+                        "₱" + Number(doc.amount).toLocaleString() ?? "-", // Amount
                         doc.fund_cluster ?? "-", // Fund Cluster
                         doc.date_signed ?? "-", // Date Signed
                         doc.file_name ?? "-", // File Name
@@ -430,10 +574,11 @@
         }
 
 
-        async function insertBudget() {
+        async function insertBudget(year = 2026, amount = 1500000) {
+            budgetamount = amount.replace(/,/g, '');
             const payload = {
-                year: 2026,
-                amount: 1500000,
+                year: year,
+                amount: budgetamount,
             };
 
             const data = await fetchWithRetry("/api/finance/budget", {
@@ -446,13 +591,15 @@
                 },
                 body: JSON.stringify(payload),
             });
+            if (!data.success) return;
+            return data;
         }
 
-        async function updateBudget() {
-            const year = 2025;
-
+        async function updateBudget(year = 2026, amount = 1500000) {
+            budgetamount = amount.replace(/,/g, '');
             const payload = {
-                amount: 1800000,
+                amount: Number(budgetamount),
+                year: year,
             };
 
             const data = await fetchWithRetry(`/api/finance/budget/${year}`, {
@@ -465,6 +612,9 @@
                 },
                 body: JSON.stringify(payload),
             });
+            if (!data.success) return;
+            return data;
+
         }
         async function getCurrentBudget(customYear = 2025) {
 
@@ -480,16 +630,18 @@
         }
 
 
-        async function updateCounts(docs) {
+        async function updateCounts(docs, year = false) {
+            let currentYear = 0;
+            if (!year) {
 
+                currentYear = new Date().getFullYear();
+            } else {
+                currentYear = year;
+            }
 
-            const currentYear = new Date().getFullYear();
             const budget = await getCurrentBudget(currentYear);
-            let totalBudget = budget.data[0].amount;
+            let totalBudget = budget?.data?.[0]?.amount ?? 0;
             let availableBudget = 0;
-            console.log(totalBudget);
-            // return;
-            //get current year's budget 
 
 
 
@@ -500,7 +652,8 @@
                 totalExpense += amount;
             });
             availableBudget = totalBudget - totalExpense;
-            console.log(totalExpense);
+            document.getElementById("currentYear").textContent = currentYear;
+            document.getElementById("yearBudget").textContent = Number(totalBudget).toLocaleString();
 
             // return;
 
@@ -517,7 +670,6 @@
 
             //calculate the utilization percentage
             const percentage = (totalExpense / totalBudget) * 100;
-            console.log(percentage);
             setBudgetPercent(100 - percentage);
 
 

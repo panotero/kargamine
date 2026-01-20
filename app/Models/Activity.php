@@ -14,6 +14,7 @@ class Activity extends Model
     ];
     protected $fillable = [
         'action',
+        'office_id',
         'document_id',
         'final_approval',
         'document_control_number',

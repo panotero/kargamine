@@ -145,7 +145,6 @@
                         Accept: "application/json"
                     },
                 });
-                console.log(users);
 
 
                 users.forEach((user) => {

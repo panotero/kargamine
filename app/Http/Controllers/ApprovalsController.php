@@ -414,6 +414,20 @@ class ApprovalsController extends Controller
 
         foreach ($authorizedSignatory as $authSignatory) {
             $this->insertNotification($approval, $user->id, $authSignatory->id, $message);
+
+            $this->mailer->send(
+                [
+                    'subject' => "Document Approval",
+                    'title'   => "{$approval->document->document_control_number} has been approved and for your signature",
+                    'message' => "",
+                    'docControlNumber' => "",
+                    'button'  => [
+                        'url'  => url('/dashboard'),
+                        'text' => 'Go to Dashboard',
+                    ],
+                ],
+                $authSignatory->id
+            );
         }
     }
 
@@ -570,9 +584,9 @@ class ApprovalsController extends Controller
         $this->mailer->send(
             [
                 'subject' => "Document Approval",
-                'title'   => 'Below document control number has been approved',
+                'title'   => "{$approval->document->document_control_number} has been routed to you for approval",
                 'message' => "",
-                'docControlNumber' => $approval->document->document_control_number,
+                'docControlNumber' => "",
                 'button'  => [
                     'url'  => url('/dashboard'),
                     'text' => 'Go to Dashboard',

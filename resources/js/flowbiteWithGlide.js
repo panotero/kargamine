@@ -29,7 +29,7 @@ try {
     class="rounded-lg w-full max-h-96 object-contain"
   />
 </li>
-      `
+      `,
       )
       .join("");
     let num = listing.price;
@@ -75,7 +75,7 @@ try {
     slidesContainer.insertAdjacentHTML("beforeend", slideHTML);
   });
 } catch (error) {
-  console.log(error);
+  console.error(error);
 }
 
 const parentGlide = new Glide(".glide-parent", {

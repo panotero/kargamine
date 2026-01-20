@@ -142,6 +142,7 @@ class DocumentController extends Controller
         $activityData = [
             'action'                  => 'confirm',
             'document_id'             => $document->document_id,
+            'office_id'             => $user->office->office_name,
             'final_approval'          => 0,
             'document_control_number' => $document->document_control_number,
             'user_id'                 => $request->user_id,
@@ -160,9 +161,10 @@ class DocumentController extends Controller
         $document = Document::with(
             'files',
             'activities',
-            'activities.user',
-            'activities.fromUser',
-            'activities.routedUser',
+            'activities.user.office',
+            'activities.fromUser.office',
+            'activities.routedUser.office',
+            'activities.document',
             'approvals',
         )
             ->where('document_id', $id)
@@ -178,6 +180,8 @@ class DocumentController extends Controller
     public function revise(Request $request)
     {
 
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($request->user_id);
         //BUG ID: 7
         $validator = Validator::make($request->all(), [
             'revisedocControlNumber' => [
@@ -344,6 +348,7 @@ class DocumentController extends Controller
         Activity::create([
             'action'                  => 'upload',
             'document_id'             => $reviseddocument->document_id,
+            'office_id'             => $user->office->office_name,
             'final_approval'          => 0,
             'document_control_number' => $reviseddocument->document_control_number,
             'user_id'                 => $reviseddocument->user_id,
@@ -379,6 +384,8 @@ class DocumentController extends Controller
     public function esign(Request $request)
     {
 
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($request->user_id);
         //BUG ID: 7
         $validator = Validator::make($request->all(), [
             'docControlNumber' => [
@@ -481,6 +488,7 @@ class DocumentController extends Controller
         Activity::create([
             'action'                  => 'sign',
             'document_id'             => $document->document_id,
+            'office_id'             => $user->office->office_name,
             'final_approval'          => 0,
             'document_control_number' => $validated['docControlNumber'],
             'user_id'                 => $user->id,
@@ -700,7 +708,7 @@ class DocumentController extends Controller
 
             $this->mailer->send(
                 [
-                    'subject' => 'Document Uploade',
+                    'subject' => 'Document Upload',
                     'title'   => 'Below document control number has been uploaded and routed to your office',
                     'message' => "",
                     'docControlNumber' => $document->document_control_number,
@@ -716,6 +724,7 @@ class DocumentController extends Controller
         Activity::create([
             'action'                  => 'upload',
             'document_id'             => $document->document_id,
+            'office_id'             => $user->office->office_name,
             'final_approval'          => 0,
             'document_control_number' => $documentControlNumber,
             'user_id'                 => $request->user_id,

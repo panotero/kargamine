@@ -49,7 +49,7 @@ window.initGraph = async function initGraph() {
     const labels = days.map((d) =>
       d.toLocaleDateString("en-US", {
         weekday: "short",
-      })
+      }),
     );
 
     const counts = week();
@@ -84,7 +84,7 @@ window.initGraph = async function initGraph() {
       {
         length: daysInMonth,
       },
-      (_, i) => `Day ${i + 1}`
+      (_, i) => `Day ${i + 1}`,
     );
 
     const counts = month(daysInMonth);
@@ -172,23 +172,23 @@ window.initGraph = async function initGraph() {
 
       counts.routing[monthIndex] = Math.max(
         counts.routing[monthIndex],
-        daily[key].routing
+        daily[key].routing,
       );
       counts.approved[monthIndex] = Math.max(
         counts.approved[monthIndex],
-        daily[key].approved
+        daily[key].approved,
       );
       counts.signed[monthIndex] = Math.max(
         counts.signed[monthIndex],
-        daily[key].signed
+        daily[key].signed,
       );
       counts.confirmed[monthIndex] = Math.max(
         counts.confirmed[monthIndex],
-        daily[key].confirmed
+        daily[key].confirmed,
       );
       counts.disapprove[monthIndex] = Math.max(
         counts.disapprove[monthIndex],
-        daily[key].disapprove
+        daily[key].disapprove,
       );
     });
 
@@ -207,7 +207,7 @@ window.initGraph = async function initGraph() {
           headers: {
             Accept: "application/json",
           },
-        }
+        },
       );
 
       const sampleData = {
@@ -224,7 +224,7 @@ window.initGraph = async function initGraph() {
         0,
         0,
         0,
-        ctx.canvas.height
+        ctx.canvas.height,
       );
       routingGradient.addColorStop(0, "rgba(255, 165, 0, 0.5)");
       routingGradient.addColorStop(1, "rgba(255, 165, 0, 0)");
@@ -233,7 +233,7 @@ window.initGraph = async function initGraph() {
         0,
         0,
         0,
-        ctx.canvas.height
+        ctx.canvas.height,
       );
       approveGradient.addColorStop(0, "rgba(0, 128, 0, 0.5)");
       approveGradient.addColorStop(1, "rgba(0, 128, 0, 0)");
@@ -242,7 +242,7 @@ window.initGraph = async function initGraph() {
         0,
         0,
         0,
-        ctx.canvas.height
+        ctx.canvas.height,
       );
       signedGradient.addColorStop(0, "rgba(0, 0, 255, 0.5)");
       signedGradient.addColorStop(1, "rgba(0, 0, 255, 0)");
@@ -251,7 +251,7 @@ window.initGraph = async function initGraph() {
         0,
         0,
         0,
-        ctx.canvas.height
+        ctx.canvas.height,
       );
       confirmedGradient.addColorStop(0, "rgba(128, 0, 128, 0.5)");
       confirmedGradient.addColorStop(1, "rgba(128, 0, 128, 0)");
@@ -260,7 +260,7 @@ window.initGraph = async function initGraph() {
         0,
         0,
         0,
-        ctx.canvas.height
+        ctx.canvas.height,
       );
       disapproveGradient.addColorStop(0, "rgba(255, 0, 0, 0.5)");
       disapproveGradient.addColorStop(1, "rgba(255, 0, 0, 0)");
@@ -355,7 +355,7 @@ window.initGraph = async function initGraph() {
       });
       // console.log(data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

@@ -221,7 +221,6 @@
 
 
             // usersList = response;
-            console.log(response);
 
             // updateDocumentCounts(filteredDocuments);
             // response.forEach((users) => {
@@ -306,7 +305,7 @@
 
                 tr.addEventListener("click", (e) => {
                     if (e.target.classList.contains("labeldropdown")) return;
-                    console.log(doc);
+
 
                     checkActionButtons(
                         doc.status,

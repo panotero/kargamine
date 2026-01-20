@@ -5,7 +5,7 @@ window.checkActionButtons = function checkActionButtons(
   documentDestinationOffice = false,
   receiptConfirmation = false,
   revision_status = false,
-  source = false
+  source = false,
 ) {
   // Force calendar open when clicking anywhere on input
   document.querySelectorAll('input[type="date"]').forEach((inpt) => {
@@ -92,8 +92,7 @@ window.checkActionButtons = function checkActionButtons(
   if (
     receiptConfirmation !== 0 &&
     status !== "remanded" &&
-    userAuth.user_config.approval_type !== "final-approval" &&
-    userAuth.user_config.approval_type !== "routing"
+    userAuth.user_config.approval_type !== "final-approval"
   ) {
     showAction("routeActions");
   }
@@ -160,7 +159,7 @@ function formatDateTime(value) {
   });
 }
 window.populateDocumentModal = async function populateDocumentModal(
-  documentId
+  documentId,
 ) {
   try {
     const data = await fetchWithRetry(`/api/documents/${documentId}`, {
@@ -215,13 +214,13 @@ window.populateDocumentModal = async function populateDocumentModal(
         .getElementById("finalApproval")
         .classList.toggle(
           "hidden",
-          data.approvals.approval_type !== "final-approval"
+          data.approvals.approval_type !== "final-approval",
         );
       document
         .getElementById("preApproval")
         .classList.toggle(
           "hidden",
-          data.approvals.approval_type === "final-approval"
+          data.approvals.approval_type === "final-approval",
         );
     }
   } catch (error) {
@@ -262,7 +261,7 @@ function populateFileList(files) {
       "dark:hover:bg-gray-800",
       "cursor-pointer",
       "fileInfoButton",
-      "modal-open"
+      "modal-open",
     );
 
     li.dataset.version = `v${index + 1}.0`;
@@ -275,8 +274,8 @@ function populateFileList(files) {
         </p>
         <p class="text-xs text-gray-500 dark:text-gray-400">
           Uploaded: ${file.uploaded_at.split(" ")[0]} by ${
-      file.uploading_office
-    }
+            file.uploading_office
+          }
         </p>
       </div>
       <a href="${file.file_path}" data-file-id="${file.file_id}"
@@ -341,6 +340,7 @@ function populateActivityLog(data) {
     return;
   }
   const activities = [...data.activities].reverse();
+  console.log(activities);
   activities.forEach((act) => {
     const importantDiv = document.createElement("li");
     const fullDiv = document.createElement("li");
@@ -352,7 +352,7 @@ function populateActivityLog(data) {
       "border",
       "border-gray-300",
       "rounded-md",
-      "p-2"
+      "p-2",
     );
     fullDiv.classList.add("text-sm", "text-gray-600", "dark:text-gray-300");
 
@@ -396,66 +396,50 @@ function populateActivityLog(data) {
     let fullText = "";
     const fullUserName = act.user?.name || `User ${act.user_id || "Unknown"}`;
     let fullActionText = "";
-    // console.log(act);
+    console.log(act);
     switch (act.action) {
-      case "route":
-        const routeTargetFull =
-          act.to_external === 1
-            ? data.destination_office || "Unknown Office"
-            : act.routed_user.name
-            ? `User ${act.routed_user.name}`
-            : "Unknown Recipient";
+      case "route": {
+        const senderName = act.user?.name ?? "Unknown User";
+
+        const routeTargetFull = act.routed_user
+          ? `${act.routed_user.name}`
+          : (act.office_id ?? "Unknown Office");
+
         fullActionText =
-          act.sender?.name ??
-          "" +
-            ` routed the document to <span class="font-semibold">${routeTargetFull}</span>`;
+          `${senderName} routed the document to ` +
+          `<span class="font-semibold">${routeTargetFull}</span>`;
         break;
-      case "upload":
-        const uploadTargetFull =
-          act.to_external === 1
-            ? data.destination_office || "Unknown Office"
-            : act.routed_to
-            ? `User ${act.routed_to}`
-            : " ";
+      }
+      case "upload": {
+        const senderName = act.user?.name ?? "Unknown User";
+
+        const uploadTargetFull = act.routed_user
+          ? `${act.routed_user.name}`
+          : (act.office_id ?? null);
+
         fullActionText =
-          act.sender?.name ??
-          " " +
-            `<span class="font-semibold">${fullUserName}</span> uploaded a document${
-              uploadTargetFull
-                ? ` for <span class="font-semibold">${
-                    act.from_user?.name || "Unknown"
-                  }</span>`
-                : ""
-            }`;
+          `${senderName} uploaded a document` +
+          (uploadTargetFull
+            ? ` for <span class="font-semibold">${uploadTargetFull}</span>`
+            : "");
         break;
-      case "approved":
-        const approvedTargetFull =
-          act.to_external === 1
-            ? data.destination_office || "Unknown Office"
-            : act.routed_to
-            ? `User ${act.routed_to}`
-            : "";
+      }
+
+      case "confirm": {
+        const senderName = act.user?.name ?? "Unknown User";
+
         fullActionText =
-          act.sender?.name ??
-          " " +
-            `approved the document${
-              approvedTargetFull
-                ? ` for <span class="font-semibold">${approvedTargetFull}</span>`
-                : ""
-            }`;
+          `<span class="font-semibold">${senderName}</span> confirmed receipt of document number: ` +
+          `<span class="font-semibold">${act.document_control_number}</span>`;
         break;
-      case "confirm":
-        fullActionText =
-          act.sender?.name ??
-          " " +
-            `<span class="font-semibold">${fullUserName}</span> confirmed receipt of document number: <span class="font-semibold">${act.document_control_number}</span>`;
+      }
+
+      case "signed": {
+        const senderName = act.user?.name ?? "Unknown User";
+
+        fullActionText = `${senderName} signed the document`;
         break;
-      case "signed":
-        fullActionText =
-          act.sender?.name ??
-          " " +
-            `<span class="font-semibold">${fullUserName}</span> signed the document`;
-        break;
+      }
       default:
         fullActionText = `<span class="font-semibold">${fullUserName}</span> ${act.action} the document`;
         break;
@@ -589,10 +573,9 @@ modalApproveBtn.addEventListener("click", function () {
 });
 
 confirmBtn.addEventListener("click", async function () {
-  this.disabled = true;
-  this.textContent = "Confirming...";
-
   try {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Confirming...";
     const selectedOption = userSelect.options[userSelect.selectedIndex];
     const finalapproval = document
       .getElementById("preApproval")
@@ -624,8 +607,8 @@ confirmBtn.addEventListener("click", async function () {
   } catch (error) {
     console.error("Confirmation failed:", error);
   } finally {
-    this.disabled = false;
-    this.textContent = "Confirm";
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Confirm";
   }
 });
 
@@ -636,14 +619,13 @@ const confirmDisapprovalBtn = document.getElementById("confirmDisapprovalBtn");
 modalDisapproveBtn.addEventListener("click", () =>
   initModal({
     modalId: "disapprovalModal",
-  })
+  }),
 );
 
 confirmDisapprovalBtn.addEventListener("click", async function () {
-  this.disabled = true;
-  this.textContent = "Confirming...";
-
   try {
+    confirmDisapprovalBtn.disabled = true;
+    confirmDisapprovalBtn.textContent = "Confirming...";
     const selectedOption = userSelect.options[userSelect.selectedIndex];
     sendApprovalAction({
       approvalId: document_id.textContent,
@@ -658,28 +640,27 @@ confirmDisapprovalBtn.addEventListener("click", async function () {
   } catch (error) {
     console.error("Disapproval failed:", error);
   } finally {
-    this.disabled = false;
-    this.textContent = "Confirm";
+    confirmDisapprovalBtn.disabled = false;
+    confirmDisapprovalBtn.textContent = "Confirm";
   }
 });
 
 //for discussions
 const modalForDiscussionBtn = document.getElementById("modalForDiscussionBtn");
 const confirmForDiscussionBtn = document.getElementById(
-  "confirmForDiscussionBtn"
+  "confirmForDiscussionBtn",
 );
 
 modalForDiscussionBtn.addEventListener("click", () =>
   initModal({
     modalId: "forDiscussionModal",
-  })
+  }),
 );
 
 confirmForDiscussionBtn.addEventListener("click", async function () {
-  this.disabled = true;
-  this.textContent = "Confirming...";
-
   try {
+    confirmForDiscussionBtn.disabled = true;
+    confirmForDiscussionBtn.textContent = "Confirming...";
     const selectedOption = userSelect.options[userSelect.selectedIndex];
     sendApprovalAction({
       approvalId: document_id.textContent,
@@ -691,8 +672,8 @@ confirmForDiscussionBtn.addEventListener("click", async function () {
   } catch (error) {
     console.error("Discussion request failed:", error);
   } finally {
-    this.disabled = false;
-    this.textContent = "Submit";
+    confirmForDiscussionBtn.disabled = false;
+    confirmForDiscussionBtn.textContent = "Submit";
   }
 });
 
@@ -714,50 +695,56 @@ modalrevisionBtn.addEventListener("click", () => {
 });
 
 submitrevisionBtn.addEventListener("click", async function () {
-  const reviseformData = new FormData();
-  const revisefileInput = document.getElementById("revisefileInput");
-
-  reviseformData.append(
-    "revisedocControlNumber",
-    document.getElementById("revisedocControlNumber").textContent.trim()
-  );
-  reviseformData.append("user_id", window.authUser.id);
-  reviseformData.append("document_form", "PDF");
-
-  if (revisefileInput.files.length > 0) {
-    reviseformData.append("file", revisefileInput.files[0]);
-  }
-
-  this.disabled = true;
-  this.textContent = "Submitting...";
-
   try {
-    const result = await fetchWithRetry("/api/documents/revise", {
-      method: "POST",
-      headers: {
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-          .content,
-      },
-      body: reviseformData,
-    });
+    this.disabled = true;
+    this.textContent = "Submitting...";
+    const reviseformData = new FormData();
+    const revisefileInput = document.getElementById("revisefileInput");
 
-    // console.log(result);
-    if (result) {
-      // Close modals
-      document.getElementById("DocumentModal")?.classList.add("hidden");
-      document.getElementById("approvalModal")?.classList.add("hidden");
-      document.getElementById("disapprovalModal")?.classList.add("hidden");
-      document.getElementById("forDiscussionModal")?.classList.add("hidden");
-      document.getElementById("reviseModal")?.classList.add("hidden");
-      document.getElementById("esignModal")?.classList.add("hidden");
-      showMessage({
-        status: "success",
-        message: "Revised Document has been uploaded",
+    reviseformData.append(
+      "revisedocControlNumber",
+      document.getElementById("revisedocControlNumber").textContent.trim(),
+    );
+    reviseformData.append("user_id", window.authUser.id);
+    reviseformData.append("document_form", "PDF");
+
+    if (revisefileInput.files.length > 0) {
+      reviseformData.append("file", revisefileInput.files[0]);
+    }
+
+    try {
+      const result = await fetchWithRetry("/api/documents/revise", {
+        method: "POST",
+        headers: {
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+            .content,
+        },
+        body: reviseformData,
       });
-      loadlastpage();
+
+      // console.log(result);
+      if (result) {
+        // Close modals
+        document.getElementById("DocumentModal")?.classList.add("hidden");
+        document.getElementById("approvalModal")?.classList.add("hidden");
+        document.getElementById("disapprovalModal")?.classList.add("hidden");
+        document.getElementById("forDiscussionModal")?.classList.add("hidden");
+        document.getElementById("reviseModal")?.classList.add("hidden");
+        document.getElementById("esignModal")?.classList.add("hidden");
+        showMessage({
+          status: "success",
+          message: "Revised Document has been uploaded",
+        });
+        loadlastpage();
+      }
+    } catch (error) {
+      console.error("Revision failed:", error);
+    } finally {
+      this.disabled = false;
+      this.textContent = "Submit";
     }
   } catch (error) {
-    console.error("Revision failed:", error);
+    console.error(error);
   } finally {
     this.disabled = false;
     this.textContent = "Submit";
@@ -796,7 +783,7 @@ routeDocumentBtn.addEventListener("click", () => {
         filtered = users.filter(
           (u) =>
             u.office?.office_code === currentOffice &&
-            u.user_config.approval_type !== "routing"
+            u.user_config.approval_type !== "routing",
         );
         if (approvalSelect.classList.contains("hidden")) {
           approvalSelect.classList.remove("hidden");
@@ -805,7 +792,7 @@ routeDocumentBtn.addEventListener("click", () => {
         filtered = users.filter(
           (u) =>
             u.office?.office_code === currentOffice &&
-            u.user_config.approval_type !== "final-approval"
+            u.user_config.approval_type !== "final-approval",
         );
         approvalSelect.classList.add("hidden");
       }
@@ -825,8 +812,8 @@ routeDocumentBtn.addEventListener("click", () => {
 });
 routeSubmitBtnBtn.addEventListener("click", async function () {
   clearModalErrors();
-  this.disabled = true;
-  this.textContent = "Submitting...";
+  routeSubmitBtnBtn.disabled = true;
+  routeSubmitBtnBtn.textContent = "Submitting...";
 
   const modal = document.getElementById("routingModal");
 
@@ -908,8 +895,8 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
   } catch (error) {
     console.error("Routing request failed:", error);
   } finally {
-    this.disabled = false;
-    this.textContent = "Submit";
+    routeSubmitBtnBtn.disabled = false;
+    routeSubmitBtnBtn.textContent = "Submit";
   }
 
   // Stop submission if errors exist
@@ -917,7 +904,7 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     showModalErrors(
       errors,
       "routingmodalErrorMessage",
-      "routingmodalErrorList"
+      "routingmodalErrorList",
     );
     modal.scrollTop = 0;
     return;
@@ -1043,28 +1030,38 @@ function showModalErrors(errors, modal, errorlist) {
 //BUG ID: 4
 const confirmButton = document.getElementById("btnConfirm");
 confirmButton.addEventListener("click", async (e) => {
-  const post = {
-    document_id: confirmButton.dataset.documentId,
-    user_id: window.authUser.id,
-  };
-  const result = await fetchWithRetry("/api/documents/confirm", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-    },
-    body: JSON.stringify(post),
-  });
-  if (result) {
-    document.getElementById("routeDocumentBtn").classList.remove("hidden");
-    confirmButton.classList.add("hidden");
-    ["getDocs", "updatetable"].forEach((fn) => {
-      if (typeof window[fn] === "function") {
-        window[fn]();
-      } else {
-        console.warn(`Function "${fn}" is not available on this page.`);
-      }
+  try {
+    confirmButton.disabled = true;
+    confirmButton.textContent = "Confirming...";
+    const post = {
+      document_id: confirmButton.dataset.documentId,
+      user_id: window.authUser.id,
+    };
+    const result = await fetchWithRetry("/api/documents/confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
+      },
+      body: JSON.stringify(post),
     });
+    if (result) {
+      document.getElementById("routeDocumentBtn").classList.remove("hidden");
+      confirmButton.classList.add("hidden");
+      ["getDocs", "updatetable"].forEach((fn) => {
+        if (typeof window[fn] === "function") {
+          window[fn]();
+        } else {
+          console.warn(`Function "${fn}" is not available on this page.`);
+        }
+      });
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    confirmButton.disabled = false;
+    confirmButton.textContent = "Confirm";
   }
 });
 

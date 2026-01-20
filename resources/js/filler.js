@@ -9,7 +9,7 @@ async function fillOfficeDropdown(otherofficetb = null) {
       `<option value="">Select Office</option>` +
       offices
         .map(
-          (o) => `<option value="${o.office_code}">${o.office_code}</option>`
+          (o) => `<option value="${o.office_code}">${o.office_code}</option>`,
         )
         .join("") +
       `<option value="Other">Other</option>`;
@@ -69,7 +69,7 @@ window.fillOfficeDropdownCustom = async function fillOfficeDropdownCustom() {
       <li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" data-value="${o.office_code}">
         ${o.office_code}
       </li>
-    `
+    `,
       )
       .join("") +
     `<li class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" data-value="Other">
@@ -89,7 +89,7 @@ window.fillOfficeDropdownCustom = async function fillOfficeDropdownCustom() {
       `<option value="">Select Office</option>` +
       offices
         .map(
-          (o) => `<option value="${o.office_code}">${o.office_code}</option>`
+          (o) => `<option value="${o.office_code}">${o.office_code}</option>`,
         )
         .join("") +
       `<option value="Other">Other</option>`;
@@ -134,7 +134,7 @@ function fillDocType(otherdocumenttb = null) {
           doctype
             .map(
               (dt) =>
-                `<option value="${dt.document_type}">${dt.document_type}</option>`
+                `<option value="${dt.document_type}">${dt.document_type}</option>`,
             )
             .join("") +
           `<option value="Other">Other</option>`;
@@ -154,7 +154,7 @@ async function fetchAuthUser() {
       window.authUser = data.user;
     } else {
       window.authUser = null;
-      console.log("User is not logged in");
+      console.error("User is not logged in");
     }
     return data;
   } catch (error) {
@@ -208,7 +208,7 @@ window.checkOverDue = function checkOverDue(documents) {
     filterdoc = documents.filter(
       (doc) =>
         today > doc.due_date &&
-        activeStatuses.includes(doc.status.toLowerCase())
+        activeStatuses.includes(doc.status.toLowerCase()),
     );
   });
   return filterdoc;
@@ -230,7 +230,6 @@ async function updateStatus(document_id, status) {
       },
       body: JSON.stringify(payload),
     });
-    console.log(data);
   } catch (error) {
     console.error(error);
   }
@@ -245,3 +244,24 @@ document.querySelectorAll(".no-special-chars").forEach((el) => {
     el.value = el.value.replace(regex, "");
   });
 });
+
+window.populateYearDropDowm = function populateYearDropDowm() {
+  const currentYear = new Date().getFullYear();
+  const yearSelects = document.querySelectorAll("select.year");
+
+  yearSelects.forEach((select) => {
+    select.innerHTML = "";
+
+    for (let year = currentYear + 3; year >= currentYear - 3; year--) {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = year;
+
+      if (year === currentYear) {
+        option.selected = true;
+      }
+
+      select.appendChild(option);
+    }
+  });
+};

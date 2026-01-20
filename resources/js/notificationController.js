@@ -113,7 +113,7 @@ function populateNotifications(notificationsArray) {
               ${formatNotificationMessage(
                 notification.message,
                 notification.document.document_control_number,
-                sendarName
+                sendarName,
               )}
           </p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -133,7 +133,7 @@ function populateNotifications(notificationsArray) {
         notification.document.recipient_id,
         notification.document.destination_office,
         notification.document.receipt_confirmation,
-        notification.document.revision_status
+        notification.document.revision_status,
       );
 
       clearModalFields();
@@ -147,7 +147,7 @@ function populateNotifications(notificationsArray) {
       logActivity(
         "view",
         notification.document_id,
-        notification.document.document_control_number
+        notification.document.document_control_number,
       );
     });
 
@@ -160,10 +160,7 @@ function formatNotificationMessage(msg, docctrlnumber, sendName) {
 
   if (msg.includes("confirmed")) {
     return (
-      sendName +
-      " confirmed a document with control number <b>" +
-      docctrlnumber +
-      "</b> to your office"
+      sendName + " confirmed a document with control number <b>" + docctrlnumber
     );
   }
   if (msg.includes("uploaded")) {

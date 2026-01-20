@@ -421,7 +421,6 @@
             if (direction === "up" && index > 0) swapWith = siblings[index - 1];
             if (direction === "down" && index < siblings.length - 1) swapWith = siblings[index + 1];
 
-            console.log(menusData);
             // return;
 
             if (!swapWith) return;

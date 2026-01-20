@@ -72,7 +72,10 @@ class RoutingController extends Controller
 
         try {
 
-            $user = Auth::user();
+            $auth = Auth::user();
+
+            $user = User::with(['userConfig', 'office'])
+                ->findOrFail($auth->id);
             if (!$user) {
                 return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
             }
@@ -175,6 +178,7 @@ class RoutingController extends Controller
                 $activityData = [
                     'action'                  => 'route',
                     'document_id'             => $document->document_id,
+                    'office_id'             => $user->office->office_name,
                     // 'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
                     'document_control_number' => $document->document_control_number,
                     'user_id'                 => $user->id,
@@ -225,6 +229,7 @@ class RoutingController extends Controller
                 $activityData = [
                     'action'                  => 'route',
                     'document_id'             => $document->document_id,
+                    'office_id'             => $user->office->office_name,
                     'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
                     'document_control_number' => $document->document_control_number,
                     'user_id'                 => $user->id,

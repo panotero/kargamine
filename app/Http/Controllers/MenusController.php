@@ -59,17 +59,14 @@ class MenusController extends Controller
             'title' => [
                 'required',
                 'string',
-                'safe_text'
             ],
             'icon' => [
                 'nullable',
                 'string',
-                'safe_text'
             ],
             'link' => [
                 'nullable',
                 'string',
-                'safe_text'
             ],
             'allowed_roles' => [
                 'nullable'
@@ -155,17 +152,14 @@ class MenusController extends Controller
             'title' => [
                 'required',
                 'string',
-                'safe_text'
             ],
             'icon' => [
                 'nullable',
                 'string',
-                'safe_text'
             ],
             'link' => [
                 'nullable',
                 'string',
-                'safe_text'
             ],
             'allowed_roles' => [
                 'nullable'
@@ -173,7 +167,6 @@ class MenusController extends Controller
             'allowed_office' => [
                 'nullable',
                 'string',
-                'safe_text'
             ],
             'parent_menu' => [
                 'nullable',

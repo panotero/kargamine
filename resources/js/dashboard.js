@@ -45,7 +45,7 @@ window.initdashboard = function initdashboard() {
           headers: {
             Accept: "application/json",
           },
-        }
+        },
       );
       return documents;
       // console.log(data);
@@ -61,7 +61,7 @@ window.initdashboard = function initdashboard() {
     //get the last 10
 
     filterdoc = docs.filter(
-      (doc) => doc.status && doc.status.toLowerCase() === status
+      (doc) => doc.status && doc.status.toLowerCase() === status,
     );
   }
 
@@ -82,7 +82,7 @@ window.initdashboard = function initdashboard() {
       docs.forEach((doc) => {
         // console.log(doc.status);
 
-        switch ((doc.status || "").toLowerCase()) {
+        switch (doc.status.toLowerCase()) {
           case "pending":
             pending++;
             break;
@@ -95,7 +95,7 @@ window.initdashboard = function initdashboard() {
           case "for discussion":
             forDiscussion++;
             break;
-          case "complete":
+          case "completed":
             completed++;
             break;
           case "approved":
@@ -160,7 +160,7 @@ window.initdashboard = function initdashboard() {
   }
 
   const statusbtn = document.querySelectorAll(".statusButton");
-  const financeTable = document.getElementById("financeTable");
+  const modalcounttable = document.getElementById("countmodaltable");
   window.selectedStatus = "all";
   window.getDocsByStatus = function getDocsByStatus() {
     getDocsCounts();
@@ -197,33 +197,34 @@ window.initdashboard = function initdashboard() {
     switch (status) {
       case "pending":
         filteredDocuments = docs.filter(
-          (doc) => doc.status && doc.status.toLowerCase() === status
+          (doc) => doc.status && doc.status.toLowerCase() === status,
         );
         break;
       case "for approval":
         filteredDocuments = docs.filter(
-          (doc) => doc.status && doc.status.toLowerCase() === status
+          (doc) => doc.status && doc.status.toLowerCase() === status,
         );
         break;
       case "completed":
         filteredDocuments = docs.filter(
-          (doc) => doc.status && doc.status.toLowerCase() === status
+          (doc) => doc.status && doc.status.toLowerCase() === status,
         );
         break;
       case "remanded":
         filteredDocuments = docs.filter(
-          (doc) => doc.status && doc.status.toLowerCase() === status
+          (doc) => doc.status && doc.status.toLowerCase() === status,
         );
         break;
       case "overdue":
         filteredDocuments = docs.filter(
           (doc) =>
-            doc.due_date < today && !statuses.includes(doc.status.toLowerCase()) //BUG ID: 8 reversed the statuses to negative clause
+            doc.due_date < today &&
+            !statuses.includes(doc.status.toLowerCase()), //BUG ID: 8 reversed the statuses to negative clause
         );
         break;
       case "approved":
         filteredDocuments = docs.filter(
-          (doc) => doc.status && doc.status.toLowerCase() === status
+          (doc) => doc.status && doc.status.toLowerCase() === status,
         );
         break;
       case "all":
@@ -232,8 +233,8 @@ window.initdashboard = function initdashboard() {
     }
     //u
 
-    if ($.fn.DataTable.isDataTable(financeTable)) {
-      const dt = $(financeTable).DataTable();
+    if ($.fn.DataTable.isDataTable(modalcounttable)) {
+      const dt = $(modalcounttable).DataTable();
       dt.clear().draw();
     }
     // console.log(filteredDocuments);
@@ -244,11 +245,11 @@ window.initdashboard = function initdashboard() {
   };
 
   function updaterow(doc) {
-    if (!financeTable) return;
-    const tableBody = financeTable.querySelector("tbody");
+    if (!modalcounttable) return;
+    const tableBody = modalcounttable.querySelector("tbody");
     let dt = null;
-    if ($.fn.DataTable.isDataTable(financeTable)) {
-      dt = $(financeTable).DataTable();
+    if ($.fn.DataTable.isDataTable(modalcounttable)) {
+      dt = $(modalcounttable).DataTable();
     }
 
     let statuscolor = "bg-gray-100";
@@ -317,7 +318,7 @@ window.initdashboard = function initdashboard() {
         "transition-colors",
         "duration-300",
         "hover:dark:bg-white",
-        "hover:dark:text-black"
+        "hover:dark:text-black",
       );
       rowNode.classList.add("cursor-pointer");
       rowNode.addEventListener("click", function () {
@@ -326,7 +327,7 @@ window.initdashboard = function initdashboard() {
           doc.recipient_id,
           doc.destination_office,
           doc.receipt_confirmation,
-          doc.revision_status
+          doc.revision_status,
         );
         clearModalFields();
         showSkeletonLoaders();
@@ -337,10 +338,59 @@ window.initdashboard = function initdashboard() {
         logActivity("view", doc.document_id, doc.document_control_number);
       });
     } else {
-      console.error(
-        "selected table is not datatable please initiate datatable"
-      );
+      const tr = document.createElement("tr");
+      tr.innerHTML = rowHtml;
+      modalcounttable.appendChild(tr);
     }
+  }
+
+  function upsertTableRow({
+    dt = null, // DataTable instance OR null
+    tableBody = null, // <tbody> for non-DataTable
+    rowId = null, // unique ID (optional)
+    columns = [], // array of cell HTML / values
+    rowClasses = [],
+    onClick = null,
+    rawHtml = null, // fallback for non-DataTable
+  }) {
+    let rowNode = null;
+
+    //  DataTable mode
+    if (dt) {
+      const newRow = dt.row.add(columns).draw(false);
+      rowNode = newRow.node();
+    }
+    //  Normal table mode
+    else if (tableBody && rawHtml) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = rawHtml;
+      tableBody.appendChild(tr);
+      rowNode = tr;
+    }
+
+    if (!rowNode) return;
+
+    // Assign row id if provided
+    if (rowId) {
+      rowNode.dataset.rowId = rowId;
+    }
+
+    // Add classes
+    rowNode.classList.add(
+      "transition-colors",
+      "duration-300",
+      "hover:bg-gray-50",
+      "dark:hover:bg-gray-700",
+      ...rowClasses,
+    );
+
+    // Attach click handler
+    if (typeof onClick === "function") {
+      rowNode.classList.add("cursor-pointer");
+      rowNode.addEventListener("click", onClick);
+    }
+
+    return rowNode;
   }
 
   initDataTables();
