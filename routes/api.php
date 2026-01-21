@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{id}', [DocumentController::class, 'update']);
         Route::delete('/{id}', [DocumentController::class, 'destroy']);
         Route::post('/update_status', [DocumentController::class, 'update_status']);
+        Route::post('/update_label/{id}', [DocumentController::class, 'update_label']);
     });
 
 

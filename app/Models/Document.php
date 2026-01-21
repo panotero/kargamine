@@ -23,6 +23,7 @@ class Document extends Model
         'office_origin',
         'destination_office',
         'user_id',
+        'label',
         'recipient_id',
         'document_form',
         'document_type',

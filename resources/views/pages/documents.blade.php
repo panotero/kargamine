@@ -233,6 +233,6 @@
 <script>
     (function() {
         initdocumentcontroller();
-
+        filllabeldropdown();
     })();
 </script>

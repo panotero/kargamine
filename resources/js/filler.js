@@ -162,6 +162,64 @@ async function fetchAuthUser() {
     window.authUser = null;
   }
 }
+
+window.filllabeldropdown = async function labeldropdown(document_id = null) {
+  const label = document.querySelectorAll(".labeldropdown");
+
+  const labels = await fetchWithRetry("/api/labeltypes/", {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  //   return;
+
+  label.forEach((labeloption) => {
+    labeloption.innerHTML =
+      `<option value="">Select Office</option>` +
+      labels
+        .map((o) => `<option value="${o.label_name}">${o.label_name}</option>`)
+        .join("") +
+      `<option value="Other">Other</option>`;
+
+    labeloption.addEventListener("change", () => {
+      const row = labeloption.closest("tr");
+
+      if (!row) return;
+
+      const documentId = row.dataset.documentId; // camelCase
+      console.log("label has been changed to:" + labeloption.value);
+      updatelabel(documentId, labeloption.value);
+      //trigger label update
+    });
+  });
+
+  return true;
+};
+
+async function updatelabel(document_id, label) {
+  console.log("updated document id: " + document_id + " label to:" + label);
+  //   return;
+  const response = await fetch(`/api/documents/update_label/${document_id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+    },
+    body: JSON.stringify({
+      document_id: document_id,
+      label: label,
+    }),
+  });
+  if (response.ok) {
+    getDocs();
+    showMessage({
+      status: "success",
+      message: "label updated",
+    });
+  }
+}
+
 window.fetchAuthUser = fetchAuthUser;
 window.fillOfficeDropdown = fillOfficeDropdown;
 window.fillDocType = fillDocType;

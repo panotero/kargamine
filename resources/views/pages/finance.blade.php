@@ -2,10 +2,10 @@
 
 
     <div class="h-full container mx-auto py-5 ">
+        <div class="w-full py-5 flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
 
-        <div class="w-full py-5 flex justify-between">
-
-            <div class="w-96 text-black ">
+            <!-- Year Selector -->
+            <div class="w-full md:w-96 text-black">
                 <label class="text-sm text-gray-600 dark:text-white">Year</label>
                 <select id="year" class="year w-full border-gray-300 rounded-lg px-3 py-2" required>
                     <option value="2026">2026</option>
@@ -14,16 +14,19 @@
                 </select>
                 <p class="mt-1 text-sm text-red-600 hidden" data-error-for="transaction"></p>
             </div>
-            <div class="my-auto">
 
+            <!-- New Document Button -->
+            <div class="w-full md:w-auto">
                 <button id="btnNewFinanceDoc"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition modal-open">
+                    class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition modal-open">
                     + New Document
                 </button>
             </div>
         </div>
+
+        <!-- Budget Header -->
         <div class="relative w-full mb-5 statusButton cursor-pointer" data-status="all">
-            <p class="flex items-center gap-2">
+            <p class="flex flex-wrap items-center gap-2 text-sm sm:text-base">
                 <b id="currentYear">YEAR</b> budget: <b>₱</b>
                 <b id="yearBudget">1,000,000</b>
 
@@ -33,64 +36,64 @@
                     ✎
                 </button>
             </p>
+
+            <!-- Budget Card -->
             <div class="relative p-5 rounded-xl border border-gray-300 bg-white drop-shadow-sm overflow-hidden">
 
-                <!-- Battery Charge Fill -->
+                <!-- Battery Fill -->
                 <div id="budgetFill"
                     class="absolute inset-y-0 left-0 bg-gradient-to-r from-green-500 to-green-700 transition-all duration-700"
                     style="width: 0%;">
                 </div>
 
-                <!-- DARK TEXT (base layer) -->
-                <div class="w-full flex justify-between">
+                <!-- Budget Info -->
+                <div class="w-full flex flex-col sm:flex-row sm:justify-between gap-4">
                     <div class="relative z-10 pointer-events-none text-gray-900">
                         <p class="text-sm">Available Budget</p>
-                        <h2 class="mt-2 text-2xl font-bold" id="totalAvailableBudgetCount">₱0</h2>
+                        <h2 class="mt-2 text-xl sm:text-2xl font-bold" id="totalAvailableBudgetCount">₱0</h2>
                         <p class="mt-1 text-xs">Office Total Available Budget</p>
                     </div>
-                    <div class="text-right relative z-10 pointer-events-none text-gray-900">
+
+                    <div class="relative z-10 pointer-events-none text-gray-900 sm:text-right">
                         <p class="text-sm">Expenses</p>
-                        <h2 class="mt-2 text-2xl font-bold" id="totalExpenseCount">₱0</h2>
+                        <h2 class="mt-2 text-xl sm:text-2xl font-bold" id="totalExpenseCount">₱0</h2>
                         <p class="mt-1 text-xs">Office Total Expense</p>
                     </div>
-
                 </div>
-
-
             </div>
         </div>
-        <div class="grid md:grid-cols-4 grid-cols-2 gap-3">
+
+        <!-- Summary Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
                 data-status="approved">
-
                 <div>
                     <p class="text-sm">Processing</p>
                     <h2 class="mt-2 text-3xl font-bold" id="forSignature">₱0</h2>
                     <p class="mt-1 text-xs">Approved and for signature</p>
                 </div>
             </div>
+
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
                 data-status="for discussion">
                 <div>
-                    <div>
-                        <p class="text-sm">Procurement Expense</p>
-                        <h2 class="mt-2 text-3xl font-bold text-blue-600" id="forDiscussion">₱0</h2>
-                        <p class="mt-1 text-xs">Procured items and services</p>
-                    </div>
+                    <p class="text-sm">Procurement Expense</p>
+                    <h2 class="mt-2 text-3xl font-bold text-blue-600" id="forDiscussion">₱0</h2>
+                    <p class="mt-1 text-xs">Procured items and services</p>
                 </div>
             </div>
+
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
                 data-status="pending">
-
                 <div>
                     <p class="text-sm">Reimbursed</p>
                     <h2 class="mt-2 text-3xl font-bold text-orange-400" id="pending">₱0</h2>
                     <p class="mt-1 text-xs">Reimbursements</p>
                 </div>
             </div>
+
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
                 data-status="pending">
-
                 <div>
                     <p class="text-sm">Other Expense</p>
                     <h2 class="mt-2 text-3xl font-bold text-orange-400" id="pending">₱0</h2>
@@ -98,6 +101,7 @@
                 </div>
             </div>
         </div>
+
 
 
         <div class="mt-8 flex justify-center ">
@@ -117,7 +121,7 @@
                                 <th class="px-4 py-3">Payee</th>
                                 <th class="px-4 py-3">Particular</th>
                                 <th class="px-4 py-3">Responsibility Center</th>
-                                <th class="px-4 py-3">MFO/PAP</th>
+                                <th class="px-4 py-3">Expenditure</th>
                                 <th class="px-4 py-3">UACS Object Code</th>
                                 <th class="px-4 py-3">Amount</th>
                                 <th class="px-4 py-3">Fund Cluster</th>
@@ -189,7 +193,7 @@
                         <span id="financeResponsibilityCenter" class="text-gray-900 dark:text-gray-100"></span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-600 dark:text-gray-400">MFO / PAP:</span>
+                        <span class="text-gray-600 dark:text-gray-400">Expenditure:</span>
                         <span id="financeMfoPap" class="text-gray-900 dark:text-gray-100"></span>
                     </div>
                     <div class="flex justify-between">
@@ -278,13 +282,15 @@
 </div>
 
 
+<div id="newfinanceModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal p-4">
 
-<div id="newfinanceModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
-    <div class="bg-white rounded-xl p-6 w-80 w-[60vw] relative">
+    <!-- Modal Container -->
+    <div class="bg-white rounded-xl relative w-full max-w-3xl md:w-[60vw] p-6">
 
-        <div class="max-h-[60vh] overflow-y-auto p-3">
+        <div class="max-h-[70vh] overflow-y-auto">
 
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Upload New Document</h2>
+            <h2 class="text-lg md:text-xl font-semibold text-gray-700 mb-4">Upload New Document</h2>
+
             <div id="modalErrorMessage"
                 class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
                 <ul id="modalErrorList" class="list-disc list-inside"></ul>
@@ -298,7 +304,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 16V4m0 0L3 8m4-4l4 4m-4 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3" />
                 </svg>
-                <p class="text-sm">
+                <p class="text-sm text-center">
                     Drag & drop a PDF file here or
                     <span class="text-blue-600 underline">click to browse</span>
                 </p>
@@ -307,7 +313,9 @@
             </div>
             <p id="financefileInfo" class="text-sm text-gray-600 mt-3 text-center"></p>
             <button id="clearfinanceSelectionBtn"
-                class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition">Clear</button>
+                class="mt-3 bg-gray-200 px-3 py-1 rounded hidden hover:bg-gray-300 transition w-full md:w-auto">
+                Clear
+            </button>
 
             <!-- Form Fields -->
             <div class="mt-6 text-black grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -351,10 +359,21 @@
                     <label class="text-sm text-gray-600">Expenditure Type</label>
                     <select id="expenditure" class="w-full border-gray-300 rounded-lg px-3 py-2" required>
                         <option value="">Select</option>
-                        <option value="ORS">Obligation Request and Status (ORS)</option>
-                        <option value="DV">Disbursement Voucher (DV)</option>
+                        <option value="EME">Extraordinary and Miscellaneous Expenses (EME)</option>
+                        <option value="Mobile Reimbursement">Mobile Reimbursement</option>
+                        <option value="Subscription Reimbursement">Subscription Reimbursement</option>
+                        <option value="Subscription Payment">Subscription Payment</option>
+                        <option value="Payment">Payment</option>
+                        <option value="Reimbursement">Reimbursement</option>
+                        <option value="Other">Other</option>
                     </select>
-                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="expenditure"></p>
+                    <div id="otherExpenditureContainer" class="hidden my-3">
+                        <label class="text-sm text-gray-600">Other Expenditure</label>
+                        <input id="otherExpenditure" type="text"
+                            class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                        <p class="mt-1 text-sm text-red-600 hidden" data-error-for="otherExpenditure"></p>
+
+                    </div>
                 </div>
 
                 <div>
@@ -384,24 +403,23 @@
                 </div>
 
             </div>
-
         </div>
 
         <!-- Modal Buttons -->
-        <div class="flex justify-end mt-8 space-x-3">
+        <div class="flex flex-col md:flex-row justify-end mt-6 md:space-x-3 space-y-2 md:space-y-0">
             <button id="btnCancelModal"
-                class="px-4 py-2 rounded-lg border text-black border-gray-300 hover:bg-gray-100 modal-close">
+                class="px-4 py-2 rounded-lg border text-black border-gray-300 hover:bg-gray-100 modal-close w-full md:w-auto">
                 Cancel
             </button>
             <button id="submitFinanceBtn"
-                class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 submitbtn">
+                class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 submitbtn w-full md:w-auto">
                 Submit
             </button>
         </div>
 
     </div>
-
 </div>
+
 <div id="BudgetModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
     <div class="bg-white rounded-xl p-6 w-80 w-[60vw] relative">
 
@@ -698,7 +716,7 @@
                 doc.responsibility_center ?? "-";
 
             document.getElementById("financeMfoPap").textContent =
-                doc.mfo_pap ?? "-";
+                doc.expenditure ?? "-";
 
             document.getElementById("financeUacs").textContent =
                 doc.uacs_object_code ?? "-";
@@ -827,7 +845,7 @@
                         doc.payee ?? "-", // Payee
                         doc.particular ?? "-", // Particular
                         doc.responsibility_center ?? "-", // Responsibility Center
-                        doc.mfo_pap ?? "-", // MFO/PAP
+                        doc.expenditure ?? "-", // MFO/PAP
                         doc.uacs_object_code ?? "-", // UACS Object Code
                         "₱" + Number(doc.amount).toLocaleString() ?? "-", // Amount
                         doc.fund_cluster ?? "-", // Fund Cluster
@@ -870,7 +888,7 @@
                 <td>${doc.payee ?? "-"}</td>
                 <td>${doc.particular ?? "-"}</td>
                 <td>${doc.responsibility_center ?? "-"}</td>
-                <td>${doc.mfo_pap ?? "-"}</td>
+                <td>${doc.expenditure ?? "-"}</td>
                 <td>${doc.uacs_object_code ?? "-"}</td>
                 <td>${doc.amount ?? "-"}</td>
                 <td>${doc.fund_cluster ?? "-"}</td>
@@ -1032,13 +1050,25 @@
             }
         }
 
-
+        document.getElementById("expenditure").addEventListener("change", function() {
+            if (this.value.toLowerCase() === "other") {
+                document.getElementById("otherExpenditureContainer").classList.remove("hidden");
+            } else {
+                document.getElementById("otherExpenditureContainer").classList.add("hidden");
+            }
+        })
         async function submitDocumentForm() {
             const fileInput = document.getElementById("financefileInput");
 
             if (!fileInput.files.length) {
                 alert("Please select a PDF file.");
                 return;
+            }
+            let expenditureValue = document.getElementById("expenditure").value.toLowerCase();
+
+            if (expenditureValue === "other") {
+                // If "Other" is selected, get the value from the "otherExpenditure" textbox
+                expenditureValue = document.getElementById("otherExpenditure").value;
             }
 
             // Build FormData
@@ -1048,7 +1078,7 @@
             formData.append('payee', document.getElementById("payee").value);
             formData.append('particular', document.getElementById("particular").value);
             formData.append('responsibility_center', document.getElementById("responsibility_center").value);
-            formData.append('expenditure', document.getElementById("expenditure").value);
+            formData.append('expenditure', expenditureValue);
             formData.append('uacs_object_code', document.getElementById("uacs_object_code").value);
             formData.append('amount', parseFloat(document.getElementById("amount").value) || 0);
             formData.append('fund_cluster', document.getElementById("fund_cluster").value);

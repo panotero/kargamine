@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use App\Services\ApplicationMailer;
+use Psr\Http\Message\RequestInterface;
 
 class DocumentController extends Controller
 {
@@ -537,6 +538,7 @@ class DocumentController extends Controller
     }
     public function store(Request $request)
     {
+        // dd($request->all());
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
 
@@ -580,7 +582,6 @@ class DocumentController extends Controller
                 'string',
                 'max:50',
                 'safe_text',
-                Rule::exists('document_types', 'document_type')
             ],
             'date_of_document' => 'nullable|date',
             'due_date' => 'nullable|date',
@@ -755,6 +756,27 @@ class DocumentController extends Controller
         }
 
         $document->update($request->all(),);
+        return response()->json(['message' => 'Document updated successfully', 'data' => $document]);
+    }
+
+    public function update_label($id, Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+
+            'label' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
+        ]);
+        $document = Document::findOrFail($request->document_id);
+
+        if (!$document) {
+            return response()->json(['error' => 'Document not found'], 404);
+        }
+        $document->update([
+            'label' => $request->label,
+        ]);
         return response()->json(['message' => 'Document updated successfully', 'data' => $document]);
     }
 

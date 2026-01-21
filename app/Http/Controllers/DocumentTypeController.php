@@ -131,12 +131,14 @@ class DocumentTypeController extends Controller
             'message'           => 'Document created successfully',
             'postdata'              => $validated,
         ]);
-        return $validated;
         $labeltype = LabelType::create([
             'label_name'  => $validated['label_name'],
         ]);
 
-        return response()->json($labeltype, 201);
+        return response()->json([
+            'success' => true,
+            'data' => $labeltype,
+        ], 201);
     }
 
     public function showlabel(string $id)

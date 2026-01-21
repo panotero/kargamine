@@ -185,11 +185,11 @@
         <h3 class="text-lg font-semibold mb-4">Add New Label Type</h3>
 
         <form id="labelTypeForm">
-            <input type="text" name="label_type" placeholder="Label"
+            <input type="text" name="label_name" placeholder="Label"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
                           dark:bg-gray-900 p-2"
                 required>
-            <p class="mt-1 text-sm text-red-600 hidden" data-error-for="label_type"></p>
+            <p class="mt-1 text-sm text-red-600 hidden" data-error-for="label_name"></p>
 
             <div class="flex justify-end gap-3">
                 <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 closemodalbutton">
@@ -278,7 +278,7 @@
                     rowId: l.id,
                     rawHtml: `
                 <td class="p-3">${l.id}</td>
-                <td class="p-3">${l.label}</td>
+                <td class="p-3">${l.label_name}</td>
                 <td class="p-3">${l.created_at}</td>
                 <td class="p-3">
                     <button
@@ -519,21 +519,17 @@
 
                 clearValidationErrors();
 
-                if (!response.ok) {
-                    const result = await response.json();
+                if (!response.success) {
+                    clearValidationErrors();
+                    showValidationErrors(response.invalid_fields);
+                    return;
 
-                    if (result.success === false && result.invalid_fields) {
-                        clearValidationErrors();
-                        showValidationErrors(result.invalid_fields);
-                        return;
-                    }
-
-                    throw new Error(result.message || "Request failed");
+                    throw new Error(response.message || "Request failed");
                 }
 
                 showMessage({
                     status: "success",
-                    message: "userconfig creation success",
+                    message: "label created",
                 });
                 closeModal('labelModal');
                 loadData();

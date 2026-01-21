@@ -95,6 +95,7 @@ function initdocumentcontroller() {
       removeDocsLoader(allDocsBody);
       removeDocsLoader(assignedBody);
     }
+    filllabeldropdown();
   };
 
   // ---------------------- LOADER ----------------------
@@ -185,10 +186,29 @@ function initdocumentcontroller() {
     let labelOptionHtml = "";
 
     if (labelValue) {
-      labelOptionHtml = `<option selected value="${labelValue}">${labelValue}</option>`;
+      labelOptionHtml = `<option selected value="${labelValue}" class="label">${labelValue}</option>`;
     } else {
-      labelOptionHtml = `<option selected disabled value="">Set Label</option>`;
+      labelOptionHtml = `<option selected disabled value="" class="label">Set Label</option>`;
     }
+
+    const labelCellHtml = labelValue
+      ? `
+    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-800">
+      ${labelValue}
+    </span>
+  `
+      : source === "assigned"
+        ? `
+          <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
+            ${labelOptionHtml}
+            <option value="General">General</option>
+            <option value="Confidential">Confidential</option>
+          </select>
+        `
+        : `
+          <span class="text-gray-400 text-xs">-</span>
+        `;
+
     const rowHtml = `
     <tr class="border-t hover:dark:bg-gray-50 hover:dark:text-black cursor-pointer"
         data-document-id="${document_id}"
@@ -199,15 +219,7 @@ function initdocumentcontroller() {
       <td class="px-4 py-2">${document_control_number}</td>
       <td class="px-4 py-2">${document_code}</td>
       <td class="px-4 py-2">
-  <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
-    ${labelOptionHtml}
-    <option value="General" ${
-      labelValue === "General" ? "selected" : ""
-    }>General</option>
-    <option value="Confidential" ${
-      labelValue === "Confidential" ? "selected" : ""
-    }>Confidential</option>
-  </select>
+  ${labelCellHtml}
 </td>
       <td class="px-2 py-2 max-w-[150px] truncate" title="${particular}">
   ${particular}
