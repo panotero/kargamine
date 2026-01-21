@@ -138,49 +138,147 @@
 
     </div>
 
-    <div id="financeModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80 w-[60vw]  relative">
-            <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Document Created</h2>
-            <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
-                <table id="countmodaltable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Control Number</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Document Number</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Subject</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Origin Office</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Destination Office</span>
-                            </th>
-                            <th class="px-4 py-auto">
-                                <span class="inline-flex items-center">Status</span>
-                            </th>
-                        </tr>
-                    </thead>
+</div>
+<div id="financeModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
 
-                    <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
-                        <!-- Rows will be inserted dynamically -->
-                    </tbody>
-                </table>
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+
+        <!-- HEADER -->
+        <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <h2 class="hidden text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                ID: <span id="financeId">—</span>
+            </h2>
+            <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                Transaction: <span id="financeTransaction">—</span>
+            </h2>
+        </div>
+
+        <!-- BODY -->
+        <div
+            class="max-h-[60vh] overflow-y-auto flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
+
+            <!-- LEFT: METADATA -->
+            <div class="w-full lg:w-1/2 p-6 space-y-4">
+                <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">
+                    Finance Document Details
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Status:
+                    <span id="financeStatus" class="font-medium text-blue-600 dark:text-blue-400">—</span>
+                </p>
+
+                <div class="space-y-2 text-md">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Uploading Office:</span>
+                        <span id="financeOffice" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Uploaded By:</span>
+                        <span id="financeUploader" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Payee:</span>
+                        <span id="financePayee" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Particular:</span>
+                        <span id="financeParticular" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Responsibility Center:</span>
+                        <span id="financeResponsibilityCenter" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">MFO / PAP:</span>
+                        <span id="financeMfoPap" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">UACS Object Code:</span>
+                        <span id="financeUacs" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Fund Cluster:</span>
+                        <span id="financeFundCluster" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Amount:</span>
+                        <span id="financeAmount" class="text-gray-900 dark:text-gray-100 font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Date Signed:</span>
+                        <span id="financeDateSigned" class="text-gray-900 dark:text-gray-100"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Date Processed:</span>
+                        <span id="financeDateProcessed" class="text-gray-900 dark:text-gray-100">—</span>
+                    </div>
+                </div>
             </div>
-            <div class="w-full flex justify-end">
-                <button
-                    class="modal-close px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
-                    Close
-                </button>
+
+            <!-- RIGHT: FILE + ACTIVITY -->
+            <div class="w-full lg:w-1/2 p-6 space-y-6">
+
+                <!-- FILE -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">
+                            Attached File
+                        </h3>
+
+                        <a id="financeDownloadBtn" download
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition">
+                            Download Latest
+                        </a>
+                    </div>
+
+                    <div
+                        class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-between">
+                        <span id="financeFileName" class="text-gray-800 dark:text-gray-200 truncate">—</span>
+
+                        <a id="financeViewFile" href="#" target="_blank"
+                            class="text-blue-600 hover:underline text-sm">
+                            View File
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ACTIVITY -->
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">
+                            Activity History
+                        </h3>
+
+                        <button id="addFinanceActivityBtn"
+                            class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                            + Add Action
+                        </button>
+                    </div>
+
+                    <ul id="financeActivityLog" class="space-y-2 max-h-48 overflow-y-auto">
+                        <div class="flex items-center justify-center">
+                            <div class="w-8 h-8 border-2 border-gray-200 border-t-2 border-t-gray-800 rounded-full animate-spin"
+                                role="status" aria-label="Loading">
+                            </div>
+                        </div>
+                    </ul>
+                </div>
 
             </div>
         </div>
+
+        <!-- FOOTER -->
+        <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
+            <button
+                class="modal-close border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                Close
+            </button>
+        </div>
     </div>
 </div>
+
+
+
 <div id="newfinanceModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
     <div class="bg-white rounded-xl p-6 w-80 w-[60vw] relative">
 
@@ -352,6 +450,82 @@
     </div>
 
 </div>
+<div id="addFinanceActivityModal"
+    class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/50 px-4 modal">
+
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+        <!-- HEADER -->
+        <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Add Finance Activity
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Record a new action or status update
+            </p>
+        </div>
+
+        <!-- BODY -->
+        <div class="px-6 py-5 space-y-4">
+
+            <!-- ACTIVITY -->
+            <div>
+                <label for="activityInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Activity <span class="text-red-500">*</span>
+                </label>
+                <input id="activityInput" type="text" maxlength="255"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white
+                           focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g. Document reviewed">
+            </div>
+
+            <!-- STATUS -->
+            <div>
+                <label for="statusSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Status
+                </label>
+                <select id="statusSelect"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white
+                           focus:ring-blue-500 focus:border-blue-500">
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="returned">Returned</option>
+                </select>
+            </div>
+
+            <!-- REMARKS -->
+            <div>
+                <label for="remarksInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Remarks
+                </label>
+                <textarea id="remarksInput" rows="3"
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white
+                           focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Optional notes or remarks"></textarea>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
+
+            <button
+                class="modal-close border border-gray-300 dark:border-gray-700
+                       text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800
+                       px-4 py-2 rounded-lg text-sm font-medium">
+                Cancel
+            </button>
+
+            <button id="saveFinanceActivityBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white
+                       px-4 py-2 rounded-lg text-sm font-medium">
+                Save Activity
+            </button>
+        </div>
+
+    </div>
+</div>
+
 
 <script>
     (function() {
@@ -386,6 +560,59 @@
 
                 document.getElementById("budgetAmount").value = 0;
                 document.getElementById("submitBudgetBtn").textContent = "Submit";
+            }
+        });
+        document.getElementById("addFinanceActivityBtn")?.addEventListener("click", async () => {
+            initModal({
+                modalId: "addFinanceActivityModal"
+            });
+        });
+
+        document.getElementById("saveFinanceActivityBtn")?.addEventListener("click", async () => {
+            const activity = document.getElementById("activityInput").value.trim();
+            const status = document.getElementById("statusSelect").value;
+            const remarks = document.getElementById("remarksInput").value.trim();
+            const finance_id = document.getElementById("financeId").textContent;
+
+            const payload = {
+                activity,
+                status,
+                finance_id,
+                remarks: remarks || null,
+            };
+
+            try {
+                this.disabled = true;
+                this.textContent = "Saving...";
+                const response = await postFinanceActivity(payload);
+
+                if (response.success) {
+                    // Optional: refresh activity list
+                    // await loadFinanceActivities();
+
+                    document.querySelectorAll(
+                            "#addFinanceActivityModal input, #addFinanceActivityModal textarea")
+                        .forEach(el => el.value = "");
+
+                    document.getElementById("addFinanceActivityModal").classList.add("hidden");
+                    showMessage({
+                        status: "success",
+                        message: "Activity Saved",
+                    });
+                    const activities = await getFinanceActivities(finance_id);
+                    // console.log(activities);
+                    populateFinanceActivityLog(activities.data);
+                }
+            } catch (error) {
+                console.error("Failed to save finance activity:", error);
+                showMessage({
+                    status: "error",
+                    message: "error",
+                });
+            } finally {
+
+                this.disabled = false;
+                this.textContent = "Save Activity";
             }
         });
 
@@ -446,6 +673,95 @@
             getFinanceData(this.value);
         });
 
+        function populateFinanceModal(doc) {
+            document.getElementById("financeTransaction").textContent =
+                doc.transaction ?? "-";
+            document.getElementById("financeId").textContent =
+                doc.id ?? "-";
+
+            document.getElementById("financeDateProcessed").textContent =
+                doc.date_processed ?? "-";
+
+            document.getElementById("financeOffice").textContent =
+                doc.uploading_office_info?.office_name ?? "-";
+
+            document.getElementById("financeUploader").textContent =
+                doc.uploader_info?.name ?? "-";
+
+            document.getElementById("financePayee").textContent =
+                doc.payee ?? "-";
+
+            document.getElementById("financeParticular").textContent =
+                doc.particular ?? "-";
+
+            document.getElementById("financeResponsibilityCenter").textContent =
+                doc.responsibility_center ?? "-";
+
+            document.getElementById("financeMfoPap").textContent =
+                doc.mfo_pap ?? "-";
+
+            document.getElementById("financeUacs").textContent =
+                doc.uacs_object_code ?? "-";
+
+            document.getElementById("financeFundCluster").textContent =
+                doc.fund_cluster ?? "-";
+
+            document.getElementById("financeAmount").textContent =
+                doc.amount ?
+                "₱" + Number(doc.amount).toLocaleString(undefined, {
+                    minimumFractionDigits: 2
+                }) :
+                "-";
+
+            document.getElementById("financeDateSigned").textContent =
+                doc.date_signed ?? "-";
+
+            document.getElementById("financeFileName").textContent =
+                doc.file_name ?? "-";
+
+            const fileLink = document.getElementById("financeViewFile");
+            if (doc.file_path) {
+                fileLink.href = doc.file_path;
+                fileLink.classList.remove("pointer-events-none", "text-gray-400");
+            } else {
+                fileLink.href = "#";
+                fileLink.classList.add("pointer-events-none", "text-gray-400");
+            }
+            const downloadBtn = document.getElementById("financeDownloadBtn");
+
+            if (doc.file_path) {
+                downloadBtn.href = doc.file_path;
+                downloadBtn.classList.remove("pointer-events-none", "opacity-50");
+            } else {
+                downloadBtn.href = "#";
+                downloadBtn.classList.add("pointer-events-none", "opacity-50");
+            }
+        }
+
+        document.getElementById("addFinanceActivityBtn")?.addEventListener("click", () => {
+            // openAddFinanceActivityModal();
+            console.log("Add finance action clicked");
+        });
+
+        async function postFinanceActivity(payload) {
+            return await fetchWithRetry("/api/finance/finance-activity", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify(payload),
+            });
+        }
+        async function getFinanceActivities(finance_id) {
+            return await fetchWithRetry(`/api/finance/finance-activity/${finance_id}`, {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                },
+            });
+        }
 
         getFinanceData();
 
@@ -506,8 +822,8 @@
                     const newRow = dt.row.add([
                         doc.transaction ?? "-", // Transaction
                         doc.date_processed ?? "-", // Date Processed
-                        doc.uploading_office ?? "-", // Uploading Office
-                        doc.uploaded_by ?? "-", // Uploaded By
+                        doc.uploading_office_info.office_name ?? "-", // Uploading Office
+                        doc.uploader_info.name ?? "-", // Uploaded By
                         doc.payee ?? "-", // Payee
                         doc.particular ?? "-", // Particular
                         doc.responsibility_center ?? "-", // Responsibility Center
@@ -533,30 +849,24 @@
                         "cursor-pointer"
                     );
 
-                    // rowNode.addEventListener("click", function() {
-                    //     checkActionButtons(
-                    //         doc.status,
-                    //         doc.recipient_id,
-                    //         doc.destination_office,
-                    //         doc.receipt_confirmation,
-                    //         doc.revision_status
-                    //     );
-                    //     clearModalFields();
-                    //     showSkeletonLoaders();
-                    //     initModal({
-                    //         modalId: "DocumentModal"
-                    //     });
-                    //     populateDocumentModal(doc.id); // Use doc.id as document_id
-                    //     logActivity("view", doc.id, doc.transaction); // Example
-                    // });
+                    rowNode.addEventListener("click", async function() {
+                        populateFinanceModal(doc);
+                        const activities = await getFinanceActivities(doc.id);
+                        // console.log(activities);
+                        populateFinanceActivityLog(activities.data);
+                        initModal({
+                            modalId: "financeModal"
+                        });
+                        //populate finance modal
+                    });
                 } else {
                     // Fallback if DataTable not initialized
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                 <td>${doc.transaction ?? "-"}</td>
                 <td>${doc.date_processed ?? "-"}</td>
-                <td>${doc.uploading_office ?? "-"}</td>
-                <td>${doc.uploaded_by ?? "-"}</td>
+                <td>${doc.uploading_office_info.office_name ?? "-"}</td>
+                <td>${doc.uploader_info.name ?? "-"}</td>
                 <td>${doc.payee ?? "-"}</td>
                 <td>${doc.particular ?? "-"}</td>
                 <td>${doc.responsibility_center ?? "-"}</td>
@@ -570,6 +880,48 @@
             `;
                     tableBody.appendChild(tr);
                 }
+            });
+        }
+
+        function populateFinanceActivityLog(activities) {
+            const container = document.getElementById("financeActivityLog");
+            if (!container) return;
+
+            // Clear existing
+            container.innerHTML = "";
+
+            if (!activities || !activities.length) {
+                container.innerHTML = `<li class="text-gray-500 dark:text-gray-400 text-sm">No activity yet.</li>`;
+                return;
+            }
+
+            // Reverse so latest appears first
+            const sorted = [...activities].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            sorted.forEach(act => {
+                const timestamp = new Date(act.timestamp);
+                const formattedTime = timestamp.toLocaleString("en-PH", {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                });
+
+                const li = document.createElement("li");
+                li.className = "bg-gray-50 dark:bg-gray-800 p-3 rounded-lg shadow-sm";
+
+                li.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="font-medium text-gray-800 dark:text-gray-100">${act.activity}</p>
+                    ${act.remarks ? `<p class="text-gray-600 dark:text-gray-400 text-sm mt-1">${act.remarks}</p>` : ''}
+                </div>
+                <span class="text-gray-500 dark:text-gray-400 text-xs ml-2">${formattedTime}</span>
+            </div>
+        `;
+
+                container.appendChild(li);
             });
         }
 

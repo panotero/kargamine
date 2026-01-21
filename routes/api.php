@@ -20,6 +20,7 @@ use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\FinanceBudgetController;
+use App\Http\Controllers\FinanceActivityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -128,6 +129,9 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('finance')->group(function () {
         Route::post('/document', [FinanceController::class, 'store']);
         Route::get('/getdata', [FinanceController::class, 'get']);
+
+        Route::get('/finance-activity/{finance_id}', [FinanceActivityController::class, 'index']);
+        Route::post('/finance-activity', [FinanceActivityController::class, 'store']);
     });
 
 

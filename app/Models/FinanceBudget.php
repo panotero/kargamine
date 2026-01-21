@@ -13,10 +13,12 @@ class FinanceBudget extends Model
     protected $fillable = [
         'year',
         'amount',
+        'office_code',
     ];
 
     protected $casts = [
         'year'   => 'integer',
         'amount' => 'decimal:2',
+        'office_code' => 'string',
     ];
 }

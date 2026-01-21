@@ -16,7 +16,7 @@ class FinanceController extends Controller
 
         $user = Auth::user();
 
-        return response()->json(Finance::where("uploading_office", $user->office_id)
+        return response()->json(Finance::with(['uploaderInfo', 'uploadingOfficeInfo'])->where("uploading_office", $user->office_id)
             ->orderBy('created_at', 'desc')
             ->get());
     }
@@ -64,7 +64,7 @@ class FinanceController extends Controller
             }
 
             $file->move($folderPath, $fileName);
-            $filePath = "storage/assets/finance/pdf/$fileName";
+            $filePath = "storage/assets/finance/$officeFolder/pdf/$fileName";
 
             $data['file_name'] = $cleanOriginal;
             $data['file_path'] = $filePath;

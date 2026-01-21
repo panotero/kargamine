@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\FinanceBudget;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class FinanceBudgetController extends Controller
 {
@@ -16,10 +18,13 @@ class FinanceBudgetController extends Controller
      */
     public function index(Request $request)
     {
+        $authuser = Auth::user();
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($authuser->id);
         $query = FinanceBudget::query();
 
         if ($request->filled('year')) {
-            $query->where('year', $request->year);
+            $query->where('year', $request->year)->where('office_code', $user->office->office_code);
         }
 
         return response()->json([
@@ -33,9 +38,22 @@ class FinanceBudgetController extends Controller
      */
     public function store(Request $request)
     {
+
+        $authuser = Auth::user();
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($authuser->id);
         $validator = Validator::make($request->all(), [
-            'year'   => 'required|integer|min:2000|max:2100|unique:finance_budget,year',
-            'amount' => 'required|numeric|min:0',
+
+            'amount' => [
+                'required',
+                'numeric',
+                'safe_text'
+            ],
+            'year' => [
+                'required',
+                'string',
+                'safe_text'
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -45,9 +63,13 @@ class FinanceBudgetController extends Controller
             ], 422);
         }
 
+        $authuser = Auth::user();
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($authuser->id);
         $budget = FinanceBudget::create([
             'year'   => $request->year,
             'amount' => $request->amount,
+            'office_code'   => $user->office->office_code,
         ]);
 
         return response()->json([
@@ -62,6 +84,9 @@ class FinanceBudgetController extends Controller
      */
     public function update(Request $request)
     {
+        $authuser = Auth::user();
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($authuser->id);
         // dd($request->all());
 
         $validator = Validator::make($request->all(), [
@@ -76,7 +101,7 @@ class FinanceBudgetController extends Controller
                 'safe_text'
             ],
         ]);
-        $budget = FinanceBudget::where('year', $request->year)->first();
+        $budget = FinanceBudget::where('year', $request->year)->where('office_code', $user->office->office_code)->first();
 
         if (!$budget) {
             return response()->json([
@@ -108,7 +133,10 @@ class FinanceBudgetController extends Controller
      */
     public function show($year)
     {
-        $budget = FinanceBudget::where('year', $year)->first();
+        $authuser = Auth::user();
+        $user = User::with(['userConfig', 'office'])
+            ->findOrFail($authuser->id);
+        $budget = FinanceBudget::where('year', $year)->where('office_code', $user->office->office_code)->first();
 
         if (!$budget) {
             return response()->json([

@@ -29,4 +29,13 @@ class Finance extends Model
         'file_name',
         'file_path',
     ];
+
+    public function uploaderInfo()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by', 'id');
+    }
+    public function uploadingOfficeInfo()
+    {
+        return $this->belongsTo(Office::class, 'uploading_office', 'office_id');
+    }
 }
