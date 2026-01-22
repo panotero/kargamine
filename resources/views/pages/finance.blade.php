@@ -66,38 +66,38 @@
         <!-- Summary Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
-                data-status="approved">
+                data-status="processing">
                 <div>
                     <p class="text-sm">Processing</p>
-                    <h2 class="mt-2 text-3xl font-bold" id="forSignature">₱0</h2>
-                    <p class="mt-1 text-xs">Approved and for signature</p>
+                    <h2 class="mt-2 text-3xl font-bold" id="processing">0</h2>
+                    <p class="mt-1 text-xs">Processing documents</p>
                 </div>
             </div>
 
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
-                data-status="for discussion">
+                data-status="approved">
                 <div>
-                    <p class="text-sm">Procurement Expense</p>
-                    <h2 class="mt-2 text-3xl font-bold text-blue-600" id="forDiscussion">₱0</h2>
-                    <p class="mt-1 text-xs">Procured items and services</p>
+                    <p class="text-sm">Approved</p>
+                    <h2 class="mt-2 text-3xl font-bold text-blue-600" id="approved">0</h2>
+                    <p class="mt-1 text-xs">Approved documents</p>
                 </div>
             </div>
 
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
-                data-status="pending">
+                data-status="completed">
                 <div>
-                    <p class="text-sm">Reimbursed</p>
-                    <h2 class="mt-2 text-3xl font-bold text-orange-400" id="pending">₱0</h2>
-                    <p class="mt-1 text-xs">Reimbursements</p>
+                    <p class="text-sm">Completed</p>
+                    <h2 class="mt-2 text-3xl font-bold text-orange-400" id="completed">0</h2>
+                    <p class="mt-1 text-xs">Completed documents</p>
                 </div>
             </div>
 
             <div class="col-span-1 p-5 rounded-md drop-shadow-md bg-white text-black statusButton cursor-pointer"
-                data-status="pending">
+                data-status="returned">
                 <div>
-                    <p class="text-sm">Other Expense</p>
-                    <h2 class="mt-2 text-3xl font-bold text-orange-400" id="pending">₱0</h2>
-                    <p class="mt-1 text-xs">Purchase, Service and other expenses</p>
+                    <p class="text-sm">Returned</p>
+                    <h2 class="mt-2 text-3xl font-bold text-orange-400" id="returned">0</h2>
+                    <p class="mt-1 text-xs">Returned documents</p>
                 </div>
             </div>
         </div>
@@ -231,7 +231,7 @@
 
                         <a id="financeDownloadBtn" download
                             class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition">
-                            Download Latest
+                            Download File
                         </a>
                     </div>
 
@@ -505,7 +505,8 @@
                 <select id="statusSelect"
                     class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white
                            focus:ring-blue-500 focus:border-blue-500">
-                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="processing">Processing</option>
                     <option value="completed">Completed</option>
                     <option value="returned">Returned</option>
                 </select>
@@ -613,12 +614,14 @@
                         .forEach(el => el.value = "");
 
                     document.getElementById("addFinanceActivityModal").classList.add("hidden");
+                    // document.getElementById("financeModal").classList.add("hidden");
                     showMessage({
                         status: "success",
                         message: "Activity Saved",
                     });
                     const activities = await getFinanceActivities(finance_id);
                     // console.log(activities);
+                    getFinanceData();
                     populateFinanceActivityLog(activities.data);
                 }
             } catch (error) {
@@ -694,6 +697,8 @@
         function populateFinanceModal(doc) {
             document.getElementById("financeTransaction").textContent =
                 doc.transaction ?? "-";
+            document.getElementById("financeStatus").textContent =
+                doc.status ?? "-";
             document.getElementById("financeId").textContent =
                 doc.id ?? "-";
 
@@ -786,7 +791,6 @@
         async function getFinanceData(year = null) {
             year = document.getElementById("year").value;
             let filteredDocs = [];
-            //BUG ID: 1 refactored getActivityData function
             try {
                 const documents = await fetchWithRetry(
                     `/api/finance/getdata`, {
@@ -1002,6 +1006,10 @@
 
         async function updateCounts(docs, year = false) {
             let currentYear = 0;
+            let processing = 0;
+            let approved = 0;
+            let completed = 0;
+            let returned = 0;
             if (!year) {
 
                 currentYear = new Date().getFullYear();
@@ -1017,12 +1025,31 @@
 
             let totalExpense = 0;
             docs.forEach((doc) => {
+                const status = doc.status;
+                switch (status.toLowerCase()) {
+                    case "processing":
+                        processing++
+                        break;
+                    case "approved":
+                        approved++
+                        break;
+                    case "completed":
+                        completed++
+                        break;
+                    case "returned":
+                        returned++
+                        break;
+                }
 
                 const amount = Number(doc.amount);
                 totalExpense += amount;
             });
             availableBudget = totalBudget - totalExpense;
             document.getElementById("currentYear").textContent = currentYear;
+            document.getElementById("approved").textContent = approved;
+            document.getElementById("completed").textContent = completed;
+            document.getElementById("returned").textContent = returned;
+            document.getElementById("processing").textContent = processing;
             document.getElementById("yearBudget").textContent = Number(totalBudget).toLocaleString();
 
             // return;

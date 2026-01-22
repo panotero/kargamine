@@ -112,85 +112,17 @@
                 </div>
 
                 <div class="max-h-64 overflow-y-auto pr-2 scroll-smooth ">
-                    <ul class="divide-y divide-white/6 text-sm">
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm  font-medium">File ABC123</div>
-                                <div class="text-xs  mt-1">Marked as Priority by <span class="">Anna</span></div>
-                            </div>
-                            <div class="text-xs \">2h ago</div>
-                        </li>
-                        <li class="py-3
-                                flex justify-between items-start">
-                                <div>
-                                    <div class="text-sm  font-medium">File XYZ789</div>
-                                    <div class="text-xs  mt-1">Deadline missed — Overdue</div>
-                                </div>
-                                <div class="text-xs ">1d ago</div>
-                        </li>
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm e font-medium">File LMN456</div>
-                                <div class="text-xs  mt-1">Status changed to Closed</div>
-                            </div>
-                            <div class="text-xs ">3d ago</div>
-                        </li>
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm  font-medium">File LMN456</div>
-                                <div class="text-xs  mt-1">Status changed to Closed</div>
-                            </div>
-                            <div class="text-xs ">3d ago</div>
-                        </li>
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm  font-medium">File LMN456</div>
-                                <div class="text-xs  mt-1">Status changed to Closed</div>
-                            </div>
-                            <div class="text-xs ">3d ago</div>
-                        </li>
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm  font-medium">File LMN456</div>
-                                <div class="text-xs  mt-1">Status changed to Closed</div>
-                            </div>
-                            <div class="text-xs ">3d ago</div>
-                        </li>
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm  font-medium">File LMN456</div>
-                                <div class="text-xs  mt-1">Status changed to Closed</div>
-                            </div>
-                            <div class="text-xs ">3d ago</div>
-                        </li>
-                        <li class="py-3 flex justify-between items-start">
-                            <div>
-                                <div class="text-sm  font-medium">File LMN456</div>
-                                <div class="text-xs mt-1">Status changed to Closed</div>
-                            </div>
-                            <div class="text-xs ">3d ago</div>
-                        </li>
+                    <ul id="activityList" class="divide-y divide-white/6 text-sm">
                     </ul>
                 </div>
             </div>
 
-            <div
-                class="lg:col-span-2 col-span-1 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
+            <div class="lg:col-span-2 col-span-1 rounded-2xl backdrop-blur-lg p-4 shadow-lg bg-white dark:bg-gray-600 ">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-lg font-medium ">Top 5 Priority</h3>
                     <span class="text-xs ">By priority</span>
                 </div>
-                <div class="w-full max-h-[30vh] overflow-y-auto" id="prioritylist">
-                    <div class="p-1 rounded-md border border-gray-300">
-                        <h1 class="text-lg font-semibold">Document number</h1>
-                        <div class="flex justify-between">
-                            <h1 class="text-sm">date forwarded by: user123</h1>
-                            <h1 class="text-sm">date forwarded: 123</h1>
-                        </div>
-
-                    </div>
-
-                </div>
+                <div class="w-full max-h-[30vh] overflow-y-auto space-y-2" id="prioritylist"></div>
 
                 <div class="mt-3 text-xs ">Minimal columns for compact view.</div>
             </div>

@@ -124,7 +124,7 @@ class ApprovalsController extends Controller
      * Action Handlers
      * ========================================================= */
 
-    private function processDisapproval($approval, $validated, $user, ApplicationMailer $mailer)
+    private function processDisapproval($approval, $validated, $user)
     {
         $user = Auth::user();
         // dd([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\FinanceActivity;
+use App\Models\Finance;
 
 class FinanceActivityController extends Controller
 {
@@ -41,9 +42,15 @@ class FinanceActivityController extends Controller
             'activity'  => $validated['activity'],
             'finance_id'  => $validated['finance_id'],
             'remarks'   => $validated['remarks'] ?? null,
-            'status'    => $validated['status'] ?? 'pending',
+            'status'    => $validated['status'] ?? 'Processing',
             'timestamp' => $validated['timestamp'] ?? now(),
         ]);
+
+        //update status based on activity status
+        Finance::where('id', $validated['finance_id'])->update([
+            'status'  => $validated['status'] ?? 'Processing',
+        ]);
+
 
         return response()->json([
             'success' => true,

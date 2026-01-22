@@ -104,7 +104,6 @@ class UserController extends Controller
                 'nullable',
                 'string',
                 'min:6',
-                'safe_text'
             ],
             'role' => [
                 'nullable',
@@ -199,7 +198,6 @@ class UserController extends Controller
                 'required',
                 'string',
                 'min:6',
-                'safe_text'
             ],
             'role' => [
                 'nullable',

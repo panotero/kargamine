@@ -114,7 +114,6 @@ async function extractPdfImages(
       viewport,
     }).promise;
 
-    // 🔽 DOWNSIZE HERE
     const resizedDataUrl = downsizeCanvas(canvas, maxWidth, maxHeight);
 
     // Build response item

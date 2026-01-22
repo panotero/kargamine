@@ -26,6 +26,7 @@ class Finance extends Model
         'amount',
         'fund_cluster',
         'date_signed',
+        'status',
         'file_name',
         'file_path',
     ];

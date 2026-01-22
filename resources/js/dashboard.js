@@ -25,14 +25,30 @@ window.initdashboard = function initdashboard() {
     // console.log(userApprovalType);
 
     // Fetch all documents once
-    try {
-      // getActivitiesCounts();
-      getDocsCounts();
-      await getDocData();
-    } catch (err) {
-      console.error(err);
-      return;
-    }
+    // try {
+    await getActivities();
+    getDocsCounts();
+    const docs = await getDocData();
+    const adminStatuses = [
+      "signed",
+      "routed",
+      "pending",
+      "remanded",
+      "completed",
+    ];
+    const authSignatureStatuses = ["approved", "disapproved"];
+    renderTopPriority(docs, {
+      userId: authUser.id,
+      userApprovalType: authUser.approval_type,
+      userOfficeName: authUser.office.office_name,
+      isAuthSignatory: authUser.is_auth_signatory,
+      adminStatuses,
+      authSignatureStatuses,
+    });
+    // } catch (err) {
+    //   console.error(err);
+    //   return;
+    // }
   };
 
   async function getDocData() {
@@ -128,35 +144,70 @@ window.initdashboard = function initdashboard() {
   // -----------------------------
   // Update Counts
   // -----------------------------
-  async function getActivitiesCounts(filteredDocs = null) {
+  async function getActivities() {
     try {
-      //BUG ID: 1
       const response = await getDocData();
       if (!response) throw new Error("Failed to fetch documents");
       allDocuments = response;
       // console.log(response);
       const authUser = window.authUser;
       if (!authUser) return;
-
-      const userOffice = authUser.office?.office_code || null;
-      const docs = filteredDocs || allDocuments;
-
-      const filtered = docs.filter((doc) => {
-        if (userOffice === "ODDG-PP") return true;
-        return doc.destination_office === userOffice;
-      });
-
-      let total = filtered.length;
-      let routed = 0;
-      let approved = 0;
-      let disapproved = 0;
-      let fordiscussion = 0;
-      let completed = 0;
-
-      filtered.forEach((doc) => {});
+      const activities = await fetchWithRetry(
+        `/api/activities/byOffice/${authUser.office.office_code}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      console.log(activities);
+      renderActivities(activities);
     } catch (error) {
       console.error(error);
     }
+  }
+  function formatTimeAgo(dateString) {
+    const diff = Math.floor((Date.now() - new Date(dateString)) / 1000);
+
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+  function renderActivities(activities) {
+    const list = document.getElementById("activityList");
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    const recentActivities = activities
+      .filter((a) => a.action !== "view")
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 10);
+
+    recentActivities.forEach((activity) => {
+      const fileNumber =
+        activity.document?.document_control_number ?? "Unknown File";
+      const userName = activity.user?.name ?? "Unknown User";
+      const actionText = activity.action.replace(/_/g, " ");
+      const timeAgo = formatTimeAgo(activity.created_at);
+
+      const li = document.createElement("li");
+      li.className = "py-3 flex justify-between items-start";
+
+      li.innerHTML = `
+      <div>
+        <div class="text-sm font-medium">File ${fileNumber}</div>
+        <div class="text-xs mt-1">
+          ${actionText} by <span>${userName}</span>
+        </div>
+      </div>
+      <div class="text-xs">${timeAgo}</div>
+    `;
+
+      list.appendChild(li);
+    });
   }
 
   const statusbtn = document.querySelectorAll(".statusButton");
@@ -186,6 +237,7 @@ window.initdashboard = function initdashboard() {
     });
     initDataTables();
     console.log(docs);
+
     // return;
     let filteredDocuments = [];
     let status = selectedStatus;
@@ -342,6 +394,163 @@ window.initdashboard = function initdashboard() {
       tr.innerHTML = rowHtml;
       modalcounttable.appendChild(tr);
     }
+  }
+
+  function updatePriorityItem(doc) {
+    const container = document.getElementById("prioritylist");
+    if (!container) return;
+
+    let statuscolor = "bg-gray-100";
+    switch ((doc.status || "").toLowerCase()) {
+      case "pending":
+        statuscolor = "bg-yellow-200";
+        break;
+      case "for approval":
+        statuscolor = "bg-yellow-100";
+        break;
+      case "completed":
+        statuscolor = "bg-green-200";
+        break;
+      case "remanded":
+        statuscolor = "bg-red-200";
+        break;
+      case "overdue":
+        statuscolor = "bg-red-300";
+        break;
+      case "approved":
+        statuscolor = "bg-blue-200";
+        break;
+    }
+
+    const card = document.createElement("div");
+    card.className = `
+    p-3 rounded-lg border border-gray-300 bg-white
+    hover:shadow-md transition cursor-pointer
+    dark:bg-gray-700 dark:border-gray-500
+  `;
+
+    card.innerHTML = `
+    <div class="flex items-center justify-between">
+      <h1 class="text-sm font-semibold">
+        ${doc.document_control_number ?? "-"}
+      </h1>
+      <span class="text-xs px-2 py-0.5 rounded-full ${statuscolor}">
+        ${doc.status ?? "-"}
+      </span>
+    </div>
+
+    <div class="mt-1 flex justify-between text-xs text-gray-600 dark:text-gray-300">
+      <span>
+        forwarded by: ${doc.forwarded_by_name ?? doc.office_origin ?? "-"}
+      </span>
+      <span>
+        ${formatTimeAgo(doc.updated_at || doc.created_at)}
+      </span>
+    </div>
+  `;
+
+    /** SAME CLICK BEHAVIOR AS updaterow */
+    card.addEventListener("click", function () {
+      checkActionButtons(
+        doc.status,
+        doc.recipient_id,
+        doc.destination_office,
+        doc.receipt_confirmation,
+        doc.revision_status,
+      );
+
+      clearModalFields();
+      showSkeletonLoaders();
+
+      initModal({ modalId: "DocumentModal" });
+      populateDocumentModal(doc.document_id);
+
+      logActivity("view", doc.document_id, doc.document_control_number);
+    });
+
+    container.appendChild(card);
+  }
+  function isAssignedToUser(doc, context) {
+    const {
+      userId,
+      userApprovalType,
+      userOfficeName,
+      isAuthSignatory,
+      adminStatuses,
+      authSignatureStatuses,
+    } = context;
+
+    return (
+      // Directly assigned to user
+      (doc.recipient_id !== null && doc.recipient_id == userId) ||
+      // Routing approval (no recipient yet)
+      (doc.recipient_id === null &&
+        userApprovalType === "routing" &&
+        userOfficeName === doc.destination_office &&
+        adminStatuses.includes((doc.status || "").toLowerCase())) ||
+      // Authorized signatory
+      (doc.recipient_id === null &&
+        authSignatureStatuses.includes((doc.status || "").toLowerCase()) &&
+        isAuthSignatory === 1 &&
+        userOfficeName === doc.destination_office)
+    );
+  }
+
+  function renderTopPriority(docs, context) {
+    const container = document.getElementById("prioritylist");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    let docArray = [];
+
+    if (Array.isArray(docs)) {
+      docArray = docs;
+    } else if (docs?.data && Array.isArray(docs.data)) {
+      docArray = docs.data;
+    } else {
+      console.warn("renderTopPriority expected array, got:", docs);
+      return;
+    }
+
+    const prioritizedDocs = docArray
+      .filter((doc) => isAssignedToUser(doc, context))
+      .map((doc) => ({
+        ...doc,
+        _priorityScore: getPriorityScore(doc),
+      }))
+      .sort((a, b) => a._priorityScore - b._priorityScore)
+      .slice(0, 5);
+
+    prioritizedDocs.forEach((doc) => updatePriorityItem(doc));
+  }
+  function daysBetween(dateA, dateB) {
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    return Math.floor((new Date(dateB) - new Date(dateA)) / MS_PER_DAY);
+  }
+
+  function getPriorityScore(doc) {
+    const today = new Date();
+
+    // Case 1: With due date
+    if (doc.due_date) {
+      const daysLeft = daysBetween(today, doc.due_date);
+
+      // Overdue → highest priority
+      if (daysLeft < 0) return daysLeft - 1000;
+
+      return daysLeft;
+    }
+
+    // Case 2: No due date → based on duration since forwarded
+    const forwardedDate =
+      doc.date_forwarded || doc.updated_at || doc.created_at;
+
+    if (!forwardedDate) return 9999;
+
+    const duration = daysBetween(forwardedDate, today);
+
+    return -duration; // longer duration = higher priority
   }
 
   function upsertTableRow({
