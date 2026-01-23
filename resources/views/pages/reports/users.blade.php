@@ -313,10 +313,10 @@
                         break;
                 }
             });
-            document.getElementById("totalUsers").textContent = totalUsers.toLocaleString();
-            document.getElementById("totalActive").textContent = active.toLocaleString();
-            document.getElementById("totalDeactive").textContent = deactivated.toLocaleString();
-            document.getElementById("totalDocuments").textContent = totalDocs.toLocaleString();
+            document.getElementById("totalUsers").textContent = totalUsers.toLocaleString() ?? "-";
+            document.getElementById("totalActive").textContent = active.toLocaleString() ?? "-";
+            document.getElementById("totalDeactive").textContent = deactivated.toLocaleString() ?? "-";
+            document.getElementById("totalDocuments").textContent = totalDocs.toLocaleString() ?? "-";
         }
 
         //flatten array function

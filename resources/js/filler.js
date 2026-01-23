@@ -15,8 +15,23 @@ async function fillOfficeDropdown(otherofficetb = null) {
       `<option value="Other">Other</option>`;
   });
 
-  return true;
+  return offices;
 }
+
+window.office = async function office() {
+  try {
+    const officeList = await fetchWithRetry(`/api/offices`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+    return officeList;
+    // console.log(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 function parseDateSafe(dateString) {
   return new Date(dateString.replace(" ", "T"));

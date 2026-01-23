@@ -117,12 +117,21 @@
                 class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2"
                 required>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="office_code"></p>
+
+            <!-- Parent Office Dropdown -->
+            <select name="parentOffice" id="parentOffice"
+                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
+                <option value="0">Select Parent Office (Optional)</option>
+            </select>
+            <p class="mt-1 text-sm text-red-600 hidden" data-error-for="parentOffice"></p>
+
             <div class="flex justify-end gap-3">
                 <button type="button"
                     class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 closemodalbutton">Cancel</button>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white">Save</button>
             </div>
         </form>
+
     </div>
 </div>
 
@@ -331,6 +340,20 @@
                         console.warn("Unknown delete mode:", mode);
                     }
                 })
+            });
+            const officeList = await office();
+            // console.log(officeList);
+            const parentoffice_dropdown = document.getElementById("parentOffice")
+            officeList.forEach(el => {
+                parentoffice_dropdown.innerHTML =
+                    `
+                <option value="0">Select Parent Office (Optional)</option>` +
+                    officeList
+                    .map(
+                        (o) => `<option value="${o.office_id}">${o.office_name}</option>`,
+                    )
+                    .join("");
+
             });
         }
 

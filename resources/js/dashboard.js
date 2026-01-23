@@ -123,20 +123,22 @@ window.initdashboard = function initdashboard() {
       overdue = checkOverDue(docs).length;
 
       document.getElementById("totalDocuments").textContent =
-        total.toLocaleString();
+        total.toLocaleString() ?? "-";
       document.getElementById("forDiscussion").textContent =
-        forDiscussion.toLocaleString();
+        forDiscussion.toLocaleString() ?? "-";
       document.getElementById("forSignature").textContent =
-        forSignature.toLocaleString();
-      document.getElementById("pending").textContent = pending.toLocaleString();
-      document.getElementById("overdue").textContent = overdue.toLocaleString();
+        forSignature.toLocaleString() ?? "-";
+      document.getElementById("pending").textContent =
+        pending.toLocaleString() ?? "-";
+      document.getElementById("overdue").textContent =
+        overdue.toLocaleString() ?? "-";
       document.getElementById("completed").textContent =
-        completed.toLocaleString();
+        completed.toLocaleString() ?? "-";
       document.getElementById("remanded").textContent =
-        remanded.toLocaleString();
+        remanded.toLocaleString() ?? "-";
 
       document.getElementById("forApproval").textContent =
-        forApproval.toLocaleString();
+        forApproval.toLocaleString() ?? "-";
     } catch (error) {
       console.error(error);
     }

@@ -92,6 +92,7 @@ class RoutingController extends Controller
 
             $document = Document::findOrFail($validated['document_id']);
 
+            $documentStatus = $document?->status;
             $originOffice      = $document->office_origin;
             $destinationOffice = $validated['destination_office'];
             $recipientUserId   = $validated['recipient_user_id'] ?? null;
@@ -110,71 +111,6 @@ class RoutingController extends Controller
                         $q->where('office_code', $request->destination_office);
                     })
                     ->get();
-
-                // if ($validated['status'] === "approved") {
-                //     if ($request->hasFile('pdf_file') && $request->file('pdf_file')->isValid()) {
-
-                //         $file = $request->file('pdf_file');
-                //         $officeFolder = $document->office_origin ?: 'UnknownOffice';
-                //         $cleanOriginal = str_replace(' ', '_', $file->getClientOriginalName());
-                //         $fileName = uniqid() . '-' . $cleanOriginal;
-                //         $publicPath = public_path("assets/documents/{$officeFolder}/pdf");
-
-                //         if (!is_dir($publicPath)) {
-                //             mkdir($publicPath, 0777, true);
-                //         }
-
-                //         $file->move($publicPath, $fileName);
-                //         $filePath = "assets/documents/{$officeFolder}/pdf/{$fileName}";
-                //     } else {
-                //         return "no pdf available";
-                //     }
-                //     DB::table('files')->insert([
-                //         'document_id'      => $document->document_id,
-                //         'file_name'        => $cleanOriginal,
-                //         'file_path'        => $filePath,
-                //         'file_password'    => null,
-                //         'uploading_office' => $destinationOffice,
-                //         'uploaded_by'      => $user->id,
-                //         'uploaded_at'      => now(),
-                //     ]);
-
-                //     foreach ($admin_users as $adminuser) {
-
-                //         $activityData = [
-                //             'action'                  => 'signed',
-                //             'document_id'             => $document->document_id,
-                //             'final_approval'          => $sameOffice ? ($destinationOffice === $originOffice ? 1 : 0) : ($backToOrigin ? 1 : 1),
-                //             'document_control_number' => $document->document_control_number,
-                //             'user_id'                 => $user->id,
-                //             'from_user_id' => $user->id,
-                //             'routed_to'               => $recipientUserId,
-                //             'to_external' => 1,
-                //             'final_remarks'           => $validated['remarks'] ?? null,
-                //         ];
-                //         DB::table('notifications')->insert([
-                //             'document_id'        => $document->document_id,
-                //             'office_origin'      => $originOffice,
-                //             'destination_office' => $destinationOffice,
-                //             'from_user_id' => $user->id,
-                //             'user_id'            => $adminuser->id,
-                //             'message'            => "$document->document_control_number has been signed ",
-                //             'is_read'            => 0,
-                //             'created_at'         => now(),
-                //             'updated_at'         => now(),
-                //         ]);
-                //     }
-                //     DB::table('documents')
-                //         ->where('document_id', $document->document_id)
-                //         ->update([
-                //             'recipient_id' => null,
-                //             'sender_id' => $user->id,
-                //             'receipt_confirmation' => 0,
-                //             'receipt_confirmed_by' => 0,
-                //             'date_forwarded' => now(),
-                //             'updated_at' => now(),
-                //         ]);
-                // } else {
                 $activityData = [
                     'action'                  => 'route',
                     'document_id'             => $document->document_id,
@@ -214,17 +150,22 @@ class RoutingController extends Controller
                         $adminuser->id
                     );
                 }
+                $updateData = [
+                    'recipient_id' => null,
+                    'sender_id' => $user->id,
+                    'receipt_confirmation' => 0,
+                    'receipt_confirmed_by' => 0,
+                    'date_forwarded' => now(),
+                    'updated_at' => now(),
+                ];
+
+                if ($documentStatus === 'completed') {
+                    $updateData['status'] = 'Routed';
+                }
+
                 DB::table('documents')
                     ->where('document_id', $document->document_id)
-                    ->update([
-                        'recipient_id' => null,
-                        'sender_id' => $user->id,
-                        'receipt_confirmation' => 0,
-                        'receipt_confirmed_by' => 0,
-                        'date_forwarded' => now(),
-                        'updated_at' => now(),
-                    ]);
-                // }
+                    ->update($updateData);
             } else {
                 $activityData = [
                     'action'                  => 'route',

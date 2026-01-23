@@ -66,9 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
     Route::prefix('approvals')->group(function () {
-
         Route::get('/', [ApprovalsController::class, 'getMyApprovals']);
-
         Route::post('/{approval_id}/action', [ApprovalsController::class, 'handleApprovalAction']);
     });
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);

@@ -16,6 +16,18 @@ class Office extends Model
     protected $fillable = [
         'office_name',
         'office_code',
+        'parent_office_id',
+        'office_level',
         'created_at',
     ];
+
+    public function parentOfficeInfo()
+    {
+
+        return $this->belongsTo(
+            Office::class,
+            'office_id',
+            'parent_office_id'
+        );
+    }
 }
