@@ -8,6 +8,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
 
@@ -28,7 +29,7 @@ class AuthenticatedSessionController extends Controller
     {
         $remember = $request->filled('remember'); // check if checkbox is ticked
 
-        // Authenticate user with remember option
+        // Authenticate user
         if (!Auth::attempt($request->only('email', 'password'), $remember)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
@@ -37,8 +38,22 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+        $currentSessionId = session()->getId();
+
+        // Delete all other sessions for this user (enforce single-device login)
+        DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->where('id', '!=', $currentSessionId)
+            ->delete();
+
+        // Optional: store current session_id in users table for extra validation
+        // $user->session_id = $currentSessionId;
+        // $user->save();
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
+
 
     /**
      * Destroy an authenticated session.
@@ -48,7 +63,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/login');

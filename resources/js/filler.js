@@ -338,3 +338,5 @@ window.populateYearDropDowm = function populateYearDropDowm() {
     }
   });
 };
+
+window.controller = new AbortController();

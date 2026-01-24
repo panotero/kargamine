@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const menulist = document.querySelectorAll(".menu");
     const activemenu = document.querySelectorAll(".menu.active");
     const activepage = Array.from(menulist).find(
-      (btn) => btn.textContent.trim() === menu.title
+      (btn) => btn.textContent.trim() === menu.title,
     );
 
     activemenu.forEach((activebttn) => {
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "hover:dark:bg-blue-600",
         "text-white",
         "active",
-        "hover:bg-blue-600"
+        "hover:bg-blue-600",
       );
       activebttn.classList.add("text-black", "hover:bg-gray-200");
     });
@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "hover:dark:bg-blue-600",
         "text-white",
         "active",
-        "hover:bg-blue-600"
+        "hover:bg-blue-600",
       );
       activepage.classList.remove("hover:bg-gray-200", "text-black");
     }
@@ -173,6 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
 `;
 
     try {
+      if (controller) console.log("abortcontroller available");
       const res = await fetch(menu.link, {
         headers: { Accept: "application/json" },
       });
@@ -219,6 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // });
 
     const menuData = await fetchWithRetry("api/load_menu", {
+      method: "GET",
       credentials: "include",
       headers: { Accept: "application/json" },
     });
