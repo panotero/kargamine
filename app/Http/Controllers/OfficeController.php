@@ -18,20 +18,20 @@ class OfficeController extends Controller
     public function store(Request $request)
     {
         // dd($request->all());
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'office_name' => [
                 'required',
                 'string',
                 'max:100',
-                'safe_text'
+
             ],
             'office_code' => [
                 'required',
                 'string',
                 'max:20',
                 'unique:office_table',
-                'safe_text'
+
             ],
             'parentOffice' => [
                 'required',

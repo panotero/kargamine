@@ -17,19 +17,19 @@ class UserConfigController extends Controller
 
     public function store(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'designation' => [
                 'required',
                 'string',
                 'max:100',
-                'safe_text'
+
             ],
             'approval_type' => [
                 'required',
                 'string',
                 'in:pre-approval,final-approval,routing',
-                'safe_text'
+
             ],
         ]);
 

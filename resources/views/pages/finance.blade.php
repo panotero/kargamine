@@ -332,19 +332,21 @@
 
                 <div>
                     <label class="text-sm text-gray-600">Date Processed</label>
-                    <input id="date_processed" type="date" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <input id="date_processed" type="date"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="date_processed"></p>
                 </div>
 
                 <div>
                     <label class="text-sm text-gray-600">Payee</label>
-                    <input id="payee" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <input id="payee" type="text"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="payee"></p>
                 </div>
 
                 <div>
                     <label class="text-sm text-gray-600">Particular</label>
-                    <textarea id="particular" class="w-full border-gray-300 rounded-lg px-3 py-2" required></textarea>
+                    <textarea id="particular" class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required></textarea>
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="particular"></p>
                 </div>
 
@@ -352,12 +354,14 @@
                     <label class="text-sm text-gray-600">Responsibility Center</label>
                     <input id="responsibility_center" type="text"
                         class="w-full border-gray-300 rounded-lg px-3 py-2" />
-                    <p class="mt-1 text-sm text-red-600 hidden" data-error-for="responsibility_center"></p>
+                    <p class="mt-1 text-sm text-red-600 hidden"
+                        data-error-for="responsibility_center no-special-chars"></p>
                 </div>
 
                 <div>
                     <label class="text-sm text-gray-600">Expenditure Type</label>
-                    <select id="expenditure" class="w-full border-gray-300 rounded-lg px-3 py-2" required>
+                    <select id="expenditure" class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars"
+                        required>
                         <option value="">Select</option>
                         <option value="EME">Extraordinary and Miscellaneous Expenses (EME)</option>
                         <option value="Mobile Reimbursement">Mobile Reimbursement</option>
@@ -370,7 +374,7 @@
                     <div id="otherExpenditureContainer" class="hidden my-3">
                         <label class="text-sm text-gray-600">Other Expenditure</label>
                         <input id="otherExpenditure" type="text"
-                            class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                            class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                         <p class="mt-1 text-sm text-red-600 hidden" data-error-for="otherExpenditure"></p>
 
                     </div>
@@ -379,26 +383,28 @@
                 <div>
                     <label class="text-sm text-gray-600">UACS Object Code</label>
                     <input id="uacs_object_code" type="text"
-                        class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                        class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="uacs_object_code"></p>
                 </div>
 
                 <div>
                     <label class="text-sm text-gray-600">Amount</label>
                     <input id="amount" type="number" step="0.01"
-                        class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                        class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="amount"></p>
                 </div>
 
                 <div>
                     <label class="text-sm text-gray-600">Fund Cluster</label>
-                    <input id="fund_cluster" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <input id="fund_cluster" type="text"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="fund_cluster"></p>
                 </div>
 
                 <div>
                     <label class="text-sm text-gray-600">Date Signed</label>
-                    <input id="date_signed" type="date" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <input id="date_signed" type="date"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2  no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="date_signed"></p>
                 </div>
 
@@ -444,7 +450,8 @@
 
                 <div>
                     <label class="text-sm text-gray-600">Budget Amount</label>
-                    <input id="budgetAmount" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                    <input id="budgetAmount" type="text"
+                        class="w-full border-gray-300 rounded-lg px-3 py-2  no-special-chars" />
                     <p class="mt-1 text-sm text-red-600 hidden" data-error-for="fund_cluster"></p>
                 </div>
 
@@ -493,7 +500,7 @@
                 </label>
                 <input id="activityInput" type="text" maxlength="255"
                     class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white
-                           focus:ring-blue-500 focus:border-blue-500"
+                           focus:ring-blue-500 focus:border-blue-500  no-special-chars"
                     placeholder="e.g. Document reviewed">
             </div>
 
@@ -519,7 +526,7 @@
                 </label>
                 <textarea id="remarksInput" rows="3"
                     class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white
-                           focus:ring-blue-500 focus:border-blue-500"
+                           focus:ring-blue-500 focus:border-blue-500  no-special-chars"
                     placeholder="Optional notes or remarks"></textarea>
             </div>
 

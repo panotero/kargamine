@@ -22,17 +22,17 @@ class MailerController extends Controller
 
     public function save(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'mail_mailer' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'mail_host' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'mail_port' => [
                 'required'
@@ -40,17 +40,17 @@ class MailerController extends Controller
             'mail_username' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'mail_password' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'mail_encryption' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'mail_from_address' => [
                 'required',
@@ -59,7 +59,7 @@ class MailerController extends Controller
             'mail_from_name' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
         ]);
 
@@ -103,7 +103,7 @@ class MailerController extends Controller
     // Example API endpoint for sending mail
     public function send(Request $request, DynamicMailerService $mailer)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'to' => [
                 'nullable',
@@ -112,17 +112,17 @@ class MailerController extends Controller
             'subject' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
             'title' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
             'body' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
         ]);
 

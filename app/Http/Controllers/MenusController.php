@@ -54,7 +54,7 @@ class MenusController extends Controller
 
     public function store(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'title' => [
                 'required',
@@ -147,7 +147,7 @@ class MenusController extends Controller
             'id' => $id,
             'payload' => $request->all()
         ]);
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'title' => [
                 'required',

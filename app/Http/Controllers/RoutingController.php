@@ -28,7 +28,7 @@ class RoutingController extends Controller
     }
     public function routeDocument(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'document_id' => [
                 'required',
@@ -37,7 +37,7 @@ class RoutingController extends Controller
             'destination_office' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'recipient_user_id' => [
                 'nullable',
@@ -46,19 +46,19 @@ class RoutingController extends Controller
             'approval_type' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
             'status' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
 
             //BUG ID: 9
             'remarks' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
         ]);
 

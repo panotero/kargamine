@@ -84,13 +84,13 @@ class UserController extends Controller
     public function save_info($id = false, Request $request)
     {
 
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'name' => [
                 'nullable',
                 'string',
                 'max:255',
-                'safe_text'
+
             ],
             'email' => [
                 'nullable',
@@ -108,7 +108,7 @@ class UserController extends Controller
             'role' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
             'office_id' => [
                 'nullable',
@@ -181,13 +181,13 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                'safe_text'
+
             ],
             'email' => [
                 'required',
@@ -202,7 +202,7 @@ class UserController extends Controller
             'role' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
             'office_id' => [
                 'nullable',

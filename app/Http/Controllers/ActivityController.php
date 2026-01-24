@@ -31,13 +31,13 @@ class ActivityController extends Controller
 
     public function store(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'action' => [
                 'required',
                 'string',
                 'max:100',
-                'safe_text'
+
             ],
             'document_id' => [
                 'nullable',
@@ -47,7 +47,7 @@ class ActivityController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'safe_text'
+
             ],
             'user_id' => [
                 'nullable',

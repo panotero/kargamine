@@ -144,73 +144,83 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 text-black">
                     <div class="space-y-4">
                         <div>
-                            <label class="text-sm text-gray-600">Document Number</label>
+                            <label class="text-sm text-gray-600">Document Number<span
+                                    class="text-red-600">*</span></label>
                             <input id="document_code" type="text" maxlength="25" pattern="^[a-zA-Z0-9\-_'\]+$"
                                 title="Only letters, numbers, hyphen (-), underscore (_), single quote ('), and double quote (\") are allowed."
-                                class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required />
 
                         </div>
                         <div>
-                            <label class="text-sm text-gray-600">Subject</label>
-                            <input id="subject" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
-                                required />
+                            <label class="text-sm text-gray-600">Subject<span class="text-red-600">*</span></label>
+                            <input id="subject" type="text"
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required />
                         </div>
                         <div>
-                            <label class="text-sm text-gray-600">Signatory</label>
-                            <input id="signatory" type="text" class="w-full border-gray-300 rounded-lg px-3 py-2"
-                                required />
+                            <label class="text-sm text-gray-600">Signatory<span class="text-red-600">*</span></label>
+                            <input id="signatory" type="text"
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required />
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">Remarks</label>
-                            <textarea id="remarks" class="no-special-chars w-full border-gray-300 rounded-lg px-3 py-2"></textarea>
+                            <textarea id="remarks" class="no-special-chars w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars"></textarea>
                         </div>
                     </div>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-sm text-gray-600">Origin Office</label>
-                            <select id="originOffice" class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect"
+                            <label class="text-sm text-gray-600">Origin Office<span
+                                    class="text-red-600">*</span></label>
+                            <select id="originOffice"
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect no-special-chars"
                                 required>
                                 <option>Select...</option>
                             </select>
                             <div id="otheroriginofficetb" class="hidden">
-                                <label class="text-sm text-gray-600">Specify Office</label>
+                                <label class="text-sm text-gray-600">Specify Office<span
+                                        class="text-red-600">*</span></label>
                                 <input id="otheroriginoffice" type="text"
-                                    class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                                    class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required />
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-600">Destination Office</label>
+                            <label class="text-sm text-gray-600">Destination Office<span
+                                    class="text-red-600">*</span></label>
                             <select id="destinationOffice"
-                                class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect" required>
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 officeSelect no-special-chars"
+                                required>
                                 <option>Select...</option>
                             </select>
                             <div id="otherdestinationofficetb" class="hidden">
-                                <label class="text-sm text-gray-600">Specify Office</label>
+                                <label class="text-sm text-gray-600">Specify Office<span
+                                        class="text-red-600">*</span></label>
                                 <input id="otherdestinationoffice" type="text"
-                                    class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                                    class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required />
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-600">Document Type</label>
+                            <label class="text-sm text-gray-600">Document Type<span
+                                    class="text-red-600">*</span></label>
 
                             <select id="documentType"
-                                class="docTypeSelect w-full border-gray-300 rounded-lg px-3 py-2" required>
+                                class="docTypeSelect w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars"
+                                required>
                             </select>
                             <div id="otherdoctypetb" class="hidden">
-                                <label class="text-sm text-gray-600">Specify Document</label>
+                                <label class="text-sm text-gray-600">Specify Document<span
+                                        class="text-red-600">*</span></label>
                                 <input id="otherdocument" type="text"
-                                    class="w-full border-gray-300 rounded-lg px-3 py-2" required />
+                                    class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" required />
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">Document Date</label>
                             <input id="document_date" type="date"
-                                class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">Due Date</label>
                             <input id="due_date" type="date"
-                                class="w-full border-gray-300 rounded-lg px-3 py-2" />
+                                class="w-full border-gray-300 rounded-lg px-3 py-2 no-special-chars" />
                         </div>
                     </div>
                 </div>

@@ -32,13 +32,13 @@ class FinanceController extends Controller
         $validator = Validator::make($request->all(), [
             'transaction' => ['required', 'string', 'in:ORS,DV'],
             'date_processed' => ['nullable', 'date'],
-            'payee' => ['required', 'string', 'max:255', 'safe_text'],
-            'particular' => ['required', 'string', 'max:1000', 'safe_text'],
-            'responsibility_center' => ['nullable', 'string', 'max:255', 'safe_text'],
-            'expenditure' => ['nullable', 'string', 'max:255', 'safe_text'],
-            'uacs_object_code' => ['nullable', 'string', 'max:50', 'safe_text'],
+            'payee' => ['required', 'string', 'max:255',],
+            'particular' => ['required', 'string', 'max:1000',],
+            'responsibility_center' => ['nullable', 'string', 'max:255',],
+            'expenditure' => ['nullable', 'string', 'max:255',],
+            'uacs_object_code' => ['nullable', 'string', 'max:50',],
             'amount' => ['required', 'numeric', 'min:0'],
-            'fund_cluster' => ['nullable', 'string', 'max:50', 'safe_text'],
+            'fund_cluster' => ['nullable', 'string', 'max:50',],
             'date_signed' => ['nullable', 'date'],
         ]);
 

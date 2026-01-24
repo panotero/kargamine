@@ -18,18 +18,18 @@ class DocumentTypeController extends Controller
     public function store(Request $request)
     {
 
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'document_type' => [
                 'required',
                 'string',
                 'max:255',
-                'safe_text'
+
             ],
             'description' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
         ]);
 
@@ -59,18 +59,18 @@ class DocumentTypeController extends Controller
     public function update(Request $request, string $id)
     {
 
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'document_type' => [
                 'required',
                 'string',
                 'max:255',
-                'safe_text'
+
             ],
             'description' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
         ]);
 
@@ -105,13 +105,13 @@ class DocumentTypeController extends Controller
     }
     public function storelabel(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'label_name' => [
                 'required',
                 'string',
                 'max:255',
-                'safe_text'
+
             ],
         ]);
 
@@ -148,13 +148,13 @@ class DocumentTypeController extends Controller
 
     public function updatelabel(Request $request, string $id)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'label' => [
                 'required',
                 'string',
                 'max:255',
-                'safe_text'
+
             ],
         ]);
 

@@ -183,12 +183,12 @@ class DocumentController extends Controller
 
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'revisedocControlNumber' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'user_id' => [
                 'required',
@@ -197,7 +197,7 @@ class DocumentController extends Controller
             'document_form' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'file' => [
                 'required',
@@ -387,22 +387,22 @@ class DocumentController extends Controller
 
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'docControlNumber' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'remarks' => [
                 'nullable',
                 'string',
-                'safe_text'
+
             ],
             'document_form' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
             'file' => [
                 'required',
@@ -542,32 +542,29 @@ class DocumentController extends Controller
         $user = User::with(['userConfig', 'office'])
             ->findOrFail($request->user_id);
 
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'document_code' => [
                 'required',
                 'string',
                 'max:25',
-                'safe_text'
+
             ],
             'date_received' => 'required|date',
             'particular' => [
                 'required',
                 'string',
-                'safe_text',
             ],
             'office_origin' => [
                 'required',
                 'string',
                 'max:100',
-                'safe_text',
                 Rule::exists('office_table', 'office_code')
             ],
             'destination_office' => [
                 'nullable',
                 'string',
                 'max:100',
-                'safe_text',
                 Rule::exists('office_table', 'office_code')
             ],
             'user_id' => 'required|integer',
@@ -575,13 +572,11 @@ class DocumentController extends Controller
                 'required',
                 'string',
                 'max:50',
-                'safe_text',
             ],
             'document_type' => [
                 'required',
                 'string',
                 'max:50',
-                'safe_text',
             ],
             'date_of_document' => 'nullable|date',
             'due_date' => 'nullable|date',
@@ -589,12 +584,10 @@ class DocumentController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'safe_text',
             ],
             'remarks' => [
                 'nullable',
                 'string',
-                'safe_text',
             ],
             'file' => 'required|file|mimes:pdf|max:50480',
         ]);
@@ -766,7 +759,7 @@ class DocumentController extends Controller
             'label' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
         ]);
         $document = Document::findOrFail($request->document_id);
@@ -782,7 +775,7 @@ class DocumentController extends Controller
 
     public function update_status(Request $request)
     {
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'document_id' => [
                 'required',
@@ -791,7 +784,7 @@ class DocumentController extends Controller
             'status' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
         ]);
 

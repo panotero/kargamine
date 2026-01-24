@@ -15,10 +15,5 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    public function boot(): void
-    {
-        Validator::extend('safe_text', function ($attribute, $value) {
-            return preg_match('/^[a-zA-Z0-9][a-zA-Z0-9 ,.\'"-@&]*$/', $value);
-        });
-    }
+    public function boot(): void {}
 }

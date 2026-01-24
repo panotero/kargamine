@@ -52,19 +52,19 @@ class ApprovalsController extends Controller
     {
 
 
-        //BUG ID: 7
+
         $validator = Validator::make($request->all(), [
             'action' => [
                 'required',
                 'string',
                 'in:approved,disapproved,remand,for-discussion',
-                'safe_text'
+
             ],
             'next_action' => [
                 'nullable',
                 'string',
                 'in:pre-approval,final-approval',
-                'safe_text'
+
             ],
             'next_user_id' => [
                 'nullable',
@@ -75,7 +75,7 @@ class ApprovalsController extends Controller
                 'nullable',
                 'string',
                 'max:500',
-                'safe_text'
+
             ],
         ]);
 

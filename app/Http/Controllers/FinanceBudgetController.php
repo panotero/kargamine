@@ -47,12 +47,12 @@ class FinanceBudgetController extends Controller
             'amount' => [
                 'required',
                 'numeric',
-                'safe_text'
+
             ],
             'year' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
         ]);
 
@@ -93,12 +93,12 @@ class FinanceBudgetController extends Controller
             'amount' => [
                 'required',
                 'numeric',
-                'safe_text'
+
             ],
             'year' => [
                 'required',
                 'string',
-                'safe_text'
+
             ],
         ]);
         $budget = FinanceBudget::where('year', $request->year)->where('office_code', $user->office->office_code)->first();
