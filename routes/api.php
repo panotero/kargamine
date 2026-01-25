@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/update_status', [DocumentController::class, 'update_status']);
         Route::post('/update_label/{id}', [DocumentController::class, 'update_label']);
     })->middleware('safe.text');
+    Route::get('/OfficeDocs', [DocumentController::class, 'OfficeDocs']);
 
 
     Route::post('/activities', [ActivityController::class, 'store'])
@@ -89,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('offices')->group(function () {
         Route::get('/', [OfficeController::class, 'index']);
+        Route::get('/getOfficeList', [OfficeController::class, 'getOfficeWithChild']);
         Route::post('/', [OfficeController::class, 'store']);
         Route::delete('/{id}', [OfficeController::class, 'destroy']);
     });

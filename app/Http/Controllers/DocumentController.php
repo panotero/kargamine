@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use App\Services\ApplicationMailer;
 use Psr\Http\Message\RequestInterface;
+use App\Models\Office;
 
 class DocumentController extends Controller
 {
@@ -30,6 +31,7 @@ class DocumentController extends Controller
 
     public function index($office_name)
     {
+        $user = Auth::user();
         $documentsQuery = Document::with([
             'files',
             'activities',
@@ -37,6 +39,7 @@ class DocumentController extends Controller
             'recipient',     // recipient user
             'confirmedBy'    // user who confirmed
         ]);
+
 
         if ($office_name !== 'ODDG-PP') {
             $documentsQuery->where(function ($q) use ($office_name) {
@@ -88,6 +91,18 @@ class DocumentController extends Controller
         });
 
         return response()->json($documents);
+    }
+
+
+    public function OfficeDocs()
+    {
+        $user = Auth::user();
+        //get logged user office code and its child office codes
+        $offices = Office::with('childrenRecursive')
+            ->where('office_id', $user->office_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return $offices;
     }
 
     public function confirm(Request $request)

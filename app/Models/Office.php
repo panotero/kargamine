@@ -23,11 +23,16 @@ class Office extends Model
 
     public function parentOfficeInfo()
     {
+        return $this->belongsTo(Office::class, 'parent_office_id', 'office_id');
+    }
 
-        return $this->belongsTo(
-            Office::class,
-            'office_id',
-            'parent_office_id'
-        );
+    public function children()
+    {
+        return $this->hasMany(Office::class, 'parent_office_id', 'office_id');
+    }
+
+    public function childrenRecursive()
+    {
+        return $this->children()->with('childrenRecursive');
     }
 }

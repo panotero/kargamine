@@ -244,7 +244,7 @@
                     rowId: o.office_id,
                     rawHtml: `
                 <td class="p-3">${o.office_id}</td>
-                <td class="p-3">${o.office_code}</td>
+                <td class="p-3">${o.office_name}</td>
                 <td class="p-3">${o.office_code}</td>
                 <td class="p-3">${o.created_at}</td>
                 <td class="p-3">

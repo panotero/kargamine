@@ -15,6 +15,16 @@ class OfficeController extends Controller
         return response()->json(Office::with(['parentOfficeInfo'])->orderBy('created_at', 'desc')->get());
     }
 
+    public function getOfficeWithChild()
+    {
+        return response()->json(
+            Office::whereNull('parent_office_id')
+                ->with('childrenRecursive')
+                ->orderBy('created_at', 'desc')
+                ->get()
+        );
+    }
+
     public function store(Request $request)
     {
         // dd($request->all());
