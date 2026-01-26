@@ -20,7 +20,7 @@
         "datatables.net-dt": "^2.3.5",
         "flowbite": "^4.0.1",
         "jquery": "^3.7.1",
-        "jspdf": "^3.0.4",
+        "jspdf": "^4.0.0",
         "jspdf-autotable": "^5.0.2",
         "pdfjs-dist": "^5.4.449",
         "simple-datatables": "^10.2.0",

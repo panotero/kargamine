@@ -21,9 +21,13 @@ use App\Http\Controllers\NotificationController;
 |
 */
 
-Route::get('/', function () {
+Route::get('/login', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
+Route::get('/', function () {
+    return auth()->check() ? redirect()->route('home') : redirect()->route('home');
+});
+
 
 Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(function () {
     Route::get('/dashboard', function () {
