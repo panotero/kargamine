@@ -18,6 +18,14 @@ async function fillOfficeDropdown(otherofficetb = null) {
   return offices;
 }
 
+async function getOfficeList() {
+  const officedropdown = document.querySelectorAll(".officeSelect");
+
+  const res = await fetch("/api/getOfficeList");
+  const offices = await res.json();
+  console.log(offices);
+}
+
 window.office = async function office() {
   try {
     const officeList = await fetchWithRetry(`/api/offices`, {
@@ -190,12 +198,36 @@ window.filllabeldropdown = async function labeldropdown(document_id = null) {
   //   return;
 
   label.forEach((labeloption) => {
-    labeloption.innerHTML =
-      `<option value="">Select Office</option>` +
-      labels
-        .map((o) => `<option value="${o.label_name}">${o.label_name}</option>`)
-        .join("") +
-      `<option value="Other">Other</option>`;
+    const selectedLabel = labeloption.dataset.selectedLabel || "";
+
+    // Keep the first option as is (placeholder or selected value)
+    // Remove any old appended options except the first
+    Array.from(labeloption.options)
+      .slice(1)
+      .forEach((opt) => opt.remove());
+
+    // Append labels from API
+    labels.forEach((o) => {
+      const option = document.createElement("option");
+      option.value = o.label_name;
+      option.textContent = o.label_name;
+
+      // Automatically select if it matches saved label
+      if (o.label_name === selectedLabel) {
+        option.selected = true;
+      }
+
+      labeloption.appendChild(option);
+    });
+
+    // Always append "Other" at the end
+    const otherOption = document.createElement("option");
+    otherOption.value = "Other";
+    otherOption.textContent = "Other";
+    if (selectedLabel === "Other") {
+      otherOption.selected = true;
+    }
+    labeloption.appendChild(otherOption);
 
     labeloption.addEventListener("change", () => {
       const row = labeloption.closest("tr");

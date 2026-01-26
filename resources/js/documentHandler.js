@@ -185,29 +185,41 @@ function initdocumentcontroller() {
 
     let labelOptionHtml = "";
 
+    // Base placeholder option
+    const placeholderOption = `
+  <option disabled value="" class="label text-black">
+    Set Label
+  </option>
+`;
+
     if (labelValue) {
-      labelOptionHtml = `<option selected value="${labelValue}" class="label">${labelValue}</option>`;
+      // Put selected value FIRST, then placeholder
+      labelOptionHtml = `
+    <option selected value="${labelValue}" class="label text-black">
+      ${labelValue}
+    </option>
+    ${placeholderOption}
+  `;
     } else {
-      labelOptionHtml = `<option selected disabled value="" class="label">Set Label</option>`;
+      labelOptionHtml = `
+    <option selected disabled value="" class="label text-black">
+      Set Label
+    </option>
+  `;
     }
 
-    const labelCellHtml = labelValue
-      ? `
-    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-800">
-      ${labelValue}
-    </span>
-  `
-      : source === "assigned"
+    const labelCellHtml =
+      source === "assigned"
         ? `
-          <select class="border rounded-full px-2 py-1 text-xs labeldropdown">
-            ${labelOptionHtml}
-            <option value="General">General</option>
-            <option value="Confidential">Confidential</option>
-          </select>
-        `
+      <select
+        class="border rounded-full px-2 py-1 text-xs labeldropdown text-black"
+        data-selected-label="${labelValue ?? ""}">
+        ${labelOptionHtml}
+      </select>
+    `
         : `
-          <span class="text-gray-400 text-xs">-</span>
-        `;
+      <span class="text-gray-400 text-xs">-</span>
+    `;
 
     const rowHtml = `
     <tr class="border-t hover:dark:bg-gray-50 hover:dark:text-black cursor-pointer"
@@ -262,6 +274,7 @@ function initdocumentcontroller() {
       );
       clearModalFields();
       showSkeletonLoaders();
+
       initModal({ modalId: "DocumentModal" });
       populateDocumentModal(document_id);
       logActivity("view", document_id, document_control_number);
@@ -280,8 +293,6 @@ function initdocumentcontroller() {
       const response = await fillOfficeDropdown();
 
       if (response) {
-        document.getElementById("originOffice").value =
-          window.authUser.office.office_code;
         fillDocType();
       }
     }
@@ -304,6 +315,8 @@ function initdocumentcontroller() {
     const fileInput = document.getElementById("fileInput");
     const confirmationBtn = document.getElementById("btnConfirm");
     newDocBtn?.addEventListener("click", () => {
+      document.getElementById("originOffice").value =
+        window.authUser.office.office_code;
       initModal({ modalId: "modalNewDocument" });
     });
     submitBtn.addEventListener("click", async () => {

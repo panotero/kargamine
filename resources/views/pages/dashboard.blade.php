@@ -129,60 +129,65 @@
         </div>
 
     </div>
+    <div id="countModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
 
-    <div id="countModal" class="hidden fixed inset-0 flex items-center justify-center z-40 bg-black/50 modal">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80 w-[60vw]  relative">
-            <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Document Created</h2>
-            <button id="refreshbtn"
-                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">refresh
-                table</button>
-            <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
-                <table id="countmodaltable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Control Number</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Document Number</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Subject</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Origin Office</span>
-                            </th>
-                            <th class="px-4 py-3">
-                                <span class="inline-flex items-center">Destination Office</span>
-                            </th>
-                            <th class="px-4 py-auto">
-                                <span class="inline-flex items-center">Status</span>
-                            </th>
-                        </tr>
-                    </thead>
+        <div
+            class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto flex flex-col">
 
-                    <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
-                        <!-- Rows will be inserted dynamically -->
-                    </tbody>
-                </table>
+            <!-- HEADER -->
+            <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                    Documents Created
+                </h2>
+                <button id="refreshbtn"
+                    class="hidden mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200 text-sm">
+                    Refresh Table
+                </button>
             </div>
-            <div class="w-full flex justify-end">
+
+            <!-- TABLE CONTENT -->
+            <div class="p-6 overflow-auto">
+                <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow">
+                    <table id="countmodaltable" class="min-w-full text-sm text-left text-gray-700 dark:text-gray-300">
+
+                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3">Control Number</th>
+                                <th class="px-4 py-3">Document Number</th>
+                                <th class="px-4 py-3">Subject</th>
+                                <th class="px-4 py-3">Origin Office</th>
+                                <th class="px-4 py-3">Destination Office</th>
+                                <th class="px-4 py-3">Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800 dark:divide-gray-700">
+                            <!-- Dynamic rows -->
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end">
                 <button
-                    class="modal-close px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+                    class="modal-close px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200 text-sm font-medium">
                     Close
                 </button>
-
             </div>
+
         </div>
     </div>
+
 </div>
 
 <script>
     (function() {
         initdashboard();
-        document.getElementById("refreshbtn").addEventListener("click", () => {
-            updatetable();
-        })
+        // document.getElementById("refreshbtn").addEventListener("click", () => {
+        //     updatetable();
+        // })
 
 
 

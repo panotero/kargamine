@@ -211,7 +211,7 @@
                                         Activity History
                                     </h3>
 
-                                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="pt-4">
 
                                         <div class="flex justify-between w-full relative">
                                             <button id="toggleFullLogBtn"
@@ -578,7 +578,7 @@
                                     Drag & drop a PDF file here or
                                     <span class="text-blue-600 dark:text-blue-400 underline">click to browse</span>
                                 </p>
-                                <input type="file" accept="application/pdf" class="" id="esignfileInput" />
+                                <input type="file" accept="application/pdf" class="hidden" id="esignfileInput" />
                             </div>
                             <div id="esignfileInfo" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></div>
                             <button id="clearesignSelectionBtn"

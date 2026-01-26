@@ -1,4 +1,4 @@
-window.initGraph = async function initGraph() {
+window.initGraph = async function initGraph(activities) {
   const ACTION_MAP = {
     routing: "route",
     approve: "approved",
@@ -200,16 +200,6 @@ window.initGraph = async function initGraph() {
 
   window.renderFileActivityGraph = async function (range = "week") {
     try {
-      const activities = await fetchWithRetry(
-        `/api/activities/byOffice/${authUser.office.office_code}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        },
-      );
-
       const sampleData = {
         week: buildWeeklyData(activities),
         month: buildMonthlyData(activities),

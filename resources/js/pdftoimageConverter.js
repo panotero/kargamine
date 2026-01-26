@@ -122,7 +122,7 @@ async function extractPdfImages(
 
   return slideElements;
 }
-function downsizeCanvas(sourceCanvas, maxWidth, maxHeight, quality = 0.8) {
+function downsizeCanvas(sourceCanvas, maxWidth, maxHeight, quality = 1) {
   const width = sourceCanvas.width;
   const height = sourceCanvas.height;
 

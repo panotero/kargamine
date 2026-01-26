@@ -49,6 +49,11 @@ window.fetchWithRetry = async function fetchWithRetry(
 
   for (let i = 0; i < retries; i++) {
     try {
+      if (signal !== null) {
+        console.log("signal available");
+      } else {
+        console.log("signal not available");
+      }
       // Clone options and attach signal if provided
       const fetchOptions = { ...options };
       if (signal) fetchOptions.signal = signal;

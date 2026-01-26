@@ -173,9 +173,21 @@ document.addEventListener("DOMContentLoaded", function () {
 `;
 
     try {
-      if (controller) console.log("abortcontroller available");
+      // Abort previous fetch if any
+      if (window.controller) {
+        window.controller.abort(); // abort ongoing fetch
+      }
+
+      // Reinitialize controller for the new fetch
+      window.controller = new AbortController();
+
+      if (window.controller) {
+        console.log("AbortController available");
+      }
+      // Fetch with the new controller
       const res = await fetch(menu.link, {
         headers: { Accept: "application/json" },
+        signal: window.controller.signal,
       });
       if (!res.ok)
         throw new Error(`Failed to load page: ${res.status} ${res.statusText}`);
@@ -191,6 +203,9 @@ document.addEventListener("DOMContentLoaded", function () {
         document.body.removeChild(newScript);
       });
     } catch (err) {
+      if (err.name === "AbortError") {
+        return; // simply exit
+      }
       contentEl.innerHTML = `<div class="bg-red-600 text-white rounded p-4">
                 <strong>Error:</strong> ${err.message}
             </div>`;

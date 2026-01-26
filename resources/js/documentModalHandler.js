@@ -283,9 +283,11 @@ function populateFileList(files) {
          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200"
          onclick="event.stopPropagation();">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v8m0-8l-4 4m4-4l4 4"/>
-        </svg>
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v-8m0 8l-4-4m4 4l4-4"/>
+</svg>
+
+
       </a>
     `;
 
@@ -340,7 +342,7 @@ function populateActivityLog(data) {
     return;
   }
   const activities = [...data.activities].reverse();
-  console.log(activities);
+  //   console.log(activities);
   activities.forEach((act) => {
     const importantDiv = document.createElement("li");
     const fullDiv = document.createElement("li");
@@ -396,7 +398,7 @@ function populateActivityLog(data) {
     let fullText = "";
     const fullUserName = act.user?.name || `User ${act.user_id || "Unknown"}`;
     let fullActionText = "";
-    console.log(act);
+    // console.log(act);
     switch (act.action) {
       case "route": {
         const senderName = act.user?.name ?? "Unknown User";
@@ -860,7 +862,7 @@ routeSubmitBtnBtn.addEventListener("click", async function () {
     }
     formData.append("remarks", remarks);
 
-    console.log("FormData to submit:", Array.from(formData.entries()));
+    // console.log("FormData to submit:", Array.from(formData.entries()));
     // return;
     // ---- Submit to API ----
     const res = await fetchWithRetry("/api/documents/route", {

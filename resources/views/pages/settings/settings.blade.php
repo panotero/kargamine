@@ -1,11 +1,11 @@
-<div class="max-w-7xl h-screen mx-auto p-6">
+<div class="max-h-screen max-w-screen w-full overflow-auto bg-gray-50 dark:bg-gray-800 p-5 rounded-lg">
     <h1 class="text-3xl font-semibold mb-8 text-center">Office & User Configuration</h1>
 
     <div class="flex flex-wrap justify-center gap-4 mb-8">
 
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-10">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-5 mb-10">
         <div class="w-full flex justify-between p-5">
 
             <h2 class="text-xl font-semibold mb-4">Office List</h2>
@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-5 mb-10">
         <div class="w-full flex justify-between p-5">
 
             <h2 class="text-xl font-semibold mb-4">User Config List</h2>
@@ -54,7 +54,7 @@
             </table>
         </div>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-5 mb-10">
         <div class="w-full flex justify-between p-5">
 
             <h2 class="text-xl font-semibold mb-4">Document Type List</h2>
@@ -77,7 +77,7 @@
             </table>
         </div>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-5 mb-10">
 
         <div class="w-full flex justify-between p-5">
 
@@ -350,7 +350,7 @@
                 <option value="0">Select Parent Office (Optional)</option>` +
                     officeList
                     .map(
-                        (o) => `<option value="${o.office_id}">${o.office_name}</option>`,
+                        (o) => `<option value="${o.office_id}">${o.office_code}</option>`,
                     )
                     .join("");
 
@@ -695,11 +695,11 @@
 
         });
 
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-                closeModal();
-            }
-        });
+        // document.addEventListener('click', (e) => {
+        //     if (e.target.classList.contains('modal-overlay')) {
+        //         closeModal();
+        //     }
+        // });
 
         function closeModal() {
             const openModals = document.querySelectorAll('[id$="Modal"]:not(.hidden)');

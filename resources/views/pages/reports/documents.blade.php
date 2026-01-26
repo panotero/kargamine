@@ -1,4 +1,4 @@
-<div class="w-full h-screen p-5 bg-gray-50 text-black dark:bg-gray-800 dark:text-white ">
+<div class="w-full h-full p-5 bg-gray-50 text-black dark:bg-gray-800 dark:text-white ">
     <div class="container mx-auto space-y-6">
         <div class="w-full border rounded-lg bg-white shadow flex flex-col lg:flex-row gap-4 p-4 text-black">
             {{-- BUG ID: 2 --}}
@@ -106,7 +106,7 @@
             </div>
 
         </div>
-        <div class="bg-white dark:bg-gray-800 overflow-x-auto rounded-xl shadow p-3">
+        <div class="bg-white dark:bg-gray-900 overflow-x-auto rounded-xl shadow p-3">
             <table id="reportsdocumentsTable" class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
                 <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-xs">
                     <tr>

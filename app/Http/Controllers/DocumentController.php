@@ -32,22 +32,25 @@ class DocumentController extends Controller
     public function index($office_name)
     {
         $user = Auth::user();
+        $offices = Office::with('childrenRecursive')
+            ->where('office_id', $user->office_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $officeCodes = $this->collectOfficeCodes($offices);
         $documentsQuery = Document::with([
             'files',
             'activities',
             'user',          // user who uploaded/created
             'recipient',     // recipient user
             'confirmedBy'    // user who confirmed
-        ]);
-
-
-        if ($office_name !== 'ODDG-PP') {
-            $documentsQuery->where(function ($q) use ($office_name) {
-                $q->where('office_origin', $office_name)
-                    ->orWhere('destination_office', $office_name)
-                    ->orWhereJsonContains('involved_office', $office_name);
+        ])
+            ->where(function ($q) use ($officeCodes) {
+                foreach ($officeCodes as $code) {
+                    $q->orWhereJsonContains('involved_office', $code);
+                }
             });
-        }
+
 
         $documents = $documentsQuery
             ->orderBy('updated_at', 'desc')
@@ -102,7 +105,24 @@ class DocumentController extends Controller
             ->where('office_id', $user->office_id)
             ->orderBy('created_at', 'desc')
             ->get();
-        return $offices;
+
+        $officeCodes = $this->collectOfficeCodes($offices);
+        return $officeCodes;
+    }
+
+    public function collectOfficeCodes($offices, &$codes = [])
+    {
+        foreach ($offices as $office) {
+            // Add current office code
+            $codes[] = $office->office_code;
+
+            // If has children, recurse
+            if (!empty($office->childrenRecursive) && $office->childrenRecursive->count()) {
+                $this->collectOfficeCodes($office->childrenRecursive, $codes);
+            }
+        }
+
+        return $codes;
     }
 
     public function confirm(Request $request)

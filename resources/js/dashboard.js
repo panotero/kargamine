@@ -10,25 +10,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-window.initdashboard = function initdashboard() {
+window.initdashboard = async function initdashboard() {
+  let DocumentData = [];
+  let documentActivities = await getDocData();
   let allDocuments = []; // store all fetched documents
 
   const statuses = ["signed", "approved", "completed"];
 
-  window.initDashboard = async function initDashboard() {
-    console.log("initdashboard");
+  window.Dashboardinit = async function Dashboardinit() {
     const authUser = window.authUser;
     if (!authUser) return;
 
     const userOffice = authUser.office?.office_code || null;
     const userApprovalType = authUser?.user_config.approval_type;
-    // console.log(userApprovalType);
 
     // Fetch all documents once
     // try {
     await getActivities();
     getDocsCounts();
-    const docs = await getDocData();
+    const docs = DocumentData;
     const adminStatuses = [
       "signed",
       "routed",
@@ -50,7 +50,6 @@ window.initdashboard = function initdashboard() {
     //   return;
     // }
   };
-
   async function getDocData() {
     //BUG ID: 1 refactored getActivityData function
     try {
@@ -63,17 +62,17 @@ window.initdashboard = function initdashboard() {
           },
         },
       );
+      DocumentData = documents;
       return documents;
-      // console.log(data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
   //get top 10 priority list
   async function topDocs() {
     let filterdoc = [];
-    const docs = await getDocData();
+    const docs = DocumentData;
     //get the last 10
 
     filterdoc = docs.filter(
@@ -83,9 +82,8 @@ window.initdashboard = function initdashboard() {
 
   async function getDocsCounts() {
     try {
-      const docs = await getDocData();
+      const docs = DocumentData;
       allDocuments = docs;
-      console.log(docs);
       const userOffice = authUser.office.office_code;
       let total = docs.length;
       let forDiscussion = 0;
@@ -96,8 +94,6 @@ window.initdashboard = function initdashboard() {
       let remanded = 0;
       let completed = 0;
       docs.forEach((doc) => {
-        // console.log(doc.status);
-
         switch (doc.status.toLowerCase()) {
           case "pending":
             pending++;
@@ -148,10 +144,14 @@ window.initdashboard = function initdashboard() {
   // -----------------------------
   async function getActivities() {
     try {
-      const response = await getDocData();
+      if (window.controller) {
+        console.log("AbortController available");
+      } else {
+        console.log("AbortController not available");
+      }
+      const response = DocumentData;
       if (!response) throw new Error("Failed to fetch documents");
       allDocuments = response;
-      // console.log(response);
       const authUser = window.authUser;
       if (!authUser) return;
       const activities = await fetchWithRetry(
@@ -162,9 +162,11 @@ window.initdashboard = function initdashboard() {
             Accept: "application/json",
           },
         },
+        window.controller.signal,
       );
-      console.log(activities);
-      renderActivities(activities);
+      initGraph(activities);
+      documentActivities = activities;
+      renderActivities(documentActivities);
     } catch (error) {
       console.error(error);
     }
@@ -224,7 +226,6 @@ window.initdashboard = function initdashboard() {
         //populate countmodaltable based on the status
         updatetable(selectedStatus);
 
-        // console.log(e.dataset.status);
         initModal({
           modalId: "countModal",
         });
@@ -233,12 +234,11 @@ window.initdashboard = function initdashboard() {
   };
   window.updatetable = async function updatetable(statusSelect = false) {
     const tables = document.querySelectorAll("table tbody");
-    const docs = await getDocData();
+    const docs = DocumentData;
     tables.forEach((table) => {
       table.innerHTML = "";
     });
     initDataTables();
-    console.log(docs);
 
     // return;
     let filteredDocuments = [];
@@ -246,7 +246,6 @@ window.initdashboard = function initdashboard() {
     if (statusSelect) {
       status = statusSelect;
     }
-    console.log(status);
     // return;
     switch (status) {
       case "pending":
@@ -291,7 +290,6 @@ window.initdashboard = function initdashboard() {
       const dt = $(modalcounttable).DataTable();
       dt.clear().draw();
     }
-    // console.log(filteredDocuments);
     //update alldocuments to mutated array based on the status
     filteredDocuments.forEach((doc) => {
       updaterow(doc);
@@ -436,7 +434,7 @@ window.initdashboard = function initdashboard() {
       <h1 class="text-sm font-semibold">
         ${doc.document_control_number ?? "-"}
       </h1>
-      <span class="text-xs px-2 py-0.5 rounded-full ${statuscolor}">
+      <span class="text-xs px-2 py-0.5 rounded-full text-black ${statuscolor}">
         ${doc.status ?? "-"}
       </span>
     </div>
@@ -523,7 +521,6 @@ window.initdashboard = function initdashboard() {
       }))
       .sort((a, b) => a._priorityScore - b._priorityScore)
       .slice(0, 5);
-
     prioritizedDocs.forEach((doc) => updatePriorityItem(doc));
   }
   function daysBetween(dateA, dateB) {
@@ -605,9 +602,7 @@ window.initdashboard = function initdashboard() {
   }
 
   initDataTables();
-
-  initGraph();
   fillOfficeDropdown();
-  initDashboard();
+  Dashboardinit();
   getDocsByStatus();
 };
