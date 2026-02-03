@@ -70,52 +70,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{approval_id}/action', [ApprovalsController::class, 'handleApprovalAction']);
     });
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);
-    Route::prefix('documents')->group(function () {
-        Route::get('/getdocs/{office_name}', [DocumentController::class, 'index']);
-        Route::get('/{ControlNumber}', [DocumentController::class, 'show']);
-        Route::post('/', [DocumentController::class, 'store']);
-        Route::post('/revise', [DocumentController::class, 'revise']);
-        Route::post('/esign', [DocumentController::class, 'esign']);
-        Route::post('/confirm', [DocumentController::class, 'confirm']);
-        Route::patch('/{id}', [DocumentController::class, 'update']);
-        Route::delete('/{id}', [DocumentController::class, 'destroy']);
-        Route::post('/update_status', [DocumentController::class, 'update_status']);
-        Route::post('/update_label/{id}', [DocumentController::class, 'update_label']);
-    })->middleware('safe.text');
     Route::get('/OfficeDocs', [DocumentController::class, 'OfficeDocs']);
 
 
-    Route::post('/activities', [ActivityController::class, 'store'])
-        ->name('api.activities.store');
-
-    Route::prefix('offices')->group(function () {
-        Route::get('/', [OfficeController::class, 'index']);
-        Route::get('/getOfficeList', [OfficeController::class, 'getOfficeWithChild']);
-        Route::post('/', [OfficeController::class, 'store']);
-        Route::delete('/{id}', [OfficeController::class, 'destroy']);
-    });
 
 
-    Route::prefix('userconfigs')->group(function () {
-        Route::get('/', [UserConfigController::class, 'index']);
-        Route::post('/', [UserConfigController::class, 'store']);
-        Route::delete('/{id}', [UserConfigController::class, 'destroy']);
-    });
 
-    Route::prefix('documenttypes')->group(function () {
-        Route::get('/', [DocumentTypeController::class, 'index']);
-        Route::post('/', [DocumentTypeController::class, 'store']);
-        Route::get('/{id}', [DocumentTypeController::class, 'show']);
-        Route::patch('/{id}', [DocumentTypeController::class, 'update']);
-        Route::delete('/{id}', [DocumentTypeController::class, 'destroy']);
-    });
-    Route::prefix('labeltypes')->group(function () {
-        Route::get('/', [DocumentTypeController::class, 'getlabel']);
-        Route::post('/', [DocumentTypeController::class, 'storelabel']);
-        Route::get('/{id}', [DocumentTypeController::class, 'showlabel']);
-        Route::patch('/{id}', [DocumentTypeController::class, 'updatelabel']);
-        Route::delete('/{id}', [DocumentTypeController::class, 'destroylabel']);
-    });
+
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
@@ -127,32 +88,10 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/reactivate/{id}', [UserController::class, 'reactivate']);
         Route::get('/reports/{officename}', [UserController::class, 'reports']);
     });
-    Route::prefix('finance')->group(function () {
-        Route::post('/document', [FinanceController::class, 'store']);
-        Route::get('/getdata', [FinanceController::class, 'get']);
 
-        Route::get('/finance-activity/{finance_id}', [FinanceActivityController::class, 'index']);
-        Route::post('/finance-activity', [FinanceActivityController::class, 'store']);
-    });
-
-
-    Route::prefix('activities')->group(function () {
-        Route::get('/byOffice/{officeName}', [ActivityController::class, 'getActivitiesByOffice']);
-        Route::get('/', [ActivityController::class, 'index']);
-        Route::get('/{id}', [ActivityController::class, 'show']);
-        Route::post('/', [ActivityController::class, 'store']);
-        Route::delete('/{id}', [ActivityController::class, 'destroy']);
-    });
 
     Route::post('/send-mail', [MailerController::class, 'send']);
 
-    Route::prefix('finance/budget')->group(function () {
-
-        Route::get('/', [FinanceBudgetController::class, 'index']);
-        Route::get('/{year}', [FinanceBudgetController::class, 'show']);
-        Route::post('/', [FinanceBudgetController::class, 'store']);
-        Route::put('/{year}', [FinanceBudgetController::class, 'update']);
-    });
 
     Route::prefix('nav_menus')->group(function () {
         Route::get('/list', [MenusController::class, 'menulist']);
@@ -163,13 +102,6 @@ Route::middleware(['auth'])->group(function () {
     });
 
 
-    Route::prefix('listings')->group(function () {
-        Route::get('/', [ListingController::class, 'index']);
-        Route::get('/{id}', [ListingController::class, 'show']);
-        Route::post('/', [ListingController::class, 'store'])->name('listings.store');
-        Route::put('/{id}', [ListingController::class, 'update']);
-        Route::delete('/{id}', [ListingController::class, 'destroy'])->name('listings.destroy');
-    });
 
     Route::get('/roles', fn() => DB::table('setting_role')->get());
 

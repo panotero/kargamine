@@ -25,7 +25,7 @@ Route::get('/login', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
 Route::get('/', function () {
-    return auth()->check() ? redirect()->route('home') : redirect()->route('home');
+    return view('home');
 });
 
 

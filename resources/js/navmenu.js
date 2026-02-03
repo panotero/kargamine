@@ -239,6 +239,7 @@ document.addEventListener("DOMContentLoaded", function () {
       credentials: "include",
       headers: { Accept: "application/json" },
     });
+    console.log(menuData);
 
     if (!menuData || !menuData.length)
       return console.warn("No menu data available");

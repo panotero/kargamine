@@ -21,10 +21,7 @@ class MenusController extends Controller
             ->get();
         $filtered = $menus->filter(function ($menu) use ($user) {
             $allowedRoles = json_decode($menu->allowed_roles, true) ?? [];
-            $allowedOffices = json_decode($menu->allowed_office, true) ?? [];
-
-            return in_array($user->role, $allowedRoles) &&
-                in_array($user->office->office_code, $allowedOffices);
+            return in_array($user->role_id, $allowedRoles);
         })->values();
 
         $grouped = $filtered->where('parent_menu', 0)->map(function ($parent) use ($filtered) {
@@ -36,7 +33,6 @@ class MenusController extends Controller
                 'link' => $parent->link,
                 'menu_order' => $parent->menu_order,
                 'allowed_roles' => $parent->allowed_roles,
-                'allowed_offices' => $parent->allowed_offices,
                 'children' => $children
             ];
         })->values();

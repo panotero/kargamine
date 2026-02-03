@@ -27,10 +27,10 @@ class DatabaseSeeder extends Seeder
             // FilesTableSeeder::class,
             // ModificationsTableSeeder::class,
             // NotificationsTableSeeder::class,
-            // NavMenuSeeder::class,
+            NavMenuSeeder::class,
             UserSeeder::class,
             // ThemeSeeder::class,
-            // Setting_roleSeeder::class
+            Setting_roleSeeder::class
         ]);
     }
 }

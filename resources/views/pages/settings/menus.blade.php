@@ -53,11 +53,6 @@
                 <div id="menuRolesContainer" class="grid grid-cols-2 gap-2 text-black">
                 </div>
             </div>
-            <div>
-                <label class="block font-medium">Allowed Office</label>
-                <div id="menuOfficeContainer" class="grid grid-cols-2 gap-2 text-black">
-                </div>
-            </div>
 
             <div>
                 <label class="block font-medium">Parent Menu</label>
@@ -86,7 +81,6 @@
             icon: document.getElementById("menuIcon"),
             link: document.getElementById("menuLink"),
             rolesContainer: document.getElementById("menuRolesContainer"),
-            officeCheckBoxFiller: document.getElementById("menuOfficeContainer"),
             parent: document.getElementById("menuParent"),
         };
 
@@ -113,11 +107,6 @@
                     cb.checked = allowedRoles.includes(cb.value);
                     cb.disabled = menu.parent_menu !== 0;
                 });
-                const allowedOffices = JSON.parse(menu.allowed_office || "[]");
-                document.querySelectorAll(".officeCheckbox").forEach(office => {
-                    office.checked = allowedOffices.includes(office.value);
-                    office.disabled = menu.parent_menu !== 0;
-                });
             } else {
                 fields.id.value = "";
                 fields.title.value = "";
@@ -140,85 +129,62 @@
         }
 
         async function loadRoles() {
-            const roles = await fetchWithRetry(`api/userconfigs`, {
+            const roles = await fetchWithRetry(`/api/roles`, {
                 headers: {
                     Accept: "application/json"
                 }
             });
-            // const roles = await res.json();
+
             const container = fields.rolesContainer;
+            if (!container) return;
+
             container.innerHTML = "";
 
+            // ---- Check All ----
             const checkAllWrapper = document.createElement("label");
-            checkAllWrapper.classList.add("flex", "items-center", "gap-2", "mb-2");
-            checkAllWrapper.innerHTML = `
-            <input type="checkbox" id="checkAllRoles" class="cursor-pointer">
-            <span class="font-medium text-gray-700">Check All</span>
-        `;
+            checkAllWrapper.className = "flex items-center gap-2 mb-2";
+
+            const checkAllBox = document.createElement("input");
+            checkAllBox.type = "checkbox";
+            checkAllBox.id = "checkAllRoles";
+            checkAllBox.className = "cursor-pointer";
+
+            const checkAllText = document.createElement("span");
+            checkAllText.className = "font-medium text-gray-700";
+            checkAllText.textContent = "Check All";
+
+            checkAllWrapper.append(checkAllBox, checkAllText);
             container.appendChild(checkAllWrapper);
 
-            roles.forEach(role => {
+            // ---- Role Checkboxes ----
+            roles.forEach(({
+                id,
+                role_name
+            }) => {
                 const wrapper = document.createElement("label");
-                wrapper.classList.add("flex", "items-center", "gap-2");
-                wrapper.innerHTML = `
-                <input type="checkbox" value="${role.designation}" class="roleCheckbox cursor-pointer">
-                <span>${role.designation}</span>
-            `;
+                wrapper.className = "flex items-center gap-2";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = id; // ✅ use role ID (important)
+                checkbox.dataset.roleName = role_name; // optional if you need name later
+                checkbox.className = "roleCheckbox cursor-pointer";
+
+                const labelText = document.createElement("span");
+                labelText.textContent = role_name;
+
+                wrapper.append(checkbox, labelText);
                 container.appendChild(wrapper);
             });
 
-            const checkAllBox = container.querySelector("#checkAllRoles");
+            // ---- Check All Logic ----
             checkAllBox.addEventListener("change", () => {
-                container.querySelectorAll(".roleCheckbox").forEach(cb => cb.checked = checkAllBox
-                    .checked);
+                container
+                    .querySelectorAll(".roleCheckbox")
+                    .forEach(cb => (cb.checked = checkAllBox.checked));
             });
         }
 
-        async function loadOffices() {
-            const offices = await fetchWithRetry(`api/offices`, {
-
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                        .content,
-                },
-            });
-
-            // const offices = await res.json();
-            const container = fields.officeCheckBoxFiller;
-            container.innerHTML = "";
-
-            const checkAllWrapper = document.createElement("label");
-            checkAllWrapper.classList.add("flex", "items-center", "gap-2", "mb-2");
-            checkAllWrapper.innerHTML = `
-        <input type="checkbox" id="checkAllOffices" class="cursor-pointer">
-        <span class="font-medium text-gray-700">Check All</span>
-    `;
-            container.appendChild(checkAllWrapper);
-
-            offices.forEach(office => {
-                const wrapper = document.createElement("label");
-                wrapper.classList.add("flex", "items-center", "gap-2");
-
-                wrapper.innerHTML = `
-            <input type="checkbox"
-                   value="${office.office_code}"
-                   data-office-name="${office.office_code}"
-                   class="officeCheckbox cursor-pointer">
-            <span>${office.office_code}</span>
-        `;
-
-                container.appendChild(wrapper);
-            });
-
-            const checkAllBox = container.querySelector("#checkAllOffices");
-            checkAllBox.addEventListener("change", () => {
-                container.querySelectorAll(".officeCheckbox").forEach(cb => {
-                    cb.checked = checkAllBox.checked;
-                });
-            });
-        }
         async function loadMenus() {
             menusData = await fetchWithRetry(`api/nav_menus/list`, {
                 credentials: 'include',
@@ -302,10 +268,6 @@
                             cb.checked = allowedRoles.includes(cb.value);
                         });
 
-                        const allowedOffice = JSON.parse(menu.allowed_office || "[]");
-                        document.querySelectorAll('.officeCheckbox').forEach(cb => {
-                            cb.checked = allowedOffice.includes(cb.value);
-                        });
 
                         modal.classList.remove("hidden");
                         modal.classList.add("flex");
@@ -355,8 +317,6 @@
             let checkedRoles = Array.from(document.querySelectorAll(".roleCheckbox:checked"))
                 .map(cb => cb.value);
 
-            let checkedOffices = Array.from(document.querySelectorAll(".officeCheckbox:checked"))
-                .map(cb => cb.value);
 
             const parentId = parseInt(fields.parent.value);
 
@@ -364,7 +324,6 @@
                 const parentMenu = menusData.find(m => m.id === parentId);
 
                 checkedRoles = parentMenu ? JSON.parse(parentMenu.allowed_roles || "[]") : [];
-                checkedOffices = parentMenu ? JSON.parse(parentMenu.allowed_office || "[]") : [];
             }
 
             const payload = {
@@ -372,7 +331,6 @@
                 icon: fields.icon.value,
                 link: fields.link.value,
                 allowed_roles: JSON.stringify(checkedRoles),
-                allowed_office: JSON.stringify(checkedOffices),
                 parent_menu: fields.parent.value,
             };
 
@@ -383,6 +341,7 @@
                 url = `api/nav_menus/${fields.id.value}`;
                 method = "PUT";
             }
+            console.log(payload);
 
             const res = await fetchWithRetry(url, {
                 method,
@@ -398,7 +357,6 @@
             closeModal();
             await loadMenus();
             await loadRoles();
-            await loadOffices();
         });
 
         tableBody.addEventListener("click", async (e) => {
@@ -465,6 +423,5 @@
 
         loadRoles();
         loadMenus();
-        loadOffices();
     })();
 </script>

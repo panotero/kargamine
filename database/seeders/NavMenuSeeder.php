@@ -19,7 +19,7 @@ class NavMenuSeeder extends Seeder
                 'title' => 'Dashboard',
                 'icon' => 'fas fa-home',
                 'link' => '/page_dashboard',
-                'allowed_roles' => json_encode(['superadmin', 'admin', 'user', 'developer']),
+                'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0'
             ],
             [
@@ -27,7 +27,7 @@ class NavMenuSeeder extends Seeder
                 'title' => 'User Management',
                 'icon' => 'fas fa-users',
                 'link' => '/page_users',
-                'allowed_roles' => json_encode(['superadmin', 'developer']),
+                'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0'
 
             ],
@@ -35,14 +35,14 @@ class NavMenuSeeder extends Seeder
                 'title' => 'Developer Option',
                 'icon' => 'fas fa-users',
                 'link' => '#',
-                'allowed_roles' => json_encode(['superadmin', 'developer']),
+                'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0'
             ],
             [
                 'title' => 'Mailer',
                 'icon' => '',
                 'link' => '/page_mailer',
-                'allowed_roles' => json_encode(['superadmin', 'developer']),
+                'allowed_roles' => json_encode(['1']),
                 'parent_menu' => 'Developer Option'
 
             ],
@@ -50,7 +50,7 @@ class NavMenuSeeder extends Seeder
                 'title' => 'Menus',
                 'icon' => '',
                 'link' => '/page_menus',
-                'allowed_roles' => json_encode(['superadmin', 'developer']),
+                'allowed_roles' => json_encode(['1']),
                 'parent_menu' => 'Developer Option'
 
             ]

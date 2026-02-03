@@ -2,7 +2,6 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <link rel="icon" type="image/x-icon" href="{{ asset('/assets/images/TESDA_Logo.png') }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -17,7 +16,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    {{-- <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.5/flowbite.min.css" rel="stylesheet" /> --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -60,23 +58,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            initNotificationStream();
-            fetchAuthUser();
-            // console.log("all content has been loaded");
-            populateUsers("routing");
-
-
-        });
-    </script>
-    <style>
-        /* Disable DataTables odd/even row background */
-        /* table.dataTable tbody tr.odd,
-        table.dataTable tbody tr.even {
-            background-color: transparent !important;
-        } */
-    </style>
 
 </body>
 

@@ -48,8 +48,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\SafeText::class,
-        \App\Http\Middleware\EnsureSingleSession::class,
+            \App\Http\Middleware\EnsureSingleSession::class,
         ],
 
         'api' => [
@@ -61,7 +60,6 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\SafeText::class,
         ],
     ];
 

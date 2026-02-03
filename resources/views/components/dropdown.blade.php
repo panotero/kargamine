@@ -61,7 +61,6 @@
 
                     <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->email }}</p>
                     <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->name }}</p>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->office->office_code }}</p>
                 </div>
             </div>
 
