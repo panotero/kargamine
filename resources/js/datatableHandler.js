@@ -36,7 +36,7 @@ window.initDataTables = function initDataTables() {
       tbody.classList.remove(
         "divide-y",
         "divide-gray-200",
-        "dark:divide-gray-700"
+        "dark:divide-gray-700",
       );
       tbody.querySelectorAll("tr").forEach((row) => {
         row.classList.remove("even:bg-gray-50", "dark:even:bg-gray-900/50");
@@ -44,7 +44,7 @@ window.initDataTables = function initDataTables() {
           "transition-colors",
           "duration-300",
           "hover:border-white",
-          "hover:border-3"
+          "hover:border-3",
         );
       });
     });
@@ -59,7 +59,7 @@ window.initDataTables = function initDataTables() {
         "justify-center",
         "p-5",
         "lg:justify-end",
-        "dark:text-white"
+        "dark:text-black",
       );
     });
     search.forEach((searchWrapper) => {
@@ -69,7 +69,7 @@ window.initDataTables = function initDataTables() {
         "justify-center",
         "p-5",
         "lg:justify-end",
-        "dark:text-white"
+        "dark:text-black",
       );
     });
     wrapper.forEach((Wrapper) => {

@@ -17,5 +17,6 @@ class NavMenu extends Model
         'allowed_roles',
         'allowed_office',
         'parent_menu',
+        'menu_order',
     ];
 }

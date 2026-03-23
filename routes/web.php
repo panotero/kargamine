@@ -49,18 +49,20 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/page_dashboard', [PageController::class, 'page_dashboard']);
     Route::get('/page_usermanagement', [PageController::class, 'page_UserManagement']);
     Route::get('/page_menus', [PageController::class, 'page_Menus']);
-    Route::get('/page_themes', [PageController::class, 'page_Themes']);
     Route::get('/page_users', [PageController::class, 'page_Users']);
-    Route::get('/page_forms', [PageController::class, 'page_Forms']);
-    Route::get('/page_featuredHome', [PageController::class, 'page_featuredHome']);
     Route::get('/page_settings', [PageController::class, 'page_settings']);
-    Route::get('/page_documents', [PageController::class, 'page_documents']);
-    Route::get('/page_approvals', [PageController::class, 'page_approvals']);
-    Route::get('/page_reports_documents', [PageController::class, 'page_reports_documents']);
-    Route::get('/page_reports_users', [PageController::class, 'page_reports_users']);
-    Route::get('/page_finance_tracker', [PageController::class, 'page_finance_tracker']);
+    Route::get('/page_maintenance', [PageController::class, 'page_Maintenance']);
+    Route::get('/page_bookings', [PageController::class, 'page_bookings']);
+    Route::get('/page_clients', [PageController::class, 'page_clients']);
+    Route::get('/page_contracts', [PageController::class, 'page_contracts']);
+    Route::get('/page_reports', [PageController::class, 'page_reports']);
+
+
+
     Route::get('/profile', [PageController::class, 'profile'])->name('profile');
     Route::get('/settings', [PageController::class, 'settings'])->name('settings');
+    Route::get('/settings', [PageController::class, 'settings'])->name('settings');
+
 
     Route::get('/testmail', [MailerController::class, 'test']);
 

@@ -8,7 +8,7 @@
            transition-transform duration-300
            z-40">
             <div class="w-full p-5 dark:text-white">
-                <h1 class="font-semibold text-sm">LiveAboardTrips</h1>
+                <h1 class="font-semibold text-sm">Management System</h1>
                 <h1 class="text-md md:text-md font-bold"></h1>
             </div>
 

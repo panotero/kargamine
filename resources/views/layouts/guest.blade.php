@@ -35,13 +35,13 @@
                 <div>
 
                     <h1 class="text-3xl md:text-4xl font-bold mt-2 leading-tight">
-                        LiveAboardTrips
+                        Nz Management System
                     </h1>
                 </div>
 
 
                 <p class="text-sm opacity-80 pt-4 max-w-xs">
-                    Your partner in you adventures!
+                    Mangement in one stop!
                 </p>
             </div>
 

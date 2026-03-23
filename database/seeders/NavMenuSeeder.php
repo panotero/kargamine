@@ -20,7 +20,8 @@ class NavMenuSeeder extends Seeder
                 'icon' => 'fas fa-home',
                 'link' => '/page_dashboard',
                 'allowed_roles' => json_encode(['1']),
-                'parent_menu' => '0'
+                'parent_menu' => '0',
+                'menu_order' => '0'
             ],
             [
 
@@ -28,7 +29,8 @@ class NavMenuSeeder extends Seeder
                 'icon' => 'fas fa-users',
                 'link' => '/page_users',
                 'allowed_roles' => json_encode(['1']),
-                'parent_menu' => '0'
+                'parent_menu' => '0',
+                'menu_order' => '1'
 
             ],
             [
@@ -36,14 +38,16 @@ class NavMenuSeeder extends Seeder
                 'icon' => 'fas fa-users',
                 'link' => '#',
                 'allowed_roles' => json_encode(['1']),
-                'parent_menu' => '0'
+                'parent_menu' => '0',
+                'menu_order' => '2'
             ],
             [
                 'title' => 'Mailer',
                 'icon' => '',
                 'link' => '/page_mailer',
                 'allowed_roles' => json_encode(['1']),
-                'parent_menu' => 'Developer Option'
+                'parent_menu' => 'Developer Option',
+                'menu_order' => '1'
 
             ],
             [
@@ -51,7 +55,8 @@ class NavMenuSeeder extends Seeder
                 'icon' => '',
                 'link' => '/page_menus',
                 'allowed_roles' => json_encode(['1']),
-                'parent_menu' => 'Developer Option'
+                'parent_menu' => 'Developer Option',
+                'menu_order' => '2'
 
             ]
         ];

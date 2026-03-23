@@ -93,4 +93,26 @@ class PageController extends Controller
     {
         return "page settings";
     }
+
+    public function page_Maintenance()
+    {
+        return view('pages.maintenance');
+    }
+
+    public function page_bookings()
+    {
+        return view('pages.bookings');
+    }
+    public function page_clients()
+    {
+        return view('pages.clients');
+    }
+    public function page_contracts()
+    {
+        return view('pages.contracts');
+    }
+    public function page_reports()
+    {
+        return view('pages.reports');
+    }
 }

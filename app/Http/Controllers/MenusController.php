@@ -104,17 +104,22 @@ class MenusController extends Controller
             ]);
 
             $parentId = $data['parent_menu'] ?? 0;
-            $maxOrder = \App\Models\NavMenu::where('parent_menu', $parentId)->max('menu_order');
+            $maxOrder = NavMenu::where('parent_menu', $parentId)->max('menu_order');
             $maxOrder = $maxOrder ? intval($maxOrder) : 0;
+
             if (empty($data['menu_order']) || $data['menu_order'] <= 0) {
                 $data['menu_order'] = $maxOrder + 1;
             } else {
-                \App\Models\NavMenu::where('parent_menu', $parentId)
+                NavMenu::where('parent_menu', $parentId)
                     ->where('menu_order', '>=', $data['menu_order'])
                     ->increment('menu_order');
             }
 
-            $menu = \App\Models\NavMenu::create($data);
+            Log::info('STORE request received', [
+                'maxOrder' => $data
+            ]);
+
+            $menu = NavMenu::create($data);
 
             Log::info('STORE success', ['menu' => $menu]);
 
@@ -235,8 +240,16 @@ class MenusController extends Controller
         try {
             $menu = NavMenu::findOrFail($id);
             $menu->delete();
+            $child = NavMenu::where('parent_menu', $id)->get();
+            if (count($child) > 0) {
 
-            Log::info('DELETE success', ['id' => $id]);
+                foreach ($child as $chilemenu) {
+                    $cmenu = NavMenu::findOrFail($chilemenu->id);
+                    $cmenu->delete();
+                }
+                Log::info('child menu DELETE success', ['id' => $chilemenu->id]);
+            }
+            Log::info('parent menu DELETE success', ['id' => $id]);
 
             return response()->json([
                 'success' => true,
