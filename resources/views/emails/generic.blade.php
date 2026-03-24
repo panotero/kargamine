@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <link rel="icon" type="image/x-icon" href="{{ asset('/assets/images/TESDA_Logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="">
     <meta charset="utf-8">
     <title>Email</title>
     <style>
@@ -95,8 +95,7 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <img src="{{ config('app.url') }}/assets/images/TESDA_Logo.png" alt="TESDA Logo"
-                style="height:40px; width:auto; display:block;">
+            <img src="" alt="TESDA Logo" style="height:40px; width:auto; display:block;">
             <h1> Document Monitoring Tool </h1>
         </div>
 

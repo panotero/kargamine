@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <link rel="icon" type="image/x-icon" href="{{ asset('/assets/images/TESDA_Logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -35,7 +35,7 @@
                 <div>
 
                     <h1 class="text-3xl md:text-4xl font-bold mt-2 leading-tight">
-                        Nz Management System
+                        Management System
                     </h1>
                 </div>
 

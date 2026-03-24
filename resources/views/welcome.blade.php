@@ -3,7 +3,7 @@
 
 <head>
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('/assets/images/TESDA_Logo.png') }}">
+    <link rel="icon" type="image/x-icon" href="">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
