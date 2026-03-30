@@ -103,9 +103,9 @@ class PageController extends Controller
     {
         return view('pages.bookings');
     }
-    public function page_clients()
+    public function page_shipperConsignee()
     {
-        return view('pages.clients');
+        return view('pages.shipperConsignee');
     }
     public function page_contracts()
     {

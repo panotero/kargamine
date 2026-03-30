@@ -1,4 +1,4 @@
-<div class="max-h-screen max-md:w-screen w-full overflow-auto bg-gray-50 dark:bg-gray-800 text-gray-800 p-5 rounded-lg">
+<div class="max-h-screen max-md:w-screen w-full overflow-auto  dark:bg-gray-800 text-gray-800 p-5 rounded-lg">
 
 
     <div class="h-full container mx-auto ">
@@ -49,7 +49,7 @@
     </div>
 
     <div id="userModal" class="fixed inset-0 bg-black/40 hidden flex items-center justify-center z-50 modal">
-        <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl relative transition-all text-black">
+        <div class=" rounded-2xl w-full max-w-lg p-6 shadow-xl relative transition-all text-black">
             <h2 id="modalTitle" class="text-xl font-semibold mb-4 ">Add New User</h2>
 
             <form id="userForm" class="space-y-4">

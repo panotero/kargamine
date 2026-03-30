@@ -53,7 +53,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/page_settings', [PageController::class, 'page_settings']);
     Route::get('/page_maintenance', [PageController::class, 'page_Maintenance']);
     Route::get('/page_bookings', [PageController::class, 'page_bookings']);
-    Route::get('/page_clients', [PageController::class, 'page_clients']);
+    Route::get('/page_shipperConsignee', [PageController::class, 'page_shipperConsignee']);
     Route::get('/page_contracts', [PageController::class, 'page_contracts']);
     Route::get('/page_reports', [PageController::class, 'page_reports']);
 
