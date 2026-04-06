@@ -16,9 +16,11 @@ import Alpine from "alpinejs";
 window.Alpine = Alpine;
 
 Alpine.start();
+import "./customFunctions";
+import "./datatableHandler";
 import "./apihandler";
 import "./customAlert";
 import "./navmenu";
 // import "./notificationController";
 import "./mailer";
-// import "./toast";
+import "./toast";

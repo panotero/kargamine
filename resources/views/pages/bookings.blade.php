@@ -160,7 +160,7 @@
 <div id="new-booking-modal"
     class="fixed inset-0 z-50 flex items-start justify-center bg-blue-950/40 backdrop-blur-sm overflow-y-auto py-6 px-4 hidden"
     role="dialog" aria-modal="true">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto my-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[80vw] mx-auto my-auto">
 
         {{-- Header --}}
         <div
@@ -180,154 +180,227 @@
                 </svg>
             </button>
         </div>
+        <div class="max-h-80">
+            123
+        </div>
 
-        <form id="new-booking-form" novalidate class="px-6 py-6 space-y-8">
 
-            {{-- ── SECTION 1: Shipper & Consignee ── --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
-                    <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Shipper & Consignee</h3>
-                </div>
-                <div class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Shipper <span
-                                    class="text-orange-400">*</span></label>
-                            <select name="shipper_id" id="form-shipper"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                <option value="">Select Shipper</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Consignee <span
-                                    class="text-orange-400">*</span></label>
-                            <select name="consignee_id" id="form-consignee"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                <option value="">Select Consignee</option>
-                            </select>
-                        </div>
+
+        {{-- Modal Footer --}}
+        <div
+            class="px-6 py-5 border-t border-blue-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 sticky bottom-0 bg-white rounded-b-2xl">
+            <button type="button"
+                class="modal-close-btn px-5 py-2.5 text-sm font-semibold text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-xl transition w-full sm:w-auto"
+                data-modal="new-booking-modal">Cancel</button>
+            <button type="button" id="btn-submit-booking"
+                class="px-6 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 active:bg-orange-700 rounded-xl shadow-sm transition w-full sm:w-auto">Create
+                Booking</button>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="NewBookingModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
+
+    <div class="bg-white  rounded-2xl shadow-2xl w-full lg:max-w-[80vw] max-h-[90vh overflow-y-auto">
+        <div class="w-full p-5 flex flex-justify-between text-black">
+
+            <p class="text-xl font-semibold">Add New Booking</p>
+
+        </div>
+        <div class="max-h-[70vh] overflow-y-auto space-y-5 p-5">
+
+            <!-- SECTION 1: SHIPPER & CONSIGNEE -->
+            <div class="flex flex-col lg:flex-row gap-5">
+
+                <!-- SHIPPER -->
+                <div class="flex-1 p-5 border rounded-xl bg-white space-y-4" id="shipper-section">
+
+                    <!-- Title -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
+                        <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Shipper</h3>
                     </div>
+
+                    <!-- Search -->
+                    <div>
+                        <input type="text" placeholder="Search shipper..."
+                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-black bg-slate-50 focus:ring-2 focus:ring-orange-300 outline-none">
+                    </div>
+
+                    <!-- Data Display (for JS injection later) -->
+                    <div class="space-y-2 text-sm">
+
+                        <div>
+                            <span class="text-xs text-blue-400">Company Code</span>
+                            <p class="font-semibold text-blue-900" data-shipper="shipperCode">—</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-blue-400">Company Name</span>
+                            <p class="font-semibold text-blue-900" data-consignee="shipperName">—</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-blue-400">Company Address</span>
+                            <p class="font-semibold text-blue-900" data-shipper="shipperAddress">—</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-blue-400">Cargo Pickup Address</span>
+                            <p class="font-semibold text-blue-900" data-shipper="shipperPickupAddress">—</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-blue-400">Contact Person</span>
+                            <p class="font-semibold text-blue-900" data-shipper="shipperContact">—</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-blue-400">Contact No.</span>
+                            <p class="font-semibold text-blue-900" data-shipper="shipperPhone">—</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Hidden value for submission -->
+                    <input type="hidden" name="shipper_id" id="form-shipper">
+
                 </div>
+
+                <!-- CONSIGNEE -->
+                <div class="flex-1 p-5 border rounded-xl bg-white space-y-4" id="consignee-section">
+
+                    <!-- Title -->
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
+                        <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Consignee</h3>
+                    </div>
+
+                    <!-- Search -->
+                    <div>
+                        <input type="text" placeholder="Search consignee..."
+                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-black bg-slate-50 focus:ring-2 focus:ring-orange-300 outline-none">
+                    </div>
+
+                    <!-- Data Display -->
+                    <div class="space-y-2 text-sm">
+
+                        <div>
+                            <span class="text-xs text-blue-400">Company Code</span>
+                            <p class="font-semibold text-blue-900" data-consignee="consigneeCode">—</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-blue-400">Company Name</span>
+                            <p class="font-semibold text-blue-900" data-consignee="consigneeName">—</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-blue-400">Company Address</span>
+                            <p class="font-semibold text-blue-900" data-consignee="consigneeAddress">—</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-blue-400">Cargo Drop off Address</span>
+                            <p class="font-semibold text-blue-900" data-shipper="consigneeDropAddress">—</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-blue-400">Contact Person</span>
+                            <p class="font-semibold text-blue-900" data-consignee="consigneeContact">—</p>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-blue-400">Contact No.</span>
+                            <p class="font-semibold text-blue-900" data-consignee="consigneePhone">—</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Hidden value -->
+                    <input type="hidden" name="consignee_id" id="form-consignee">
+
+                </div>
+
             </div>
 
-            {{-- ── SECTION 2: Origin & Destination ── --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
-                    <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Origin & Destination</h3>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Pickup Address (Origin) <span
-                                class="text-orange-400">*</span></label>
-                        <textarea name="origin_address" rows="2" placeholder="Full pickup address"
-                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Drop-off Address (Destination)
-                            <span class="text-orange-400">*</span></label>
-                        <textarea name="destination_address" rows="2" placeholder="Full delivery address"
-                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Mode of Transport <span
-                                    class="text-orange-400">*</span></label>
-                            <select name="transport_mode"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                <option value="">Select Mode</option>
-                                <option>Sea Freight</option>
-                                <option>Air Freight</option>
-                                <option>Land</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Route / Lane</label>
-                            <input type="text" name="route" placeholder="e.g. Manila → Cebu"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Scheduled Pickup Date <span
-                                    class="text-orange-400">*</span></label>
-                            <input type="date" name="pickup_date"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Expected Delivery Date <span
-                                    class="text-orange-400">*</span></label>
-                            <input type="date" name="delivery_date"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {{-- ── SECTION 3: Cargo Details ── --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
+            <!-- SECTION 2: CARGO DETAILS -->
+            <div class="p-5 border rounded-xl bg-white space-y-4" id="cargo-section">
+
+                <!-- Title -->
+                <div class="flex items-center gap-2">
                     <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
                     <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Cargo Details</h3>
                 </div>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Cargo Description <span
-                                class="text-orange-400">*</span></label>
-                        <textarea name="cargo_description" rows="2" placeholder="Describe the cargo contents"
-                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Quantity</label>
-                            <input type="number" name="cargo_quantity" placeholder="0"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Weight (kg)</label>
-                            <input type="number" name="cargo_weight" placeholder="0.00"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Volume (m³)</label>
-                            <input type="number" name="cargo_volume" placeholder="0.00"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Pkg Type</label>
-                            <select name="cargo_packaging"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                <option value="">Select</option>
-                                <option>Boxes</option>
-                                <option>Pallets</option>
-                                <option>Drums</option>
-                                <option>Bags</option>
-                                <option>Crates</option>
-                                <option>Loose</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <label
-                            class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-blue-100 rounded-xl px-4 py-2.5 hover:bg-blue-50 transition">
-                            <input type="checkbox" name="is_hazardous" class="accent-orange-500 rounded" />
-                            <span class="text-xs font-semibold text-blue-700">Hazardous / Dangerous Goods</span>
-                        </label>
-                        <label
-                            class="flex items-center gap-2 cursor-pointer bg-slate-50 border border-blue-100 rounded-xl px-4 py-2.5 hover:bg-blue-50 transition">
-                            <input type="checkbox" name="is_fragile" class="accent-orange-500 rounded" />
-                            <span class="text-xs font-semibold text-blue-700">Fragile — Handle with Care</span>
-                        </label>
-                    </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-xs font-semibold text-blue-500 mb-1">
+                        Cargo Description
+                    </label>
+                    <textarea name="cargo_description" rows="2"
+                        class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm bg-slate-50 focus:ring-2 focus:ring-orange-300 outline-none resize-none"
+                        placeholder="Describe the cargo"></textarea>
                 </div>
+
+                <!-- Metrics -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-500 mb-1">Quantity</label>
+                        <input type="number" name="cargo_quantity"
+                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm bg-slate-50">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-500 mb-1">Weight (kg)</label>
+                        <input type="number" name="cargo_weight"
+                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm bg-slate-50">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-500 mb-1">Volume (m³)</label>
+                        <input type="number" name="cargo_volume"
+                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm bg-slate-50">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-500 mb-1">Packaging</label>
+                        <select name="cargo_packaging"
+                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-black bg-slate-50">
+                            <option value="">Select</option>
+                            <option>Boxes</option>
+                            <option>Pallets</option>
+                            <option>Drums</option>
+                            <option>Bags</option>
+                            <option>Crates</option>
+                            <option>Loose</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Flags -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <label class="flex items-center gap-2 border rounded-xl px-4 py-2.5 bg-slate-50">
+                        <input type="checkbox" name="is_hazardous" class="accent-orange-500">
+                        <span class="text-xs font-semibold text-blue-700">Hazardous</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 border rounded-xl px-4 py-2.5 bg-slate-50">
+                        <input type="checkbox" name="is_fragile" class="accent-orange-500">
+                        <span class="text-xs font-semibold text-blue-700">Fragile</span>
+                    </label>
+
+                </div>
+
             </div>
 
-            {{-- ── SECTION 4: Vehicle / Driver / Container ── --}}
             <div>
                 <div class="flex items-center gap-2 mb-4">
                     <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
-                    <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Assigned Vehicle & Driver</h3>
+                    <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Assigned Vehicle & Driver
+                    </h3>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
@@ -341,7 +414,8 @@
                             class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Container / Truck Type</label>
+                        <label class="block text-xs font-semibold text-blue-500 mb-1">Container / Truck
+                            Type</label>
                         <select name="vehicle_type"
                             class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
                             <option value="">Select Type</option>
@@ -357,7 +431,32 @@
                 </div>
             </div>
 
-            {{-- ── SECTION 5: Billing Details ── --}}
+        </div>
+        <div class="border-t border-gray-200 px-6 py-4 mt-auto flex justify-end gap-3">
+
+            <button id="proceedBtn"
+                class=" bg-blue-500 border border-gray-300  text-gray-200 hover:bg-blue-800 dark:hover:bg-blue-800 px-5 py-2 rounded-lg text-sm font-medium">
+                Proceed
+            </button>
+            <button
+                class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="BillingModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
+
+    <div class="bg-white  rounded-2xl shadow-2xl w-full lg:max-w-[80vw] max-h-[90vh overflow-y-auto">
+        <div class="w-full p-5 flex flex-justify-between text-black">
+
+            <p class="text-xl font-semibold">Billing Details</p>
+
+        </div>
+        <div class="max-h-[70vh] overflow-y-auto space-y-5 p-5">
             <div>
                 <div class="flex items-center gap-2 mb-4">
                     <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
@@ -466,25 +565,25 @@
             <div>
                 <div class="flex items-center gap-2 mb-4">
                     <span class="w-1.5 h-5 bg-orange-400 rounded-full"></span>
-                    <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Remarks & Special Instructions
+                    <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Remarks & Special
+                        Instructions
                     </h3>
                 </div>
                 <textarea name="remarks" rows="3"
                     placeholder="Any special instructions, handling notes, or additional remarks..."
                     class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
             </div>
+        </div>
+        <div class="border-t border-gray-200 px-6 py-4 mt-auto flex justify-end gap-3">
 
-        </form>
-
-        {{-- Modal Footer --}}
-        <div
-            class="px-6 py-5 border-t border-blue-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 sticky bottom-0 bg-white rounded-b-2xl">
-            <button type="button"
-                class="modal-close-btn px-5 py-2.5 text-sm font-semibold text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-xl transition w-full sm:w-auto"
-                data-modal="new-booking-modal">Cancel</button>
-            <button type="button" id="btn-submit-booking"
-                class="px-6 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 active:bg-orange-700 rounded-xl shadow-sm transition w-full sm:w-auto">Create
-                Booking</button>
+            <button id="submitBooking"
+                class=" bg-blue-500 border border-gray-300  text-gray-200 hover:bg-blue-800 dark:hover:bg-blue-800 px-5 py-2 rounded-lg text-sm font-medium">
+                Submit
+            </button>
+            <button
+                class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -495,6 +594,7 @@
 ════════════════════════════════════════════════════════════════ --}}
 <script>
     (function() {
+
         'use strict';
 
         // ══════════════════════════════════════
@@ -871,114 +971,75 @@
             });
         });
 
-        // ══════════════════════════════════════
-        // MODAL OPEN / CLOSE
-        // ══════════════════════════════════════
-        function openModal(id) {
-            const m = document.getElementById(id);
-            if (!m) return;
-            m.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            console.log('[Bookings] Modal opened:', id);
-        }
-
-        function closeModal(id) {
-            const m = document.getElementById(id);
-            if (!m) return;
-            m.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-            console.log('[Bookings] Modal closed:', id);
-        }
-
-        document.getElementById('btn-open-new-booking').addEventListener('click', () => openModal(
-            'new-booking-modal'));
+        document.getElementById('btn-open-new-booking').addEventListener('click', () =>
+            initModal({
+                modalId: "NewBookingModal",
+            }));
         document.querySelectorAll('.modal-close-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 closeModal(this.dataset.modal);
             });
         });
-        document.getElementById('new-booking-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal('new-booking-modal');
-        });
 
-        // ══════════════════════════════════════
-        // FORM SUBMISSION
-        // ══════════════════════════════════════
-        document.getElementById('btn-submit-booking').addEventListener('click', function() {
-            const form = document.getElementById('new-booking-form');
-            const data = new FormData(form);
-            const payload = {};
-            data.forEach((value, key) => {
-                payload[key] = value;
-            });
-            console.log('[Bookings] New booking submitted — payload:', payload);
-            // TODO: axios.post('/api/bookings', payload)
-            closeModal('new-booking-modal');
-            form.reset();
-            document.getElementById('form-total').value = '';
-        });
 
-        // ══════════════════════════════════════
-        // DATATABLE INIT
-        // ══════════════════════════════════════
-        window.initDataTables = function() {
-            $("table").each(function() {
-                if (!$.fn.DataTable.isDataTable(this)) {
-                    const dt = $(this).DataTable({
-                        paging: true,
-                        searching: true,
-                        info: false,
-                        lengthChange: false,
-                        scrollY: "550px",
-                        scrollCollapse: true,
-                        pageLength: 10,
-                        scrollX: $(window).width() < 1024,
-                        responsive: true,
-                        autoWidth: true,
-                        dom: "<'dt-top'f><'dt-wrapper't><'dt-bottom'i p>",
-                        order: [],
-                        columnDefs: [{
-                            orderable: false,
-                            targets: -1
-                        }],
-                    });
-                    styleDataTable(this);
-                    dt.on("draw", () => styleDataTable(this));
-                    $(window).on("resize", () => {
-                        dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
-                        dt.columns.adjust();
-                    });
-                }
-            });
-        };
-
-        function styleDataTable(table) {
-            table.querySelectorAll("tbody").forEach(tbody => {
-                tbody.classList.remove("divide-y", "divide-gray-200", "dark:divide-gray-700");
-                tbody.querySelectorAll("tr").forEach(row => {
-                    row.classList.remove("even:bg-gray-50", "dark:even:bg-gray-900/50");
-                    row.classList.add("transition-colors", "duration-300", "hover:border-white",
-                        "hover:border-3");
-                });
-            });
-            document.querySelectorAll(".pagination").forEach(el => el.classList.add("flex", "justify-center", "p-5",
-                "lg:justify-end", "dark:text-white"));
-            document.querySelectorAll(".dt-search").forEach(el => el.classList.add("flex", "justify-center", "p-5",
-                "lg:justify-end", "dark:text-white"));
-            document.querySelectorAll(".dt-wrapper").forEach(el => el.classList.add("bg-white", "text-black"));
-        }
 
         // ══════════════════════════════════════
         // BOOT
         // ══════════════════════════════════════
         function boot() {
             renderKPIs(BOOKINGS);
-            populateDropdowns();
+            // populateDropdowns();
             renderBookingsTable('all');
-            if (typeof $ !== 'undefined' && $.fn?.DataTable) window.initDataTables();
+            initDataTables();
             console.log('[Bookings] Page initialized.');
         }
-        document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot) : boot();
+        boot();
+
+    })();
+</script>
+
+<script>
+    (function() {
+
+        const proceedBtn = document.getElementById("proceedBtn");
+        if (!proceedBtn.dataset.listenerAttached) {
+            proceedBtn.addEventListener("click", function() {
+
+                initModal({
+                    modalId: "BillingModal",
+                });
+            });
+
+            proceedBtn.dataset.listenerAttached = "true";
+        }
+
+
+        const submitBooking = document.getElementById("submitBooking");
+        if (!submitBooking.dataset.listenerAttached) {
+            submitBooking.addEventListener("click", function() {
+                this.disabled = true;
+                this.innerHTML =
+                    `<div class="animate-spin h-8 w-8 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>`;
+
+                setTimeout(() => {
+                    closemodals();
+
+                    showMessage({
+                        status: "success",
+                        title: "New Booking Submitted",
+                        message: "The booking has been submitted! Nice one!",
+                    });
+
+                    this.disabled = false;
+                    this.innerHTML = "Submit";
+                }, 3500);
+
+
+            });
+
+            submitBooking.dataset.listenerAttached = "true";
+        }
+
 
     })();
 </script>

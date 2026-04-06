@@ -46,7 +46,8 @@
             </div>
         </div>
     </div>
-    <div id="globalMessageContainer" class="fixed bottom-4 right-4 z-50 flex flex-col items-end pointer-events-none">
+    <div id="globalMessageContainer"
+        class="fixed top-0 left-1/2 -translate-x-1/2 mt-10 z-50 flex flex-col items-center pointer-events-none">
     </div>
     {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.5/flowbite.min.js"></script> --}}
 
