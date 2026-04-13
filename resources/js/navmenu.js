@@ -189,6 +189,11 @@ document.addEventListener("DOMContentLoaded", function () {
         headers: { Accept: "application/json" },
         signal: window.controller.signal,
       });
+
+      if (res.status === 401) {
+        window.location.reload();
+        return;
+      }
       if (!res.ok)
         throw new Error(`Failed to load page: ${res.status} ${res.statusText}`);
       const data = await res.text();

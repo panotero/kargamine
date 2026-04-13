@@ -138,7 +138,7 @@ function showMessage({
       setTimeout(() => {
         messagecontainer.classList.add("max-w-[48px]");
         messagecontainer.classList.remove("max-w-xs", "px-4");
-      }, 200);
+      }, 300);
 
       // 1. Hide text
       setTimeout(() => {

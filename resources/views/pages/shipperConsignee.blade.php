@@ -545,28 +545,15 @@
                         <div>
                             <p class="text-xs font-semibold text-blue-500 mb-2">Invoice Submission</p>
                             <div class="space-y-3">
+
                                 <div>
-                                    <label class="flex items-start gap-2 cursor-pointer">
-                                        <input type="checkbox" id="chk-email" name="invoice_email"
-                                            class="mt-0.5 accent-orange-500 rounded" />
-                                        <span class="text-sm text-blue-700">Electronic — via email</span>
-                                    </label>
-                                    <div id="field-invoice-email" class="hidden mt-2 ml-6">
-                                        <input type="email" name="invoice_email_address"
-                                            placeholder="billing@company.com"
-                                            class="w-full border border-blue-100 rounded-xl px-4 py-2 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="flex items-start gap-2 cursor-pointer">
-                                        <input type="checkbox" id="chk-courier" name="invoice_courier"
-                                            class="mt-0.5 accent-orange-500 rounded" />
-                                        <span class="text-sm text-blue-700">Via Courier</span>
-                                    </label>
-                                    <div id="field-invoice-courier" class="hidden mt-2 ml-6">
-                                        <textarea name="invoice_courier_address" rows="2" placeholder="Courier delivery address"
-                                            class="w-full border border-blue-100 rounded-xl px-4 py-2 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                                    </div>
+                                    <select name="payment_mode" id="payment-mode-select"
+                                        class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
+                                        <option value="">Select Invoice Submission Mode</option>
+                                        <option value="electronic">Electronic</option>
+                                        <option value="courier">Courier</option>
+                                        <option value="both">Both</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -574,28 +561,15 @@
                         <div>
                             <p class="text-xs font-semibold text-blue-500 mb-2">Customer Payment</p>
                             <div class="space-y-3">
+
                                 <div>
-                                    <label class="flex items-start gap-2 cursor-pointer">
-                                        <input type="checkbox" id="chk-check-pickup" name="payment_check_pickup"
-                                            class="mt-0.5 accent-orange-500 rounded" />
-                                        <span class="text-sm text-blue-700">Check Pick Up</span>
-                                    </label>
-                                    <div id="field-check-pickup" class="hidden mt-2 ml-6">
-                                        <textarea name="check_pickup_address" rows="2" placeholder="Pick-up address"
-                                            class="w-full border border-blue-100 rounded-xl px-4 py-2 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="flex items-start gap-2 cursor-pointer">
-                                        <input type="checkbox" id="chk-bank" name="payment_bank"
-                                            class="mt-0.5 accent-orange-500 rounded" />
-                                        <span class="text-sm text-blue-700">Direct Remittance to Bank
-                                            Account</span>
-                                    </label>
-                                    <div id="field-bank" class="hidden mt-2 ml-6">
-                                        <textarea name="bank_account_details" rows="2" placeholder="Bank name, account name, account number"
-                                            class="w-full border border-blue-100 rounded-xl px-4 py-2 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                                    </div>
+                                    <select name="payment_mode" id="payment-mode-select"
+                                        class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
+                                        <option value="">Select Customer Payment Mode</option>
+                                        <option value="electronic">Check Pick Up</option>
+                                        <option value="courier">Direct Remittance to Bank
+                                            Account</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
