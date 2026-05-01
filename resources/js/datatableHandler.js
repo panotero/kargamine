@@ -1,4 +1,4 @@
-window.initDataTables = function initDataTables() {
+window.initDataTables = function initDataTables(rows = 10) {
   $("table").each(function () {
     if (!$.fn.DataTable.isDataTable(this)) {
       const dt = $(this).DataTable({
@@ -8,7 +8,7 @@ window.initDataTables = function initDataTables() {
         lengthChange: false,
         scrollY: "550px",
         scrollCollapse: true,
-        pageLength: 10,
+        pageLength: rows,
         scrollX: $(window).width() < 1024, // horizontal scroll only if screen < lg (1024px)
         responsive: true, // allows columns to adjust
         autoWidth: true,
@@ -31,23 +31,19 @@ window.initDataTables = function initDataTables() {
       });
     }
   });
+
   function styleDataTable(table) {
-    table.querySelectorAll("tbody").forEach((tbody) => {
-      tbody.classList.remove(
-        "divide-y",
-        "divide-gray-200",
-        "dark:divide-gray-700",
-      );
-      tbody.querySelectorAll("tr").forEach((row) => {
-        row.classList.remove("even:bg-gray-50", "dark:even:bg-gray-900/50");
-        row.classList.add(
-          "transition-colors",
-          "duration-300",
-          "hover:border-white",
-          "hover:border-3",
-        );
-      });
+    const thead = document.querySelectorAll("table thead tr th");
+    thead.forEach((th) => {
+      th.className =
+        "text-black text-center bg-orange-400 text-white font-white py-1";
     });
+
+    const tbody = document.querySelectorAll("table tbody tr");
+    tbody.forEach((tr) => {
+      tr.className = "hover:bg-gray-300 bg-white duration-300 text-center";
+    });
+
     const pagination = document.querySelectorAll(".pagination");
     // console.log(pagination);
     const search = document.querySelectorAll(".dt-search");
@@ -57,21 +53,68 @@ window.initDataTables = function initDataTables() {
       paginationWrapper.classList.add(
         "flex",
         "justify-center",
-        "p-5",
+        "py-2",
         "lg:justify-end",
-        "dark:text-black",
+        "dark:text-white",
       );
     });
     search.forEach((searchWrapper) => {
       //   console.log(searchWrapper);
       searchWrapper.classList.add(
+        "bg-white",
         "flex",
         "justify-center",
-        "p-5",
+        "py-2",
+        "gap-3",
         "lg:justify-end",
         "dark:text-black",
+        "items-center",
       );
     });
+
+    //search box design
+    const searchbox = document.querySelectorAll(
+      '.dt-search input[type="search"]',
+    );
+    if (!searchbox) {
+      console.log("searchbox not available");
+      return;
+    }
+    searchbox.forEach((sbox) => {
+      //remove search box class
+      sbox.className = "";
+      //   //add new classes
+      sbox.className =
+        "bg-white rounded-lg text-black border-grey-200 drop-shadow-lg";
+    });
+
+    const paginationbutton = document.querySelectorAll(".pagination a");
+
+    if (!paginationbutton) {
+      console.log("searchbox not available");
+      return;
+    }
+
+    paginationbutton.forEach((pagebutton) => {
+      //remove search box class
+      pagebutton.className = "";
+      //   //add new classes
+      pagebutton.className =
+        " text-black font-semibold aspect-square w-10 flex items-center justify-center border border-gray-200 rounded-md text-white";
+      const status = pagebutton.getAttribute("aria-disabled");
+      if (!status) {
+        pagebutton.classList.remove("bg-orange-200");
+        pagebutton.classList.add(
+          "hover:bg-orange-600",
+          "duration-300",
+          "bg-orange-400",
+        );
+      } else {
+        pagebutton.classList.remove("bg-orange-400");
+        pagebutton.classList.add("bg-orange-200");
+      }
+    });
+
     wrapper.forEach((Wrapper) => {
       //   console.log(Wrapper);
       Wrapper.classList.add("bg-white", "text-black");

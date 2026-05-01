@@ -5,22 +5,16 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
-use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\MailerController;
 use App\Http\Controllers\MenusController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ListingController;
-use App\Http\Controllers\OfficeController;
-use App\Http\Controllers\UserConfigController;
 use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\ApprovalsController;
-use App\Http\Controllers\FinanceController;
-use App\Http\Controllers\FinanceBudgetController;
-use App\Http\Controllers\FinanceActivityController;
+
+use App\Http\Controllers\OptionController;
+use App\Http\Controllers\ListOfValueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -99,6 +93,30 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [MenusController::class, 'update']);
         Route::delete('/{id}', [MenusController::class, 'destroy']);
         Route::post('/swap', [MenusController::class, 'swapMenuOrder']);
+    });
+
+
+
+    Route::prefix('options')->group(function () {
+        Route::get('/', [OptionController::class, 'index']);
+        Route::post('/', [OptionController::class, 'store']);
+        Route::get('/{id}', [OptionController::class, 'show']);
+        Route::put('/{id}', [OptionController::class, 'update']);
+        Route::delete('/{id}', [OptionController::class, 'destroy']);
+
+        Route::get('/{optionId}/values', [ListOfValueController::class, 'byOption']);
+        Route::post('/{optionId}/values', [ListOfValueController::class, 'storeByOption']);
+    });
+
+
+    // Global LOV routes (if you still want independent access)
+    Route::prefix('lov')->group(function () {
+
+        Route::get('/', [ListOfValueController::class, 'index']);
+        Route::post('/', [ListOfValueController::class, 'store']);
+        Route::get('/{id}', [ListOfValueController::class, 'show']);
+        Route::put('/{id}', [ListOfValueController::class, 'update']);
+        Route::delete('/{id}', [ListOfValueController::class, 'destroy']);
     });
 
 

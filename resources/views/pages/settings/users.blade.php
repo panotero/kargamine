@@ -1163,39 +1163,6 @@
             btn.classList.add('bg-white', 'text-blue-700', 'shadow-sm');
         });
 
-        // ══════════════════════════════════════════════
-        // DATATABLE INIT
-        // ══════════════════════════════════════════════
-        window.initDataTables = function() {
-            $("table").each(function() {
-                if (!$.fn.DataTable.isDataTable(this)) {
-                    const dt = $(this).DataTable({
-                        paging: true,
-                        searching: true,
-                        info: false,
-                        lengthChange: false,
-                        scrollY: "550px",
-                        scrollCollapse: true,
-                        pageLength: 10,
-                        scrollX: $(window).width() < 1024,
-                        responsive: true,
-                        autoWidth: true,
-                        dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
-                        order: [],
-                        columnDefs: [{
-                            orderable: false,
-                            targets: -1
-                        }],
-                    });
-                    styleDataTable(this);
-                    dt.on("draw", () => styleDataTable(this));
-                    $(window).on("resize", () => {
-                        dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
-                        dt.columns.adjust();
-                    });
-                }
-            });
-        };
 
         function styleDataTable(table) {
             table.querySelectorAll("tbody").forEach(tbody => {

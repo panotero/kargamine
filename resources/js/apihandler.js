@@ -91,3 +91,105 @@ window.fetchWithRetry = async function fetchWithRetry(
     }
   }
 };
+
+window.apiJSONPOST = async function apiJSONPOST(data, url, button) {
+  console.log("Post Request:", data);
+  const buttonText = button.textContent;
+  try {
+    button.disabled = true;
+    button.innerHTML = `<div class="flex items-center gap-2">
+    <div class="w-4 h-4 border-2 border-gray-800 border-t-white rounded-full animate-spin"></div>
+  </div>`;
+    const response = await fetchWithRetry(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
+      },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+
+    button.disabled = false;
+    button.innerHTML = buttonText;
+    return response;
+  } catch (err) {
+    console.error(err);
+
+    showMessage({
+      status: "error",
+      title: "Error Occured",
+      message:
+        "There is some error saving your information. Please contact system administrator",
+    });
+
+    button.disabled = false;
+    button.innerHTML = buttonText;
+  } finally {
+    button.disabled = false;
+    button.innerHTML = buttonText;
+  }
+};
+
+window.apiJSONGET = async function apiJSONGET(url, data = null) {
+  try {
+    const response = await fetchWithRetry(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    return response;
+  } catch (err) {
+    console.error(err);
+
+    showMessage({
+      status: "error",
+      title: "Error Occured",
+      message:
+        "There is some error fetching your information. Please contact system administrator",
+    });
+  }
+};
+
+window.apiPOST = async function apiPOST(data, url, button) {
+  console.log("Post Request:", data);
+  const buttonText = button.textContent;
+  try {
+    button.disabled = true;
+    button.innerHTML = `<div class="flex items-center gap-2">
+    <div class="w-4 h-4 border-2 border-gray-800 border-t-white rounded-full animate-spin"></div>
+  </div>`;
+    const response = await fetchWithRetry(url, {
+      method: "POST",
+      headers: {
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+          .content,
+      },
+      body: data,
+      credentials: "include",
+    });
+
+    button.disabled = false;
+    button.innerHTML = buttonText;
+    return response;
+  } catch (err) {
+    console.error(err);
+
+    showMessage({
+      status: "error",
+      title: "Error Occured",
+      message:
+        "There is some error saving your information. Please contact system administrator",
+    });
+
+    button.disabled = false;
+    button.innerHTML = buttonText;
+  } finally {
+    button.disabled = false;
+    button.innerHTML = buttonText;
+  }
+};

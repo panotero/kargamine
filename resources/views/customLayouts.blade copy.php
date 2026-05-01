@@ -120,3 +120,86 @@
         message: "User created successfully",
     });
 </script>
+
+
+{{-- custom confirmation modal  --}}
+<div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 text-center">
+        <p id="customConfirmMessage" class="mb-4 text-gray-800"></p>
+        <div class="flex justify-center gap-4">
+            <button id="customConfirmOk" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">OK</button>
+            <button id="customConfirmCancel"
+                class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+        </div>
+    </div>
+</div>
+<script>
+    // confirm first before sending
+    const confirmed = await customConfirm("Delete this menu?");
+    if (!confirmed) return;
+</script>
+
+
+
+
+
+{{-- custom api handle script --}}
+
+<script>
+    try {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<div class="flex items-center gap-2">
+  <div class="w-4 h-4 border-2 border-gray-800 border-t-white rounded-full animate-spin"></div>
+  <span>Saving...</span>
+</div>`;
+        const response = await fetchWithRetry(`api/headline`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]')
+                    .content,
+            },
+            body: JSON.stringify(data),
+            credentials: "include"
+        });
+        console.log(response);
+        if (!response.success) {
+
+            showMessage({
+                status: "error",
+                title: "Error Occured",
+                message: "There is some error saving your information. Please contact system administrator",
+            });
+            return;
+        };
+
+        showMessage({
+            status: "success",
+            title: "Headline Saved!",
+        });
+
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `Save`;
+        saveBtn.classList.add('hidden');
+
+
+    } catch (err) {
+
+        console.error(err);
+
+        showMessage({
+            status: "error",
+            title: "Error Occured",
+            message: "There is some error saving your information. Please contact system administrator",
+        });
+
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `Save`;
+    } finally {
+
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `Save`;
+    }
+</script>

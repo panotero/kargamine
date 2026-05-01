@@ -103,7 +103,7 @@
         async function getusers() {
 
             try {
-                initDataTables();
+                initDataTables(5);
                 const response = await fetchWithRetry(
                     `/api/users/reports/${window.authUser.office.office_code}`, {
                         method: "GET",

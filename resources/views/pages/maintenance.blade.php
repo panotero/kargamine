@@ -513,42 +513,6 @@
         document.getElementById('payment-count-badge').textContent = LOV_DATA.payment.length;
         document.getElementById('custtype-count-badge').textContent = LOV_DATA.custtype.length;
 
-        // ── Initialize DataTables ────────────────────────────────────────
-        window.initDataTables = function initDataTables() {
-            $("table").each(function() {
-                if (!$.fn.DataTable.isDataTable(this)) {
-                    const dt = $(this).DataTable({
-                        paging: true,
-                        searching: true,
-                        info: false,
-                        lengthChange: false,
-                        scrollY: "550px",
-                        scrollCollapse: true,
-                        pageLength: 10,
-                        scrollX: $(window).width() < 1024,
-                        responsive: true,
-                        autoWidth: true,
-                        dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
-                        order: [],
-                        // Prevent DataTables from hijacking the delete button click
-                        columnDefs: [{
-                            orderable: false,
-                            targets: -1
-                        }],
-                    });
-
-                    styleDataTable(this);
-                    dt.on("draw", () => {
-                        styleDataTable(this);
-                    });
-
-                    $(window).on("resize", () => {
-                        dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
-                        dt.columns.adjust();
-                    });
-                }
-            });
-        };
 
         function styleDataTable(table) {
             table.querySelectorAll("tbody").forEach((tbody) => {
@@ -572,10 +536,10 @@
 
         // Init on DOM ready (call after jQuery + DataTables are loaded)
         if (typeof $ !== 'undefined' && $.fn && $.fn.DataTable) {
-            window.initDataTables();
+            initDataTables(5);
         } else {
             document.addEventListener('DOMContentLoaded', function() {
-                if (typeof window.initDataTables === 'function') window.initDataTables();
+                initDataTables(5);
             });
         }
 

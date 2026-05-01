@@ -61,7 +61,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
 
     Route::get('/profile', [PageController::class, 'profile'])->name('profile');
     Route::get('/settings', [PageController::class, 'settings'])->name('settings');
-    Route::get('/settings', [PageController::class, 'settings'])->name('settings');
+    Route::get('/page_lookupValues', [PageController::class, 'page_lookupValues']);
 
 
     Route::get('/testmail', [MailerController::class, 'test']);

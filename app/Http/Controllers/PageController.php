@@ -115,4 +115,9 @@ class PageController extends Controller
     {
         return view('pages.reports');
     }
+
+    public function page_lookupValues()
+    {
+        return view('pages.settings.lookupVal');
+    }
 }

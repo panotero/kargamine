@@ -9,11 +9,11 @@ window.initdocumentreport = function initdocumentreport() {
     const userApprovalType = authUser.user_config?.approval_type || null;
 
     const reportsocumentsTable = document.querySelector(
-      "#allDocumentTable tbody"
+      "#allDocumentTable tbody",
     );
     if (!reportsocumentsTable) return;
 
-    initDataTables();
+    initDataTables(5);
     showDocsLoader(reportsocumentsTable);
 
     try {
@@ -22,7 +22,7 @@ window.initdocumentreport = function initdocumentreport() {
         {
           method: "GET",
           headers: { Accept: "application/json" },
-        }
+        },
       );
 
       clearTable("#allDocumentTable");
@@ -149,7 +149,7 @@ window.initdocumentreport = function initdocumentreport() {
       item.date_received && item.date_forwarded
         ? Math.ceil(
             (new Date(item.date_forwarded) - new Date(item.date_received)) /
-              (1000 * 60 * 60 * 24)
+              (1000 * 60 * 60 * 24),
           ) + " days"
         : "-";
     let statuscolor = "bg-gray-100";
