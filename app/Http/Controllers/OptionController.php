@@ -86,13 +86,18 @@ class OptionController extends Controller
     }
 
     // Delete option (cascade deletes LOVs)
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $option = Option::findOrFail($id);
-        $option->delete();
+
+        $result = DB::transaction(function () use ($request) {
+            $option = Option::findOrFail($request['optionID']);
+            $option->delete();
+        });
 
         return response()->json([
-            'message' => 'Option deleted successfully'
+            'success' => true,
+            'message' => 'Option deleted successfully',
+            'data' => $result,
         ]);
     }
     public function byOption($optionId)

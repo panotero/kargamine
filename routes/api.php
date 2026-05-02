@@ -102,7 +102,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [OptionController::class, 'store']);
         Route::get('/{id}', [OptionController::class, 'show']);
         Route::put('/{id}', [OptionController::class, 'update']);
-        Route::delete('/{id}', [OptionController::class, 'destroy']);
+        Route::delete('/', [OptionController::class, 'destroy']);
 
         Route::get('/{optionId}/values', [ListOfValueController::class, 'byOption']);
         Route::post('/{optionId}/values', [ListOfValueController::class, 'storeByOption']);
@@ -116,7 +116,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [ListOfValueController::class, 'store']);
         Route::get('/{id}', [ListOfValueController::class, 'show']);
         Route::put('/{id}', [ListOfValueController::class, 'update']);
-        Route::delete('/{id}', [ListOfValueController::class, 'destroy']);
+        Route::delete('/', [ListOfValueController::class, 'destroy']);
     });
 
 

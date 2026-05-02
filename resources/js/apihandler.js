@@ -134,6 +134,7 @@ window.apiJSONPOST = async function apiJSONPOST(data, url, button) {
 };
 
 window.apiJSONGET = async function apiJSONGET(url, data = null) {
+  console.log("Get Request");
   try {
     const response = await fetchWithRetry(url, {
       method: "GET",
@@ -191,5 +192,82 @@ window.apiPOST = async function apiPOST(data, url, button) {
   } finally {
     button.disabled = false;
     button.innerHTML = buttonText;
+  }
+};
+
+window.apiCall = async function apiCall({
+  mode = "GET",
+  isJson = true,
+  payload = null,
+  url,
+  button = null,
+}) {
+  let originalText = "";
+
+  try {
+    // Button loading state
+    if (button) {
+      originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="w-4 h-4 border-2 border-gray-800 border-t-white rounded-full animate-spin"></div>
+                </div>`;
+    }
+
+    // Normalize method
+    let method = mode.toUpperCase();
+    if (method === "UPDATE") method = "PUT";
+
+    // Get CSRF token safely
+    const csrfToken = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
+
+    // Base headers
+    let headers = {
+      Accept: "application/json",
+    };
+
+    // Attach CSRF only for mutating requests
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && csrfToken) {
+      headers["X-CSRF-TOKEN"] = csrfToken;
+    }
+
+    let options = {
+      method,
+      headers,
+      credentials: "include",
+    };
+
+    // Attach body
+    if (method !== "GET" && payload) {
+      if (isJson) {
+        headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify(payload);
+      } else {
+        // FormData (browser sets headers automatically)
+        options.body = payload;
+      }
+    }
+
+    const response = await fetchWithRetry(url, options);
+    return response;
+  } catch (err) {
+    console.error(err);
+
+    showMessage({
+      status: "error",
+      title: "Error Occured",
+      message:
+        "There is some error saving your information. Please contact system administrator",
+    });
+
+    throw err;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
   }
 };
