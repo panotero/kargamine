@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="flex h-screen dark:bg-gray-900">
         <aside id="sidebar-wrapper"
-            class="bg-white dark:bg-gray-900 shadow-lg w-64
+            class="bg-white dark:bg-zinc-900 shadow-lg w-64
            fixed lg:static inset-y-0 left-0
            h-full flex flex-col
            transform -translate-x-full lg:translate-x-0
@@ -26,7 +26,7 @@
                 class="lg:hidden absolute top-2 left-2  px-2 py-4 bg-gray-800 text-white rounded z-10">
                 ☰
             </button>
-            <header class="bg-white dark:bg-gray-800 shadow px-6 py-4 flex justify-between items-center">
+            <header class="bg-white dark:bg-zinc-700 shadow px-6 py-4 flex justify-between items-center">
                 <h2 id="page-title" class="text-xl font-semibold text-gray-800 dark:text-gray-200 max-lg:pl-5">
                     Dashboard
                 </h2>
@@ -100,7 +100,8 @@
                     </x-dropdown>
                 </div>
             </header>
-            <main id="content" class="flex-1 w-full overflow-y-auto  text-gray-800 dark:text-gray-200">
+            <main id="content"
+                class="flex-1 w-full overflow-y-auto dark:bg-zinc-800  text-gray-800 dark:text-gray-200">
             </main>
 
         </div>

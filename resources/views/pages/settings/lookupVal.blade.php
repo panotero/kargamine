@@ -11,103 +11,167 @@
         </div>
     </div>
 </div>
+
 <div id="NewOptionModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
 
-    <div class="bg-white dark:bg-slate-700 rounded-2xl shadow-2xl w-[50%] lg:max-w-[80vw] max-h-[90vh overflow-y-auto">
+    <div
+        class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full lg:max-w-[50vw] max-h-[90vh] overflow-hidden flex flex-col">
+
         {{-- Header --}}
-        <div class="w-full p-5 flex flex-justify-between text-black dark:text-white font-bold">
+        <div
+            class="w-full p-5 flex justify-between items-center border-b border-gray-200 dark:border-zinc-700 text-black dark:text-white">
 
-            <p class="text-xl font-semibold">Add New Option</p>
+            <p class="text-xl font-semibold">
+                Add New Option
+            </p>
 
         </div>
+
         {{-- Contents --}}
-        <div class="max-h-[70vh] overflow-y-auto space-y-5 p-5">
-            <div>
+        <div class="max-h-[70vh] overflow-y-auto p-5 space-y-6">
 
-                <div class="flex p-5 rounded border gap-4 bg-white text-black">
-                    <div class="flex-1">
-                        <p>Option Name</p>
-                        <input type="text" name="OptionName" id="OptionName" class="w-full border rounded px-2 py-1">
-                    </div>
+            {{-- Option Information --}}
+            <div class="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
 
-                    <div class="flex-1">
-                        <p>Option Description</p>
-                        <input type="text" name="OptionDescription" id="OptionDescription"
-                            class="w-full border rounded px-2 py-1">
-                    </div>
-                </div>
-            </div>
-            <div>
-                <p>
-                    List of Values
+                <p class="font-semibold text-lg dark:text-white">
+                    Option Information
                 </p>
-                <div id="lovContainer">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">
+                            Option Name
+                        </label>
+
+                        <input type="text" name="OptionName" id="OptionName"
+                            class="border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">
+                            Option Description
+                        </label>
+
+                        <input type="text" name="OptionDescription" id="OptionDescription"
+                            class="border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+                    </div>
+
                 </div>
-                <button class="w-full px-5 py-2 my-2 rounded-lg bg-blue-600 hover:bg-blue-800 font-bold text-white"
-                    id="addLovButton">
-                    Add List of Value
-                </button>
+
+            </div>
+
+            {{-- LOV Section --}}
+            <div class="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
+
+                <div class="flex justify-between items-center">
+
+                    <p class="font-semibold text-lg dark:text-white">
+                        List of Values
+                    </p>
+
+                    <button id="addLovButton"
+                        class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium">
+                        + Add LOV
+                    </button>
+
+                </div>
+
+                <div id="lovContainer" class="space-y-3">
+                </div>
 
             </div>
 
         </div>
-        {{-- Footer  --}}
-        <div class="border-t border-gray-200 px-6 py-4 mt-auto flex justify-end gap-3">
+
+        {{-- Footer --}}
+        <div class="border-t border-gray-200 dark:border-zinc-700 px-6 py-4 flex justify-end gap-3">
+
             <button id="SaveOption"
-                class=" bg-blue-500 border border-gray-300  text-gray-200 hover:bg-blue-800 dark:hover:bg-blue-800 px-5 py-2 rounded-lg text-sm font-medium">
+                class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium">
                 Submit
             </button>
+
             <button
-                class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                class="modal-close border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-600 px-5 py-2 rounded-lg text-sm font-medium">
                 Cancel
             </button>
+
         </div>
+
     </div>
 </div>
 <div id="addLOVModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
 
-    <div class="bg-white dark:bg-slate-700 rounded-2xl shadow-2xl w-[50%] lg:max-w-[80vw] max-h-[90vh overflow-y-auto">
-        {{-- Header --}}
-        <div class="w-full p-5 flex flex-justify-between text-black dark:text-white font-bold">
+    <div
+        class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full lg:max-w-[40vw] max-h-[90vh] overflow-hidden flex flex-col">
 
-            <p class="text-xl font-semibold">Add List of Value </p>
+        {{-- Header --}}
+        <div
+            class="w-full p-5 flex justify-between items-center border-b border-gray-200 dark:border-zinc-700 text-black dark:text-white">
+
+            <p class="text-xl font-semibold">
+                Add List of Value
+            </p>
 
         </div>
-        {{-- Contents --}}
-        <div class="max-h-[70vh] overflow-y-auto space-y-5 p-5">
-            <div>
-                <input type="hidden" name="OptionID" id="OptionID">
-                <div class="w-full flex gap-2">
 
-                    <div class="flex-1">
-                        <p>List of Value Code</p>
-                        <input type="text" class="add-lov-code w-full border rounded px-2 py-1  text-black">
-                    </div>
-                    <div class="flex-1">
-                        <p>List of Value Name</p>
-                        <input type="text" class="add-lov-name w-full border rounded px-2 py-1  text-black">
-                    </div>
+        {{-- Contents --}}
+        <div class="max-h-[70vh] overflow-y-auto p-5 space-y-6">
+
+            <input type="hidden" name="OptionID" id="OptionID">
+
+
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div class="flex flex-col">
+                    <label class="text-sm dark:text-white">
+                        LOV Code
+                    </label>
+
+                    <input type="text"
+                        class="add-lov-code border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
                 </div>
 
-                <div class="flex-1">
-                    <p>List of Value Description</p>
-                    <input type="text" class="add-lov-description w-full border rounded px-2 py-1  text-black">
+                <div class="flex flex-col">
+                    <label class="text-sm dark:text-white">
+                        LOV Name
+                    </label>
+
+                    <input type="text"
+                        class="add-lov-name border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
                 </div>
 
             </div>
 
+            <div class="flex flex-col">
+                <label class="text-sm dark:text-white">
+                    LOV Description
+                </label>
+
+                <input type="text"
+                    class="add-lov-description border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+            </div>
+
+
         </div>
-        {{-- Footer  --}}
-        <div class="border-t border-gray-200 px-6 py-4 mt-auto flex justify-end gap-3">
+
+        {{-- Footer --}}
+        <div class="border-t border-gray-200 dark:border-zinc-700 px-6 py-4 flex justify-end gap-3">
+
             <button id="SaveLOV"
-                class=" bg-blue-500 border border-gray-300  text-gray-200 hover:bg-blue-800 dark:hover:bg-blue-800 px-5 py-2 rounded-lg text-sm font-medium">
+                class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium">
                 Submit
             </button>
+
             <button
-                class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
+                class="modal-close border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-600 px-5 py-2 rounded-lg text-sm font-medium">
                 Cancel
             </button>
+
         </div>
+
     </div>
 </div>
 
@@ -166,7 +230,7 @@
 
                         <p class="text-xl font-bold">${option.option_name}</p>
 
-                        <p class="text-xs text-blue-400">${option.option_description}asdasdasdasdad</p>
+                        <p class="text-xs text-blue-400">${option.option_description}</p>
                         </div>
                         <div class="p-2 flex flex-col justify-center">
                             <div class="w-7 h-auto aspect-square flex items-center justify-center rounded-full bg-orange-300 text-orange-800 shadow-md text-sm font-bold">

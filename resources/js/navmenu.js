@@ -129,7 +129,8 @@ document.addEventListener("DOMContentLoaded", function () {
     activemenu.forEach((activebttn) => {
       activebttn.classList.remove(
         "bg-blue-400",
-        "hover:dark:bg-blue-600",
+        "dark:bg-zinc-700",
+        "hover:dark:bg-zinc-800",
         "text-white",
         "active",
         "hover:bg-blue-600",
@@ -140,7 +141,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (activepage) {
       activepage.classList.add(
         "bg-blue-400",
-        "hover:dark:bg-blue-600",
+        "dark:bg-zinc-700",
+
+        "hover:dark:bg-zinc-800",
         "text-white",
         "active",
         "hover:bg-blue-600",
@@ -197,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!res.ok)
         throw new Error(`Failed to load page: ${res.status} ${res.statusText}`);
       const data = await res.text();
-      contentEl.innerHTML = `<div class="dark lg:p-4 dark:bg-gray-800 rounded shadow">${data}</div>`;
+      contentEl.innerHTML = `<div class="dark lg:p-4 dark:bg-zinc-800 rounded shadow">${data}</div>`;
 
       // Execute inline scripts
       contentEl.querySelectorAll("script").forEach((oldScript) => {

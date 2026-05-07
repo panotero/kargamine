@@ -12,7 +12,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\ApprovalsController;
-
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OptionController;
 use App\Http\Controllers\ListOfValueController;
 
@@ -117,6 +117,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}', [ListOfValueController::class, 'show']);
         Route::put('/{id}', [ListOfValueController::class, 'update']);
         Route::delete('/', [ListOfValueController::class, 'destroy']);
+    });
+
+    Route::prefix('companies')->group(function () {
+
+        Route::get('/', [CompanyController::class, 'index']);
+        Route::post('/', [CompanyController::class, 'store']);
+        Route::get('/{id}', [CompanyController::class, 'show']);
+        Route::put('/{id}', [CompanyController::class, 'update']);
+        Route::delete('/{id}', [CompanyController::class, 'destroy']);
     });
 
 

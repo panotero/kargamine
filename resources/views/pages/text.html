@@ -1,0 +1,413 @@
+{{-- Modal --}}
+<div
+  id="NewBookingModal"
+  class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal"
+>
+  <div
+    class="bg-white rounded-2xl shadow-2xl w-full lg:max-w-[80vw] max-h-[90vh] overflow-y-auto"
+  >
+    {{-- Header --}}
+    <div class="w-full p-5 flex justify-between text-black border-b">
+      <p class="text-xl font-semibold">CRM - Company Setup</p>
+    </div>
+
+    {{-- Contents --}}
+    <div class="max-h-[70vh] overflow-y-auto p-5 space-y-6">
+      {{-- ================= STAGE 1 ================= --}}
+      <div class="stage" data-stage="1">
+        <p class="font-semibold text-lg mb-3">Stage 1 - Company Information</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            id="customer_code"
+            class="border p-2 rounded"
+            placeholder="Customer Code"
+          />
+          <input
+            id="company_name"
+            class="border p-2 rounded"
+            placeholder="Company Name"
+          />
+
+          <input
+            id="registered_address"
+            class="border p-2 rounded col-span-2"
+            placeholder="Registered Address"
+          />
+
+          <input
+            id="contact_number_1"
+            class="border p-2 rounded"
+            placeholder="Contact Number 1"
+          />
+          <input
+            id="contact_number_2"
+            class="border p-2 rounded"
+            placeholder="Contact Number 2"
+          />
+
+          <input
+            id="industry"
+            class="border p-2 rounded"
+            placeholder="Industry (LOV)"
+          />
+          <input
+            id="organization_type"
+            class="border p-2 rounded"
+            placeholder="Type of Organization (LOV)"
+          />
+
+          <input
+            id="tin"
+            class="border p-2 rounded"
+            placeholder="Tax Identification Number"
+          />
+          <input
+            id="business_start_date"
+            type="date"
+            class="border p-2 rounded"
+          />
+
+          <input
+            id="employees"
+            class="border p-2 rounded"
+            placeholder="Number of Employees"
+          />
+          <input
+            id="synkar"
+            class="border p-2 rounded"
+            placeholder="Synkar (true/false)"
+          />
+
+          <input
+            id="annual_revenue"
+            class="border p-2 rounded"
+            placeholder="Estimated Annual Revenue"
+          />
+          <input
+            id="net_income"
+            class="border p-2 rounded"
+            placeholder="Estimated Net Income"
+          />
+
+          <input
+            id="company_url"
+            class="border p-2 rounded col-span-2"
+            placeholder="Company URL"
+          />
+
+          <select id="customer_type" class="border p-2 rounded col-span-2">
+            <option value="">Select Type</option>
+            <option value="shipper">Shipper</option>
+            <option value="consignee">Consignee</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+      </div>
+
+      {{-- ================= STAGE 2 ================= --}}
+      <div class="stage hidden" data-stage="2">
+        <p class="font-semibold text-lg mb-3">Stage 2 - Contact & References</p>
+
+        <div class="border p-4 rounded space-y-4">
+          <p class="font-medium">Contact Info</p>
+
+          <input
+            id="contact_name"
+            class="border p-2 rounded w-full"
+            placeholder="Contact Name"
+          />
+          <input
+            id="contact_number"
+            class="border p-2 rounded w-full"
+            placeholder="Contact Number"
+          />
+          <input
+            id="contact_email"
+            class="border p-2 rounded w-full"
+            placeholder="Email Address"
+          />
+          <input
+            id="contact_role"
+            class="border p-2 rounded w-full"
+            placeholder="Role (LOV)"
+          />
+          <input
+            id="contact_position"
+            class="border p-2 rounded w-full"
+            placeholder="Position (LOV)"
+          />
+        </div>
+
+        <div class="border p-4 rounded space-y-4 mt-4">
+          <p class="font-medium">Trade / Bank Reference</p>
+
+          <input
+            id="business_name"
+            class="border p-2 rounded w-full"
+            placeholder="Business Name"
+          />
+          <input
+            id="relationship"
+            class="border p-2 rounded w-full"
+            placeholder="Nature of Relationship"
+          />
+          <input
+            id="business_address"
+            class="border p-2 rounded w-full"
+            placeholder="Business Address"
+          />
+
+          <input
+            id="ref_contact_person"
+            class="border p-2 rounded w-full"
+            placeholder="Contact Person"
+          />
+          <input
+            id="ref_phone"
+            class="border p-2 rounded w-full"
+            placeholder="Phone Number"
+          />
+          <input
+            id="ref_email"
+            class="border p-2 rounded w-full"
+            placeholder="Email Address"
+          />
+        </div>
+      </div>
+
+      {{-- ================= STAGE 3 ================= --}}
+      <div class="stage hidden" data-stage="3">
+        <p class="font-semibold text-lg mb-3">Stage 3 - Finance & Sales</p>
+
+        <div class="border p-4 rounded space-y-4">
+          <p class="font-medium">Finance</p>
+
+          <input
+            id="credit_terms"
+            class="border p-2 rounded w-full"
+            placeholder="Credit Terms"
+          />
+          <input
+            id="payment_mode"
+            class="border p-2 rounded w-full"
+            placeholder="Payment Mode"
+          />
+
+          <input
+            id="billing_service"
+            class="border p-2 rounded w-full"
+            placeholder="Standard Billing Service (true/false)"
+          />
+
+          <input
+            id="invoice_email"
+            class="border p-2 rounded w-full"
+            placeholder="Invoice Email (true/false)"
+          />
+          <input
+            id="invoice_email_address"
+            class="border p-2 rounded w-full"
+            placeholder="Invoice Email Address"
+          />
+        </div>
+
+        <div class="border p-4 rounded space-y-4 mt-4">
+          <p class="font-medium">Sales</p>
+
+          <input
+            id="account_owner"
+            class="border p-2 rounded w-full"
+            placeholder="Account Owner / Sales Rep"
+          />
+        </div>
+
+        <div class="border p-4 rounded space-y-4 mt-4">
+          <p class="font-medium">Stages Info</p>
+
+          <input
+            id="stage"
+            class="border p-2 rounded w-full"
+            placeholder="Stage (LOV)"
+          />
+          <input
+            id="forecast_month"
+            type="date"
+            class="border p-2 rounded w-full"
+            placeholder="Forecast Month"
+          />
+          <input
+            id="potential_volume"
+            class="border p-2 rounded w-full"
+            placeholder="Potential Volume"
+          />
+          <textarea
+            id="remarks"
+            class="border p-2 rounded w-full"
+            placeholder="Remarks"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    {{-- Footer --}}
+    <div class="border-t border-gray-200 px-6 py-4 flex justify-between">
+      <button
+        id="prevBtn"
+        class="bg-gray-200 px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+      >
+        Previous
+      </button>
+
+      <div class="flex gap-3">
+        <button
+          class="modal-close bg-red-500 text-white px-5 py-2 rounded-lg text-sm"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="nextBtn"
+          class="bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    const modal = document.getElementById("NewBookingModal");
+    const stages = modal.querySelectorAll(".stage");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+
+    let currentStage = 0;
+
+    const payload = {
+      contacts: [],
+      trade_references: [],
+    };
+
+    function showStage(index) {
+      stages.forEach((s, i) => {
+        s.classList.toggle("hidden", i !== index);
+      });
+
+      prevBtn.disabled = index === 0;
+      nextBtn.textContent = index === stages.length - 1 ? "Finish" : "Next";
+    }
+
+    function collectStage1() {
+      payload.customer_code = document.getElementById("customer_code").value;
+      payload.company_name = document.getElementById("company_name").value;
+      payload.registered_address =
+        document.getElementById("registered_address").value;
+      payload.contact_number_1 =
+        document.getElementById("contact_number_1").value;
+      payload.contact_number_2 =
+        document.getElementById("contact_number_2").value;
+      payload.industry = document.getElementById("industry").value;
+      payload.organization_type =
+        document.getElementById("organization_type").value;
+      payload.tax_identification_number = document.getElementById("tin").value;
+      payload.business_start_date = document.getElementById(
+        "business_start_date",
+      ).value;
+      payload.number_of_employees = document.getElementById("employees").value;
+      payload.synkar = document.getElementById("synkar").value;
+      payload.estimated_annual_revenue =
+        document.getElementById("annual_revenue").value;
+      payload.estimated_annual_net_income =
+        document.getElementById("net_income").value;
+      payload.company_url = document.getElementById("company_url").value;
+      payload.customer_type = document.getElementById("customer_type").value;
+    }
+
+    function collectStage2() {
+      payload.contacts = [
+        {
+          contact_name: document.getElementById("contact_name").value,
+          contact_number: document.getElementById("contact_number").value,
+          email: document.getElementById("contact_email").value,
+          role: document.getElementById("contact_role").value,
+          position: document.getElementById("contact_position").value,
+        },
+      ];
+
+      payload.trade_references = [
+        {
+          business_name: document.getElementById("business_name").value,
+          relationship: document.getElementById("relationship").value,
+          business_address: document.getElementById("business_address").value,
+          contact_person_name:
+            document.getElementById("ref_contact_person").value,
+          contact_phone: document.getElementById("ref_phone").value,
+          contact_email: document.getElementById("ref_email").value,
+        },
+      ];
+    }
+
+    function collectStage3() {
+      payload.finance = {
+        credit_terms: document.getElementById("credit_terms").value,
+        payment_mode: document.getElementById("payment_mode").value,
+        standard_billing_service:
+          document.getElementById("billing_service").value,
+        invoice_email: document.getElementById("invoice_email").value,
+        invoice_email_address: document.getElementById("invoice_email_address")
+          .value,
+      };
+
+      payload.sales = {
+        account_owner: document.getElementById("account_owner").value,
+      };
+
+      payload.stages = {
+        stage: document.getElementById("stage").value,
+        forecast_transaction_month:
+          document.getElementById("forecast_month").value,
+        potential_volume_month:
+          document.getElementById("potential_volume").value,
+        remarks: document.getElementById("remarks").value,
+      };
+    }
+
+    function collect() {
+      if (currentStage === 0) collectStage1();
+      if (currentStage === 1) collectStage2();
+      if (currentStage === 2) collectStage3();
+    }
+
+    nextBtn.addEventListener("click", function () {
+      collect();
+
+      console.log(
+        "STAGE " + (currentStage + 1),
+        JSON.parse(JSON.stringify(payload)),
+      );
+
+      if (currentStage < stages.length - 1) {
+        currentStage++;
+        showStage(currentStage);
+      } else {
+        console.log("FINAL PAYLOAD", payload);
+        modal.classList.add("hidden");
+      }
+    });
+
+    prevBtn.addEventListener("click", function () {
+      if (currentStage > 0) {
+        currentStage--;
+        showStage(currentStage);
+      }
+    });
+
+    modal.querySelectorAll(".modal-close").forEach((btn) => {
+      btn.addEventListener("click", () => modal.classList.add("hidden"));
+    });
+
+    showStage(currentStage);
+  })();
+</script>

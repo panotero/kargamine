@@ -1,728 +1,817 @@
-<section class="min-h-screen flex items-center justify-center bg-gray-50 px-6 hidden">
-    <div class="max-w-xl w-full text-center">
+<div class="container mx-auto space-y-5">
 
-        <!-- Icon -->
-        <div class="flex justify-center mb-6">
-            <div class="w-20 h-20 flex items-center justify-center rounded-full bg-red-100">
-                <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" stroke-width="2"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 9v3m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
-                </svg>
-            </div>
-        </div>
+    <button id="newCustomer" class="px-5 py-2 rounded-lg bg-orange-400 hover:bg-orange-600 text-white font-bold">New
+        Customer</button>
+    <div class=" overflow-auto bg-white rounded-lg text-black border-2 border-slate-100 drop-shadow-md p-5">
+        <div class="w-full rounded-lg overflow-hidden">
+            <table class="w-full text-sm text-left text-black border-collapse responsive-table rounded-lg">
+                <thead>
+                    <tr>
 
-        <!-- Title -->
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            This Page is Under Maintenance
-        </h1>
+                        <th class="px-4 py-3 text-left">Customer Code</th>
 
-        <!-- Description -->
-        <p class="text-gray-600 mb-6">
-            Our system is currently undergoing scheduled maintenance to improve performance and reliability.
-            Please check back shortly.
-        </p>
+                        <th class="px-4 py-3 text-left">Company Name</th>
 
-        <!-- Status Badge -->
-        <div class="inline-block px-4 py-2 rounded-full bg-yellow-100 text-yellow-700 text-sm font-medium mb-6">
-            Ongoing Maintenance
-        </div>
+                        <th class="px-4 py-3 text-left">Type</th>
 
-        <!-- Optional Actions -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <th class="px-4 py-3 text-left">Industry</th>
 
-            <!-- Refresh Button -->
-            <button onclick="location.reload()"
-                class="px-6 py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition">
-                Refresh Page
-            </button>
+                        <th class="px-4 py-3 text-left">Primary Contact</th>
 
+                        <th class="px-4 py-3 text-left">Contact Number</th>
 
-        </div>
+                        <th class="px-4 py-3 text-left">Account Owner</th>
 
-    </div>
-</section>
+                        <th class="px-4 py-3 text-left">Stage</th>
 
+                        <th class="px-4 py-3 text-left">Potential Volume</th>
 
+                        <th class="px-4 py-3 text-left">Status</th>
 
+                        <th class="px-4 py-3 text-right">Action</th>
 
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-100">
 
-{{-- Shipper-Consignee Module --}}
-{{-- Blade SPA Page | Laravel 10 | Tailwind CSS --}}
-
-<div id="shipper-consignee-page" class="min-h-screen font-sans">
-
-    {{-- Page Header --}}
-    <div class=" border-b border-blue-100 px-4 sm:px-6 lg:px-8 py-5">
-        <div class="max-w-screen-xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        </div>
-    </div>
-
-    {{-- Main Content --}}
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {{-- Stats Row --}}
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-2xl border border-blue-100 px-5 py-4 shadow-sm">
-                <p class="text-xs text-blue-400 font-medium uppercase tracking-wider">Total Records</p>
-                <p class="text-3xl font-bold text-blue-900 mt-1">24</p>
-            </div>
-            <div class="bg-white rounded-2xl border border-blue-100 px-5 py-4 shadow-sm">
-                <p class="text-xs text-orange-400 font-medium uppercase tracking-wider">On-Account</p>
-                <p class="text-3xl font-bold text-orange-500 mt-1">11</p>
-            </div>
-            <div class="bg-white rounded-2xl border border-blue-100 px-5 py-4 shadow-sm">
-                <p class="text-xs text-blue-400 font-medium uppercase tracking-wider">Prepaid</p>
-                <p class="text-3xl font-bold text-blue-900 mt-1">8</p>
-            </div>
-            <div class="bg-white rounded-2xl border border-blue-100 px-5 py-4 shadow-sm">
-                <p class="text-xs text-blue-400 font-medium uppercase tracking-wider">Cash on Delivery</p>
-                <p class="text-3xl font-bold text-blue-900 mt-1">5</p>
-            </div>
-        </div>
-
-        <button id="btn-open-modal"
-            class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-150 w-fit mb-5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            New Shipper / Consignee
-        </button>
-        {{-- Table Card --}}
-        <div class="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
-
-            {{-- Table Toolbar --}}
-            <div
-                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-b border-blue-50">
-                <div class="relative w-full sm:w-72">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" fill="none"
-                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                    </svg>
-                    <input id="table-search" type="text" placeholder="Search company, code, industry..."
-                        class="w-full pl-9 pr-4 py-2 text-sm border border-blue-100 rounded-xl bg-slate-50 text-blue-900 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" />
-                </div>
-                <div class="flex items-center gap-2">
-                    <select id="filter-customer-type"
-                        class="text-sm border border-blue-100 rounded-xl px-3 py-2 bg-slate-50 text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                        <option value="">All Types</option>
-                        <option value="shipper">Shipper</option>
-                        <option value="consignee">Consignee</option>
-                        <option value="both">Both</option>
-                    </select>
-                    <select id="filter-payment-mode"
-                        class="text-sm border border-blue-100 rounded-xl px-3 py-2 bg-slate-50 text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                        <option value="">All Payments</option>
-                        <option value="on-account">On-Account</option>
-                        <option value="prepaid">Prepaid</option>
-                        <option value="cod">Cash on Delivery</option>
-                    </select>
-                </div>
-            </div>
-
-            {{-- Scrollable Table --}}
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead>
-                        <tr class="bg-blue-50 text-blue-500 text-xs uppercase tracking-wider">
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">SC Code</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Company Name</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Industry</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Type of Org</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Customer Type</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Payment Mode</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Credit Limit</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">TIN</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Contact Number</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Sales Rep</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Date Created</th>
-                            <th class="px-4 py-3 text-left font-semibold whitespace-nowrap">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="shipper-table-body" class="divide-y divide-blue-50 text-blue-900">
-                        {{-- Sample Data Rows --}}
-                        <tr class="hover:bg-orange-50 transition-colors duration-100">
-                            <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-blue-400 font-semibold">
-                                SC-00001</td>
-                            <td class="px-4 py-3 whitespace-nowrap font-semibold text-blue-900">Layag Freight
-                                Solutions</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Logistics</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Corporation</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span
-                                    class="bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">Shipper</span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span
-                                    class="bg-orange-100 text-orange-600 text-xs font-semibold px-2.5 py-1 rounded-full">On-Account</span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-700">₱500,000</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">123-456-789-000</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">+63 917 123 4567</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Juan dela Cruz</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-400 text-xs">2025-01-15</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-                                    <button
-                                        class="btn-edit p-1.5 text-blue-400 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition"
-                                        title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-3 1 1-3a4 4 0 01.828-1.414z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn-view p-1.5 text-blue-400 hover:text-orange-500 hover:bg-orange-100 rounded-lg transition"
-                                        title="View">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn-delete p-1.5 text-blue-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                        title="Delete">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-orange-50 transition-colors duration-100">
-                            <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-blue-400 font-semibold">
-                                SC-00002</td>
-                            <td class="px-4 py-3 whitespace-nowrap font-semibold text-blue-900">Daloy Trading
-                                Co.</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Retail</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Partnership</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span
-                                    class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Consignee</span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span
-                                    class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full">Prepaid</span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-400">—</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">987-654-321-000</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">+63 918 987 6543</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Maria Santos</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-400 text-xs">2025-02-03</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-                                    <button
-                                        class="btn-edit p-1.5 text-blue-400 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition"
-                                        title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-3 1 1-3a4 4 0 01.828-1.414z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn-view p-1.5 text-blue-400 hover:text-orange-500 hover:bg-orange-100 rounded-lg transition"
-                                        title="View">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn-delete p-1.5 text-blue-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                        title="Delete">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-orange-50 transition-colors duration-100">
-                            <td class="px-4 py-3 whitespace-nowrap font-mono text-xs text-blue-400 font-semibold">
-                                SC-00003</td>
-                            <td class="px-4 py-3 whitespace-nowrap font-semibold text-blue-900">Agos
-                                Manufacturing Inc.</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Manufacturing</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Corporation</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span
-                                    class="bg-purple-100 text-purple-700 text-xs font-semibold px-2.5 py-1 rounded-full">Both</span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span
-                                    class="bg-orange-100 text-orange-600 text-xs font-semibold px-2.5 py-1 rounded-full">On-Account</span>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-700">₱1,200,000</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">456-123-789-000</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">+63 920 456 7890</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-600">Pedro Reyes</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-blue-400 text-xs">2025-03-10</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-                                    <button
-                                        class="btn-edit p-1.5 text-blue-400 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition"
-                                        title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.828l-3 1 1-3a4 4 0 01.828-1.414z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn-view p-1.5 text-blue-400 hover:text-orange-500 hover:bg-orange-100 rounded-lg transition"
-                                        title="View">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn-delete p-1.5 text-blue-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                        title="Delete">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Table Footer / Pagination --}}
-            <div
-                class="px-6 py-4 border-t border-blue-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <p class="text-xs text-blue-400">Showing <span class="font-semibold text-blue-600">3</span> of
-                    <span class="font-semibold text-blue-600">24</span> records
-                </p>
-                <div class="flex items-center gap-1">
-                    <button
-                        class="px-3 py-1.5 text-xs text-blue-400 hover:text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-50 transition">Prev</button>
-                    <button class="px-3 py-1.5 text-xs bg-orange-500 text-white rounded-lg font-semibold">1</button>
-                    <button
-                        class="px-3 py-1.5 text-xs text-blue-400 hover:text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-50 transition">2</button>
-                    <button
-                        class="px-3 py-1.5 text-xs text-blue-400 hover:text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-50 transition">3</button>
-                    <button
-                        class="px-3 py-1.5 text-xs text-blue-400 hover:text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-50 transition">Next</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- ===================== MODAL ===================== --}}
-<div id="sc-modal"
-    class="fixed inset-0 z-50 flex items-start justify-center bg-blue-950/40 backdrop-blur-sm overflow-y-auto py-6 px-4 hidden"
-    role="dialog" aria-modal="true">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto my-auto relative">
-
-
-        {{-- Modal Body --}}
-        <form id="sc-form" novalidate class="px-6 py-6 space-y-8">
-
-        </form>
-
-        {{-- Modal Footer --}}
-        <div
-            class="px-6 py-5 border-t border-blue-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 sticky bottom-0 bg-white rounded-b-2xl">
-            <button id="btn-cancel-modal" type="button"
-                class="px-5 py-2.5 text-sm font-semibold text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-xl transition w-full sm:w-auto">
-                Cancel
-            </button>
-            <button id="btn-submit-form" type="button"
-                class="px-6 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 active:bg-orange-700 rounded-xl shadow-sm transition w-full sm:w-auto">
-                Save Shipper / Consignee
-            </button>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 
-<div id="NewClientModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
-
-    <div class="bg-white  rounded-2xl shadow-2xl w-full lg:max-w-[80vw] max-h-[90vh overflow-y-auto">
+{{-- Modal --}}
+<div id="NewCustomerModal" class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 px-4 modal">
+    <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl w-full lg:max-w-[50vw] max-h-[90vh] overflow-y-auto">
         {{-- Header --}}
-        <div class="w-full p-5 flex flex-justify-between text-black">
-
-            <div>
-                <h2 class="text-lg font-bold text-blue-900">New Shipper / Consignee</h2>
-                <p class="text-xs text-blue-400 mt-0.5">Fill in all required fields to add a record</p>
-            </div>
-
+        <div class="w-full p-5 flex justify-between text-black dark:text-white border-b">
+            <p class="text-xl font-semibold">CRM - Company Setup</p>
         </div>
+
         {{-- Contents --}}
-        <div class="max-h-[70vh] overflow-y-auto space-y-5 p-5">
+        <div class="max-h-[70vh] overflow-y-auto p-5 space-y-6">
+            {{-- ================= STAGE 1 ================= --}}
+            <div class="stage" data-stage="1">
+                <p class="font-semibold text-lg mb-3">Stage 1 - Company Information</p>
 
+                <div class="space-y-2">
 
-            {{-- ---- SECTION: Company Information ---- --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-5 bg-orange-400 rounded-full inline-block"></span>
-                    <h3 class="text-sm font-bold text-blue-900 uppercase tracking-wider">Company Information
-                    </h3>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Company Name <span
-                                class="text-orange-400">*</span></label>
-                        <input type="text" name="company_name" placeholder="e.g. Layag Freight Solutions"
-                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Registered Company
-                            Address <span class="text-orange-400">*</span></label>
-                        <textarea name="company_address" rows="2" placeholder="Full registered address"
-                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition resize-none"></textarea>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Contact Number 1
-                                <span class="text-blue-300">(Billing)</span></label>
-                            <input type="text" name="contact_1" placeholder="+63 9XX XXX XXXX"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Contact Number 2
-                                <span class="text-blue-300">(Billing)</span></label>
-                            <input type="text" name="contact_2" placeholder="+63 9XX XXX XXXX"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
+                    <!-- Customer Type -->
+                    <div class="space-y-2">
+                        <p class="text-sm font-medium dark:text-white">Customer Type</p>
+
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input required type="radio" name="customer_type" value="shipper"
+                                    class="w-4 h-4 text-blue-600 border-gray-300">
+                                <span>Shipper</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input required type="radio" name="customer_type" value="consignee"
+                                    class="w-4 h-4 text-blue-600 border-gray-300">
+                                <span>Consignee</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input required type="radio" name="customer_type" value="both"
+                                    class="w-4 h-4 text-blue-600 border-gray-300">
+                                <span>Shipper / Consignee</span>
+                            </label>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Industry <span
-                                    class="text-orange-400">*</span></label>
-                            <select name="industry"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
+
+                    <!-- Form Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Customer Code</label>
+                            <input required type="text" id="customer_code"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Company Name</label>
+                            <input required type="text" id="company_name"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col col-span-2">
+                            <label class="text-sm">Registered Address</label>
+                            <textarea required id="registered_address" class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"></textarea>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Contact Number 1</label>
+                            <input required type="tel" id="contact_number_1"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Contact Number 2</label>
+                            <input type="tel" id="contact_number_2"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <!-- Industry Dropdown -->
+                        <div class="flex flex-col">
+                            <label class="text-sm">Industry</label>
+
+                            <select required id="industry"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
                                 <option value="">Select Industry</option>
-                                <option>Logistics</option>
-                                <option>Retail</option>
-                                <option>Manufacturing</option>
-                                <option>Agriculture</option>
-                                <option>Food & Beverage</option>
-                                <option>Construction</option>
-                                <option>Healthcare</option>
-                                <option>Technology</option>
-                                <option>Others</option>
+                                <option value="logistics">Logistics</option>
+                                <option value="manufacturing">Manufacturing</option>
+                                <option value="retail">Retail</option>
+                                <option value="ecommerce">E-Commerce</option>
+                                <option value="construction">Construction</option>
+                                <option value="food_beverage">Food & Beverage</option>
+                                <option value="pharmaceutical">Pharmaceutical</option>
+                                <option value="automotive">Automotive</option>
+                                <option value="technology">Technology</option>
+                                <option value="others">Others</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Type of Organization
-                                <span class="text-orange-400">*</span></label>
-                            <select name="type_of_org"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                <option value="">Select Type</option>
-                                <option>Sole Proprietorship</option>
-                                <option>Partnership</option>
-                                <option>Corporation</option>
-                                <option>Cooperative</option>
-                                <option>Government Agency</option>
-                                <option>NGO / Non-Profit</option>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Organization Type</label>
+                            <input required type="text" id="organization_type"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Tax Identification Number</label>
+                            <input required type="text" id="tin"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Business Start Date</label>
+                            <input required type="date" id="business_start_date"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Number of Employees</label>
+                            <input required type="number" min="0" id="employees"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Synkar</label>
+
+                            <select required id="synkar"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                                <option value="">Select Option</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
                             </select>
                         </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Estimated Annual Revenue</label>
+                            <input required type="number" min="0" step="0.01" id="annual_revenue"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-sm">Estimated Net Income</label>
+                            <input required type="number" min="0" step="0.01" id="net_income"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
+                        <div class="flex flex-col col-span-2">
+                            <label class="text-sm">Company URL</label>
+                            <input required type="url" id="company_url"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                        </div>
+
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Tax Identification
-                                Number (TIN)</label>
-                            <input type="text" name="tin" placeholder="XXX-XXX-XXX-000"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Start of
-                                Business</label>
-                            <input type="date" name="start_of_business"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Number of
-                                Employees</label>
-                            <input type="text" name="num_employees" placeholder="e.g. 50"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Est. Annual
-                                Revenue</label>
-                            <input type="number" name="annual_revenue" placeholder="0.00"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Est. Annual Net
-                                Income</label>
-                            <input type="number" name="annual_net_income" placeholder="0.00"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Customer Type <span
-                                    class="text-orange-400">*</span></label>
-                            <select name="customer_type"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                <option value="">Select Type</option>
-                                <option>Shipper</option>
-                                <option>Consignee</option>
-                                <option>Both</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Company URL</label>
-                            <input type="url" name="company_url" placeholder="https://company.com"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                        </div>
-                    </div>
+
                 </div>
             </div>
 
-            {{-- ---- SECTION: Company Finance ---- --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-5 bg-orange-400 rounded-full inline-block"></span>
-                    <h3 class="text-sm font-bold text-blue-900 uppercase tracking-wider">Company Finance</h3>
-                </div>
-                <div class="space-y-4">
+            {{-- ================= STAGE 2 ================= --}}
+            <div class="stage hidden" data-stage="2">
+
+                <p class="font-semibold text-lg mb-3">Stage 2 - Contact & References</p>
+
+                <div class="space-y-2">
+
+                    <p>Contact Information</p>
+
+                    <div class="contact-card border p-4 rounded space-y-4">
+
+                        <div class="flex justify-between">
+                            <div class="dark:text-white contact-title">Contact 1</div>
+
+                            <button type="button"
+                                class="remove-contact dark:bg-zinc-800 dark:text-white px-2 py-1 border rounded-md border-zinc-500">
+                                Remove
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+
+                            <div class="flex flex-col">
+                                <label class="text-sm dark:text-white">Contact Name</label>
+
+                                <input required type="text"
+                                    class="contact_name border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"
+                                    placeholder="Contact Name">
+                            </div>
+
+                            <div class="flex flex-col">
+                                <label class="text-sm dark:text-white">Contact Number</label>
+
+                                <input required type="tel"
+                                    class="contact_number border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"
+                                    placeholder="Contact Number">
+                            </div>
+
+                            <div class="flex flex-col col-span-2">
+                                <label class="text-sm dark:text-white">Email Address</label>
+
+                                <input required type="email"
+                                    class="contact_email border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"
+                                    placeholder="Email Address">
+                            </div>
+
+                            <div class="flex flex-col">
+                                <label class="text-sm dark:text-white">Role</label>
+
+                                <select required
+                                    class="contact_role border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                                    <option value="">Select Role</option>
+                                    <option value="manager">Manager</option>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col">
+                                <label class="text-sm dark:text-white">Position</label>
+
+                                <select required
+                                    class="contact_position border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+                                    <option value="">Select Position</option>
+                                    <option value="head">Head</option>
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="additionalContactContainer"></div>
+
                     <div>
-                        <label class="block text-xs font-semibold text-blue-500 mb-1">Payment Mode <span
-                                class="text-orange-400">*</span></label>
-                        <select name="payment_mode" id="payment-mode-select"
-                            class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                            <option value="">Select Payment Mode</option>
-                            <option value="on-account">On-Account</option>
-                            <option value="prepaid">Prepaid</option>
-                            <option value="cod">Cash on Delivery</option>
+                        <button id="addContact"
+                            class="text-md dark:text-white dark:bg-zinc-800 border border-zinc-500 rounded-md px-2 py-1 hover:dark:bg-zinc-500">
+                            + Add Contact
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border p-4 rounded space-y-4 mt-4">
+
+                    <p class="font-medium dark:text-white">Trade / Bank Reference</p>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Business Name</label>
+
+                        <input required type="text" id="business_name"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Business Name" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Nature of Relationship</label>
+
+                        <input required type="text" id="relationship"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Nature of Relationship" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Business Address</label>
+
+                        <textarea required id="business_address" class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Business Address"></textarea>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Contact Person</label>
+
+                        <input required type="text" id="ref_contact_person"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Contact Person" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Phone Number</label>
+
+                        <input required type="tel" id="ref_phone"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Phone Number" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Email Address</label>
+
+                        <input required type="email" id="ref_email"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Email Address" />
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- ================= STAGE 3 ================= --}}
+            <div class="stage hidden" data-stage="3">
+
+                <p class="font-semibold text-lg mb-3">Stage 3 - Finance & Sales</p>
+
+                <div class="border p-4 rounded space-y-4">
+
+                    <p class="font-medium dark:text-white">Finance</p>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Credit Terms</label>
+
+                        <select required id="credit_terms"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full">
+                            <option value="">Select Option</option>
+                            <option value="15">15 Days</option>
+                            <option value="30">30 Days</option>
                         </select>
                     </div>
-                    {{-- On-Account Fields (conditional) --}}
-                    <div id="on-account-fields"
-                        class="hidden space-y-4 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                        <p class="text-xs text-blue-400 font-semibold uppercase tracking-wider">On-Account
-                            Details</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-blue-500 mb-1">Credit
-                                    Limit</label>
-                                <input type="number" name="credit_limit" placeholder="0.00"
-                                    class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                                <p class="text-xs text-blue-300 mt-1">If exceeded, KFMS changes mode to Prepaid
-                                </p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-blue-500 mb-1">Current
-                                    Credit</label>
-                                <input type="number" name="current_credit" placeholder="0.00"
-                                    class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                            </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Payment Mode</label>
+                        <select required id="payment_mode"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full">
+                            <option value="">Select Option</option>
+                            <option value="COLLECT DESTINATION">COLLECT DESTINATION</option>
+                            <option value="PREPAID">PREPAID</option>
+                            <option value="ELSEWHERE">ELSEWHERE</option>
+                            <option value="ON-ACCOUNT">ON-ACCOUNT</option>
+                        </select>
+                    </div>
+
+
+                    <div class="space-y-2">
+                        <p class="text-sm font-medium dark:text-white">Invoice Submission</p>
+
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input required type="radio" name="invoice_submission" value="Email"
+                                    class="w-4 h-4 text-blue-600 border-gray-300">
+                                <span>Via Email</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input required type="radio" name="invoice_submission" value="Courier"
+                                    class="w-4 h-4 text-blue-600 border-gray-300">
+                                <span>Via Courier</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="invoice_email_container" class="space-y-2 hidden">
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Invoice Email Address</label>
+
+                            <input required type="email" id="invoice_email_address"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Invoice Email Address" />
                         </div>
                     </div>
 
-                    {{-- Standard Billing Service --}}
-                    <div class="bg-slate-50 rounded-xl p-4 border border-blue-100 space-y-4">
-                        <p class="text-xs font-bold text-blue-700 uppercase tracking-wider">Standard Billing
-                            Service</p>
+                    <div id="invoice_courier_container" class="space-y-2 hidden">
 
-                        <div>
-                            <p class="text-xs font-semibold text-blue-500 mb-2">Invoice Submission</p>
-                            <div class="space-y-3">
-
-                                <div>
-                                    <select name="payment_mode" id="payment-mode-select"
-                                        class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                        <option value="">Select Invoice Submission Mode</option>
-                                        <option value="electronic">Electronic</option>
-                                        <option value="courier">Courier</option>
-                                        <option value="both">Both</option>
-                                    </select>
-                                </div>
-                            </div>
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Recepient Name</label>
+                            <input required type="text" id="courier_recepient_name"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Email Address" />
                         </div>
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Recepient Contact</label>
 
-                        <div>
-                            <p class="text-xs font-semibold text-blue-500 mb-2">Customer Payment</p>
-                            <div class="space-y-3">
+                            <input required type="text" id="courier_recepient_contact"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Email Address" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Recepient Addreess</label>
 
-                                <div>
-                                    <select name="payment_mode" id="payment-mode-select"
-                                        class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
-                                        <option value="">Select Customer Payment Mode</option>
-                                        <option value="electronic">Check Pick Up</option>
-                                        <option value="courier">Direct Remittance to Bank
-                                            Account</option>
-                                    </select>
-                                </div>
-                            </div>
+                            <input required type="text" id="courier_recepient_address"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Email Address" />
                         </div>
                     </div>
 
-                    {{-- Additional Billing Service --}}
-                    <div class="bg-slate-50 rounded-xl p-4 border border-blue-100 space-y-3">
-                        <p class="text-xs font-bold text-blue-700 uppercase tracking-wider">Additional Billing
-                            Service Request</p>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="add_doc_handling" class="accent-orange-500 rounded" />
-                            <span class="text-sm text-blue-700">Document Handling</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="add_billing_report" class="accent-orange-500 rounded" />
-                            <span class="text-sm text-blue-700">Billing Report</span>
-                        </label>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-500 mb-1">Others</label>
-                            <input type="text" name="add_others" placeholder="Specify other billing requests"
-                                class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
+                    <p class="font-medium dark:text-white">Additional Billing Service Request</p>
+
+                    <div class="space-y-2">
+
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Document Handling</label>
+                            <input required type="text" id="document_handling"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Email Address" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Billing Summary Report</label>
+
+                            <input required type="text" id="billing_summary_report"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Email Address" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-sm dark:text-white">Other</label>
+
+                            <input required type="text" id="other_billing_request"
+                                class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                                placeholder="Email Address" />
                         </div>
                     </div>
+
+                </div>
+
+
+                <div class="border p-4 rounded space-y-4 mt-4">
+
+                    <p class="font-medium dark:text-white">Sales</p>
+
+                    <div class="flex flex-col">
+                        <label class="text-sm dark:text-white">Account Owner / Sales Rep</label>
+
+                        <input required type="text" id="account_owner"
+                            class="border p-2 rounded-lg dark:bg-zinc-800 dark:text-white w-full"
+                            placeholder="Account Owner / Sales Rep" />
+                    </div>
+
                 </div>
             </div>
-
-            {{-- ---- SECTION: Contact Info ---- --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-5 bg-orange-400 rounded-full inline-block"></span>
-                    <h3 class="text-sm font-bold text-blue-900 uppercase tracking-wider">Contact Information
-                    </h3>
-                </div>
-                <div class="space-y-3">
-                    <div
-                        class="grid grid-cols-5 gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider px-1">
-                        <span class="col-span-1">Name</span>
-                        <span class="col-span-1">Contact No.</span>
-                        <span class="col-span-1">Email</span>
-                        <span class="col-span-1">Role</span>
-                        <span class="col-span-1">Position</span>
-                    </div>
-                    <div id="contact-rows" class="space-y-2">
-                        <div class="grid grid-cols-5 gap-2">
-                            <input type="text" name="contacts[0][name]" placeholder="Full Name"
-                                class="border border-blue-100 rounded-xl px-3 py-2 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition col-span-1" />
-                            <input type="text" name="contacts[0][number]" placeholder="+63..."
-                                class="border border-blue-100 rounded-xl px-3 py-2 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition col-span-1" />
-                            <input type="email" name="contacts[0][email]" placeholder="email@co.com"
-                                class="border border-blue-100 rounded-xl px-3 py-2 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition col-span-1" />
-                            <input type="text" name="contacts[0][role]" placeholder="Role"
-                                class="border border-blue-100 rounded-xl px-3 py-2 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition col-span-1" />
-                            <input type="text" name="contacts[0][position]" placeholder="Position"
-                                class="border border-blue-100 rounded-xl px-3 py-2 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition col-span-1" />
-                        </div>
-                    </div>
-                    <button type="button" id="btn-add-contact-row"
-                        class="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition mt-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add Another Contact
-                    </button>
-                </div>
-            </div>
-
-            {{-- ---- SECTION: Sales Info ---- --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-5 bg-orange-400 rounded-full inline-block"></span>
-                    <h3 class="text-sm font-bold text-blue-900 uppercase tracking-wider">Sales Information</h3>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-blue-500 mb-1">Account Owner / Sales Rep
-                        Name</label>
-                    <input type="text" name="sales_rep" placeholder="Full name of account owner"
-                        class="w-full border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-900 placeholder-blue-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-300 transition" />
-                </div>
-            </div>
-
-
         </div>
-        {{-- Footer  --}}
-        <div class="border-t border-gray-200 px-6 py-4 mt-auto flex justify-end gap-3">
-            <button id="NewShipperBtn"
-                class=" bg-blue-500 border border-gray-300  text-gray-200 hover:bg-blue-800 dark:hover:bg-blue-800 px-5 py-2 rounded-lg text-sm font-medium">
-                Submit
-            </button>
-            <button
-                class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 px-5 py-2 rounded-lg text-sm font-medium">
-                Cancel
-            </button>
+
+        {{-- Footer --}}
+        <div class="border-t border-gray-200 px-6 py-4 flex justify-between">
+
+
+            <div class="flex gap-3">
+
+                <button id="prevBtn"
+                    class="bg-zinc-600 hover:bg-zinc-400 text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50">
+                    Previous
+                </button>
+                <button id="nextBtn"
+                    class="hover:bg-orange-600 bg-orange-400 text-white px-5 py-2 rounded-lg text-sm font-medium">
+                    Next
+                </button>
+                <button
+                    class="modal-close border hover:bg-zinc-400 hover:text-white border-zinc-500 dark:bg-zinc-600 dark:text-white px-5 py-2 rounded-lg text-sm">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
-
-{{-- ===================== JAVASCRIPT ===================== --}}
 <script>
     (function() {
-        'use strict';
-
-
-        document.getElementById("btn-open-modal").addEventListener('click', function() {
-
+        const newCustomerButton = document.getElementById("newCustomer");
+        newCustomerButton.addEventListener("click", function() {
             initModal({
-                modalId: "NewClientModal",
+                modalId: "NewCustomerModal",
             });
         });
 
 
 
+        //modal control
+        const modal = document.getElementById('NewCustomerModal');
+        const stages = modal.querySelectorAll('.stage');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
 
 
+        let currentStage = 0;
 
-        // ── Form Submit ─────────────────────────────────────────
-        document.getElementById('btn-submit-form').addEventListener('click', function() {
-            const form = $('sc-form');
-            const data = new FormData(form);
-            const payload = {};
-            data.forEach((value, key) => {
-                payload[key] = value;
-            });
-            console.log('[SC Module] Form submitted — payload:', payload);
-            // TODO: Replace with axios.post('/api/shipper-consignee', payload) or fetch()
-        });
+        const payload = {
+            contacts: [],
+            trade_references: []
+        };
 
-        const NewShipperBtn = document.getElementById("NewShipperBtn");
-        if (!NewShipperBtn.dataset.listenerAttached) {
-            NewShipperBtn.addEventListener("click", function() {
-                this.disabled = true;
-                this.innerHTML =
-                    `<div class="animate-spin h-8 w-8 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>`;
-
-                setTimeout(() => {
-                    closemodals();
-
-                    showMessage({
-                        status: "success",
-                        title: "Shipper Added",
-                        message: "Congratsulations you got new Shipper! keep it coming!",
-                    });
-
-                    this.disabled = false;
-                    this.innerHTML = "Submit";
-                }, 3500);
-
-
+        function showStage(index) {
+            stages.forEach((s, i) => {
+                s.classList.toggle('hidden', i !== index);
             });
 
-            NewShipperBtn.dataset.listenerAttached = "true";
+            prevBtn.disabled = index === 0;
+            nextBtn.textContent = index === stages.length - 1 ? 'Finish' : 'Next';
         }
 
+        function collectStage1() {
+            payload.customer_code = document.getElementById('customer_code').value;
+            payload.company_name = document.getElementById('company_name').value;
+            payload.registered_address = document.getElementById('registered_address').value;
+            payload.contact_number_1 = document.getElementById('contact_number_1').value;
+            payload.contact_number_2 = document.getElementById('contact_number_2').value;
+            payload.industry = document.getElementById('industry').value;
+            payload.organization_type = document.getElementById('organization_type').value;
+            payload.tax_identification_number = document.getElementById('tin').value;
+            payload.business_start_date = document.getElementById('business_start_date').value;
+            payload.number_of_employees = document.getElementById('employees').value;
+            payload.synkar = document.getElementById('synkar').value;
+            payload.estimated_annual_revenue = document.getElementById('annual_revenue').value;
+            payload.estimated_annual_net_income = document.getElementById('net_income').value;
+            payload.company_url = document.getElementById('company_url').value;
+            payload.customer_type = document.querySelector('input[name="customer_type"]:checked')?.value;
+        }
+
+        function collectStage2() {
+
+
+            const contacts = [];
+
+            document.querySelectorAll('.contact-card').forEach(card => {
+
+                contacts.push({
+                    contact_name: card.querySelector('.contact_name').value,
+                    contact_number: card.querySelector('.contact_number').value,
+                    email: card.querySelector('.contact_email').value,
+                    role: card.querySelector('.contact_role').value,
+                    position: card.querySelector('.contact_position').value
+                });
+
+            });
+            payload.contacts = contacts;
+
+            payload.trade_references = [{
+                business_name: document.getElementById('business_name').value,
+                relationship: document.getElementById('relationship').value,
+                business_address: document.getElementById('business_address').value,
+                contact_person_name: document.getElementById('ref_contact_person').value,
+                contact_phone: document.getElementById('ref_phone').value,
+                contact_email: document.getElementById('ref_email').value
+            }];
+        }
+
+        function collectStage3() {
+
+            payload.finance = {
+                credit_terms: document.getElementById('credit_terms').value,
+                payment_mode: document.getElementById('payment_mode').value,
+                standard_billing_service: document.getElementById('billing_service').value,
+                invoice_email: document.getElementById('invoice_email').value,
+                invoice_email_address: document.getElementById('invoice_email_address').value
+            };
+
+            payload.sales = {
+                account_owner: document.getElementById('account_owner').value
+            };
+
+        }
+
+        function collect() {
+            if (currentStage === 0) collectStage1();
+            if (currentStage === 1) collectStage2();
+            if (currentStage === 2) collectStage3();
+        }
+
+        nextBtn.addEventListener('click', async function() {
+            // if (!validateCurrentStage()) {
+            //     return;
+            // }
+            collect();
+
+            console.log('STAGE ' + (currentStage + 1), JSON.parse(JSON.stringify(payload)));
+
+            if (currentStage < stages.length - 1) {
+                currentStage++;
+                showStage(currentStage);
+            } else {
+
+                console.log('FINAL PAYLOAD', payload);
+
+                const response = await apiCall({
+                    mode: "POST",
+                    isJson: true,
+                    payload: payload,
+                    url: "/api/companies",
+                    button: nextBtn
+                });
+                // const response = await apiJSONPOST(payload, 'api/options', SaveOption);
+                console.log("response: " + response);
+                if (!response.success) {
+
+                    showMessage({
+                        status: "error",
+                        title: "Error Saving Company Information",
+                        message: "There is some error saving your company information. Please contact system administrator",
+                    });
+                    return;
+                };
+
+                currentStage = 0;
+                showStage(currentStage);
+                clearInputs();
+            }
+        });
+
+        function validateCurrentStage() {
+
+            const currentStageEl = document.querySelector(`.stage[data-stage="${currentStage + 1}"]`);
+
+            const inputs = currentStageEl.querySelectorAll('input, select, textarea');
+
+            for (let input of inputs) {
+
+                if (!input.checkValidity()) {
+                    input.reportValidity(); // shows browser tooltip
+                    return false;
+                }
+
+            }
+
+            return true;
+        }
+
+        prevBtn.addEventListener('click', function() {
+            if (currentStage > 0) {
+                currentStage--;
+                showStage(currentStage);
+            }
+        });
+
+        modal.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                clearInputs();
+            });
+
+        });
+
+        function clearInputs() {
+
+
+            document.querySelectorAll("input").forEach(input => {
+                input.value = "";
+            });
+
+            document.querySelectorAll("select").forEach(input => {
+                input.value = "";
+            });
+        }
+
+        showStage(currentStage);
+
+
+        const addBtn = document.getElementById('addContact');
+        const container = document.getElementById('additionalContactContainer');
+
+        let contactCount = 1;
+
+        function createContactCard() {
+            contactCount++;
+
+            const div = document.createElement('div');
+            div.className = 'contact-card border p-4 rounded space-y-4 mt-3';
+
+            div.innerHTML = `
+            <div class="flex justify-between">
+                <div class="dark:text-white contact-title">Contact ${contactCount}</div>
+                <button type="button" class="remove-contact dark:bg-zinc-800 dark:text-white px-2 py-1 border rounded-md border-zinc-500">
+                    Remove
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+
+    <div class="flex flex-col">
+        <label class="text-sm dark:text-white">Contact Name</label>
+        <input required
+            class="contact_name border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"
+            placeholder="Contact Name">
+    </div>
+
+    <div class="flex flex-col">
+        <label class="text-sm dark:text-white">Contact Number</label>
+        <input required
+            class="contact_number border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"
+            placeholder="Contact Number">
+    </div>
+
+    <div class="flex flex-col col-span-2">
+        <label class="text-sm dark:text-white">Email Address</label>
+        <input required
+            class="contact_email border p-2 rounded-lg dark:bg-zinc-800 dark:text-white"
+            placeholder="Email Address">
+    </div>
+
+    <div class="flex flex-col">
+        <label class="text-sm dark:text-white">Role</label>
+        <select
+            class="contact_role border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+            <option value="">Select Role</option>
+            <option value="manager">Manager</option>
+        </select>
+    </div>
+
+    <div class="flex flex-col">
+        <label class="text-sm dark:text-white">Position</label>
+        <select
+            class="contact_position border p-2 rounded-lg dark:bg-zinc-800 dark:text-white">
+            <option value="">Select Position</option>
+            <option value="head">Head</option>
+        </select>
+    </div>
+
+</div>
+        `;
+
+            container.appendChild(div);
+        }
+        //updating card number index on removal
+        function reindexContacts() {
+            const cards = document.querySelectorAll('.contact-card');
+            cards.forEach((card, index) => {
+                card.querySelector('.contact-title').textContent = `Contact ${index + 1}`;
+            });
+            contactCount = cards.length;
+        }
+
+        // Add
+        addBtn.addEventListener('click', function() {
+            createContactCard();
+        });
+
+        // Remove (event delegation)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-contact')) {
+                e.target.closest('.contact-card').remove();
+                reindexContacts();
+            }
+        });
+
+        initDataTables(10);
+
+
+        //function for invoice submission mode
+        const invoiceSubmissionRadios = document.querySelectorAll(
+            'input[name="invoice_submission"]'
+        );
+
+        const invoiceEmailContainer = document.getElementById('invoice_email_container');
+        const invoiceCourierContainer = document.getElementById('invoice_courier_container');
+
+        function toggleInvoiceSubmission() {
+
+            const selected = document.querySelector(
+                'input[name="invoice_submission"]:checked'
+            );
+
+            // Hide all first
+            invoiceEmailContainer.classList.add('hidden');
+            invoiceCourierContainer.classList.add('hidden');
+
+            // Remove required first
+            invoiceEmailContainer.querySelectorAll('input').forEach(input => {
+                input.required = false;
+            });
+
+            invoiceCourierContainer.querySelectorAll('input').forEach(input => {
+                input.required = false;
+            });
+
+            if (!selected) return;
+
+            // VIA EMAIL
+            if (selected.value === 'Email') {
+
+                invoiceEmailContainer.classList.remove('hidden');
+
+                invoiceEmailContainer.querySelectorAll('input').forEach(input => {
+                    input.required = true;
+                });
+            }
+
+            // VIA COURIER
+            if (selected.value === 'Courier') {
+
+                invoiceCourierContainer.classList.remove('hidden');
+
+                invoiceCourierContainer.querySelectorAll('input').forEach(input => {
+                    input.required = true;
+                });
+            }
+        }
+
+        // Radio change listener
+        invoiceSubmissionRadios.forEach(radio => {
+            radio.addEventListener('change', toggleInvoiceSubmission);
+        });
+
+        // Initial load
+        toggleInvoiceSubmission();
     })();
 </script>

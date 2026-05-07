@@ -17,12 +17,12 @@ window.initDataTables = function initDataTables(rows = 10) {
         order: [],
       });
 
-      // Re-style table
-      styleDataTable(this);
-
       dt.on("draw", () => {
         styleDataTable(this);
       });
+
+      // Re-style table
+      styleDataTable(this);
 
       // Adjust horizontal scroll on window resize
       $(window).on("resize", () => {

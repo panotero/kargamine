@@ -22,7 +22,7 @@
 <body class="font-sans antialiased [&_*]:duration-300">
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900  max-md:max-w-screen">
         @if (isset($header))
-            <header class="bg-white dark:bg-gray-800 shadow">
+            <header class="bg-white dark:bg-zinc-700 shadow">
                 <div class="max-w-screen mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     {{ $header }}
                 </div>
@@ -40,7 +40,7 @@
             <p id="customConfirmMessage" class="mb-4 text-gray-800"></p>
             <div class="flex justify-center gap-4">
                 <button id="customConfirmOk"
-                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">OK</button>
+                    class="px-4 py-2 bg-blue-500 dark:bg-zinc-800 text-white rounded hover:bg-blue-600">OK</button>
                 <button id="customConfirmCancel"
                     class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
             </div>
