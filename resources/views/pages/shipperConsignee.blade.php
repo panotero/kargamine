@@ -559,12 +559,29 @@
 
         function collectStage3() {
 
+            const invoiceSubmission = document.querySelector(
+                'input[name="invoice_submission"]:checked'
+            )?.value || '';
+
             payload.finance = {
                 credit_terms: document.getElementById('credit_terms').value,
                 payment_mode: document.getElementById('payment_mode').value,
-                standard_billing_service: document.getElementById('billing_service').value,
-                invoice_email: document.getElementById('invoice_email').value,
-                invoice_email_address: document.getElementById('invoice_email_address').value
+
+                invoice_submission: invoiceSubmission,
+
+                invoice_email_address: document.getElementById('invoice_email_address').value,
+
+                courier: {
+                    recepient_name: document.getElementById('courier_recepient_name').value,
+                    recepient_contact: document.getElementById('courier_recepient_contact').value,
+                    recepient_address: document.getElementById('courier_recepient_address').value
+                },
+
+                additional_billing_service_request: {
+                    document_handling: document.getElementById('document_handling').value,
+                    billing_summary_report: document.getElementById('billing_summary_report').value,
+                    other: document.getElementById('other_billing_request').value
+                }
             };
 
             payload.sales = {
@@ -616,6 +633,7 @@
                 currentStage = 0;
                 showStage(currentStage);
                 clearInputs();
+                closemodals();
             }
         });
 

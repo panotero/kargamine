@@ -12,10 +12,10 @@ class CustomerValidationService
         $validator = Validator::make($data, [
 
             /*
-            |--------------------------------------------------------------------------
-            | MAIN COMPANY
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | MAIN COMPANY
+        |--------------------------------------------------------------------------
+        */
 
             'customer_code' => 'required|string|max:255',
             'company_name' => 'required|string|max:255',
@@ -43,28 +43,28 @@ class CustomerValidationService
             'customer_type' => 'required|in:shipper,consignee,both',
 
             /*
-            |--------------------------------------------------------------------------
-            | CONTACTS
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | CONTACTS
+        |--------------------------------------------------------------------------
+        */
 
             'contacts' => 'nullable|array',
 
-            'contacts.*.contact_name' => 'required|string|max:255',
+            'contacts.*.contact_name' => 'nullable|string|max:255',
             'contacts.*.contact_number' => 'nullable|string|max:255',
             'contacts.*.email' => 'nullable|email|max:255',
             'contacts.*.role' => 'nullable|string|max:255',
             'contacts.*.position' => 'nullable|string|max:255',
 
             /*
-            |--------------------------------------------------------------------------
-            | TRADE REFERENCES
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | TRADE REFERENCES
+        |--------------------------------------------------------------------------
+        */
 
             'trade_references' => 'nullable|array',
 
-            'trade_references.*.business_name' => 'required|string|max:255',
+            'trade_references.*.business_name' => 'nullable|string|max:255',
             'trade_references.*.relationship' => 'nullable|string|max:255',
             'trade_references.*.business_address' => 'nullable|string|max:1000',
 
@@ -74,10 +74,10 @@ class CustomerValidationService
             'trade_references.*.contact_email' => 'nullable|email|max:255',
 
             /*
-            |--------------------------------------------------------------------------
-            | SERVICES
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | SERVICES
+        |--------------------------------------------------------------------------
+        */
 
             'services' => 'nullable|array',
 
@@ -86,27 +86,54 @@ class CustomerValidationService
             'services.*.destination' => 'nullable|string|max:255',
 
             /*
-            |--------------------------------------------------------------------------
-            | FINANCE
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | FINANCE
+        |--------------------------------------------------------------------------
+        */
 
             'finance' => 'nullable|array',
 
             'finance.credit_terms' => 'nullable|string|max:255',
             'finance.payment_mode' => 'nullable|string|max:255',
 
-            'finance.standard_billing_service' => 'nullable|string|max:255',
-
-            'finance.invoice_email' => 'nullable|string|max:255',
+            'finance.invoice_submission' => 'nullable|in:Email,Courier',
 
             'finance.invoice_email_address' => 'nullable|email|max:255',
 
             /*
-            |--------------------------------------------------------------------------
-            | BILLING
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | FINANCE - COURIER
+        |--------------------------------------------------------------------------
+        */
+
+            'finance.courier' => 'nullable|array',
+
+            'finance.courier.recepient_name' => 'nullable|string|max:255',
+            'finance.courier.recepient_contact' => 'nullable|string|max:255',
+            'finance.courier.recepient_address' => 'nullable|string|max:1000',
+
+            /*
+        |--------------------------------------------------------------------------
+        | FINANCE - ADDITIONAL BILLING SERVICE REQUEST
+        |--------------------------------------------------------------------------
+        */
+
+            'finance.additional_billing_service_request' => 'nullable|array',
+
+            'finance.additional_billing_service_request.document_handling'
+            => 'nullable|string|max:255',
+
+            'finance.additional_billing_service_request.billing_summary_report'
+            => 'nullable|string|max:255',
+
+            'finance.additional_billing_service_request.other'
+            => 'nullable|string|max:255',
+
+            /*
+        |--------------------------------------------------------------------------
+        | BILLING
+        |--------------------------------------------------------------------------
+        */
 
             'billing' => 'nullable|array',
 
@@ -116,20 +143,20 @@ class CustomerValidationService
             'billing.tin_no' => 'nullable|string|max:255',
 
             /*
-            |--------------------------------------------------------------------------
-            | SALES
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | SALES
+        |--------------------------------------------------------------------------
+        */
 
             'sales' => 'nullable|array',
 
             'sales.account_owner' => 'nullable|string|max:255',
 
             /*
-            |--------------------------------------------------------------------------
-            | STAGES
-            |--------------------------------------------------------------------------
-            */
+        |--------------------------------------------------------------------------
+        | STAGES
+        |--------------------------------------------------------------------------
+        */
 
             'stages' => 'nullable|array',
 

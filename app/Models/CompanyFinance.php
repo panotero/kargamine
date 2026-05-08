@@ -23,6 +23,7 @@ class CompanyFinance extends Model
         'document_handling',
         'billing_summary_report',
         'other_requests',
+        'invoice_mode',
     ];
 
     protected $casts = [

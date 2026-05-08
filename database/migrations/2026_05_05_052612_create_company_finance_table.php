@@ -19,6 +19,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('credit_terms')->nullable(); // LOV
+            $table->string('invoice_mode')->nullable(); // LOV
 
 
             $table->string('payment_mode');
