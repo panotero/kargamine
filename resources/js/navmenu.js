@@ -117,6 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   //loads page to the content area
   window.loadPage = async function loadPage(menu) {
+    window.pageLoaded = false;
     if (!menu) return;
     localStorage.setItem("lastMenu", JSON.stringify(menu));
 
@@ -202,6 +203,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await res.text();
       contentEl.innerHTML = `<div class="dark lg:p-4 dark:bg-zinc-800 rounded shadow">${data}</div>`;
 
+      window.pageLoaded = true;
+
       // Execute inline scripts
       contentEl.querySelectorAll("script").forEach((oldScript) => {
         const newScript = document.createElement("script");
@@ -224,15 +227,31 @@ document.addEventListener("DOMContentLoaded", function () {
   window.loadPage = loadPage;
 
   window.loadlastpage = async function loadlastpage() {
+    const navType = performance.getEntriesByType("navigation")[0]?.type;
+
+    // Only run on real reload
+    if (navType !== "reload") return;
+
     let lastMenu = localStorage.getItem("lastMenu");
-    if (lastMenu) {
-      try {
-        lastMenu = JSON.parse(lastMenu);
+
+    if (!lastMenu) {
+      loadPage("/dashboard");
+      return;
+    }
+
+    try {
+      lastMenu = JSON.parse(lastMenu);
+
+      if (typeof lastMenu === "string") {
         loadPage(lastMenu);
-        return;
-      } catch (e) {
-        console.warn("Failed to parse lastMenu", e);
+      } else if (lastMenu?.url) {
+        loadPage(lastMenu.url);
+      } else {
+        loadPage("/dashboard");
       }
+    } catch (e) {
+      console.warn("Failed to parse lastMenu", e);
+      loadPage("/dashboard");
     }
   };
   //initialize menu

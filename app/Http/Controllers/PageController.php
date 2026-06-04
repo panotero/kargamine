@@ -120,4 +120,10 @@ class PageController extends Controller
     {
         return view('pages.settings.lookupVal');
     }
+
+    public function page_crm()
+    {
+
+        return view('pages.crm');
+    }
 }

@@ -687,6 +687,7 @@
 <script>
     (function() {
         //fetching of rows
+        initDataTables(5);
         async function getCompanyList() {
             const companies = await apiCall({
                 mode: "GET",

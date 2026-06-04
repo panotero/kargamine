@@ -195,6 +195,35 @@ window.apiPOST = async function apiPOST(data, url, button) {
   }
 };
 
+/*
+sample usage
+
+
+            FOR GET METHOD
+            const companies = await apiCall({
+                mode: "GET",
+                url: "/api/companies"
+            });
+
+
+            FOR POST METHOD
+            const response = await apiCall({
+                    mode: "POST",
+                    isJson: true,
+                    payload: payload,
+                    url: "/api/companies",
+                    button: nextBtn
+                });
+
+            FOR DELETE METHOD
+            const response = await apiCall({
+                mode: "DELETE",
+                isJson: true,
+                payload: payload,
+                url: "/api/lov",
+                button: deleteButton    t
+            });
+*/
 window.apiCall = async function apiCall({
   mode = "GET",
   isJson = true,

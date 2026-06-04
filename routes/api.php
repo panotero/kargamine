@@ -15,6 +15,9 @@ use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OptionController;
 use App\Http\Controllers\ListOfValueController;
+use App\Http\Controllers\CrmLeadController;
+use App\Http\Controllers\CrmStatusController;
+use App\Http\Controllers\CrmActivityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -126,6 +129,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}', [CompanyController::class, 'show']);
         Route::put('/{id}', [CompanyController::class, 'update']);
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
+    });
+
+
+    Route::prefix('crm')->group(function () {
+
+        // LEADS (create full lead package)
+        Route::post('/leads', [CrmLeadController::class, 'store']);
+        Route::get('/leads', [CrmLeadController::class, 'index']);
+        Route::get('/leads/{id}', [CrmLeadController::class, 'show']);
+        Route::put('/leads/{id}', [CrmLeadController::class, 'update']);
+        Route::delete('/leads/{id}', [CrmLeadController::class, 'destroy']);
+
+        // STATUS CRUD
+        Route::apiResource('status', CrmStatusController::class);
+
+        // ACTIVITIES CRUD
+        Route::apiResource('activities', CrmActivityController::class);
     });
 
 

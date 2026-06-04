@@ -30,7 +30,7 @@ Route::get('/', function () {
 
 
 Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/app', function () {
         return view('dashboard');
     })->name('dashboard');
 
@@ -56,6 +56,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/page_shipperConsignee', [PageController::class, 'page_shipperConsignee']);
     Route::get('/page_contracts', [PageController::class, 'page_contracts']);
     Route::get('/page_reports', [PageController::class, 'page_reports']);
+    Route::get('/page_crm', [PageController::class, 'page_crm']);
 
 
 

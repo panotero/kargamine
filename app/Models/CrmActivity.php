@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DocumentType extends Model
+class CrmActivity extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'document_type',
+        'lead_id',
+        'type',
         'description',
+        'created_by'
     ];
 }
