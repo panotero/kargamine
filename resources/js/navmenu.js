@@ -185,9 +185,9 @@ document.addEventListener("DOMContentLoaded", function () {
       // Reinitialize controller for the new fetch
       window.controller = new AbortController();
 
-      if (window.controller) {
-        console.log("AbortController available");
-      }
+      //   if (window.controller) {
+      //     console.log("AbortController available");
+      //   }
       // Fetch with the new controller
       const res = await fetch(menu.link, {
         headers: { Accept: "application/json" },
@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
       credentials: "include",
       headers: { Accept: "application/json" },
     });
-    console.log(menuData);
+    // console.log(menuData);
 
     if (!menuData || !menuData.length)
       return console.warn("No menu data available");

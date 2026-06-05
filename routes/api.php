@@ -142,10 +142,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/leads/{id}', [CrmLeadController::class, 'destroy']);
 
         // STATUS CRUD
-        Route::apiResource('status', CrmStatusController::class);
+        Route::get('/getCrmStatus', [CrmStatusController::class, 'index']);
 
         // ACTIVITIES CRUD
         Route::apiResource('activities', CrmActivityController::class);
+
+        // TEST BY PAGE FETCHING
+        Route::get('/leads/datatables', [CrmLeadController::class, 'datatable']);
     });
 
 

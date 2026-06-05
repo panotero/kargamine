@@ -17,13 +17,12 @@
     "dependencies": {
         "@glidejs/glide": "^3.7.1",
         "chart.js": "^4.5.1",
-        "datatables.net-dt": "^2.3.5",
-        "flowbite": "^4.0.1",
+        "datatables.net": "^2.3.8",
+        "flowbite": "^4.0.2",
         "jquery": "^3.7.1",
         "jspdf": "^4.0.0",
         "jspdf-autotable": "^5.0.2",
         "pdfjs-dist": "^5.4.449",
-        "simple-datatables": "^10.2.0",
         "swiper": "^12.0.3"
     }
 }

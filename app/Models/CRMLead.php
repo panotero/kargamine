@@ -34,4 +34,8 @@ class CRMLead extends Model
     {
         return $this->hasMany(CrmActivity::class, 'lead_id');
     }
+    public function status()
+    {
+        return $this->hasOne(CrmStatus::class, 'id', 'status');
+    }
 }

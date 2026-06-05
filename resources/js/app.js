@@ -5,6 +5,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/zoom";
+// import "flowbite";
 
 window.Swiper = Swiper;
 window.Navigation = Navigation;

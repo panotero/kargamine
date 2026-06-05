@@ -11,7 +11,11 @@ class CrmStatusController extends Controller
 
     public function index()
     {
-        return CrmStatus::all();
+        $statuses =  CrmStatus::all();
+        return response()->json([
+            'success' => true,
+            'data' => $statuses,
+        ]);
     }
 
     public function store(Request $request)

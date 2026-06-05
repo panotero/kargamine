@@ -1,35 +1,48 @@
 window.initDataTables = function initDataTables(rows = 10) {
   $("table").each(function () {
-    if (!$.fn.DataTable.isDataTable(this)) {
-      const dt = $(this).DataTable({
-        paging: true,
-        searching: true,
-        info: false, // hide "Showing X of Y" text
-        lengthChange: false,
-        scrollY: "550px",
-        scrollCollapse: true,
-        pageLength: rows,
-        scrollX: $(window).width() < 1024, // horizontal scroll only if screen < lg (1024px)
-        responsive: true, // allows columns to adjust
-        autoWidth: true,
-        dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
-        // Disable initial auto-sort
-        order: [],
-      });
+    const table = this;
 
-      dt.on("draw", () => {
-        styleDataTable(this);
-      });
+    // IF already initialized → just redraw + restyle
+    if ($.fn.DataTable.isDataTable(table)) {
+      const dt = $(table).DataTable();
 
-      // Re-style table
-      styleDataTable(this);
+      dt.columns.adjust();
+      dt.responsive?.recalc?.();
+      dt.draw(false);
 
-      // Adjust horizontal scroll on window resize
-      $(window).on("resize", () => {
-        dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
-        dt.columns.adjust();
-      });
+      setTimeout(() => {
+        styleDataTable(table);
+      }, 0);
+
+      return;
     }
+
+    // INIT if not exists
+    const dt = $(table).DataTable({
+      paging: true,
+      searching: true,
+      info: false,
+      lengthChange: false,
+      scrollY: "550px",
+      scrollCollapse: true,
+      pageLength: rows,
+      scrollX: $(window).width() < 1024,
+      responsive: true,
+      autoWidth: true,
+      dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
+      order: [],
+    });
+
+    dt.on("draw", () => {
+      setTimeout(() => styleDataTable(table), 0);
+    });
+
+    styleDataTable(table);
+
+    $(window).on("resize", () => {
+      dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
+      dt.columns.adjust();
+    });
   });
 
   function styleDataTable(table) {
@@ -39,10 +52,14 @@ window.initDataTables = function initDataTables(rows = 10) {
         "text-black text-center bg-orange-400 text-white font-white py-1";
     });
 
-    const tbody = document.querySelectorAll("table tbody tr");
-    tbody.forEach((tr) => {
+    const tbodytr = document.querySelectorAll("table tbody tr");
+    tbodytr.forEach((tr) => {
       tr.className =
-        "hover:bg-gray-300 bg-white duration-300 text-center cursor-pointer";
+        "hover:bg-orange-300 bg-white duration-300 text-center cursor-pointer";
+    });
+    const tbody = document.querySelectorAll("table tbody");
+    tbody.forEach((tb) => {
+      tb.classList.add("border", "rounded-lg");
     });
 
     const pagination = document.querySelectorAll(".pagination");

@@ -8,6 +8,7 @@ use App\Models\CrmNote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CrmLeadController extends Controller
 {
@@ -15,6 +16,7 @@ class CrmLeadController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request->all());
         DB::beginTransaction();
 
         try {
@@ -25,28 +27,22 @@ class CrmLeadController extends Controller
                 'status' => $request->status,
                 'source' => $request->source,
                 'assigned_to' => auth()->id(),
-                'estimated_value' => $request->estimated_value,
-                'expected_close_date' => $request->expected_close_date,
+                'estimated_value' => $request->est_value,
+                'expected_close_date' => Carbon::now()->addWeek(),
                 'status_updated_at' => now(),
             ]);
 
-            if ($request->company) {
-                CompanyInfo::create([
-                    'lead_id' => $lead->id,
-                    'company_name' => $request->company['company_name'],
-                    'position' => $request->company['position'] ?? null,
-                ]);
-            }
+            CompanyInfo::create([
+                'lead_id' => $lead->id,
+                'company_name' => $request->company_name,
+                'position' => $request->position ?? null,
+            ]);
+            CrmNote::create([
+                'lead_id' => $lead->id,
+                'note' => $request->notes,
+                'created_by' => auth()->id(),
+            ]);
 
-            if ($request->notes && is_array($request->notes)) {
-                foreach ($request->notes as $note) {
-                    CrmNote::create([
-                        'lead_id' => $lead->id,
-                        'note' => $note,
-                        'created_by' => auth()->id(),
-                    ]);
-                }
-            }
 
             DB::commit();
 
@@ -68,7 +64,21 @@ class CrmLeadController extends Controller
 
     public function index()
     {
-        return CrmLead::with('company', 'notes', 'activities')->get();
+        return CrmLead::select(
+            'id',
+            'contact_name',
+            'email',
+            'mobile',
+            'status',
+            'assigned_to',
+            'created_at'
+        )
+            ->with([
+                'company:id,lead_id,company_name',
+                'status:id,status'
+            ])
+            ->latest()
+            ->get();
     }
 
     public function show($id)

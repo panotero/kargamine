@@ -150,5 +150,5 @@ window.renderRows = function renderRows(
     tbody.appendChild(tr);
   });
 
-  initDataTables(10);
+  //   initDataTables(10);
 };

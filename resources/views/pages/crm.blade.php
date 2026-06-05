@@ -10,29 +10,63 @@
     </button>
 
 </div>
+<!-- CRM Status Count Cards -->
+<section class="w-full my-10">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
-<div class=" overflow-auto bg-white rounded-lg text-black border-2 border-slate-100 drop-shadow-md p-5">
-    <div class="w-full rounded-lg overflow-hidden">
-        <table id="crmTable" class="w-full">
-            <thead>
-                <tr>
-                    <th>Contact</th>
-                    <th>Company</th>
-                    <th>Email</th>
-                    <th>Mobile</th>
-                    <th>Status</th>
-                    <th>Assigned To</th>
-                    <th>Created</th>
-                </tr>
-            </thead>
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p class="text-xs text-gray-500">LEAD</p>
+            <p class="text-2xl font-bold text-black" id="countLead">0</p>
+        </div>
 
-            <tbody id="crmTableBody">
-            </tbody>
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p class="text-xs text-gray-500">QUALIFIED</p>
+            <p class="text-2xl font-bold text-black" id="countQualified">0</p>
+        </div>
 
-        </table>
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p class="text-xs text-gray-500">OPPORTUNITY</p>
+            <p class="text-2xl font-bold text-black" id="countOpportunity">0</p>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p class="text-xs text-gray-500">NEGOTIATION</p>
+            <p class="text-2xl font-bold text-black" id="countNegotiation">0</p>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p class="text-xs text-gray-500">WIN</p>
+            <p class="text-2xl font-bold text-black" id="countWin">0</p>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p class="text-xs text-gray-500">LOST</p>
+            <p class="text-2xl font-bold text-black" id="countLose">0</p>
+        </div>
 
     </div>
-</div>
+</section>
+<x-table-container>
+    <table id="crmTable" class="w-full">
+        <thead>
+            <tr>
+                <th>Contact</th>
+                <th>Company</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+
+        <tbody id="crmTableBody">
+        </tbody>
+
+    </table>
+</x-table-container>
+
+
 
 
 <x-modal id="NewLeadModal">
@@ -45,10 +79,10 @@
 
     </div>
 
-    <form id="leadForm">
 
-        <div class="p-5">
+    <div class="p-5">
 
+        <form id="leadForm">
             <div class="grid grid-cols-2 gap-3">
 
                 <div class="flex flex-col">
@@ -82,7 +116,8 @@
                 <div class="flex flex-col">
                     <label>Status</label>
 
-                    <select name="status" class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
+                    <select name="status"
+                        class="statusDropDown border p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
 
                         <option value="LEAD">LEAD</option>
                         <option value="QUALIFIED">QUALIFIED</option>
@@ -96,31 +131,40 @@
                 </div>
 
                 <div class="flex flex-col">
-                    <label>Assigned To</label>
-                    <input type="text" name="assigned_to"
+                    <label>Source</label>
+                    <input type="text" name="source" class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
+                </div>
+                <div class="flex flex-col col-span-2">
+                    <label>Estemated Value</label>
+                    <input type="text" name="est_value"
                         class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
                 </div>
+                <div class="flex flex-col col-span-2">
+                    <label>Notes</label>
+                    <textarea name="notes" id="notes"rows="6" class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white"></textarea>
+                </div>
+
 
             </div>
 
-        </div>
+        </form>
+    </div>
 
-        <div class="border-t px-5 py-4 flex justify-end gap-2">
+    <div class="border-t px-5 py-4 flex justify-end gap-2">
 
 
-            <button type="submit" id="saveLeadBtn"
-                class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-lg">
-                Save Lead
-            </button>
+        <button type="submit" id="saveLeadBtn"
+            class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-lg">
+            Save Lead
+        </button>
 
-            <button
-                class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white px-5 py-2 rounded-lg text-sm font-medium">
-                Cancel
-            </button>
+        <button
+            class="modal-close border border-gray-300  text-gray-700  hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white px-5 py-2 rounded-lg text-sm font-medium">
+            Cancel
+        </button>
 
-        </div>
+    </div>
 
-    </form>
 </x-modal>
 
 
@@ -156,68 +200,49 @@
 
 <script>
     (function() {
+        let statusarray = [];
+        let crmArray = [];
         async function getLeads() {
-            return [{
-                    id: 1,
-                    contact_name: "John Smith",
-                    mobile: "+1 555 123 4567",
-                    email: "john@acme.com",
-                    company_name: "Acme Corporation",
-                    position: "Procurement Manager",
-                    status: "LEAD",
-                    assigned_to: "Minton",
-                    created_at: "2026-06-05"
-                },
-                {
-                    id: 2,
-                    contact_name: "Sarah Johnson",
-                    mobile: "+1 555 999 1234",
-                    email: "sarah@globex.com",
-                    company_name: "Globex Inc.",
-                    position: "Operations Director",
-                    status: "NEGOTIATION",
-                    assigned_to: "Minton",
-                    created_at: "2026-06-04"
-                },
-                {
-                    id: 3,
-                    contact_name: "Michael Reyes",
-                    mobile: "+63 917 123 4567",
-                    email: "michael@northstar.ph",
-                    company_name: "Northstar Logistics",
-                    position: "General Manager",
-                    status: "QUALIFIED",
-                    assigned_to: "Minton",
-                    created_at: "2026-06-03"
-                }
-            ];
 
-            /*
             const leads = await apiCall({
                 mode: "GET",
                 url: "/api/crm/leads"
             });
-
+            // console.log(leads);
             return leads;
-            */
         }
 
         async function renderTable() {
-            const leads = await getLeads();
 
+            document.getElementById("crmTableBody").innerHTML = "";
+            const leads = await getLeads();
             let html = '';
 
+            const counts = {
+                LEAD: 0,
+                QUALIFIED: 0,
+                OPPORTUNITY: 0,
+                NEGOTIATION: 0,
+                WIN: 0,
+                LOST: 0
+            };
             leads.forEach(row => {
 
+                crmArray.push(row);
+                const status = row.status.status;
+
+                if (counts.hasOwnProperty(status)) {
+                    counts[status]++;
+                }
                 html += `
             <tr class="cursor-pointer hover:bg-zinc-100"
                 data-id="${row.id}">
 
                 <td>${row.contact_name}</td>
-                <td>${row.company_name}</td>
+                <td>${row.company?.company_name ?? "No Company"}</td>
                 <td>${row.email}</td>
                 <td>${row.mobile}</td>
-                <td>${row.status}</td>
+                <td>${row.status?.status ?? "Unknown Status"}</td>
                 <td>${row.assigned_to}</td>
                 <td>${row.created_at}</td>
 
@@ -227,7 +252,16 @@
 
             $("#crmTableBody").html(html);
 
-            initDataTables(5);
+            document.getElementById("countLead").innerText = counts.LEAD;
+            document.getElementById("countQualified").innerText = counts.QUALIFIED;
+            document.getElementById("countOpportunity").innerText = counts.OPPORTUNITY;
+            document.getElementById("countNegotiation").innerText = counts.NEGOTIATION;
+            document.getElementById("countWin").innerText = counts.WIN;
+            document.getElementById("countLose").innerText = counts.LOST;
+
+            console.log(crmArray);
+
+            initDataTables(10);
         }
         $(document).on("click", "#crmTable tbody tr", function() {
 
@@ -240,86 +274,30 @@
             });
 
         });
-        $("#leadForm").on("submit", async function(e) {
+        $("#saveLeadBtn").on("click", async function(e) {
             const submitBtn = $("#saveLeadBtn");
+            const form = $("#leadForm")[0];
 
             e.preventDefault();
+            const formData = new FormData();
 
-            // const formData = new FormData();
+            formData.append("contact_name", form.contact_name.value);
+            formData.append("mobile", form.mobile.value);
+            formData.append("email", form.email.value);
+            formData.append("company_name", form.company_name.value);
+            formData.append("position", form.position.value);
+            formData.append("status", form.status.value);
+            formData.append("est_value", form.status.value);
+            formData.append("source", form.source.value);
+            formData.append("notes", form.notes.value);
 
-            // formData.append(
-            //     "contact_name",
-            //     $('[name="contact_name"]').val()
-            // );
-
-            // formData.append(
-            //     "mobile",
-            //     $('[name="mobile"]').val()
-            // );
-
-            // formData.append(
-            //     "email",
-            //     $('[name="email"]').val()
-            // );
-
-            // formData.append(
-            //     "company_name",
-            //     $('[name="company_name"]').val()
-            // );
-
-            // formData.append(
-            //     "position",
-            //     $('[name="position"]').val()
-            // );
-
-            // formData.append(
-            //     "status",
-            //     $('[name="status"]').val()
-            // );
-
-            // formData.append(
-            //     "assigned_to",
-            //     $('[name="assigned_to"]').val()
-            // );
-
-            // console.log(formData);
-
-            /*
-            const response = await apiCall({
-                mode: "POST",
-                url: "/api/crm/leads",
-                body: formData
-            });
-            */
-
-            const formData = {
-                contact_name: "Juan Dela Cruz",
-                email: "juan@email.com",
-                mobile: "09171234567",
-                status: 1, // crm_status ID
-                source: "Facebook Ads",
-                assigned_to: 3, // user ID
-                estimated_value: 150000,
-                expected_close_date: "2026-06-30",
-
-                company: {
-                    company_name: "Juan Marketing Agency",
-                    position: "CEO"
-                },
-
-                notes: [
-                    "Initial inquiry from Facebook ad",
-                    "Client is interested in premium package",
-                    "Follow up next week"
-                ]
-            };
 
             const response = await apiCall({
                 mode: "POST",
-                isJson: true,
+                isJson: false,
                 payload: formData,
                 url: "/api/crm/leads",
-                button: submitBtn
+                button: document.getElementById("saveLeadBtn")
             });
 
             if (!response.success) {
@@ -336,8 +314,9 @@
                 status: "success",
                 title: "Successfully Saved Company Info. Keep it up!",
             });
+            renderTable();
+            closemodals();
 
-            console.log(response);
         });
         async function updateLead(id) {
             console.log("Update Lead", id);
@@ -360,7 +339,6 @@
             });
             */
         }
-        console.log(pageLoaded);
         if (pageLoaded) {
 
             initializepage();
@@ -375,6 +353,31 @@
                 });
             });
 
+            getStatuses();
+
+        }
+
+        async function getStatuses() {
+            const statusdropdown = document.querySelectorAll(".statusDropDown");
+
+            const statuses = await apiCall({
+                mode: "GET",
+                url: "/api/crm/getCrmStatus"
+            });
+
+            let html = "";
+            statusdropdown.forEach(dropdown => {
+                statuses.data.forEach(status => {
+                    statusarray.push({
+                        id: status.id,
+                        status: status.status
+                    });
+                    html += `
+                        <option value="${status.id}">${status.status}</option>`;
+
+                });
+                dropdown.innerHTML = html;
+            });
         }
 
 
