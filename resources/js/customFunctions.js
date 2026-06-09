@@ -39,6 +39,83 @@ window.initModal = function initModal({ modalId }) {
   });
 };
 
+window.initSideModal = function initSideModal({ modalId }) {
+  const modal = document.getElementById(modalId);
+
+  if (!modal) {
+    console.warn("Modal not found:", modalId);
+    return;
+  }
+
+  const panel = modal.querySelector(".side-modal-panel");
+  const closeButtons = modal.querySelectorAll(".modal-close");
+
+  const scrollY = window.scrollY;
+
+  // show backdrop
+  modal.classList.remove("hidden");
+
+  requestAnimationFrame(() => {
+    panel.classList.remove("translate-x-full");
+  });
+
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.overflow = "hidden";
+
+  closeButtons.forEach((btn) => {
+    btn.onclick = async function () {
+      const confirmed = await customConfirm(
+        "You have unsaved changes. Are you sure you want to close?",
+      );
+      if (!confirmed) return;
+      closeSideModal(modalId, scrollY);
+    };
+  });
+
+  //   modal.onclick = async function (e) {
+  //     if (e.target === modal) {
+  //       const confirmed = await customConfirm(
+  //         "You have unsaved changes. Are you sure you want to close?",
+  //       );
+  //       if (!confirmed) return;
+  //       closeSideModal(modalId, scrollY);
+  //     }
+  //   };
+};
+
+window.closeSideModal = function closeSideModal(
+  modalId,
+  scrollY = window.scrollY,
+) {
+  const modal = document.getElementById(modalId);
+
+  if (!modal) return;
+
+  const panel = modal.querySelector(".side-modal-panel");
+
+  panel.classList.add("translate-x-full");
+
+  setTimeout(() => {
+    modal.classList.add("hidden");
+
+    const openmodalcount = checkopenmodal();
+
+    if (openmodalcount > 0) return;
+
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.overflow = "";
+
+    window.scrollTo(0, scrollY);
+  }, 300);
+  clearInputs();
+};
+
 function checkopenmodal() {
   const opennedmodal = document.querySelectorAll(".modal");
   let openmodalcount = 0;
@@ -151,4 +228,80 @@ window.renderRows = function renderRows(
   });
 
   //   initDataTables(10);
+};
+
+window.initLoading = function initLoading() {
+  return `
+  <div class="w-full h-full overflow-auto rounded-md p-2">
+    <div class="mx-auto w-full rounded-md p-4 animate-pulse mt-4 min-w-max">
+      <div class="w-full flex space-x-4">
+        <div class="h-10 w-10 rounded-full bg-gray-200"></div>
+        <div class="flex-1 space-y-6 py-1">
+          <div class="h-2 rounded bg-gray-200"></div>
+          <div class="space-y-3">
+            <div class="grid grid-cols-3 gap-4">
+              <div class="col-span-2 h-2 rounded bg-gray-200"></div>
+              <div class="col-span-1 h-2 rounded bg-gray-200"></div>
+            </div>
+            <div class="h-2 rounded bg-gray-200"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+};
+
+window.formatDateTime = function formatDateTime(dateString) {
+  const date = new Date(dateString);
+
+  return date.toLocaleString("en-PH", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+window.customConfirm = function customConfirm(message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("customConfirmModal");
+    const messageEl = document.getElementById("customConfirmMessage");
+    const okBtn = document.getElementById("customConfirmOk");
+    const cancelBtn = document.getElementById("customConfirmCancel");
+
+    if (!modal || !messageEl || !okBtn || !cancelBtn) return;
+
+    messageEl.textContent = message;
+
+    modal.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+
+    const closeModal = (value) => {
+      modal.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      resolve(value);
+    };
+
+    const onOk = () => closeModal(true);
+    const onCancel = () => closeModal(false);
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+  });
+};
+
+window.clearInputs = function clearInputs() {
+  document.querySelectorAll("input").forEach((input) => {
+    input.value = "";
+  });
+
+  document.querySelectorAll("select").forEach((input) => {
+    input.value = "";
+  });
+  document.querySelectorAll("textarea").forEach((textarea) => {
+    textarea.value = "";
+  });
 };

@@ -38,4 +38,8 @@ class CRMLead extends Model
     {
         return $this->hasOne(CrmStatus::class, 'id', 'status');
     }
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'assigned_to');
+    }
 }

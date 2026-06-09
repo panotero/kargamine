@@ -2,47 +2,44 @@ window.initDataTables = function initDataTables(rows = 10) {
   $("table").each(function () {
     const table = this;
 
-    // IF already initialized → just redraw + restyle
-    if ($.fn.DataTable.isDataTable(table)) {
-      const dt = $(table).DataTable();
+    const dtExists = $.fn.DataTable.isDataTable(table);
 
-      dt.columns.adjust();
-      dt.responsive?.recalc?.();
-      dt.draw(false);
+    // INIT if not exists
+    if (!dtExists) {
+      const dt = $(table).DataTable({
+        paging: true,
+        searching: true,
+        info: false,
+        lengthChange: false,
+        scrollY: "550px",
+        scrollCollapse: true,
+        pageLength: rows,
+        scrollX: $(window).width() < 1024,
+        responsive: true,
+        autoWidth: true,
+        dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
+        order: [],
+      });
 
-      setTimeout(() => {
-        styleDataTable(table);
-      }, 0);
+      dt.on("draw", () => {
+        setTimeout(() => styleDataTable(table), 0);
+      });
 
+      styleDataTable(table);
       return;
     }
 
-    // INIT if not exists
-    const dt = $(table).DataTable({
-      paging: true,
-      searching: true,
-      info: false,
-      lengthChange: false,
-      scrollY: "550px",
-      scrollCollapse: true,
-      pageLength: rows,
-      scrollX: $(window).width() < 1024,
-      responsive: true,
-      autoWidth: true,
-      dom: "<'dt-top'f>" + "<'dt-wrapper't>" + "<'dt-bottom'i p>",
-      order: [],
-    });
+    // ✅ FIX: instead of draw-only, force re-sync DOM
+    const dt = $(table).DataTable();
 
-    dt.on("draw", () => {
-      setTimeout(() => styleDataTable(table), 0);
-    });
+    dt.clear(); // remove internal cache
+    dt.rows.add($(table).find("tbody tr")); // re-read DOM rows
+    dt.draw(false);
 
-    styleDataTable(table);
+    dt.columns.adjust();
+    dt.responsive?.recalc?.();
 
-    $(window).on("resize", () => {
-      dt.settings()[0].oInit.scrollX = $(window).width() < 1024;
-      dt.columns.adjust();
-    });
+    setTimeout(() => styleDataTable(table), 0);
   });
 
   function styleDataTable(table) {

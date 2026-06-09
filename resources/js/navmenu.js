@@ -156,25 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (titleEl) titleEl.textContent = menu.title;
 
     const contentEl = document.getElementById("content");
-    contentEl.innerHTML = `
-  <div class="w-full h-96 overflow-auto border rounded-md p-2">
-    <div class="mx-auto w-full rounded-md p-4 animate-pulse mt-4 min-w-max">
-      <div class="w-full flex space-x-4">
-        <div class="h-10 w-10 rounded-full bg-gray-200"></div>
-        <div class="flex-1 space-y-6 py-1">
-          <div class="h-2 rounded bg-gray-200"></div>
-          <div class="space-y-3">
-            <div class="grid grid-cols-3 gap-4">
-              <div class="col-span-2 h-2 rounded bg-gray-200"></div>
-              <div class="col-span-1 h-2 rounded bg-gray-200"></div>
-            </div>
-            <div class="h-2 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
+    contentEl.innerHTML = initLoading();
 
     try {
       // Abort previous fetch if any

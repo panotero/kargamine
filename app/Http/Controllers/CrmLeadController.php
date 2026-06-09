@@ -75,7 +75,8 @@ class CrmLeadController extends Controller
         )
             ->with([
                 'company:id,lead_id,company_name',
-                'status:id,status'
+                'status:id,status',
+                'user:id,name'
             ])
             ->latest()
             ->get();
@@ -83,7 +84,14 @@ class CrmLeadController extends Controller
 
     public function show($id)
     {
-        return CrmLead::with('company', 'notes', 'activities')->findOrFail($id);
+
+        $lead = CrmLead::with('company', 'notes', 'activities', 'status:id,status', 'user')->findOrFail($id);
+
+        return response()->json([
+
+            'success' => true,
+            'data' => $lead
+        ]);
     }
 
     public function update(Request $request, $id)
