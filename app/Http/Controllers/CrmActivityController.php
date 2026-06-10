@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CrmActivity;
+use Illuminate\Support\Facades\DB;
 
 class CrmActivityController extends Controller
 {
@@ -15,12 +16,27 @@ class CrmActivityController extends Controller
 
     public function store(Request $request)
     {
-        return CrmActivity::create([
-            'lead_id' => $request->lead_id,
-            'type' => $request->type,
-            'description' => $request->description,
-            'created_by' => auth()->id(),
-        ]);
+        try {
+            DB::beginTransaction();
+            CrmActivity::create([
+                'lead_id' => $request->leadId,
+                'type' => $request->type,
+                'description' => $request->activity,
+                'created_by' => auth()->id(),
+            ]);
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'activity saved!'
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'error saving'
+            ]);
+        }
     }
 
     public function show($id)

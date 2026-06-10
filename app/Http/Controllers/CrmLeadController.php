@@ -85,7 +85,7 @@ class CrmLeadController extends Controller
     public function show($id)
     {
 
-        $lead = CrmLead::with('company', 'notes', 'activities', 'status:id,status', 'user')->findOrFail($id);
+        $lead = CrmLead::with('company', 'notes.user', 'activities.user', 'status:id,status', 'user')->findOrFail($id);
 
         return response()->json([
 

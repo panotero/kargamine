@@ -232,23 +232,49 @@ window.renderRows = function renderRows(
 
 window.initLoading = function initLoading() {
   return `
-  <div class="w-full h-full overflow-auto rounded-md p-2">
-    <div class="mx-auto w-full rounded-md p-4 animate-pulse mt-4 min-w-max">
-      <div class="w-full flex space-x-4">
-        <div class="h-10 w-10 rounded-full bg-gray-200"></div>
-        <div class="flex-1 space-y-6 py-1">
-          <div class="h-2 rounded bg-gray-200"></div>
-          <div class="space-y-3">
-            <div class="grid grid-cols-3 gap-4">
-              <div class="col-span-2 h-2 rounded bg-gray-200"></div>
-              <div class="col-span-1 h-2 rounded bg-gray-200"></div>
-            </div>
-            <div class="h-2 rounded bg-gray-200"></div>
-          </div>
-        </div>
-      </div>
+  <style>
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%);
+        }
+
+        100% {
+            transform: translateX(300%);
+        }
+    }
+
+    .animate-shimmer {
+        animation: shimmer 1.5s infinite linear;
+    }
+</style>
+
+<div class="relative h-4 w-full overflow-hidden rounded bg-gray-200">
+    <div
+        class="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer">
     </div>
-  </div>`;
+</div>`;
+};
+window.loadingLine = function loadingLine() {
+  return `
+    <style>
+    @keyframes slide-loading {
+        0% {
+            left: -8rem;
+        }
+
+        100% {
+            left: 100%;
+        }
+    }
+
+    .slide-loading {
+        animation: slide-loading 2s linear infinite;
+    }
+</style>
+
+<div class="relative h-4 w-full overflow-hidden">
+    <div class="slide-loading absolute h-2 w-32 rounded-full bg-gray-100"></div>
+</div>`;
 };
 
 window.formatDateTime = function formatDateTime(dateString) {

@@ -149,7 +149,7 @@
                     <div class="flex flex-col">
                         <label>Mobile</label>
                         <input type="text" name="mobile"
-                            class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white" required>
+                            class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white format-mobile" required>
                     </div>
 
                     <div class="flex flex-col col-span-2">
@@ -195,7 +195,7 @@
                     <div class="flex flex-col col-span-2">
                         <label>Estemated Value</label>
                         <input type="text" name="est_value"
-                            class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
+                            class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white format-currency">
                     </div>
                     <div class="flex flex-col col-span-2">
                         <label>Notes</label>
@@ -230,116 +230,198 @@
 
     <div class="p-5 border-b flex justify-between items-center">
         <div class="flex flex-col">
-            <div>
+            <div class="flex gap-2">
                 <p class="text-lg font-semibold" id="leadCompanyName">Company Name</p>
+                <div class="items-center flex  flex-col">
+
+                    <div class="px-3 my-auto text-sm rounded-full bg-green-600 text-white" id="leadStatus">
+                        status
+                    </div>
+                </div>
             </div>
             <div class="flex gap-2 text-md">
                 some info
             </div>
         </div>
         <div class="h-full items-center">
+            <button id="deleteLeadBtn" class="p-2 aspect-square bg-red-400 rounded-full text-white"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
 
-            <div class="px-3 py-1 text-sm rounded-full bg-green-600 text-white" id="leadStatus">
-                status
-            </div>
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                </svg></button>
         </div>
     </div>
 
-    <div class="max-h-[60vh]   overflow-auto">
-        <div class="lg:min-h-[50vh] h-full grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div class="md:col-span-2 flex flex-col p-5 gap-5">
-                <div class="flex flex-col gap-3">
+    <div class="max-h-[60vh] overflow-auto">
+        <div class="lg:min-h-[50vh] h-full grid grid-cols-1 md:grid-cols-6 relative">
+
+            <div id="editContactInfoDropdown"
+                class="modaldropdown hidden absolute left-1/2 top-10 w-72 bg-white dark:bg-zinc-700 border rounded-md p-3 z-50 -translate-x-1/2 shadow-xl shadow-black/10 dark:shadow-gray-200/10">
+                <div>
+                    <p class="text-md">Edit Contact Information</p>
+                </div>
+                <div class="bg-white dark:bg-zinc-700">
+                    <label for="contaceName" class="text-sm font-semibold text-zinc-300">Contace Name</label>
+                    <input type="text" class="w-full bg-white dark:bg-zinc-600" name="contaceName"
+                        id="contaceName">
+                    <label for="contactEmail" class="text-sm font-semibold text-zinc-300">Contact Email</label>
+                    <input type="text" class="w-full bg-white dark:bg-zinc-600" name="contactEmail"
+                        id="contactEmail">
+                    <label for="contactMobile" class="text-sm font-semibold text-zinc-300">Contact Mobile</label>
+                    <input type="text" class="w-full bg-white dark:bg-zinc-600" name="contactMobile"
+                        id="contactMobile">
+                </div>
+
+                <div class="flex justify-end gap-2 mt-2">
+                    <button id="cancelContactInfoBtn" class="px-3 py-1 text-sm bg-white dark:bg-zinc-600 rounded">
+                        Cancel
+                    </button>
+                    <button id="saveContactInfoBtn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded">
+                        Save
+                    </button>
+                </div>
+            </div>
+            <div class="md:col-span-2 flex flex-col gap-5 md:border-r border-zinc-300  relative">
+
+                <div class="absolute top-0 right-0 p-2">
+
+                    <button id="editContactBtn"><svg xmlns="http://www.w3.org/2000/svg" width="20"
+                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                        </svg></button>
+                </div>
+                <div class="flex flex-col gap-3  p-5 ">
+
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Name</p>
-                        <p class="text-lg" id="leadContactName"> Contact Name</p>
+                        <p class="text-lg" id="leadContactName">-</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Email</p>
-                        <p class="text-lg" id="leadEmail">jdc@email.com</p>
+                        <p class="text-lg" id="leadEmail">-</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Mobile</p>
-                        <p class="text-lg" id="leadMobile">+63912 3456 789</p>
+                        <p class="text-lg" id="leadMobile">p-3</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Source</p>
-                        <p class="text-lg" id="leadSource">Facebook</p>
+                        <p class="text-lg" id="leadSource">-</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Estimated Value</p>
-                        <p class="text-lg" id="leadEstimatedValue">$500,000</p>
+                        <p class="text-lg" id="leadEstimatedValue">-</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Date Added</p>
-                        <p class="text-lg" id="leadCreatedAt">January 1, 2026</p>
+                        <p class="text-lg" id="leadCreatedAt">-</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-500">Expected Close Date</p>
-                        <p class="text-lg" id="leadExpectedCloseDate">January 16, 2026</p>
+                        <p class="text-lg" id="leadExpectedCloseDate">-</p>
                     </div>
 
                 </div>
 
             </div>
-            <div class="md:col-span-4 flex flex-col md:border-l border-zinc-300 p-5 gap-5">
+            <div class="md:col-span-4 flex flex-col p-5 gap-5">
                 <div class="w-full space-y-3">
 
-                    <div class="w-full flex justify-between items-center">
+                    <div class="w-full flex justify-between items-center relative">
 
                         <p class="text-lg font-bold text-zinc-500">activities
                         </p>
-                        <button class="px-3 py-1 rounded-full font-semibold bg-zinc-100 border drop-shadow-md text-sm">
+                        <button id="addActivityBtn"
+                            class="px-3 py-1 rounded-full font-semibold bg-white dark:bg-zinc-700 border drop-shadow-md text-sm">
                             add
                             +</button>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <div class="w-full p-2 border border-zinc-300 rounded-md flex  justify-between  items-center">
+
+                        <div id="activityDropdown"
+                            class="modaldropdown hidden absolute right-0 top-10 w-72 bg-white dark:bg-zinc-700 border rounded-md  p-3 z-50 flex flex-col gap-2 shadow-xl shadow-black/10 dark:shadow-gray-200/10">
+
+                            <div>
+                                <p class="text-md">Add New Activity</p>
+                            </div>
                             <div>
 
-                                <p class="text-md font-semibold">activity name</p>
-                                <p class="text-xs font-light">date time user</p>
+                                <label for="type" class="text-sm font-semibold text-zinc-300">Note</label>
+                                <input type="text" name="type" id="activityTypeInput"
+                                    class="w-full bg-white dark:bg-zinc-600 rounded-md">
+
                             </div>
-                            <div class="px-3 py-1 text-sm rounded-full bg-blue-600 text-white">
-                                status
+                            <div>
+
+                                <label for="activityDescriptionInput"
+                                    class="text-sm font-semibold text-zinc-300">Description</label>
+                                <textarea name="activityDescriptionInput" id="activityDescriptionInput"
+                                    class="w-full bg-white dark:bg-zinc-600 rounded-md p-2" rows="3" placeholder="Add activity..."></textarea>
+
+                            </div>
+
+                            <div class="flex justify-end gap-2 mt-2">
+                                <button id="cancelActivityBtn"
+                                    class="px-3 py-1 text-sm bg-white dark:bg-zinc-600 rounded">
+                                    Cancel
+                                </button>
+                                <button id="saveActivityBtn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded">
+                                    Save
+                                </button>
                             </div>
                         </div>
-                        <div class="w-full p-2 border border-zinc-300 rounded-md flex  justify-between  items-center">
-                            <div>
+                    </div>
+                    <div class="flex flex-col-reverse gap-2" id="activityContainer">
 
-                                <p class="text-md font-semibold">activity name</p>
-                                <p class="text-xs font-light">date time user</p>
-                            </div>
-                            <div class="px-3 py-1 text-sm rounded-full bg-blue-600 text-white">
-                                status
-                            </div>
+                        <div class="w-full p-2 rounded-md text-center">
+                            <p class="font-semibold text-zinc-400">Theres no activities found</p>
                         </div>
 
                     </div>
                 </div>
                 <div class="w-full space-y-3">
-                    <div class="w-full flex justify-between items-center">
+                    <div class="w-full flex justify-between items-center relative">
 
                         <p class="text-lg font-bold text-zinc-500">notes
                         </p>
-                        <button class="px-3 py-1 rounded-full font-semibold bg-zinc-100 border drop-shadow-md text-sm">
+                        <button id="addNoteBtn"
+                            class="px-3 py-1 rounded-full font-semibold bg-white dark:bg-zinc-700 border drop-shadow-md text-sm">
                             add
                             +</button>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <div class="w-full p-2 border border-zinc-300 rounded-md">
-                            <div class="flex justify-between">
+                        <div id="noteDropdown"
+                            class=" modaldropdown hidden absolute right-0 top-10 w-72 bg-white dark:bg-zinc-700 border rounded-md p-3 z-50 flex flex-col gap-2 shadow-xl shadow-black/10 dark:shadow-gray-200/10">
 
-                                <p class="text-md font-semibold">created by : date time</p>
-                                <button><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 24 24" fill="currentColor">
-                                        <circle cx="5" cy="12" r="2"></circle>
-                                        <circle cx="12" cy="12" r="2"></circle>
-                                        <circle cx="19" cy="12" r="2"></circle>
-                                    </svg></button>
-
+                            <div>
+                                <p class="text-md">Add New Note</p>
+                            </div>
+                            <div>
+                                <label for="noteInput" class="text-sm font-semibold text-zinc-300">Note</label>
+                                <textarea name="noteInput" id="noteInput" class="w-full bg-white dark:bg-zinc-600 rounded-md p-2" rows="3"
+                                    placeholder="Add note..."></textarea>
                             </div>
 
-                            <p class="text-md">notes</p>
+                            <div class="flex justify-end gap-2 mt-2">
+                                <button id="cancelNoteBtn"
+                                    class="px-3 py-1 text-sm bg-white dark:bg-zinc-600 rounded">
+                                    Cancel
+                                </button>
+                                <button id="saveNoteBtn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded">
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col-reverse gap-2" id="noteContainer">
+
+                        <div class="w-full p-2 rounded-md text-center">
+                            <p class="font-semibold text-zinc-400">Theres no notes found</p>
                         </div>
 
                     </div>
@@ -348,7 +430,6 @@
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-
             <div>
                 <label class="block text-sm font-medium mb-1">
                     Contact Name
@@ -406,18 +487,6 @@
     </div>
 
     <div class="border-t px-5 py-4 flex justify-end gap-2">
-
-        <button id="btnDeleteLead" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-            Delete
-        </button>
-
-        <button id="btnEditLead" class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-lg">
-            Edit
-        </button>
-
-        <button id="btnSaveLead" class="hidden bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
-            Save
-        </button>
 
         <button class="modal-close border px-4 py-2 rounded-lg">
             Close
@@ -539,8 +608,6 @@
 
             const id = $(this).data("id");
 
-            console.log("Open Lead", id);
-
             initModal({
                 modalId: "LeadInfoModal",
             });
@@ -589,7 +656,10 @@
                 status: "success",
                 title: "Successfully Saved Company Info. Keep it up!",
             });
-            renderTable();
+
+            const leads = await getLeads();
+            renderTable(leads);
+            renderCounts(leads);
 
             clearInputs();
             closeSideModal("LeadDetailsSideModal");
@@ -663,12 +733,25 @@
 
 
         async function loadLeadInfo() {
+            const loader = loadingLine();
+            $('#leadCompanyName').html(loader);
+            $('#leadStatus').html(loader);
+            $('#leadContactName').html(loader);
+            $('#leadEmail').html(loader);
+            $('#leadMobile').html(loader);
+            $('#leadSource').html(loader);
+            $('#leadEstimatedValue').html(loader);
+            $('#leadCreatedAt').html(loader);
+            $('#leadExpectedCloseDate').html(loader);
+            $('#noteContainer').html(loader);
+            $('#activityContainer').html(loader);
+
 
             const leads = await apiCall({
                 mode: "GET",
                 url: `/api/crm/leads/${leadID}`
             });
-            console.log(leads.data);
+            console.log(leads);
             if (!leads.success) {
                 showMessage({
                     status: "error",
@@ -691,8 +774,15 @@
             $('#leadExpectedCloseDate').html(formatDateTime(lead.expected_close_date) ?? '');
 
 
+
             $('#btnEditLead').removeClass('hidden');
             $('#btnSaveLead').addClass('hidden');
+
+            //render activities
+            renderActivity(leads.data.activities);
+
+            //render notes
+            renderNotes(leads.data.notes);
         }
 
         function getLeadFormData() {
@@ -729,9 +819,6 @@
                 url: "/api/crm/leads",
                 button: document.getElementById("btnSaveLead")
             });
-            if (!response.success) {
-
-            }
 
             toastr.success('Lead updated successfully');
 
@@ -755,6 +842,251 @@
 
                 renderTable(filtered);
             });
+        });
+
+
+        function renderActivity(activities) {
+            //build activity html
+            let html = "";
+
+            //select the container
+            const activityContainer = document.getElementById("activityContainer");
+            //foreach logic for activities
+            activities.forEach(activity => {
+                html += `
+            <div class="w-full p-2 border border-zinc-300 rounded-md flex  justify-between  items-center">
+                            <div class="flex flex-col gap-2">
+
+                                <div class="flex flex-col">
+                                <p class="text-lg font-semibold">${activity.type}</p>
+                                <p class="text-md">${activity.type}</p>
+                                    </div>
+                                <p class="text-xs font-light">${formatDateTime(activity.created_at)} ${activity.user.name}</p>
+                            </div>
+                        </div>`;
+
+            });
+
+            if (activities.length === 0) {
+                html = `
+
+                        <div class="w-full p-2 rounded-md text-center">
+                            <p class="font-semibold text-zinc-400">Theres no notes</p>
+                            </div>
+                            `
+            }
+            //append html to the container
+            activityContainer.innerHTML = html;
+
+        }
+
+        function renderNotes(notes) {
+            let html = "";
+            //select the container
+            const noteContainer = document.getElementById("noteContainer");
+
+            //foreach logic for activities
+            notes.forEach(note => {
+                //build activity html
+                html += `
+                        <div class="w-full p-2 border border-zinc-300 rounded-md">
+                            <div class="flex justify-between">
+
+                                <p class="text-xs font-light">${formatDateTime(note.created_at)} ${note.user.name}</p>
+                                <button><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                        viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="5" cy="12" r="2"></circle>
+                                        <circle cx="12" cy="12" r="2"></circle>
+                                        <circle cx="19" cy="12" r="2"></circle>
+                                    </svg></button>
+
+                            </div>
+
+                            <p class="text-md">${note.note}</p>
+                        </div>
+            `;
+            });
+            if (notes.length === 0) {
+                html = `
+
+                        <div class="w-full p-2 border border-zinc-300 rounded-md text-center">
+                            <p class="font-semibold text-zinc-400">Theres no notes</p>
+                            </div>
+                            `
+            }
+
+            //append html to the container
+            noteContainer.innerHTML = html;
+
+
+
+        }
+
+        //adding of notes and activity function
+        const addActivityBtn = document.getElementById('addActivityBtn');
+        const activityDropdown = document.getElementById('activityDropdown');
+        const activityDescriptionInput = document.getElementById('activityDescriptionInput');
+        const activityTypeInput = document.getElementById('activityTypeInput');
+        const saveActivityBtn = document.getElementById('saveActivityBtn');
+        const cancelActivityBtn = document.getElementById('cancelActivityBtn');
+
+        const addNoteBtn = document.getElementById('addNoteBtn');
+        const noteDropdown = document.getElementById('noteDropdown');
+        const noteInput = document.getElementById('noteInput');
+        const saveNoteBtn = document.getElementById('saveNoteBtn');
+        const cancelNoteBtn = document.getElementById('cancelNoteBtn');
+
+
+        const editContactBtn = document.getElementById('editContactBtn');
+        const editContactInfoDropdown = document.getElementById('editContactInfoDropdown');
+        const saveContactInfoBtn = document.getElementById('saveContactInfoBtn');
+        const cancelContactInfoBtn = document.getElementById('cancelContactInfoBtn');
+
+
+
+        // OPEN / CLOSE HELPERS
+        function openDropdown(dropdown) {
+            dropdown.classList.remove('hidden');
+        }
+
+        function closeDropdown(dropdown) {
+            dropdown.classList.add('hidden');
+        }
+
+
+        // =======================
+        // ACTIVITY EVENTS
+        // =======================
+
+        addActivityBtn.addEventListener('click', () => {
+            openDropdown(activityDropdown);
+        });
+
+        saveActivityBtn.addEventListener('click', async function() {
+
+
+            const payload = {
+                leadId: leadID,
+                type: activityTypeInput.value,
+                activity: activityDescriptionInput.value
+            };
+
+            const response = await apiCall({
+                mode: "POST",
+                isJson: true,
+                payload: payload,
+                url: "/api/crm/activity",
+                button: saveActivityBtn
+            });
+            console.log(response);
+            if (!response.success) {
+
+                showMessage({
+                    status: "error",
+                    title: "Error Saving Activity",
+                });
+                return;
+            };
+
+            showMessage({
+                status: "success",
+                title: "Activity Saved!",
+            });
+            activityTypeInput.value = '';
+            activityDescriptionInput.value = '';
+            closeDropdown(activityDropdown);
+            loadLeadInfo();
+
+        });
+
+        cancelActivityBtn.addEventListener('click', () => {
+            closeDropdown(activityDropdown);
+            activityTypeInput.value = '';
+            activityDescriptionInput.value = '';
+        });
+
+
+        // =======================
+        // NOTE EVENTS
+        // =======================
+
+        addNoteBtn.addEventListener('click', () => {
+            openDropdown(noteDropdown);
+        });
+
+        saveNoteBtn.addEventListener('click', async function() {
+
+            const payload = {
+                leadId: leadID,
+                note: noteInput.value
+            };
+
+            const response = await apiCall({
+                mode: "POST",
+                isJson: true,
+                payload: payload,
+                url: "/api/crm/note",
+                button: saveNoteBtn
+            });
+            console.log(response);
+            if (!response.success) {
+
+                showMessage({
+                    status: "error",
+                    title: "Error Saving Note",
+                });
+                return;
+            };
+
+            showMessage({
+                status: "success",
+                title: "Note saved!",
+            });
+
+            noteInput.value = '';
+            closeDropdown(noteDropdown);
+            loadLeadInfo();
+        });
+
+        cancelNoteBtn.addEventListener('click', () => {
+            noteInput.value = '';
+            closeDropdown(noteDropdown);
+        });
+
+        editContactBtn.addEventListener("click", () => {
+            openDropdown(editContactInfoDropdown);
+
+        });
+        saveContactInfoBtn.addEventListener('click', () => {
+
+        });
+        cancelContactInfoBtn.addEventListener('click', () => {
+            closeDropdown(editContactInfoDropdown);
+        });
+
+
+        // =======================
+        // CLICK OUTSIDE CLOSE
+        // (still scoped, no document query loops)
+        // =======================
+
+        window.addEventListener('click', (e) => {
+
+            const isActivityClick =
+                addActivityBtn.contains(e.target) ||
+                activityDropdown.contains(e.target);
+
+            const isNoteClick =
+                addNoteBtn.contains(e.target) ||
+                noteDropdown.contains(e.target);
+
+            const iseditContactClick =
+                editContactBtn.contains(e.target) ||
+                editContactInfoDropdown.contains(e.target);
+
+            if (!isActivityClick) closeDropdown(activityDropdown);
+            if (!isNoteClick) closeDropdown(noteDropdown);
+            if (!iseditContactClick) closeDropdown(editContactInfoDropdown);
         });
 
     })();

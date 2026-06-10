@@ -18,6 +18,7 @@ use App\Http\Controllers\ListOfValueController;
 use App\Http\Controllers\CrmLeadController;
 use App\Http\Controllers\CrmStatusController;
 use App\Http\Controllers\CrmActivityController;
+use App\Http\Controllers\CrmNoteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -149,6 +150,9 @@ Route::middleware(['auth'])->group(function () {
 
         // TEST BY PAGE FETCHING
         Route::get('/leads/datatables', [CrmLeadController::class, 'datatable']);
+
+        Route::post('/note', [CrmNoteController::class, 'store']);
+        Route::post('/activity', [CrmActivityController::class, 'store']);
     });
 
 
