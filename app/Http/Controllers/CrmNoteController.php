@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\CrmNote;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use App\Models\CRMLead;
 
 class CrmNoteController extends Controller
 {
@@ -15,10 +16,10 @@ class CrmNoteController extends Controller
     public function store(Request $request)
     {
         try {
-
+            $lead = CrmLead::where('uuid', $request->leadUUId)->firstOrFail();
             db::beginTransaction();
             CrmNote::create([
-                'lead_id' => $request->leadId,
+                'lead_id' => $lead->id,
                 'note' => $request->note,
                 'created_by' => auth()->id(),
             ]);

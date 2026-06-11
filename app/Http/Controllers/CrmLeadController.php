@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class CrmLeadController extends Controller
 {
@@ -21,6 +22,7 @@ class CrmLeadController extends Controller
 
         try {
             $lead = CrmLead::create([
+
                 'contact_name' => $request->contact_name,
                 'email' => $request->email,
                 'mobile' => $request->mobile,
@@ -65,27 +67,28 @@ class CrmLeadController extends Controller
     public function index()
     {
         return CrmLead::select(
-            'id',
+            'uuid',
             'contact_name',
             'email',
             'mobile',
             'status',
             'assigned_to',
-            'created_at'
+            'created_at',
+            'updated_at'
         )
             ->with([
                 'company:id,lead_id,company_name',
                 'status:id,status',
                 'user:id,name'
             ])
-            ->latest()
+            ->orderBy('updated_at', 'desc')
             ->get();
     }
 
-    public function show($id)
+    public function show($uuid)
     {
 
-        $lead = CrmLead::with('company', 'notes.user', 'activities.user', 'status:id,status', 'user')->findOrFail($id);
+        $lead = CrmLead::with('company', 'notes.user', 'activities.user', 'status:id,status', 'user')->where('uuid', $uuid)->firstOrFail();
 
         return response()->json([
 
@@ -94,12 +97,30 @@ class CrmLeadController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $uuid)
     {
-        $lead = CrmLead::findOrFail($id);
-        $lead->update($request->all());
+        $updatePayload = [
+            'contact_name' => $request->contact_name,
+            'email' => $request->contact_email,
+            'mobile' => $request->contact_mobile,
+        ];
+        try {
+            DB::beginTransaction();
 
-        return $lead;
+            CrmLead::where('uuid', $uuid)->firstOrFail()->update($updatePayload);
+            DB::commit();
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $ex
+            ]);
+        }
+        return response()->json([
+
+            'success' => true,
+            'message' => 'updated!'
+        ]);
     }
 
     public function destroy($id)

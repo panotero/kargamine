@@ -138,9 +138,9 @@ Route::middleware(['auth'])->group(function () {
         // LEADS (create full lead package)
         Route::post('/leads', [CrmLeadController::class, 'store']);
         Route::get('/leads', [CrmLeadController::class, 'index']);
-        Route::get('/leads/{id}', [CrmLeadController::class, 'show']);
-        Route::put('/leads/{id}', [CrmLeadController::class, 'update']);
-        Route::delete('/leads/{id}', [CrmLeadController::class, 'destroy']);
+        Route::get('/leads/{uuid}', [CrmLeadController::class, 'show']);
+        Route::put('/leads/{uuid}', [CrmLeadController::class, 'update']);
+        Route::delete('/leads/{uuid}', [CrmLeadController::class, 'destroy']);
 
         // STATUS CRUD
         Route::get('/getCrmStatus', [CrmStatusController::class, 'index']);

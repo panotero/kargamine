@@ -72,14 +72,6 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '1'
             ],
             [
-                'title' => 'Booking',
-                'icon' => '',
-                'link' => '/page_bookings',
-                'allowed_roles' => json_encode(['1', '2', '3', '4']),
-                'parent_menu' => '0',
-                'menu_order' => '2'
-            ],
-            [
                 'title' => 'Shipper/Consignee',
                 'icon' => '',
                 'link' => '/page_shipperConsignee',
@@ -110,6 +102,14 @@ class NavMenuSeeder extends Seeder
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '3',
                 'menu_order' => '3'
+            ],
+            [
+                'title' => 'CRM',
+                'icon' => '',
+                'link' => '/page_crm',
+                'allowed_roles' => json_encode(['1']),
+                'parent_menu' => '0',
+                'menu_order' => '2'
             ]
         ];
 

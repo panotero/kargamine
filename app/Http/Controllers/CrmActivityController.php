@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CrmActivity;
 use Illuminate\Support\Facades\DB;
+use App\Models\CRMLead;
 
 class CrmActivityController extends Controller
 {
@@ -17,13 +18,18 @@ class CrmActivityController extends Controller
     public function store(Request $request)
     {
         try {
+            $lead = CrmLead::where('uuid', $request->leadUUId)->firstOrFail();
+            $updatepayload = [
+                'status' => $request->status,
+            ];
             DB::beginTransaction();
             CrmActivity::create([
-                'lead_id' => $request->leadId,
+                'lead_id' => $lead->id,
                 'type' => $request->type,
                 'description' => $request->activity,
                 'created_by' => auth()->id(),
             ]);
+            $lead->update($updatepayload);
             DB::commit();
             return response()->json([
                 'success' => true,

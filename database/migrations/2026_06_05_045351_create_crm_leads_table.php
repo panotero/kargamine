@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_leads', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->string('contact_name');
             $table->string('email')->nullable();
             $table->string('mobile')->nullable();

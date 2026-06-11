@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class CRMLead extends Model
 {
+    use HasUuids;
     protected $table = 'crm_leads';
     protected $fillable = [
         'contact_name',
@@ -19,6 +21,12 @@ class CRMLead extends Model
         'expected_close_date',
         'status_updated_at'
     ];
+
+
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
 
     public function company()
     {

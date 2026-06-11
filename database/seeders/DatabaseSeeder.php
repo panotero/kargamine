@@ -30,7 +30,8 @@ class DatabaseSeeder extends Seeder
             NavMenuSeeder::class,
             UserSeeder::class,
             // ThemeSeeder::class,
-            Setting_roleSeeder::class
+            Setting_roleSeeder::class,
+            CrmStatusSeeder::class
         ]);
     }
 }

@@ -27,3 +27,4 @@ import "./mailer";
 import "./toast";
 
 import "./formatter";
+import "./logic_crm";
