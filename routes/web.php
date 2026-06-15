@@ -57,6 +57,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::get('/page_contracts', [PageController::class, 'page_contracts']);
     Route::get('/page_reports', [PageController::class, 'page_reports']);
     Route::get('/page_crm', [PageController::class, 'page_crm']);
+    Route::get('/page_proposals', [PageController::class, 'page_proposals']);
 
 
 

@@ -126,4 +126,9 @@ class PageController extends Controller
 
         return view('pages.crm');
     }
+
+    public function page_proposals()
+    {
+        return view('pages.proposals');
+    }
 }

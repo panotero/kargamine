@@ -22,16 +22,14 @@ class DatabaseSeeder extends Seeder
         // ]);
         // $this->call(UserSeeder::class);
         $this->call([
-            // DocumentsTableSeeder::class,
-            // OfficesTableSeeder::class,
-            // FilesTableSeeder::class,
-            // ModificationsTableSeeder::class,
-            // NotificationsTableSeeder::class,
+            //template seeder
             NavMenuSeeder::class,
             UserSeeder::class,
-            // ThemeSeeder::class,
             Setting_roleSeeder::class,
-            CrmStatusSeeder::class
+
+            //kargamine seeder
+            CrmStatusSeeder::class,
+            lovSeeder::class
         ]);
     }
 }

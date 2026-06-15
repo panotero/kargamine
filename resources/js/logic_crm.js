@@ -605,4 +605,14 @@ window.initCrmLogic = function initCrmLogic() {
   $(".editContactDropdown").on("change", function () {
     $("#saveContactInfoBtn").removeClass("hidden");
   });
+
+  document
+    .getElementById("deleteLeadBtn")
+    .addEventListener("click", function () {
+      const proposalModal = document.querySelector("#generateProposal");
+      if (!proposalModal) return;
+      initSideModal({
+        modalId: "generateProposal",
+      });
+    });
 };
