@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class CRMLead extends Model
+class CrmLead extends Model
 {
     use HasUuids;
     protected $table = 'crm_leads';
