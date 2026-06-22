@@ -230,6 +230,31 @@ window.renderRows = function renderRows(
   //   initDataTables(10);
 };
 
+window.getStatusBadgeClass = function getStatusBadgeClass(status) {
+  switch (status) {
+    case "LEAD":
+      return "bg-gray-100 text-gray-700";
+
+    case "QUALIFIED":
+      return "bg-indigo-100 text-indigo-700";
+
+    case "OPPORTUNITY":
+      return "bg-purple-100 text-purple-700";
+
+    case "NEGOTIATION":
+      return "bg-amber-100 text-amber-700";
+
+    case "WIN":
+      return "bg-green-100 text-green-700";
+
+    case "LOST":
+      return "bg-red-100 text-red-700";
+
+    default:
+      return "bg-zinc-100 text-zinc-700";
+  }
+};
+
 window.initLoading = function initLoading() {
   return `
   <style>

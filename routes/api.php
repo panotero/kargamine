@@ -159,6 +159,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::prefix('proposal')->group(function () {
+        Route::get('/', [ProposalController::class, 'index']);
         Route::post('/', [ProposalController::class, 'store']);
     });
     Route::prefix('listofval')->group(function () {

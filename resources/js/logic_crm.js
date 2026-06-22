@@ -297,27 +297,64 @@ window.initCrmLogic = function initCrmLogic() {
     //select the container
     const proposalContainer = document.getElementById("proposalContainer");
     proposals.forEach((proposal) => {
+      const statusColors = {
+        Draft: "bg-gray-100 text-gray-700",
+        Pending: "bg-yellow-100 text-yellow-700",
+        Approved: "bg-green-100 text-green-700",
+        Rejected: "bg-red-100 text-red-700",
+      };
+
+      const statusClass = getStatusBadgeClass(proposal.status.status);
+
+      const badgeClass =
+        statusColors[proposal.status] || "bg-blue-100 text-blue-700";
       const downloadurl = `/createpdf/${proposal.id}`;
 
       //build activity html
       html += `
-                       <div
-                            class="dark:bg-zinc-600 border border-zinc-300 rounded-md  p-1 w-full flex justify-between items-center">
-                            <div class="flex flex-col">
+                      <div
+    class="dark:bg-zinc-600 border border-zinc-300 rounded-lg p-3 w-full flex justify-between items-center">
 
-                                <h1>${proposal.code}</h1>
-                                <p class="text-xs dark:text-zinc-300">${formatDateTime(proposal.created_at)}</p>
-                            </div>
-                            <a href="${downloadurl}"
-       target="_blank"
-       class="bg-orange-600 text-white rounded-md p-1">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke-width="1.5" stroke="currentColor" width="24" height="24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 10.5l4.5 4.5m0 0l4.5-4.5m-4.5 4.5V3" />
-        </svg>
-    </a>
-                        </div>
+    <!-- LEFT -->
+    <div class="flex flex-col gap-1">
+
+        <!-- STATUS -->
+        <span class="text-xs font-semibold px-2 rounded-full ${statusClass}">
+    ${proposal.status.status}
+</span>
+        <h1 class="font-medium text-sm">${proposal.code}</h1>
+        <p class="text-xs text-zinc-500 dark:text-zinc-300">
+            ${formatDateTime(proposal.created_at)}
+        </p>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="flex flex-col items-end gap-2">
+
+
+        <!-- DOWNLOAD -->
+        <a href="${downloadurl}"
+           target="_blank"
+           class="bg-orange-600 hover:bg-orange-700 text-white rounded-md p-2 transition">
+
+            <svg xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                width="20"
+                height="20">
+
+                <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 10.5l4.5 4.5m0 0l4.5-4.5m-4.5 4.5V3" />
+            </svg>
+
+        </a>
+
+    </div>
+
+</div>
             `;
     });
     if (proposals.length === 0) {

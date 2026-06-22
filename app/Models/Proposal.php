@@ -37,4 +37,8 @@ class Proposal extends Model
     {
         return $this->hasMany(ProposalInfo::class, 'proposal_id');
     }
+    public function status()
+    {
+        return  $this->belongsTo(ProposalStatus::class, 'status');
+    }
 }

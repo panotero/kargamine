@@ -14,7 +14,22 @@ use Carbon\Carbon;
 class ProposalController extends Controller
 {
     //
-    public function index() {}
+    public function index()
+    {
+        $proposals = Proposal::select(
+            'id',
+            'code',
+            'lead_id',
+            'created_by',
+            'status',
+            'created_at',
+            'updated_at'
+        )->with('lead:id,contact_name', 'lead.company:id,lead_id,company_name', 'rates', 'creator:id,name', 'status:id,status')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $proposals,
+        ]);
+    }
     public function store(Request $request)
     {
         $now = Carbon::now();
@@ -77,7 +92,7 @@ class ProposalController extends Controller
             ProposalInfo::create($proposalRatePayload);
 
             //update lead status to negotiation
-            $lead->update(['status' => 4]);
+            $lead->update(['status' => 3]);
 
 
 

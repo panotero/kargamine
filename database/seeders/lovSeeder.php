@@ -59,6 +59,7 @@ class lovSeeder extends Seeder
         ]);
 
         DB::table('proposal_status')->insert([
+            ['status' => 'Pending'],
             ['status' => 'Approved'],
             ['status' => 'Disapproved'],
             ['status' => 'Accepted'],

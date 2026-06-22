@@ -95,7 +95,7 @@ class CrmLeadController extends Controller
             'activities.user',
             'status:id,status',
             'user',
-            'proposals'
+            'proposals.status'
         )->where('uuid', $uuid)->firstOrFail();
 
         return response()->json([

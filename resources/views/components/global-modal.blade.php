@@ -24,16 +24,16 @@
                 <div class="col-span-2 flex flex-col  dark:text-white">
                     <label>Rate</label>
                     <input type="text" name="proposed_rate"
-                        class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white format-currency">
+                        class="border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white format-currency">
                 </div>
                 <div class="col-span-2 flex flex-col  dark:text-white">
                     <label>Service Mode</label>
-                    <div class="p-2 rounded-lg border border-zinc-600 grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div class="p-2 rounded-lg border border-zinc-200 grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div class="flex flex-col  dark:text-white">
                             <label>Origin</label>
 
                             <select name="service_origin"
-                                class="serviceDropDown origin border p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
+                                class="serviceDropDown origin border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
                                 required>
 
                             </select>
@@ -42,7 +42,7 @@
                             <label>Destination</label>
 
                             <select name="service_destination"
-                                class="serviceDropDown destination border p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
+                                class="serviceDropDown destination border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
                                 required>
 
                             </select>
@@ -52,12 +52,13 @@
                 </div>
                 <div class="col-span-2 flex flex-col  dark:text-white">
                     <label>Route</label>
-                    <div class="p-2 rounded-lg border border-zinc-600 grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div class="p-2 rounded-lg border border-zinc-200 grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div class="flex flex-col  dark:text-white">
                             <label>From</label>
 
                             <select name="route_from"
-                                class="routeDropDown border p-2 rounded-lg dark:bg-zinc-600 dark:text-white" required>
+                                class="routeDropDown border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
+                                required>
 
                             </select>
                         </div>
@@ -65,7 +66,8 @@
                             <label>To</label>
 
                             <select name="route_to"
-                                class="routeDropDown border p-2 rounded-lg dark:bg-zinc-600 dark:text-white" required>
+                                class="routeDropDown border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
+                                required>
 
                             </select>
                         </div>
@@ -75,18 +77,20 @@
                 <div class="col-span-2 flex flex-col  dark:text-white">
                     <label>Minimum Van Quantity</label>
                     <input type="number" name="min_van_qty"
-                        class="border p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
+                        class="border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white">
                 </div>
                 <div class="flex flex-col  dark:text-white">
                     <label>Van Type</label>
                     <select name="van_type"
-                        class="vanTypeDropdown border p-2 rounded-lg dark:bg-zinc-600 dark:text-white" required>
+                        class="vanTypeDropdown border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
+                        required>
                     </select>
                 </div>
                 <div class="flex flex-col  dark:text-white">
                     <label>Van Size</label>
                     <select name="van_size"
-                        class="vanSizeDropdown border p-2 rounded-lg dark:bg-zinc-600 dark:text-white" required>
+                        class="vanSizeDropdown border border-zinc-200 p-2 rounded-lg dark:bg-zinc-600 dark:text-white"
+                        required>
                     </select>
                 </div>
 
