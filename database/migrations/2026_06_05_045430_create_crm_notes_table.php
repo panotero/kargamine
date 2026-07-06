@@ -15,7 +15,7 @@ return new class extends Migration
                 ->constrained('crm_leads')
                 ->cascadeOnDelete();
 
-            $table->text('note');
+            $table->text('note')->nullable();
 
             $table->foreignId('created_by')
                 ->nullable()

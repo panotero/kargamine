@@ -137,6 +137,18 @@
                 <td><strong>Company</strong></td>
                 <td>{{ $proposal->lead->company->company_name }}</td>
             </tr>
+            <tr>
+                <td><strong>Company Address</strong></td>
+                <td>{{ $proposal->lead->company->company_address }}</td>
+            </tr>
+            <tr>
+                <td><strong>Authorized Signatory</strong></td>
+                <td>{{ $proposal->lead->company->authorized_signatory_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Signatory Position</strong></td>
+                <td>{{ $proposal->lead->company->authorized_signatory_position }}</td>
+            </tr>
 
             <tr>
                 <td><strong>Prepared By</strong></td>
@@ -158,6 +170,7 @@
                     <th width="5%">#</th>
                     <th width="15%">Origin</th>
                     <th width="15%">Destination</th>
+                    <th width="18%">Van Class</th>
                     <th width="18%">Van Type</th>
                     <th width="12%">Van Size</th>
                     <th width="8%">Qty</th>
@@ -180,6 +193,9 @@
                             {{ $rate->routeTo->route }}
                         </td>
 
+                        <td>
+                            {{ $rate->vanClass->class }}
+                        </td>
                         <td>
                             {{ $rate->vanType->type }}
                         </td>

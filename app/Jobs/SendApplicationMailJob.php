@@ -12,25 +12,27 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SendApplicationMailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $payload;
-    protected $recipient_id;
+    protected $userId;
+    protected $user;
 
-    public function __construct(array $payload, $recipient_id)
+    public function __construct(array $payload, $userId)
     {
         $this->payload = $payload;
-        $this->recipient_id = $recipient_id;
+        $this->userId = $userId;
     }
 
     public function handle()
     {
         $config = MailerSetting::latest()->first();
-        $user = User::with(['userConfig', 'office'])
-            ->find($this->recipient_id);
+
+        $user = User::find($this->userId);
 
         if (!$config || !$user) {
             return;
@@ -55,10 +57,14 @@ class SendApplicationMailJob implements ShouldQueue
                 $this->payload['subject'],
                 $this->payload['message'] ?? '',
                 [
-                    'title'   => $this->payload['title'] ?? null,
-                    'message' => $this->payload['message'] ?? null,
+                    'title'            => $this->payload['title'] ?? null,
+                    'message'          => $this->payload['message'] ?? null,
                     'docControlNumber' => $this->payload['docControlNumber'] ?? null,
-                    'button'  => $this->payload['button'] ?? null,
+                    'Header'           => $this->payload['Header'] ?? null,
+                    'app_name'         => $this->payload['app_name'] ?? null,
+                    'logo'             => $this->payload['logo'] ?? null,
+                    'button'           => $this->payload['button'] ?? null,
+                    'footer'           => $this->payload['footer'] ?? null,
                 ]
             )
         );

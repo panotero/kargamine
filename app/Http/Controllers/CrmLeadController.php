@@ -26,6 +26,7 @@ class CrmLeadController extends Controller
                 'contact_name' => $request->contact_name,
                 'email' => $request->email,
                 'mobile' => $request->mobile,
+                'position' => $request->position ?? null,
                 'status' => $request->status,
                 'source' => $request->source,
                 'assigned_to' => auth()->id(),
@@ -37,13 +38,15 @@ class CrmLeadController extends Controller
             CrmCompanyInfo::create([
                 'lead_id' => $lead->id,
                 'company_name' => $request->company_name,
-                'position' => $request->position ?? null,
             ]);
-            CrmNote::create([
-                'lead_id' => $lead->id,
-                'note' => $request->notes,
-                'created_by' => auth()->id(),
-            ]);
+            if (isset($request->notes)) {
+
+                CrmNote::create([
+                    'lead_id' => $lead->id,
+                    'note' => $request->notes,
+                    'created_by' => auth()->id(),
+                ]);
+            }
 
 
             DB::commit();
@@ -121,7 +124,7 @@ class CrmLeadController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => $ex
+                'message' => $ex->getMessage(),
             ]);
         }
         return response()->json([

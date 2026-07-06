@@ -7,6 +7,7 @@ use App\Models\Service;
 use App\Models\Route;
 use App\Models\VanType;
 use App\Models\VanSize;
+use App\Models\VanClass;
 
 
 class LovController extends Controller
@@ -31,6 +32,11 @@ class LovController extends Controller
     public function vansize()
     {
         $vansize = VanSize::all();
+        return $vansize;
+    }
+    public function vanclass()
+    {
+        $vansize = VanClass::all();
         return $vansize;
     }
 }

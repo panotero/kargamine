@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CrmActivity;
 use Illuminate\Support\Facades\DB;
-use App\Models\CRMLead;
+use App\Models\CrmLead;
 
 class CrmActivityController extends Controller
 {
@@ -40,7 +40,7 @@ class CrmActivityController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'error saving'
+                'message' => $ex->getMessage(),
             ]);
         }
     }

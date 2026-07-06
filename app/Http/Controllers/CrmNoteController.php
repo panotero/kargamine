@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\CrmNote;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use App\Models\CRMLead;
+use App\Models\CrmLead;
 
 class CrmNoteController extends Controller
 {
@@ -33,7 +33,7 @@ class CrmNoteController extends Controller
             db::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'error saving',
+                'message' => $ex->getMessage(),
             ]);
         }
     }

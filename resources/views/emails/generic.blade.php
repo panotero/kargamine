@@ -2,125 +2,132 @@
 <html>
 
 <head>
-    <link rel="icon" type="image/x-icon" href="">
     <meta charset="utf-8">
-    <title>Email</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $body['title'] ?? 'Email' }}</title>
     <style>
-        body {
+        body,
+        table,
+        td {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #eef1f5;
-            padding: 40px 0;
-            color: #333;
+        }
+
+        body {
             margin: 0;
-        }
-
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.6);
-            padding: 20px 30px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .header img {
-            height: 36px;
-            width: auto;
-        }
-
-        .content {
-            padding: 40px 30px;
-        }
-
-        h1 {
-            color: #111827;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-
-        p {
-            color: #374151;
-            line-height: 1.6;
-            font-size: 15px;
-            margin-bottom: 25px;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #2563eb;
-            color: #fff !important;
-            padding: 12px 28px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-            transition: background 0.2s ease;
-        }
-
-        .btn:hover {
-            background-color: #1e40af;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 20px 30px;
-            font-size: 13px;
-            color: #6b7280;
-            background: rgba(255, 255, 255, 0.6);
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0;
+            background-color: #f4f4f5;
         }
 
         @media (max-width: 600px) {
             .email-container {
-                border-radius: 0;
-                box-shadow: none;
+                width: 100% !important;
             }
 
-            .content {
-                padding: 30px 20px;
+            .content-padding {
+                padding: 28px 20px !important;
+            }
+
+            .header-padding {
+                padding: 20px !important;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="email-container">
-        <div class="header">
-            <img src="" alt="TESDA Logo" style="height:40px; width:auto; display:block;">
-            <h1> Document Monitoring Tool </h1>
-        </div>
 
-        <div class="content">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+        style="background-color:#f4f4f5; padding:40px 0;">
+        <tr>
+            <td align="center">
 
-            <h1>{{ $body['title'] ?? 'Hello!' }}</h1>
+                <table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0"
+                    style="max-width:600px; width:100%; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06); border:1px solid #e4e4e7;">
 
-            <h1>{{ $body['docControlNumber'] ?? '' }}</h1>
-            <p>{{ $body['message'] ?? 'This is a test email.' }}</p>
+                    <!-- HEADER -->
+                    <tr>
+                        <td class="header-padding" style="background-color:#18181b; padding:24px 32px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td valign="middle" width="40">
+                                        <img src="{{ $body['logo'] ?? '' }}" alt="Logo" width="36"
+                                            height="36" style="display:block; border-radius:6px;">
+                                    </td>
+                                    <td valign="middle" style="padding-left:12px;">
+                                        <p
+                                            style="margin:0; color:#fafafa; font-size:15px; font-weight:600; letter-spacing:0.2px;">
+                                            {{ $body['app_name'] ?? 'Document Monitoring Tool' }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-            <br />
-            <br />
+                    <!-- ACCENT BAR -->
+                    <tr>
+                        <td style="background-color:#f97316; height:3px; line-height:3px; font-size:0;">&nbsp;</td>
+                    </tr>
 
+                    <!-- CONTENT -->
+                    <tr>
+                        <td class="content-padding" style="padding:40px 32px;">
 
-            @if (isset($body['button']))
-                <a href="{{ $body['button']['url'] }}" class="btn">
-                    {{ $body['button']['text'] }}
-                </a>
-            @endif
-        </div>
+                            <h1
+                                style="margin:0 0 8px; color:#18181b; font-size:22px; font-weight:700; line-height:1.3;">
+                                {{ $body['title'] ?? 'Hello!' }}
+                            </h1>
 
-        <div class="footer">
-            <p>Please do not reply to this email. Thank you.</p>
-        </div>
-    </div>
+                            @if (isset($body['Header']))
+                                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+                                    <tr>
+                                        <td
+                                            style="background-color:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:6px 12px;">
+                                            <p
+                                                style="margin:0; color:#c2410c; font-size:13px; font-weight:600; font-family:monospace, monospace;">
+                                                {{ $body['Header'] }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @endif
+
+                            <p style="margin:0 0 28px; color:#52525b; font-size:15px; line-height:1.65;">
+                                {{ $body['message'] ?? 'This is a test email.' }}
+                            </p>
+
+                            @if (isset($body['button']))
+                                <table role="presentation" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="border-radius:8px; background-color:#f97316;">
+                                            <a href="{{ $body['button']['url'] }}"
+                                                style="display:inline-block; padding:13px 30px; color:#ffffff; text-decoration:none; font-size:14px; font-weight:600; letter-spacing:0.2px;">
+                                                {{ $body['button']['text'] }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @endif
+
+                        </td>
+                    </tr>
+
+                    <!-- FOOTER -->
+                    <tr>
+                        <td
+                            style="background-color:#fafafa; border-top:1px solid #e4e4e7; padding:20px 32px; text-align:center;">
+                            <p style="margin:0; color:#a1a1aa; font-size:12px; line-height:1.6;">
+                                {{ $body['footer'] ?? 'Please do not reply to this email. Thank you.' }}
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
 </body>
 
 </html>

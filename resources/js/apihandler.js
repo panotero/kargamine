@@ -62,6 +62,10 @@ window.fetchWithRetry = async function fetchWithRetry(
       const text = await res.text();
       response = text ? JSON.parse(text) : null;
 
+      if (res.status === 401) {
+        window.location.reload();
+        return;
+      }
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
@@ -281,6 +285,11 @@ window.apiCall = async function apiCall({
     }
 
     const response = await fetchWithRetry(url, options);
+
+    //   if (res.status === 401) {
+    //     window.location.reload();
+    //     return;
+    //   }
     return response;
   } catch (err) {
     console.error(err);

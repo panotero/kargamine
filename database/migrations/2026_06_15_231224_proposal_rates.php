@@ -20,8 +20,9 @@ return new class extends Migration
             $table->string('route_from');
             $table->string('route_to');
             $table->integer('min_van_qty');
-            $table->integer('van_type');
-            $table->integer('van_size');
+            $table->integer('container_class');
+            $table->integer('container_type');
+            $table->integer('container_size');
             $table->integer('origin_service_type');
             $table->integer('destination_service_type');
             $table->timestamps();

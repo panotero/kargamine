@@ -14,6 +14,13 @@ use App\Services\ApplicationMailer;
 
 class MailerController extends Controller
 {
+
+    protected ApplicationMailer $mailer;
+
+    public function __construct(ApplicationMailer $mailer)
+    {
+        $this->mailer = $mailer;
+    }
     public function index()
     {
         $config = MailerSetting::latest()->first();
@@ -181,25 +188,45 @@ class MailerController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Unexpected error while sending mail.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
-    public function test(ApplicationMailer $mailer)
+    public function test($userid)
     {
-        $mailer->send(
+        // $mailer->send(
+        //     [
+        //         'to'      => 'panoterominton@gmail.com',
+        //         'subject' => 'Test Subject',
+        //         'title'   => 'Your request was approved',
+        //         'message' => 'You may now proceed to the next step.',
+        //         'docControlNumber' => '123123123',
+        //         'button'  => [
+        //             'url'  => url('/dashboard'),
+        //             'text' => 'Go to Dashboard',
+        //         ],
+        //     ],
+        //     17
+        // );
+
+        //get all users with role type manager
+        $userId = $userid;
+        $proposalCode = "TESTPRCODE123";
+        $this->mailer->send(
             [
-                'to'      => 'panoterominton@gmail.com',
-                'subject' => 'Test Subject',
-                'title'   => 'Your request was approved',
-                'message' => 'You may now proceed to the next step.',
-                'docControlNumber' => '123123123',
-                'button'  => [
-                    'url'  => url('/dashboard'),
+                'subject'  => 'New Proposal',
+                'title'    => 'New Proposal Upload',
+                'message'  => 'There is new proposal uploaded for your review and approval',
+                'Header'   => $proposalCode,
+                'app_name' => 'Document Monitoring Tool',
+                'logo'     => asset('images/logo.png'),
+                'button'   => [
+                    'url'  => url('/app'),
                     'text' => 'Go to Dashboard',
                 ],
+                'footer'   => 'Please do not reply to this email. Thank you.',
             ],
-            17
+            $userId
         );
 
         return response()->json([

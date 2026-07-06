@@ -14,6 +14,8 @@ return new class extends Migration
             $table->string('contact_name');
             $table->string('email')->nullable();
             $table->string('mobile')->nullable();
+
+            $table->string('position')->nullable();
             $table->integer('status')->default(0);
 
 

@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class VanType extends Model
 {
     use HasFactory;
-    protected $table = 'van_type';
+    protected $table = 'container_type';
 }

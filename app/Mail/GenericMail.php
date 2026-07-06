@@ -6,14 +6,17 @@ use Illuminate\Mail\Mailable;
 
 class GenericMail extends Mailable
 {
-
     public string $subjectText;
     public array $body;
 
     public function __construct(string $subject, string $message, array $body)
     {
         $this->subjectText = $subject;
-        $this->body = $body;
+        $this->body = array_merge([
+            'app_name' => config('app.name', 'Document Monitoring Tool'),
+            'logo'     => asset('images/logo.png'),
+            'footer'   => 'Please do not reply to this email. Thank you.',
+        ], $body);
     }
 
     public function build()

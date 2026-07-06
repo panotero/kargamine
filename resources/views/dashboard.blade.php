@@ -106,7 +106,6 @@
 
         </div>
     </div>
-    <x-global-modal />
 
 
 

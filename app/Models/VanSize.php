@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class VanSize extends Model
 {
     use HasFactory;
-    protected $table = 'van_size';
+    protected $table = 'container_size';
 }

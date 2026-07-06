@@ -29,7 +29,9 @@ class DatabaseSeeder extends Seeder
 
             //kargamine seeder
             CrmStatusSeeder::class,
-            lovSeeder::class
+            lovSeeder::class,
+            departmentSeeder::class,
+            userstatusSeeder::class
         ]);
     }
 }

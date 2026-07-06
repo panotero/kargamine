@@ -16,7 +16,9 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('company_name');
-            $table->string('position')->nullable();
+            $table->string('company_address')->nullable();
+            $table->string('authorized_signatory_name')->nullable();
+            $table->string('authorized_signatory_position')->nullable();
 
             $table->timestamps();
         });

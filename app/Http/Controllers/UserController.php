@@ -10,12 +10,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use App\Models\SettingRole;
+use App\Models\UserDepartment;
+use App\Models\UserStatus;
 
 class UserController extends Controller
 {
     public function index()
     {
-        return response()->json(User::with('office', 'userConfig')->orderBy('created_at', 'desc')->get());
+        return response()->json(User::with('role')->orderBy('created_at', 'desc')->get());
     }
 
     public function create()
@@ -27,7 +30,7 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = User::with('office', 'userConfig')->findOrFail($id);
+            $user = User::findOrFail($id);
 
             return response()->json($user, 200);
         } catch (\Exception $e) {
@@ -263,58 +266,13 @@ class UserController extends Controller
         }
     }
 
-    public function reports($officecode)
+    public function getUserSettings()
     {
-        $query = DB::table('users')
-            ->join('office_table', 'office_table.office_id', '=', 'users.office_id')
-            ->select(
-                'users.id',
-                'users.name',
-                'users.email',
-                'office_table.office_code',
-
-                // Current documents (recipient-based)
-                DB::raw('(
-                    SELECT COUNT(*)
-                    FROM documents
-                    WHERE documents.recipient_id = users.id
-                ) AS current_document_count'),
-
-                // Processed documents (activity-based, distinct documents)
-                DB::raw('(
-                    SELECT COUNT(DISTINCT activities.document_id)
-                    FROM activities
-                    WHERE activities.user_id = users.id
-                ) AS processed_document_count')
-            );
-
-        /**
-         * Office filter rule
-         */
-        if ($officecode !== 'ODDG-PP') {
-            $query->where('office_table.code', $officecode);
-        }
-
-        $users = $query->orderBy('users.name')->get();
-
-        return response()->json([
-            'office_filter' => $officecode,
-            'total_users'   => $users->count(),
-            'data'          => $users
-        ]);
-        // dd($officename);
-    }
-
-    public function getUsersWithDocs($office_code)
-    {
-        $query = User::with('office', 'userConfig', 'documents');
-        $office = Office::where('office_code', $office_code)->firstOrFail();
-
-
-        if ($office_code !== 'ODDG-PP') {
-            $query->where('office_id', $office->office_id);
-        }
-        $userslist = $query->get();
-        return response()->json($userslist);
+        // return true;
+        return [
+            'roles' => SettingRole::all(),
+            'departments' => UserDepartment::all(),
+            'statuses' => UserStatus::all(),
+        ];
     }
 }

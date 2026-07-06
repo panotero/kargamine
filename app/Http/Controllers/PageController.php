@@ -19,10 +19,8 @@ class PageController extends Controller
     public function page_UserManagement()
     {
 
-        $roles = SettingRole::all();
-        $users = User::with('role')->get();
 
-        return view('pages.usermanagement', compact('roles', 'users'));
+        return view('pages.settings.usersmanagement');
     }
     public function page_Mailer()
     {
@@ -94,10 +92,6 @@ class PageController extends Controller
         return "page settings";
     }
 
-    public function page_Maintenance()
-    {
-        return view('pages.maintenance');
-    }
 
     public function page_bookings()
     {
@@ -130,5 +124,9 @@ class PageController extends Controller
     public function page_proposals()
     {
         return view('pages.proposals');
+    }
+    public function page_maintenance()
+    {
+        return view('pages.maintenance');
     }
 }

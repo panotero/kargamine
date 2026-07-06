@@ -6,7 +6,6 @@ use App\Http\Controllers\UserController;
 use Symfony\Component\HttpFoundation\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\MailerController;
 use App\Http\Middleware\CheckUserStatus;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProposalController;
@@ -46,33 +45,9 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
             'user' => $user,
         ];
     });
+    require __DIR__ . '/page.php';
+    require __DIR__ . '/mailer.php';
 
-    Route::get('/page_dashboard', [PageController::class, 'page_dashboard']);
-    Route::get('/page_usermanagement', [PageController::class, 'page_UserManagement']);
-    Route::get('/page_menus', [PageController::class, 'page_Menus']);
-    Route::get('/page_users', [PageController::class, 'page_Users']);
-    Route::get('/page_settings', [PageController::class, 'page_settings']);
-    Route::get('/page_maintenance', [PageController::class, 'page_Maintenance']);
-    Route::get('/page_bookings', [PageController::class, 'page_bookings']);
-    Route::get('/page_shipperConsignee', [PageController::class, 'page_shipperConsignee']);
-    Route::get('/page_contracts', [PageController::class, 'page_contracts']);
-    Route::get('/page_reports', [PageController::class, 'page_reports']);
-    Route::get('/page_crm', [PageController::class, 'page_crm']);
-    Route::get('/page_proposals', [PageController::class, 'page_proposals']);
-
-
-
-    Route::get('/profile', [PageController::class, 'profile'])->name('profile');
-    Route::get('/settings', [PageController::class, 'settings'])->name('settings');
-    Route::get('/page_lookupValues', [PageController::class, 'page_lookupValues']);
-
-
-    Route::get('/testmail', [MailerController::class, 'test']);
-
-
-    Route::get('/page_mailer', [PageController::class, 'page_Mailer']);
-    Route::post('/mailer_save', [MailerController::class, 'save'])->name('mailer_save');
-    Route::post('/mailer/send', [MailerController::class, 'send'])->name('mailer.send');
 
     Route::get('/createpdf/{id}', [ProposalController::class, 'createPdf']);
 

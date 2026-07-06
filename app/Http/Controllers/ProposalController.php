@@ -5,14 +5,29 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Proposal;
 use App\Models\ProposalInfo;
-use App\Models\CRMLead;
+use App\Models\CrmLead;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\CrmCompanyInfo;
+use App\Models\ProposalStatus;
+use App\Services\ApplicationMailer;
+use App\Services\ActivityService;
 use Carbon\Carbon;
+use MessageFormatter;
 
 class ProposalController extends Controller
 {
+
+    protected ApplicationMailer $mailer;
+    protected ActivityService $activityService;
+
+
+    public function __construct(ApplicationMailer $mailer,  ActivityService $activityService)
+    {
+        $this->mailer = $mailer;
+        $this->activityService = $activityService;
+    }
     //
     public function index()
     {
@@ -24,7 +39,8 @@ class ProposalController extends Controller
             'status',
             'created_at',
             'updated_at'
-        )->with('lead:id,contact_name', 'lead.company:id,lead_id,company_name', 'rates', 'creator:id,name', 'status:id,status')->get();
+        )->with('lead:id,contact_name', 'lead.company:id,lead_id,company_name', 'rates', 'creator:id,name', 'status:id,status')
+            ->orderBy('updated_at', 'desc')->get();
         return response()->json([
             'success' => true,
             'data' => $proposals,
@@ -32,38 +48,40 @@ class ProposalController extends Controller
     }
     public function store(Request $request)
     {
-        $now = Carbon::now();
-
-        // YYYYMM format (202606)
-        $yearMonth = $now->format('Ym');
-
-        $prefix = 'PR';
-        $lastProposal = Proposal::where('code', 'like', "{$prefix}-{$yearMonth}%")
-            ->orderByDesc('id')
-            ->lockForUpdate()
-            ->first();
-        if (!$lastProposal) {
-            $sequence = 1;
-        } else {
-            // extract last 4 digits
-            $lastCode = $lastProposal->code; // PR-202606-0003
-
-            $lastSequence = (int) substr($lastCode, -4);
-
-            $sequence = $lastSequence + 1;
-        }
-
-        // pad to 4 digits
-        $sequencePadded = str_pad($sequence, 4, '0', STR_PAD_LEFT);
-
-        $code = "{$prefix}-{$yearMonth}-{$sequencePadded}";
-
+        // dd($request->all());
         try {
+
+            $now = Carbon::now();
+
+            // YYYYMM format (202606)
+            $yearMonth = $now->format('Ym');
+
+            $prefix = 'PR';
+            $lastProposal = Proposal::where('code', 'like', "{$prefix}-{$yearMonth}%")
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+            if (!$lastProposal) {
+                $sequence = 1;
+            } else {
+                // extract last 4 digits
+                $lastCode = $lastProposal->code; // PR-202606-0003
+
+                $lastSequence = (int) substr($lastCode, -4);
+
+                $sequence = $lastSequence + 1;
+            }
+
+            // pad to 4 digits
+            $sequencePadded = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+            $code = "{$prefix}-{$yearMonth}-{$sequencePadded}";
             DB::beginTransaction();
             //first get lead info
-            $lead = CRMLead::where('uuid', $request->uuid)->first();
+            $lead = CrmLead::where('uuid', $request->uuid)->first();
+            $leadCompanyInfo = CrmCompanyInfo::where('lead_id', $lead->id)->first();
             //check first if there is existing record on the proposal table
-            $proposal = Proposal::where('lead_id', $lead->id)->first();
+            $proposal = Proposal::where('lead_id', $lead->id)->where('status', 1)->first();
 
 
             //if there is no existing record create the record first then return the id and create porposal rates with the proposal id.
@@ -76,6 +94,25 @@ class ProposalController extends Controller
                 ];
                 $proposal = Proposal::create($payload);
             }
+            //get all users with role type manager
+            // $userId = 1;
+            // $proposalCode = "TESTPRCODE123";
+            // $this->mailer->send(
+            //     [
+            //         'subject'  => 'New Proposal',
+            //         'title'    => 'New Proposal Upload',
+            //         'message'  => 'There is new proposal uploaded for your review and approval',
+            //         'Header'   => $proposalCode,
+            //         'app_name' => 'Document Monitoring Tool',
+            //         'logo'     => asset('images/logo.png'),
+            //         'button'   => [
+            //             'url'  => url('/dashboard'),
+            //             'text' => 'Go to Dashboard',
+            //         ],
+            //         'footer'   => 'Please do not reply to this email. Thank you.',
+            //     ],
+            //     $userId
+            // );
 
             //if there is a record get the proposal id and create additional porposal rates with the proposal id
             $proposalRatePayload = [
@@ -84,15 +121,25 @@ class ProposalController extends Controller
                 'route_from' => $request->route_from,
                 'route_to' => $request->route_to,
                 'min_van_qty'   => $request->min_van_qty,
-                'van_type' => $request->van_type,
-                'van_size' => $request->van_size,
+                'container_type' => $request->container_type,
+                'container_class' => $request->container_class,
+                'container_size' => $request->container_size,
                 'origin_service_type' => $request->service_origin,
                 'destination_service_type' => $request->service_destination,
             ];
             ProposalInfo::create($proposalRatePayload);
-
+            $updateLeadCompanyPayload = [
+                'company_name' =>  $request->company_name,
+                'company_address' =>  $request->company_address,
+                'authorized_signatory_name' =>  $request->authorized_signatory_name,
+                'authorized_signatory_position' =>  $request->authorized_signatory_position,
+            ];
             //update lead status to negotiation
-            $lead->update(['status' => 3]);
+            $lead->update([
+                'status' => 3,
+            ]);
+            $leadCompanyInfo->update($updateLeadCompanyPayload);
+
 
 
 
@@ -106,20 +153,22 @@ class ProposalController extends Controller
         } catch (\Exception $ex) {
             return response()->json([
                 'success' => false,
-                'message' => $ex
+                'message' => $ex->getMessage(),
             ]);
         }
     }
     public function createPdf($id)
     {
         $proposal = Proposal::with([
-            'rates',
-            'rates.routeFrom',
-            'rates.routeTo',
-            'rates.vanType',
-            'rates.vanSize',
-            'rates.serviceOrigin',
-            'rates.ServiceDestination',
+            'rates' => [
+                'routeFrom',
+                'routeTo',
+                'vanClass',
+                'vanType',
+                'vanSize',
+                'serviceOrigin',
+                'serviceDestination',
+            ],
             'lead',
             'lead.company',
             'creator'
@@ -134,5 +183,71 @@ class ProposalController extends Controller
         ]);
 
         return $pdf->download('proposal.pdf');
+    }
+
+    public function getByCode($proposalCode)
+    {
+        // dd($proposalCode);
+        try {
+            DB::beginTransaction();
+            $proposal = Proposal::with([
+                'lead.company',
+                'creator',
+                'status',
+                'rates' => [
+                    'routeFrom',
+                    'routeTo',
+                    'vanClass',
+                    'vanType',
+                    'vanSize',
+                    'serviceOrigin',
+                    'serviceDestination',
+                ],
+            ])->where('code', $proposalCode)->firstOrFail();
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'data' => $proposal,
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $ex->getMessage()
+            ]);
+        }
+    }
+    public function processApprovals(Request $request)
+    {
+        $auth = Auth::user();
+        try {
+            DB::beginTransaction();
+            $proposal = Proposal::with('status')
+                ->where('code', $request->proposalCode)
+                ->firstOrFail();
+
+            $proposal->update([
+                'status' => $request->status,
+            ]);
+            $status = ProposalStatus::where('id', $proposal->status)->firstOrFail();
+            DB::commit();
+            $this->activityService->create(
+                $proposal->lead_id,
+                "Proposal Status Change",
+                "Proposal with code: " . $proposal->code . " has been " . $status['status'] . " by:"  . $auth->name
+            );
+            return response()->json([
+                'success' => true,
+                'message' => 'success',
+                'status' => $proposal,
+            ]);
+        } catch (\Exception $ex) {
+
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $ex->getMessage()
+            ]);
+        }
     }
 }

@@ -12,7 +12,11 @@ class CrmCompanyInfo extends Model
     protected $fillable = [
         'lead_id',
         'company_name',
-        'position'
+        'position',
+        'company_name',
+        'company_address',
+        'authorized_signatory_name',
+        'authorized_signatory_position',
     ];
 
     public function lead()

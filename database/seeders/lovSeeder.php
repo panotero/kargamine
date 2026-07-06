@@ -37,7 +37,7 @@ class lovSeeder extends Seeder
             ['route' => 'MANILA', 'port' => 'MANILA'],
         ]);
 
-        DB::table('van_type')->insert([
+        DB::table('container_type')->insert([
             ['type' => 'DRY VAN/CON VAN'],
             ['type' => 'FLATRACK (PLATFORM)'],
             ['type' => 'REEFER'],
@@ -64,6 +64,7 @@ class lovSeeder extends Seeder
             ['status' => 'Disapproved'],
             ['status' => 'Accepted'],
             ['status' => 'Rejected'],
+            ['status' => 'On-Hold'],
         ]);
 
         DB::table('customer_type')->insert([
@@ -71,13 +72,13 @@ class lovSeeder extends Seeder
             ['type' => 'CONSIGNEE'],
             ['type' => 'SHIPPER-CONSIGNEE'],
         ]);
-        DB::table('van_class')->insert([
+        DB::table('container_class')->insert([
             ['class' => 'A'],
             ['class' => 'B'],
             ['class' => 'C'],
             ['class' => 'D'],
         ]);
-        DB::table('van_size')->insert([
+        DB::table('container_size')->insert([
             ['size' => '10-FOOTER'],
             ['size' => '20-FOOTER'],
             ['size' => '40-FOOTER STD'],

@@ -1,20 +1,157 @@
 window.initCrmLogic = function initCrmLogic() {
-  let statusarray = [];
+  // ============================================================
+  // STATE
+  // ============================================================
+
   let leadUUID = "";
   let leadsArray = [];
-  let leadinfo = [];
+  let leadInfo = {};
+
+  // ============================================================
+  // CONSTANTS
+  // ============================================================
+
+  const STATUS_BADGE = {
+    LEAD: "bg-gray-100 text-gray-700",
+    QUALIFIED: "bg-indigo-100 text-indigo-700",
+    OPPORTUNITY: "bg-purple-100 text-purple-700",
+    NEGOTIATION: "bg-amber-100 text-amber-700",
+    WIN: "bg-green-100 text-green-700",
+    LOST: "bg-red-100 text-red-700",
+    DEFAULT: "bg-zinc-100 text-zinc-700",
+  };
+
+  const PROPOSAL_STATUS = {
+    APPROVED: 2,
+  };
+
+  const COUNT_MAP = {
+    ALL: "countALL",
+    LEAD: "countLead",
+    QUALIFIED: "countQualified",
+    OPPORTUNITY: "countOpportunity",
+    NEGOTIATION: "countNegotiation",
+    WIN: "countWin",
+    LOST: "countLose",
+  };
+
+  // ============================================================
+  // DOM REFS
+  // ============================================================
+
+  const addActivityBtn = document.getElementById("addActivityBtn");
+  const activityDropdown = document.getElementById("activityDropdown");
+  const activityDescInput = document.getElementById("activityDescriptionInput");
+  const activityTypeInput = document.getElementById("activityTypeInput");
+  const activityStatusInput = document.getElementById("activityStatusInput");
+  const saveActivityBtn = document.getElementById("saveActivityBtn");
+  const cancelActivityBtn = document.getElementById("cancelActivityBtn");
+
+  const addNoteBtn = document.getElementById("addNoteBtn");
+  const noteDropdown = document.getElementById("noteDropdown");
+  const noteInput = document.getElementById("noteInput");
+  const saveNoteBtn = document.getElementById("saveNoteBtn");
+  const cancelNoteBtn = document.getElementById("cancelNoteBtn");
+
+  const editContactBtn = document.getElementById("editContactBtn");
+  const editContactInfoDropdown = document.getElementById(
+    "editContactInfoDropdown",
+  );
+  const saveContactInfoBtn = document.getElementById("saveContactInfoBtn");
+  const cancelContactInfoBtn = document.getElementById("cancelContactInfoBtn");
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
+  function getStatusBadgeClass(status) {
+    return STATUS_BADGE[status] ?? STATUS_BADGE.DEFAULT;
+  }
+
+  function openDropdown(dropdown) {
+    dropdown.classList.remove("hidden");
+  }
+
+  function closeDropdown(dropdown) {
+    dropdown.classList.add("hidden");
+  }
+
+  function emptyState(message) {
+    return `
+            <div class="w-full p-2 rounded-md text-center">
+                <p class="font-semibold text-zinc-400">${message}</p>
+            </div>`;
+  }
+
+  // ============================================================
+  // API
+  // ============================================================
+
   async function getLeads() {
     const leads = await apiCall({
       mode: "GET",
       url: "/api/crm/leads",
     });
-
     leadsArray = leads;
     return leads;
   }
 
+  async function getStatuses() {
+    const statuses = await apiCall({
+      mode: "GET",
+      url: "/api/crm/getCrmStatus",
+    });
+
+    document.querySelectorAll(".statusDropDown").forEach((dropdown) => {
+      dropdown.innerHTML = [
+        `<option value="">Select Status</option>`,
+        ...statuses.data.map(
+          (s) => `<option value="${s.id}">${s.status}</option>`,
+        ),
+      ].join("");
+    });
+  }
+
+  // ============================================================
+  // RENDER — TABLE
+  // ============================================================
+
+  function renderTable(leads) {
+    document.getElementById("crmTableBody").innerHTML = initLoading();
+
+    const html = leads
+      .map((row) => {
+        const status = row.status?.status ?? "UNKNOWN";
+        const statusClass = getStatusBadgeClass(status);
+
+        return `
+                <tr class="cursor-pointer hover:bg-zinc-100" data-uuid="${row.uuid}">
+                    <td>${row.contact_name}</td>
+                    <td>${row.company?.company_name ?? "No Company"}</td>
+                    <td>${row.email}</td>
+                    <td>${row.mobile}</td>
+                    <td>
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                            ${status}
+                        </span>
+                    </td>
+                    <td>${row.user.name}</td>
+                    <td>${formatDateTime(row.created_at)}</td>
+                </tr>`;
+      })
+      .join("");
+
+    $("#crmTableBody").html(html);
+    initDataTables(10);
+  }
+
+  // ============================================================
+  // RENDER — COUNTS
+  // ============================================================
+
   function renderCounts(leads) {
     const counts = {
+      ALL: leads.length,
       LEAD: 0,
       QUALIFIED: 0,
       OPPORTUNITY: 0,
@@ -22,99 +159,224 @@ window.initCrmLogic = function initCrmLogic() {
       WIN: 0,
       LOST: 0,
     };
-    let total = 0;
 
     leads.forEach((row) => {
-      total++;
       const status = row.status.status;
-      if (counts.hasOwnProperty(status)) {
-        counts[status]++;
-      }
+      if (counts.hasOwnProperty(status)) counts[status]++;
     });
 
-    document.getElementById("countALL").innerText = total;
-    document.getElementById("countLead").innerText = counts.LEAD;
-    document.getElementById("countQualified").innerText = counts.QUALIFIED;
-    document.getElementById("countOpportunity").innerText = counts.OPPORTUNITY;
-    document.getElementById("countNegotiation").innerText = counts.NEGOTIATION;
-    document.getElementById("countWin").innerText = counts.WIN;
-    document.getElementById("countLose").innerText = counts.LOST;
+    Object.entries(COUNT_MAP).forEach(([key, elementId]) => {
+      const el = document.getElementById(elementId);
+      if (el) el.innerText = counts[key] ?? 0;
+    });
   }
 
-  function renderTable(leads) {
-    document.getElementById("crmTableBody").innerHTML = initLoading();
-    let html = "";
-    leads.forEach((row) => {
-      const status = row.status?.status ?? "UNKNOWN";
+  // ============================================================
+  // RENDER — LEAD INFO
+  // ============================================================
 
-      const statusClass = getStatusBadgeClass(status);
+  async function loadLeadInfo() {
+    const loader = loadingLine();
+    [
+      "#leadCompanyName",
+      "#leadStatus",
+      "#leadContactName",
+      "#leadEmail",
+      "#leadMobile",
+      "#leadSource",
+      "#leadEstimatedValue",
+      "#leadCreatedAt",
+      "#leadExpectedCloseDate",
+      "#noteContainer",
+      "#activityContainer",
+    ].forEach((id) => $(id).html(loader));
+    document.getElementById("proposalContainer").innerHTML = loader;
 
-      html += `
-        <tr class="cursor-pointer hover:bg-zinc-100"
-            data-uuid="${row.uuid}">
-
-            <td>${row.contact_name}</td>
-            <td>${row.company?.company_name ?? "No Company"}</td>
-            <td>${row.email}</td>
-            <td>${row.mobile}</td>
-
-            <td>
-                <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
-                    ${status}
-                </span>
-            </td>
-
-            <td>${row.user.name}</td>
-            <td>${formatDateTime(row.created_at)}</td>
-
-        </tr>
-    `;
+    const response = await apiCall({
+      mode: "GET",
+      url: `/api/crm/leads/${leadUUID}`,
     });
 
-    $("#crmTableBody").html(html);
-
-    initDataTables(10);
-  }
-
-  function getStatusBadgeClass(status) {
-    switch (status) {
-      case "LEAD":
-        return "bg-gray-100 text-gray-700";
-
-      case "QUALIFIED":
-        return "bg-indigo-100 text-indigo-700";
-
-      case "OPPORTUNITY":
-        return "bg-purple-100 text-purple-700";
-
-      case "NEGOTIATION":
-        return "bg-amber-100 text-amber-700";
-
-      case "WIN":
-        return "bg-green-100 text-green-700";
-
-      case "LOST":
-        return "bg-red-100 text-red-700";
-
-      default:
-        return "bg-zinc-100 text-zinc-700";
+    if (!response.success) {
+      showMessage({
+        status: "error",
+        title: "Error Fetching Lead",
+        message:
+          "There is an error fetching your information. Please contact the system administrator.",
+      });
+      return;
     }
-  }
-  $(document).on("click", "#crmTable tbody tr", function () {
-    const uuid = $(this).data("uuid");
 
-    initModal({
-      modalId: "LeadInfoModal",
-    });
-    leadUUID = uuid;
-    window.uuid = uuid;
-    loadLeadInfo();
-  });
+    leadInfo = response.data;
+    const lead = response.data;
+    const value = Number(lead?.estimated_value || 0);
+    const statusClass = getStatusBadgeClass(lead.status.status);
+
+    $("#leadCompanyName").html(lead.company.company_name.toUpperCase() ?? "");
+    $("#leadStatus").html(`
+            <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                ${lead.status.status}
+            </span>`);
+    $("#leadContactName").html(lead.contact_name ?? "");
+    $("#leadEmail").html(lead.email ?? "");
+    $("#leadMobile").html(lead.mobile ?? "");
+    $("#leadSource").html(lead.source ?? "");
+    $("#leadEstimatedValue").html(`₱${value.toLocaleString()}`);
+    $("#leadCreatedAt").html(formatDateTime(lead.created_at) ?? "");
+    $("#leadExpectedCloseDate").html(
+      formatDateTime(lead.expected_close_date) ?? "",
+    );
+
+    $("#contactName").val(lead.contact_name ?? "");
+    $("#contactEmail").val(lead.email ?? "");
+    $("#contactMobile").val(lead.mobile ?? "");
+    $("#activityStatusInput").val(lead.status.id ?? "");
+
+    $("#btnEditLead").removeClass("hidden");
+    $("#btnSaveLead").addClass("hidden");
+
+    renderActivity(lead.activities);
+    renderNotes(lead.notes);
+    renderProposals(lead.proposals);
+  }
+
+  // ============================================================
+  // RENDER — PROPOSALS
+  // ============================================================
+
+  function renderProposals(proposals) {
+    const container = document.getElementById("proposalContainer");
+
+    if (!proposals.length) {
+      container.innerHTML = emptyState(
+        "There's no proposal yet. Create one now!",
+      );
+      return;
+    }
+
+    container.innerHTML = proposals
+      .map((proposal) => {
+        const statusClass = getStatusBadgeClass(proposal.status.status);
+        const isApproved = proposal.status.id === PROPOSAL_STATUS.APPROVED;
+        const downloadUrl = `/createpdf/${proposal.id}`;
+        const downloadClass = isApproved
+          ? "bg-orange-600 hover:bg-orange-700"
+          : "pointer-events-none opacity-50 cursor-not-allowed bg-gray-400";
+
+        return `
+                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 w-full flex justify-between items-center gap-4">
+
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full ${statusClass}"></span>
+                            <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">${proposal.status.status}</p>
+                        </div>
+                        <h2 class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${proposal.code}</h2>
+                        <p class="text-[11px] text-zinc-400">${formatDateTime(proposal.created_at)}</p>
+                    </div>
+
+                    <a href="${downloadUrl}" target="_blank"
+                        class="shrink-0 ${downloadClass} text-white w-8 h-8 flex items-center justify-center rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 10.5l4.5 4.5m0 0l4.5-4.5m-4.5 4.5V3" />
+                        </svg>
+                    </a>
+
+                </div>`;
+      })
+      .join("");
+  }
+
+  // ============================================================
+  // RENDER — ACTIVITIES
+  // ============================================================
+
+  function renderActivity(activities) {
+    const container = document.getElementById("activityContainer");
+
+    if (!activities.length) {
+      container.innerHTML = emptyState("There's no activity yet.");
+      return;
+    }
+
+    container.innerHTML = activities
+      .map(
+        (activity) => `
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 w-full flex justify-between items-start gap-4">
+                <div class="flex gap-3 items-start">
+                    <div class="mt-0.5 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-blue-600 dark:text-blue-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">${activity.type}</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${activity.description}</p>
+                        <p class="text-[11px] text-zinc-400">${formatDateTime(activity.created_at)} &middot; ${activity.user.name}</p>
+                    </div>
+                </div>
+            </div>`,
+      )
+      .join("");
+  }
+
+  // ============================================================
+  // RENDER — NOTES
+  // ============================================================
+
+  function renderNotes(notes) {
+    const container = document.getElementById("noteContainer");
+
+    if (!notes.length) {
+      container.innerHTML = emptyState("There's no notes yet.");
+      return;
+    }
+
+    container.innerHTML = notes
+      .map(
+        (note) => `
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 w-full flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center shrink-0">
+                            <span class="text-[10px] font-medium text-zinc-500 dark:text-zinc-300">${note.user.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <p class="text-[11px] text-zinc-400">${note.user.name} &middot; ${formatDateTime(note.created_at)}</p>
+                    </div>
+                    <button class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition w-7 h-7 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="5" cy="12" r="2"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                            <circle cx="19" cy="12" r="2"></circle>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">${note.note}</p>
+            </div>`,
+      )
+      .join("");
+  }
+
+  // ============================================================
+  // LEAD FORM
+  // ============================================================
+
+  function getLeadFormData() {
+    return {
+      contact_name: $("#contact_name").val(),
+      email: $("#email").val(),
+      mobile: $("#mobile").val(),
+      source: $("#source").val(),
+      estimated_value: $("#estimated_value").val(),
+      expected_close_date: $("#expected_close_date").val(),
+    };
+  }
+
   $("#saveLeadBtn").on("click", async function (e) {
-    const submitBtn = $("#saveLeadBtn");
+    e.preventDefault();
+
     const form = $("#leadForm")[0];
     const estValue = form.elements["est_value"].value.replace(/,/g, "");
-    e.preventDefault();
     const formData = new FormData();
 
     formData.append("contact_name", form.contact_name.value);
@@ -138,248 +400,30 @@ window.initCrmLogic = function initCrmLogic() {
     if (!response.success) {
       showMessage({
         status: "error",
-        title: "Error Saving Company Information",
+        title: "Error Saving Lead",
         message:
-          "There is some error saving your company information. Please contact system administrator",
+          "There is an error saving your information. Please contact the system administrator.",
       });
       return;
     }
 
-    showMessage({
-      status: "success",
-      title: "Successfully Saved Company Info. Keep it up!",
-    });
+    showMessage({ status: "success", title: "Lead saved successfully!" });
 
     const leads = await getLeads();
     renderTable(leads);
     renderCounts(leads);
-
     clearInputs();
     closeSideModal("LeadDetailsSideModal");
   });
-  async function deleteLead(id) {
-    console.log("Delete Lead", id);
-
-    /*
-            const response = await apiCall({
-                mode: "DELETE",
-                url: `/api/crm/leads/${id}`
-            });
-            */
-  }
-
-  initializepage();
-  async function initializepage() {
-    updateLeadDetails();
-    $("#btnNewLead").click(function () {
-      // initModal({
-      //     modalId: "NewLeadModal",
-      // });
-      initSideModal({
-        modalId: "LeadDetailsSideModal",
-      });
-    });
-
-    getStatuses();
-  }
-
-  async function updateLeadDetails() {
-    await getLeads();
-    renderTable(leadsArray);
-
-    renderCounts(leadsArray);
-  }
-
-  async function getStatuses() {
-    const statusdropdown = document.querySelectorAll(".statusDropDown");
-
-    const statuses = await apiCall({
-      mode: "GET",
-      url: "/api/crm/getCrmStatus",
-    });
-
-    statusdropdown.forEach((dropdown) => {
-      let html = `<option value="">Select Status</option>`;
-      statuses.data.forEach((status) => {
-        html += `
-                        <option value="${status.id}">${status.status}</option>`;
-      });
-      dropdown.innerHTML = html;
-    });
-  }
-  window.reloadCrmData = function () {
-    loadLeadInfo();
-    updateLeadDetails();
-  };
-  async function loadLeadInfo() {
-    const loader = loadingLine();
-    $("#leadCompanyName").html(loader);
-    $("#leadStatus").html(loader);
-    $("#leadContactName").html(loader);
-    $("#leadEmail").html(loader);
-    $("#leadMobile").html(loader);
-    $("#leadSource").html(loader);
-    $("#leadEstimatedValue").html(loader);
-    $("#leadCreatedAt").html(loader);
-    $("#leadExpectedCloseDate").html(loader);
-    $("#noteContainer").html(loader);
-    $("#activityContainer").html(loader);
-    document.getElementById("proposalContainer").innerHTML = loader;
-
-    const leads = await apiCall({
-      mode: "GET",
-      url: `/api/crm/leads/${leadUUID}`,
-    });
-
-    console.log(leads);
-    if (!leads.success) {
-      showMessage({
-        status: "error",
-        title: "Error Saving Company Information",
-        message:
-          "There is some error saving your company information. Please contact system administrator",
-      });
-      return;
-      closemodals();
-    }
-
-    leadinfo = leads.data;
-    const lead = leads.data;
-    const value = Number(lead?.estimated_value || 0);
-
-    const statusClass = getStatusBadgeClass(lead.status.status);
-    const statusHTML = `
-                <span class="px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
-                    ${lead.status.status}
-                </span>`;
-    //company info
-    $("#leadCompanyName").html(lead.company.company_name.toUpperCase() ?? "");
-    $("#contactName").val(lead.contact_name ?? "");
-    $("#contactEmail").val(lead.email ?? "");
-    $("#contactMobile").val(lead.mobile ?? "");
-    $("#activityStatusInput").val(lead.status.id ?? "");
-    $("#leadStatus").html(statusHTML ?? "");
-    $("#leadContactName").html(lead.contact_name ?? "");
-    $("#leadEmail").html(lead.email ?? "");
-    $("#leadMobile").html(lead.mobile ?? "");
-    $("#leadSource").html(lead.source ?? "");
-    $("#leadEstimatedValue").html(`₱${value.toLocaleString()}`);
-    $("#leadCreatedAt").html(formatDateTime(lead.created_at) ?? "");
-    $("#leadExpectedCloseDate").html(
-      formatDateTime(lead.expected_close_date) ?? "",
-    );
-
-    $("#btnEditLead").removeClass("hidden");
-    $("#btnSaveLead").addClass("hidden");
-
-    //render activities
-    renderActivity(leads.data.activities);
-
-    //render notes
-    renderNotes(leads.data.notes);
-    //render proposals
-    renderProposals(leads.data.proposals);
-  }
-
-  function getLeadFormData() {
-    return {
-      contact_name: $("#contact_name").val(),
-      email: $("#email").val(),
-      mobile: $("#mobile").val(),
-      source: $("#source").val(),
-      estimated_value: $("#estimated_value").val(),
-      expected_close_date: $("#expected_close_date").val(),
-    };
-  }
-
-  function renderProposals(proposals) {
-    let html = "";
-    //select the container
-    const proposalContainer = document.getElementById("proposalContainer");
-    proposals.forEach((proposal) => {
-      const statusColors = {
-        Draft: "bg-gray-100 text-gray-700",
-        Pending: "bg-yellow-100 text-yellow-700",
-        Approved: "bg-green-100 text-green-700",
-        Rejected: "bg-red-100 text-red-700",
-      };
-
-      const statusClass = getStatusBadgeClass(proposal.status.status);
-
-      const badgeClass =
-        statusColors[proposal.status] || "bg-blue-100 text-blue-700";
-      const downloadurl = `/createpdf/${proposal.id}`;
-
-      //build activity html
-      html += `
-                      <div
-    class="dark:bg-zinc-600 border border-zinc-300 rounded-lg p-3 w-full flex justify-between items-center">
-
-    <!-- LEFT -->
-    <div class="flex flex-col gap-1">
-
-        <!-- STATUS -->
-        <span class="text-xs font-semibold px-2 rounded-full ${statusClass}">
-    ${proposal.status.status}
-</span>
-        <h1 class="font-medium text-sm">${proposal.code}</h1>
-        <p class="text-xs text-zinc-500 dark:text-zinc-300">
-            ${formatDateTime(proposal.created_at)}
-        </p>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="flex flex-col items-end gap-2">
-
-
-        <!-- DOWNLOAD -->
-        <a href="${downloadurl}"
-           target="_blank"
-           class="bg-orange-600 hover:bg-orange-700 text-white rounded-md p-2 transition">
-
-            <svg xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                width="20"
-                height="20">
-
-                <path stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 10.5l4.5 4.5m0 0l4.5-4.5m-4.5 4.5V3" />
-            </svg>
-
-        </a>
-
-    </div>
-
-</div>
-            `;
-    });
-    if (proposals.length === 0) {
-      html = `
-
-                        <div class="w-full p-2 border border-zinc-300 rounded-md text-center">
-                            <p class="font-semibold text-zinc-400">Theres no proposal yet. create one now!</p>
-                            </div>
-                            `;
-    }
-
-    //append html to the container
-    proposalContainer.innerHTML = html;
-  }
 
   $(document).on("click", "#btnEditLead", function () {
     $(".lead-input").prop("readonly", false);
-
     $("#btnEditLead").addClass("hidden");
   });
 
   $(document).on("input change", ".lead-input", function () {
     const changed =
       JSON.stringify(getLeadFormData()) !== JSON.stringify(originalLeadData);
-
     $("#btnSaveLead").toggleClass("hidden", !changed);
   });
 
@@ -392,300 +436,236 @@ window.initCrmLogic = function initCrmLogic() {
       button: document.getElementById("btnSaveLead"),
     });
 
+    if (!response.success) {
+      showMessage({
+        status: "error",
+        title: "Error Updating Lead",
+        message:
+          "There is an error updating your information. Please contact the system administrator.",
+      });
+      return;
+    }
+
     toastr.success("Lead updated successfully");
-
     originalLeadData = getLeadFormData();
-
     $(".lead-input").prop("readonly", true);
-
     $("#btnSaveLead").addClass("hidden");
     $("#btnEditLead").removeClass("hidden");
   });
 
-  document.querySelectorAll(".statusBtn").forEach((statusButton) => {
-    statusButton.addEventListener("click", function () {
-      const status = statusButton.dataset.status;
-      let filtered = leadsArray.filter((row) => row.status.status === status);
-      if (status === "ALL") {
-        filtered = leadsArray;
-      }
+  // ============================================================
+  // STATUS FILTER BUTTONS
+  // ============================================================
 
-      //call rendertable here
-
+  document.querySelectorAll(".statusBtn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const status = btn.dataset.status;
+      const filtered =
+        status === "ALL"
+          ? leadsArray
+          : leadsArray.filter((row) => row.status.status === status);
       renderTable(filtered);
     });
   });
 
-  function renderActivity(activities) {
-    //build activity html
-    let html = "";
+  // ============================================================
+  // TABLE ROW CLICK
+  // ============================================================
 
-    //select the container
-    const activityContainer = document.getElementById("activityContainer");
-    //foreach logic for activities
-    activities.forEach((activity) => {
-      html += `
-            <div class="w-full p-2 border border-zinc-300 rounded-md flex  justify-between  items-center">
-                            <div class="flex flex-col gap-2">
+  $(document).on("click", "#crmTable tbody tr", function () {
+    leadUUID = $(this).data("uuid");
+    window.uuid = leadUUID;
+    initModal({ modalId: "LeadInfoModal" });
+    loadLeadInfo();
+  });
 
-                                <div class="flex flex-col">
-                                <p class="text-lg font-semibold">${activity.type}</p>
-                                <p class="text-md">${activity.description}</p>
-                                    </div>
-                                <p class="text-xs font-light">${formatDateTime(activity.created_at)} ${activity.user.name}</p>
-                            </div>
-                        </div>`;
-    });
-
-    if (activities.length === 0) {
-      html = `
-
-                        <div class="w-full p-2 rounded-md text-center">
-                            <p class="font-semibold text-zinc-400">Theres no notes</p>
-                            </div>
-                            `;
-    }
-    //append html to the container
-    activityContainer.innerHTML = html;
-  }
-
-  function renderNotes(notes) {
-    let html = "";
-    //select the container
-    const noteContainer = document.getElementById("noteContainer");
-
-    //foreach logic for activities
-    notes.forEach((note) => {
-      //build activity html
-      html += `
-                        <div class="w-full p-2 border border-zinc-300 rounded-md">
-                            <div class="flex justify-between">
-
-                                <p class="text-xs font-light">${formatDateTime(note.created_at)} ${note.user.name}</p>
-                                <button><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 24 24" fill="currentColor">
-                                        <circle cx="5" cy="12" r="2"></circle>
-                                        <circle cx="12" cy="12" r="2"></circle>
-                                        <circle cx="19" cy="12" r="2"></circle>
-                                    </svg></button>
-
-                            </div>
-
-                            <p class="text-md">${note.note}</p>
-                        </div>
-            `;
-    });
-    if (notes.length === 0) {
-      html = `
-
-                        <div class="w-full p-2 border border-zinc-300 rounded-md text-center">
-                            <p class="font-semibold text-zinc-400">Theres no notes</p>
-                            </div>
-                            `;
-    }
-
-    //append html to the container
-    noteContainer.innerHTML = html;
-  }
-
-  //adding of notes and activity function
-  const addActivityBtn = document.getElementById("addActivityBtn");
-  const activityDropdown = document.getElementById("activityDropdown");
-  const activityDescriptionInput = document.getElementById(
-    "activityDescriptionInput",
-  );
-  const activityTypeInput = document.getElementById("activityTypeInput");
-  const activityStatusInput = document.getElementById("activityStatusInput");
-  const saveActivityBtn = document.getElementById("saveActivityBtn");
-  const cancelActivityBtn = document.getElementById("cancelActivityBtn");
-
-  const addNoteBtn = document.getElementById("addNoteBtn");
-  const noteDropdown = document.getElementById("noteDropdown");
-  const noteInput = document.getElementById("noteInput");
-  const saveNoteBtn = document.getElementById("saveNoteBtn");
-  const cancelNoteBtn = document.getElementById("cancelNoteBtn");
-
-  const editContactBtn = document.getElementById("editContactBtn");
-  const editContactInfoDropdown = document.getElementById(
-    "editContactInfoDropdown",
-  );
-  const saveContactInfoBtn = document.getElementById("saveContactInfoBtn");
-  const cancelContactInfoBtn = document.getElementById("cancelContactInfoBtn");
-
-  // OPEN / CLOSE HELPERS
-  function openDropdown(dropdown) {
-    dropdown.classList.remove("hidden");
-  }
-
-  function closeDropdown(dropdown) {
-    dropdown.classList.add("hidden");
-  }
-
-  // =======================
+  // ============================================================
   // ACTIVITY EVENTS
-  // =======================
+  // ============================================================
 
-  addActivityBtn.addEventListener("click", () => {
-    openDropdown(activityDropdown);
-  });
-
-  saveActivityBtn.addEventListener("click", async function () {
-    const payload = {
-      leadUUId: leadUUID,
-      status: activityStatusInput.value,
-      type: activityTypeInput.value,
-      activity: activityDescriptionInput.value,
-    };
-
-    const response = await apiCall({
-      mode: "POST",
-      isJson: true,
-      payload: payload,
-      url: "/api/crm/activity",
-      button: saveActivityBtn,
-    });
-    if (!response.success) {
-      showMessage({
-        status: "error",
-        title: "Error Saving Activity",
-      });
-      return;
-    }
-
-    showMessage({
-      status: "success",
-      title: "Activity Saved!",
-    });
-    activityStatusInput.value = "";
-    activityTypeInput.value = "";
-    activityDescriptionInput.value = "";
-    closeDropdown(activityDropdown);
-
-    reloadCrmData();
-  });
+  addActivityBtn.addEventListener("click", () =>
+    openDropdown(activityDropdown),
+  );
 
   cancelActivityBtn.addEventListener("click", () => {
     activityStatusInput.value = "";
     activityTypeInput.value = "";
-    activityDescriptionInput.value = "";
+    activityDescInput.value = "";
     closeDropdown(activityDropdown);
   });
 
-  // =======================
-  // NOTE EVENTS
-  // =======================
-
-  addNoteBtn.addEventListener("click", () => {
-    openDropdown(noteDropdown);
-  });
-
-  saveNoteBtn.addEventListener("click", async function () {
-    const payload = {
-      leadUUId: leadUUID,
-      note: noteInput.value,
-    };
-
+  saveActivityBtn.addEventListener("click", async function () {
     const response = await apiCall({
       mode: "POST",
       isJson: true,
-      payload: payload,
-      url: "/api/crm/note",
-      button: saveNoteBtn,
+      payload: {
+        leadUUId: leadUUID,
+        status: activityStatusInput.value,
+        type: activityTypeInput.value,
+        activity: activityDescInput.value,
+      },
+      url: "/api/crm/activity",
+      button: saveActivityBtn,
     });
+
     if (!response.success) {
-      showMessage({
-        status: "error",
-        title: "Error Saving Note",
-      });
+      showMessage({ status: "error", title: "Error Saving Activity" });
       return;
     }
 
-    showMessage({
-      status: "success",
-      title: "Note saved!",
-    });
-
-    noteInput.value = "";
-    closeDropdown(noteDropdown);
-    loadLeadInfo();
+    showMessage({ status: "success", title: "Activity Saved!" });
+    activityStatusInput.value = "";
+    activityTypeInput.value = "";
+    activityDescInput.value = "";
+    closeDropdown(activityDropdown);
+    reloadCrmData();
   });
+
+  // ============================================================
+  // NOTE EVENTS
+  // ============================================================
+
+  addNoteBtn.addEventListener("click", () => openDropdown(noteDropdown));
 
   cancelNoteBtn.addEventListener("click", () => {
     noteInput.value = "";
     closeDropdown(noteDropdown);
   });
 
-  editContactBtn.addEventListener("click", () => {
-    openDropdown(editContactInfoDropdown);
-  });
-  saveContactInfoBtn.addEventListener("click", async function () {
-    const payload = {
-      leadUUId: leadUUID,
-      contact_name: $("#contactName").val(),
-      contact_mobile: $("#contactMobile").val(),
-      contact_email: $("#contactEmail").val(),
-    };
-
+  saveNoteBtn.addEventListener("click", async function () {
     const response = await apiCall({
-      mode: "PUT",
+      mode: "POST",
       isJson: true,
-      payload: payload,
-      url: `/api/crm/leads/${leadUUID}`,
-      button: saveContactInfoBtn,
+      payload: { leadUUId: leadUUID, note: noteInput.value },
+      url: "/api/crm/note",
+      button: saveNoteBtn,
     });
+
     if (!response.success) {
-      showMessage({
-        status: "error",
-        title: "Error Saving Note",
-      });
+      showMessage({ status: "error", title: "Error Saving Note" });
       return;
     }
 
-    showMessage({
-      status: "success",
-      title: "Contact Updated!",
-    });
-
-    closeDropdown(editContactInfoDropdown);
+    showMessage({ status: "success", title: "Note saved!" });
+    noteInput.value = "";
+    closeDropdown(noteDropdown);
     loadLeadInfo();
   });
+
+  // ============================================================
+  // CONTACT INFO EVENTS
+  // ============================================================
+
+  editContactBtn.addEventListener("click", () =>
+    openDropdown(editContactInfoDropdown),
+  );
+
   cancelContactInfoBtn.addEventListener("click", () => {
     $("#saveContactInfoBtn").removeClass("hidden");
     closeDropdown(editContactInfoDropdown);
   });
 
-  // =======================
-  // CLICK OUTSIDE CLOSE
-  // (still scoped, no document query loops)
-  // =======================
+  saveContactInfoBtn.addEventListener("click", async function () {
+    const response = await apiCall({
+      mode: "PUT",
+      isJson: true,
+      payload: {
+        leadUUId: leadUUID,
+        contact_name: $("#contactName").val(),
+        contact_mobile: $("#contactMobile").val(),
+        contact_email: $("#contactEmail").val(),
+      },
+      url: `/api/crm/leads/${leadUUID}`,
+      button: saveContactInfoBtn,
+    });
 
-  window.addEventListener("click", (e) => {
-    const isActivityClick =
-      addActivityBtn.contains(e.target) || activityDropdown.contains(e.target);
+    if (!response.success) {
+      showMessage({ status: "error", title: "Error Updating Contact" });
+      return;
+    }
 
-    const isNoteClick =
-      addNoteBtn.contains(e.target) || noteDropdown.contains(e.target);
-
-    const iseditContactClick =
-      editContactBtn.contains(e.target) ||
-      editContactInfoDropdown.contains(e.target);
-
-    if (!isActivityClick) closeDropdown(activityDropdown);
-    if (!isNoteClick) closeDropdown(noteDropdown);
-    if (!iseditContactClick) closeDropdown(editContactInfoDropdown);
+    showMessage({ status: "success", title: "Contact Updated!" });
+    closeDropdown(editContactInfoDropdown);
+    loadLeadInfo();
   });
 
   $(".editContactDropdown").on("change", function () {
     $("#saveContactInfoBtn").removeClass("hidden");
   });
 
+  // ============================================================
+  // CLICK OUTSIDE — CLOSE DROPDOWNS
+  // ============================================================
+
+  window.addEventListener("click", (e) => {
+    if (
+      !addActivityBtn.contains(e.target) &&
+      !activityDropdown.contains(e.target)
+    )
+      closeDropdown(activityDropdown);
+
+    if (!addNoteBtn.contains(e.target) && !noteDropdown.contains(e.target))
+      closeDropdown(noteDropdown);
+
+    if (
+      !editContactBtn.contains(e.target) &&
+      !editContactInfoDropdown.contains(e.target)
+    )
+      closeDropdown(editContactInfoDropdown);
+  });
+
+  // ============================================================
+  // NEW PROPOSAL BUTTON
+  // ============================================================
+
   document
-    .getElementById("deleteLeadBtn")
+    .getElementById("NewProposalBtn")
     .addEventListener("click", function () {
       const proposalModal = document.querySelector("#generateProposal");
       if (!proposalModal) return;
-      initSideModal({
-        modalId: "generateProposal",
-      });
+
+      proposalModal.querySelector('input[name="company_name"]').value =
+        leadInfo.company.company_name;
+      proposalModal.querySelector('input[name="company_address"]').value =
+        leadInfo.company.company_address;
+      proposalModal.querySelector(
+        'input[name="authorized_signatory_name"]',
+      ).value = leadInfo.company.authorized_signatory_name;
+      proposalModal.querySelector(
+        'input[name="authorized_signatory_position"]',
+      ).value = leadInfo.company.authorized_signatory_position;
+      proposalModal.dataset.leadUuid = leadUUID;
+
+      initSideModal({ modalId: "generateProposal" });
     });
+
+  // ============================================================
+  // PUBLIC API
+  // ============================================================
+
+  window.reloadCrmData = function () {
+    loadLeadInfo();
+    updateLeadDetails();
+  };
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  async function updateLeadDetails() {
+    await getLeads();
+    renderTable(leadsArray);
+    renderCounts(leadsArray);
+  }
+
+  async function initializePage() {
+    updateLeadDetails();
+    getStatuses();
+
+    $("#btnNewLead").click(function () {
+      initSideModal({ modalId: "LeadDetailsSideModal" });
+    });
+  }
+
+  initializePage();
 };

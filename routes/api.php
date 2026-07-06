@@ -21,6 +21,7 @@ use App\Http\Controllers\CrmActivityController;
 use App\Http\Controllers\CrmNoteController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\LovController;
+use App\Http\Controllers\ContractController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,30 +33,6 @@ use App\Http\Controllers\LovController;
 */
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/debug_auth', function () {
-        $user = auth()->user();
-        if ($user) {
-            $user->load('office');
-        }
-
-        return [
-            'isLoggedIn' => auth()->check(),
-            'user' => $user,
-        ];
-    });
-    Route::get('/user', fn(Request $request) => $request->user());
-    Route::get('/user_info', function () {
-
-        $user = auth()->user();
-        if ($user) {
-            $user->load('office', 'userConfig');
-        }
-
-        return [
-            'isLoggedIn' => auth()->check(),
-            'user' => $user,
-        ];
-    });
 
     Route::get('/load_menu', [MenusController::class, 'index']);
     Route::prefix('notifications')->group(function () {
@@ -65,28 +42,40 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
-    Route::prefix('approvals')->group(function () {
-        Route::get('/', [ApprovalsController::class, 'getMyApprovals']);
-        Route::post('/{approval_id}/action', [ApprovalsController::class, 'handleApprovalAction']);
-    });
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);
-    Route::get('/OfficeDocs', [DocumentController::class, 'OfficeDocs']);
-
-
-
-
-
 
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
+        Route::get('/settings', [UserController::class, 'getUserSettings']);
         Route::get('/{id}', [UserController::class, 'show']);
-        Route::get('/reports/{office_code}', [UserController::class, 'getUsersWithDocs']);
         Route::post('/', [UserController::class, 'store']);
         Route::patch('/save/{id}', [UserController::class, 'save_info']);
         Route::patch('/deactivate/{id}', [UserController::class, 'deactivate']);
         Route::patch('/reactivate/{id}', [UserController::class, 'reactivate']);
-        Route::get('/reports/{officename}', [UserController::class, 'reports']);
+    });
+
+
+    Route::prefix('contracts')->name('contracts.')->group(function () {
+
+        Route::get('/', [ContractController::class, 'index'])
+            ->name('index');
+
+        Route::get('/{contract}', [ContractController::class, 'show'])
+            ->name('show');
+        Route::post('/', [ContractController::class, 'store'])
+            ->name('store');
+
+        Route::put('/{contract}', [ContractController::class, 'update'])
+            ->name('update');
+
+        // Delete contract
+        Route::delete('/{contract}', [ContractController::class, 'destroy'])
+            ->name('destroy');
+
+        // Cancel contract
+        Route::patch('/{contract}/cancel', [ContractController::class, 'cancel'])
+            ->name('cancel');
     });
 
 
@@ -161,10 +150,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('proposal')->group(function () {
         Route::get('/', [ProposalController::class, 'index']);
         Route::post('/', [ProposalController::class, 'store']);
+        Route::get('/{proposalcode}', [ProposalController::class, 'getByCode']);
+        Route::post('/approvals', [ProposalController::class, 'processApprovals']);
     });
     Route::prefix('listofval')->group(function () {
         Route::get('/route', [LovController::class, 'route']);
         Route::get('/service', [LovController::class, 'service']);
+        Route::get('/vanclass', [LovController::class, 'vanclass']);
         Route::get('/vantype', [LovController::class, 'vantype']);
         Route::get('/vansize', [LovController::class, 'vansize']);
     });
@@ -179,4 +171,10 @@ Route::middleware(['auth'])->group(function () {
             'message' => 'API successfully triggered!',
         ]);
     });
+
+
+    require __DIR__ . '/api_booking.php';
+    require __DIR__ . '/api_maintenance.php';
+    require __DIR__ . '/api_master.php';
+    require __DIR__ . '/api_contracts.php';
 });
