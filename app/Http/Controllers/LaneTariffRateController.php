@@ -14,7 +14,11 @@ class LaneTariffRateController extends Controller
     public function index(Request $request)
     {
         $rates = LaneTariffRate::query()
-            ->with('lane.originPort', 'lane.destinationPort')
+            ->with([
+                'lane.originPort',
+                'lane.destinationPort',
+                'prices',
+            ])
             ->when($request->filled('lane_id'), fn($q) => $q->where('lane_id', $request->lane_id))
             ->orderByDesc('effective_date')
             ->paginate($request->get('per_page', 25));
@@ -40,15 +44,44 @@ class LaneTariffRateController extends Controller
             'effective_date' => ['required', 'date'],
         ]);
 
-        $rate = DB::transaction(function () use ($validated) {
+
+        $rate = DB::transaction(function () use ($validated, $request) {
+
             $this->closePreviousVersion(
                 LaneTariffRate::class,
                 ['lane_id' => $validated['lane_id']],
                 $validated['effective_date']
             );
 
-            return LaneTariffRate::create($validated + ['is_active' => true]);
+            $rate = LaneTariffRate::create($validated + [
+                'is_active' => true,
+            ]);
+
+            foreach ($request->input('prices', []) as $price) {
+
+                if (
+                    !isset($price['container_variant_id']) ||
+                    $price['frt'] === '' ||
+                    $price['frt'] === null
+                ) {
+                    continue;
+                }
+
+                $rate->prices()->create([
+                    'container_variant_id' => $price['container_variant_id'],
+                    'frt' => $price['frt'],
+                ]);
+            }
+
+            return $rate;
         });
+        foreach ($request->input('prices', []) as $price) {
+            if (!isset($price['container_variant_id']) || $price['frt'] === '' || $price['frt'] === null) continue;
+            $rate->prices()->create([
+                'container_variant_id' => $price['container_variant_id'],
+                'frt' => $price['frt'],
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -58,9 +91,15 @@ class LaneTariffRateController extends Controller
 
     public function show(LaneTariffRate $laneTariffRate)
     {
+        $laneTariffRate->load([
+            'lane.originPort',
+            'lane.destinationPort',
+            'prices',
+        ]);
+
         return response()->json([
             'success' => true,
-            'data' => $laneTariffRate->load('lane'),
+            'data' => $laneTariffRate,
         ]);
     }
 
@@ -79,6 +118,27 @@ class LaneTariffRateController extends Controller
         ]);
 
         $laneTariffRate->update($validated);
+
+        if ($request->has('prices')) {
+
+            $laneTariffRate->prices()->delete();
+
+            foreach ($request->input('prices', []) as $price) {
+
+                if (
+                    !isset($price['container_variant_id']) ||
+                    $price['frt'] === '' ||
+                    $price['frt'] === null
+                ) {
+                    continue;
+                }
+
+                $laneTariffRate->prices()->create([
+                    'container_variant_id' => $price['container_variant_id'],
+                    'frt' => $price['frt'],
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,

@@ -14,6 +14,7 @@ use App\Http\Controllers\ServiceableAreaController;
 use App\Http\Controllers\TruckingTariffController;
 use App\Http\Controllers\VatRateController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ContainerController;
 
 // =========================================================
 // Maintenance: master data
@@ -142,3 +143,30 @@ Route::prefix('contracts')->group(function () {
 Route::prefix('proposals')->group(function () {
     Route::get('/{proposal}/ratesPrefill', [ContractController::class, 'ratesFromProposal']);
 });
+
+
+// -----------------------------------------------------------------
+// Containers (own class/size combinations, priced per lane tariff)
+// -----------------------------------------------------------------
+Route::prefix('containers')->group(function () {
+    Route::get('/', [ContainerController::class, 'index']);
+    Route::get('/variants', [ContainerController::class, 'variants']); // must stay above /{container}
+    Route::get('/{container}', [ContainerController::class, 'show']);
+    Route::post('/', [ContainerController::class, 'store']);
+    Route::put('/{container}', [ContainerController::class, 'update']);
+    Route::delete('/{container}', [ContainerController::class, 'destroy']);
+});
+
+// Simple lookups used by the Container form's dropdowns
+Route::get('/containerTypes', fn() => response()->json([
+    'success' => true,
+    'data' => \DB::table('container_type')->orderBy('type')->get(),
+]));
+Route::get('/containerClasses', fn() => response()->json([
+    'success' => true,
+    'data' => \DB::table('container_class')->orderBy('class')->get(),
+]));
+Route::get('/containerSizes', fn() => response()->json([
+    'success' => true,
+    'data' => \DB::table('container_size')->orderBy('size')->get(),
+]));

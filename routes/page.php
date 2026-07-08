@@ -15,6 +15,8 @@ Route::get('/page_contracts', [PageController::class, 'page_contracts']);
 Route::get('/page_reports', [PageController::class, 'page_reports']);
 Route::get('/page_crm', [PageController::class, 'page_crm']);
 Route::get('/page_proposals', [PageController::class, 'page_proposals']);
+Route::get('/page_clientMasters', [PageController::class, 'page_clientMasters']);
+Route::get('/page_clientMasterForm', [PageController::class, 'page_clientMasterForm']);
 
 
 

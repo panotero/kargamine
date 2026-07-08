@@ -22,6 +22,7 @@ use App\Http\Controllers\CrmNoteController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\LovController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ClientMasterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -171,7 +172,14 @@ Route::middleware(['auth'])->group(function () {
             'message' => 'API successfully triggered!',
         ]);
     });
-
+    Route::prefix('clientMasters')->group(function () {
+        Route::get('/', [ClientMasterController::class, 'index']);
+        Route::get('/{uuid}', [ClientMasterController::class, 'show']);
+        Route::post('/stage1', [ClientMasterController::class, 'saveStage1']);
+        Route::post('/{uuid}/stage2', [ClientMasterController::class, 'saveStage2']);
+        Route::post('/{uuid}/stage3', [ClientMasterController::class, 'saveStage3']);
+        Route::delete('/{uuid}', [ClientMasterController::class, 'destroy']);
+    });
 
     require __DIR__ . '/api_maintenance.php';
 });

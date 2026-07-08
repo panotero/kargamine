@@ -49,4 +49,8 @@ class LaneTariffRate extends Model
     {
         return (float) $this->frt + (float) $this->bsc + $this->total_adjustment;
     }
+    public function prices()
+    {
+        return $this->hasMany(LaneTariffRatePrice::class, 'lane_tariff_rate_id', 'rate_id');
+    }
 }

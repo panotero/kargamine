@@ -129,4 +129,13 @@ class PageController extends Controller
     {
         return view('pages.maintenance');
     }
+    public function page_clientMasters()
+    {
+        return view('pages.clientMasters');
+    }
+
+    public function page_clientMasterForm()
+    {
+        return view('pages.clientMasterForm');
+    }
 }

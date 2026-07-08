@@ -15,6 +15,9 @@
                 data-tab="ports">Ports</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-800"
+                data-tab="containers">Containers</button>
+            <button type="button"
+                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-800"
                 data-tab="chargeTypes">Charge Types</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-800"
@@ -50,6 +53,7 @@
     <div class="mt-5" id="maintenanceTabPanels">
         @foreach ([
         'ports' => 'Ports',
+        'containers' => 'Containers',
         'chargeTypes' => 'Charge Types',
         'deliveryTypes' => 'Delivery Types',
         'serviceableAreas' => 'Serviceable Areas',
@@ -113,6 +117,77 @@
         <button type="submit" form="maintenanceForm" id="maintenanceFormSubmitBtn"
             class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
             Save
+        </button>
+    </div>
+</x-side-modal>
+
+<x-side-modal id="containerFormModal">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
+        <h3 id="containerFormTitle" class="text-base font-semibold text-zinc-900">Add Container</h3>
+        <button type="button" id="containerFormCloseBtn" class="text-zinc-400 hover:text-zinc-600">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <form id="containerForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <input type="hidden" id="containerIdInput">
+
+        <div class="grid grid-cols-2 gap-3">
+            <div class="col-span-2">
+                <label class="block text-sm font-medium text-zinc-700 mb-1">
+                    Container Type *
+                </label>
+                <input type="text" id="containerTypeInput" required
+                    placeholder="e.g. Dry Van, Reefer, Open Top, Flat Rack"
+                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-1">Code *</label>
+                <input type="text" id="containerCodeInput" required placeholder="e.g. RF-20"
+                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 mb-1">Name *</label>
+                <input type="text" id="containerNameInput" required placeholder="e.g. 20ft Reefer"
+                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div class="col-span-2">
+                <label class="flex items-center gap-2 text-sm text-zinc-700">
+                    <input type="checkbox" id="containerActiveInput" checked
+                        class="rounded border-zinc-300 text-orange-600 focus:ring-orange-500">
+                    Active
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-zinc-700">Class / Size Combinations *</label>
+                <button type="button" id="addVariantRowBtn"
+                    class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Add Combination
+                </button>
+            </div>
+            <p class="text-xs text-zinc-400 mb-2">Each row is a distinct class + size combo. Prices for each combo
+                are set later, per lane, in the Lane Tariff Rates tab.</p>
+            <div id="containerVariantRows" class="space-y-2"></div>
+        </div>
+    </form>
+
+    <div class="px-5 py-4 border-t border-zinc-200 flex justify-end gap-2">
+        <button type="button" id="containerFormCancelBtn"
+            class="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+            Cancel
+        </button>
+        <button type="submit" form="containerForm" id="containerFormSubmitBtn"
+            class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+            Save Container
         </button>
     </div>
 </x-side-modal>
@@ -231,6 +306,37 @@
                         default: true
                     },
                 ],
+            },
+            containers: {
+                label: 'Container',
+                pk: 'id',
+                listUrl: '/api/containers',
+                deleteUrl: (id) => `/api/containers/${id}`,
+                columns: [{
+                        key: 'code',
+                        label: 'Code'
+                    },
+                    {
+                        key: 'name',
+                        label: 'Name'
+                    },
+                    {
+                        key: 'type',
+                        label: 'Type',
+                        render: (row) => row.type?.type ?? '-'
+                    },
+                    {
+                        key: 'variants',
+                        label: 'Combinations',
+                        render: (row) => (row.variants?.length ?? 0)
+                    },
+                    {
+                        key: 'is_active',
+                        label: 'Status',
+                        render: (row) => activeBadge(row.is_active)
+                    },
+                ],
+                fields: [],
             },
 
             chargeTypes: {
@@ -1164,12 +1270,14 @@
             return payload;
         }
 
-        function openAddForm(key) {
+        async function openAddForm(key) {
             const config = ENTITY_CONFIG[key];
             editingId = null;
 
             document.getElementById('maintenanceFormTitle').textContent = `Add ${config.label}`;
             renderFormFields(config, false);
+
+            if (key === 'laneTariffRates') await renderLaneTariffPricingGrid(null);
 
             initSideModal({
                 modalId: 'maintenanceFormModal'
@@ -1177,6 +1285,7 @@
         }
 
         async function openEditForm(key, id) {
+            if (key === 'containers') return openContainerForm(id);
             const config = ENTITY_CONFIG[key];
             editingId = id;
 
@@ -1200,6 +1309,7 @@
 
             document.getElementById('maintenanceFormTitle').textContent = `Edit ${config.label}`;
             await renderFormFields(config, true, row);
+            if (key === 'laneTariffRates') await renderLaneTariffPricingGrid(row);
 
             initSideModal({
                 modalId: 'maintenanceFormModal'
@@ -1212,6 +1322,9 @@
             const config = ENTITY_CONFIG[activeTab];
             const isEdit = Boolean(editingId);
             const payload = collectFormData(config, isEdit);
+            if (activeTab === 'laneTariffRates') {
+                payload.prices = collectLaneTariffPrices();
+            }
             const button = document.getElementById('maintenanceFormSubmitBtn');
 
             const response = await apiCall({
@@ -1280,7 +1393,13 @@
             initTabs();
 
             document.querySelectorAll('.add-new-btn').forEach((btn) => {
-                btn.addEventListener('click', () => openAddForm(btn.dataset.entity));
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.entity === 'containers') {
+                        openContainerForm();
+                    } else {
+                        openAddForm(btn.dataset.entity);
+                    }
+                });
             });
 
             const form = document.getElementById('maintenanceForm');
@@ -1294,5 +1413,220 @@
         }
 
         init();
+
+        let editingContainerId = null;
+        let containerClassOptionsHtml = '';
+        let containerSizeOptionsHtml = '';
+
+        async function loadContainerLookups() {
+            const [typesRes, classesRes, sizesRes] = await Promise.all([
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/containerTypes'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/containerClasses'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/containerSizes'
+                }),
+            ]);
+
+            const typeSelect = document.getElementById('containerTypeSelect');
+            if (classesRes.success) {
+                containerClassOptionsHtml = classesRes.data.map((c) =>
+                    `<option value="${c.id}">${c.class}</option>`).join('');
+            }
+            if (sizesRes.success) {
+                containerSizeOptionsHtml = sizesRes.data.map((s) =>
+                    `<option value="${s.id}">${s.size}</option>`).join('');
+            }
+        }
+
+        function variantRowHtml() {
+            return `
+        <div class="variant-row flex items-center gap-2" data-variant-row>
+            <select data-field="container_class_id" required
+                    class="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <option value="">Select Class</option>${containerClassOptionsHtml}
+            </select>
+            <select data-field="container_size_id" required
+                    class="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <option value="">Select Size</option>${containerSizeOptionsHtml}
+            </select>
+            <button type="button" class="remove-variant-row text-zinc-400 hover:text-red-600 p-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    `;
+        }
+
+        function addVariantRow(selectedClassId = '', selectedSizeId = '') {
+            const wrap = document.getElementById('containerVariantRows');
+            wrap.insertAdjacentHTML('beforeend', variantRowHtml());
+            const row = wrap.lastElementChild;
+            if (selectedClassId) row.querySelector('[data-field="container_class_id"]').value = selectedClassId;
+            if (selectedSizeId) row.querySelector('[data-field="container_size_id"]').value = selectedSizeId;
+        }
+
+        document.getElementById('containerVariantRows').addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-variant-row');
+            if (btn) btn.closest('[data-variant-row]').remove();
+        });
+
+        document.getElementById('addVariantRowBtn').addEventListener('click', () => addVariantRow());
+
+        async function openContainerForm(id = null) {
+            editingContainerId = id;
+            document.getElementById('containerForm').reset();
+            document.getElementById('containerVariantRows').innerHTML = '';
+            document.getElementById('containerFormTitle').textContent = id ? 'Edit Container' : 'Add Container';
+
+            await loadContainerLookups();
+
+            if (id) {
+                const response = await apiCall({
+                    mode: 'GET',
+                    url: `/api/containers/${id}`
+                });
+                if (!response.success) {
+                    showMessage({
+                        status: 'error',
+                        title: 'Error',
+                        message: 'Unable to load this container.'
+                    });
+                    return;
+                }
+                const row = response.data;
+                document.getElementById('containerIdInput').value = row.id;
+                document.getElementById('containerTypeSelect').value = row.container_type_id;
+                document.getElementById('containerCodeInput').value = row.code;
+                document.getElementById('containerNameInput').value = row.name;
+                document.getElementById('containerActiveInput').checked = Boolean(row.is_active);
+                (row.variants ?? []).forEach((v) => addVariantRow(v.container_class_id, v.container_size_id));
+            } else {
+                document.getElementById('containerIdInput').value = '';
+                addVariantRow();
+            }
+
+            initSideModal({
+                modalId: 'containerFormModal'
+            });
+        }
+
+        function collectContainerVariants() {
+            return Array.from(document.querySelectorAll('#containerVariantRows [data-variant-row]')).map((row) => ({
+                container_class_id: row.querySelector('[data-field="container_class_id"]').value,
+                container_size_id: row.querySelector('[data-field="container_size_id"]').value,
+            }));
+        }
+
+        document.getElementById('containerForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const variants = collectContainerVariants();
+            if (!variants.length || variants.some((v) => !v.container_class_id || !v
+                    .container_size_id)) {
+                showMessage({
+                    status: 'error',
+                    title: 'Incomplete',
+                    message: 'Add at least one complete class + size combination.'
+                });
+                return;
+            }
+
+            const payload = {
+                container_type_id: document.getElementById('containerTypeSelect').value,
+                code: document.getElementById('containerCodeInput').value,
+                name: document.getElementById('containerNameInput').value,
+                is_active: document.getElementById('containerActiveInput').checked,
+                variants,
+            };
+
+            const isEdit = Boolean(editingContainerId);
+            const button = document.getElementById('containerFormSubmitBtn');
+
+            const response = await apiCall({
+                mode: isEdit ? 'PUT' : 'POST',
+                isJson: true,
+                payload,
+                url: isEdit ? `/api/containers/${editingContainerId}` : '/api/containers',
+                button,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to save this container.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Saved',
+                message: `Container ${isEdit ? 'updated' : 'added'}.`
+            });
+            closeSideModal('containerFormModal');
+            getOrCreateTable('containers').reload();
+        });
+
+        document.getElementById('containerFormCloseBtn').addEventListener('click', () => closeSideModal(
+            'containerFormModal'));
+        document.getElementById('containerFormCancelBtn').addEventListener('click', () => closeSideModal(
+            'containerFormModal'));
+
+        async function renderLaneTariffPricingGrid(existingRow = null) {
+            const fieldsContainer = document.getElementById('maintenanceFormFields');
+
+            const wrapper = document.createElement('div');
+            wrapper.id = 'laneTariffPricingWrapper';
+            wrapper.className = 'space-y-2 border-t border-zinc-200 pt-4';
+            wrapper.innerHTML = `
+        <label class="block text-sm font-medium text-zinc-700 mb-1">Container Pricing (FRT per combination)</label>
+        <p class="text-xs text-zinc-400 mb-2">Set the freight rate for each container class/size combination on this lane.</p>
+        <div id="laneTariffPricingRows" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+    `;
+            fieldsContainer.appendChild(wrapper);
+
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/containers/variants'
+            });
+            if (!response.success) return;
+
+            const priceByVariant = {};
+            (existingRow?.prices ?? []).forEach((p) => {
+                priceByVariant[p.container_variant_id] = p.frt;
+            });
+
+            const rows = document.getElementById('laneTariffPricingRows');
+            rows.innerHTML = response.data.map((variant) => `
+        <div class="flex items-center gap-3 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+            <div class="flex-1 text-xs text-zinc-600">
+                <span class="font-medium text-zinc-800">${variant.container?.name ?? '-'}</span>
+                — ${variant.container_class?.class ?? '-'} / ${variant.container_size?.size ?? '-'}
+            </div>
+            <input type="number" step="0.01" min="0" placeholder="0.00"
+                   data-variant-id="${variant.id}"
+                   value="${priceByVariant[variant.id] ?? ''}"
+                   class="w-32 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm focus:border-orange-500 focus:ring-orange-500">
+        </div>
+    `).join('') || '<p class="text-xs text-zinc-400">No containers configured yet — add one from the Containers tab first.</p>';
+        }
+
+        function collectLaneTariffPrices() {
+            return Array.from(document.querySelectorAll('#laneTariffPricingRows [data-variant-id]'))
+                .filter((el) => el.value !== '')
+                .map((el) => ({
+                    container_variant_id: el.dataset.variantId,
+                    frt: Number(el.value)
+                }));
+        }
     })();
 </script>
