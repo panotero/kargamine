@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             //kargamine seeder
             CrmStatusSeeder::class,
             lovSeeder::class,
+            PortSeeder::class,
             departmentSeeder::class,
             userstatusSeeder::class
         ]);

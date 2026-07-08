@@ -32,6 +32,9 @@ window.initCrmLogic = function initCrmLogic() {
   const addActivityBtn = document.getElementById("addActivityBtn");
   const activityDropdown = document.getElementById("activityDropdown");
   const activityDescInput = document.getElementById("activityDescriptionInput");
+  const activityAttachmentInput = document.getElementById(
+    "activityAttachmentInput",
+  );
   const activityTypeInput = document.getElementById("activityTypeInput");
   const activityStatusInput = document.getElementById("activityStatusInput");
   const saveActivityBtn = document.getElementById("saveActivityBtn");
@@ -505,19 +508,26 @@ window.initCrmLogic = function initCrmLogic() {
     activityStatusInput.value = "";
     activityTypeInput.value = "";
     activityDescInput.value = "";
+    activityAttachmentInput.value = "";
     closeDropdown(activityDropdown);
   });
 
   saveActivityBtn.addEventListener("click", async function () {
+    const attachment = activityAttachmentInput.files[0];
+    const formData = new FormData();
+
+    formData.append("leadUUId", leadUUID);
+    formData.append("status", activityStatusInput.value);
+    formData.append("type", activityTypeInput.value);
+    formData.append("activity", activityDescInput.value);
+
+    if (activityAttachmentInput.files.length > 0) {
+      formData.append("attachment", activityAttachmentInput.files[0]);
+    }
     const response = await apiCall({
       mode: "POST",
-      isJson: true,
-      payload: {
-        leadUUId: leadUUID,
-        status: activityStatusInput.value,
-        type: activityTypeInput.value,
-        activity: activityDescInput.value,
-      },
+      isJson: false,
+      payload: formData,
       url: "/api/crm/activity",
       button: saveActivityBtn,
     });

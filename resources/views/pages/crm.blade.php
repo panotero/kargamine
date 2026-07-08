@@ -438,7 +438,31 @@
                                 <textarea name="activityDescriptionInput" id="activityDescriptionInput" rows="3" placeholder="Add activity..."
                                     class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition resize-none"></textarea>
                             </div>
+                            <!-- Attachment -->
+                            <div class="flex flex-col gap-1">
+                                <label for="activityAttachmentInput"
+                                    class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">
+                                    Attachment
+                                </label>
 
+                                <input type="file" name="attachment" id="activityAttachmentInput"
+                                    class="block w-full text-sm text-zinc-700 dark:text-zinc-200
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-lg file:border-0
+               file:text-sm file:font-medium
+               file:bg-blue-50 file:text-blue-700
+               hover:file:bg-blue-100
+               dark:file:bg-blue-900/40 dark:file:text-blue-300
+               cursor-pointer
+               bg-zinc-50 dark:bg-zinc-800
+               border border-zinc-200 dark:border-zinc-700
+               rounded-lg p-2
+               focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+
+                                <p class="text-xs text-zinc-400 mt-1">
+                                    Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG (Max 10MB)
+                                </p>
+                            </div>
                             <!-- Footer -->
                             <div class="flex justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                                 <button id="cancelActivityBtn"

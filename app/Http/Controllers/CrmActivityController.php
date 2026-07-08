@@ -17,6 +17,11 @@ class CrmActivityController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            dd($file);
+        }
+
         try {
             $lead = CrmLead::where('uuid', $request->leadUUId)->firstOrFail();
             $updatepayload = [
