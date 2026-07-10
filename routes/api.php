@@ -23,6 +23,9 @@ use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\LovController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ClientMasterController;
+use App\Http\Controllers\ClientContractController;
+use App\Http\Controllers\ClientProposalController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -179,6 +182,24 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{uuid}/stage2', [ClientMasterController::class, 'saveStage2']);
         Route::post('/{uuid}/stage3', [ClientMasterController::class, 'saveStage3']);
         Route::delete('/{uuid}', [ClientMasterController::class, 'destroy']);
+    });
+
+    Route::prefix('clientMasters')->group(function () {
+        Route::get('/', [ClientMasterController::class, 'index']);
+        Route::get('/{uuid}', [ClientMasterController::class, 'show']);
+        Route::post('/stage1', [ClientMasterController::class, 'saveStage1']);
+        Route::post('/{uuid}/stage2', [ClientMasterController::class, 'saveStage2']);
+        Route::post('/{uuid}/stage3', [ClientMasterController::class, 'saveStage3']);
+        Route::delete('/{uuid}', [ClientMasterController::class, 'destroy']);
+
+        // literal route before the {uuid} wildcard ones below
+        Route::get('/proposals/rateLookup', [ClientProposalController::class, 'rateLookup']);
+
+        Route::get('/{uuid}/proposals', [ClientProposalController::class, 'index']);
+        Route::post('/{uuid}/proposals', [ClientProposalController::class, 'store']);
+
+        Route::get('/{uuid}/contracts', [ClientContractController::class, 'index']);
+        Route::post('/{uuid}/contracts', [ClientContractController::class, 'store']);
     });
 
     require __DIR__ . '/api_maintenance.php';
