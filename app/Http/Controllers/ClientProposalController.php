@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientMaster;
 use App\Models\ClientProposal;
+use App\Models\ClientProposalRate;
 use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
@@ -11,10 +12,11 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ClientProposalController extends Controller
 {
-    public function index($clientUuid)
+    public function index(Request $request, $clientUuid)
     {
         $client = ClientMaster::where('uuid', $clientUuid)->firstOrFail();
 
@@ -25,15 +27,14 @@ class ClientProposalController extends Controller
             'rates.containerClass',
             'rates.containerSize',
             'creator:id,name',
-        ])->where('client_id', $client->id)->orderByDesc('created_at')->get();
+        ])->where('client_id', $client->id)
+            ->orderByDesc('created_at')
+            ->paginate($request->get('per_page', 5))
+            ->appends($request->query());
 
         return response()->json(['success' => true, 'data' => $proposals]);
     }
 
-    /**
-     * Looks up the FRT for a container/lane combination straight from the
-     * tariff engine (Lane -> active LaneTariffRate -> LaneTariffRatePrice).
-     */
     public function rateLookup(Request $request)
     {
         $validated = $request->validate([
@@ -71,6 +72,14 @@ class ClientProposalController extends Controller
         return response()->json(['success' => true, 'data' => ['frt' => (float) $price->frt]]);
     }
 
+    /**
+     * Adds one or more container/rate lines. For each line:
+     *  - If a PENDING proposal already exists for this client on the same
+     *    origin/destination lane, the new container is appended to it.
+     *  - Otherwise a brand new (pending) proposal is created for that lane.
+     * Once a proposal leaves pending (approved/disapproved/accepted/rejected),
+     * any further container added on that same lane starts a fresh proposal.
+     */
     public function store(Request $request, $clientUuid)
     {
         $client = ClientMaster::where('uuid', $clientUuid)->firstOrFail();
@@ -89,27 +98,66 @@ class ClientProposalController extends Controller
             'rates.*.final_rate' => ['required', 'numeric', 'min:0'],
         ]);
 
-        $proposal = DB::transaction(function () use ($client, $validated, $request) {
-            $yearMonth = Carbon::now()->format('Ym');
-            $last = ClientProposal::where('code', 'like', "CPR-{$yearMonth}%")
-                ->orderByDesc('id')->lockForUpdate()->first();
-            $seq = $last ? ((int) substr($last->code, -4)) + 1 : 1;
+        $touched = DB::transaction(function () use ($client, $validated, $request) {
+            $touchedProposals = [];
 
-            $proposal = ClientProposal::create([
-                'uuid' => (string) Str::uuid(),
-                'code' => sprintf('CPR-%s-%04d', $yearMonth, $seq),
-                'client_id' => $client->id,
-                'status' => 1,
-                'created_by' => $request->user()?->id,
-            ]);
+            foreach ($validated['rates'] as $rateData) {
+                $proposal = ClientProposal::where('client_id', $client->id)
+                    ->where('status', ClientProposal::STATUS_PENDING)
+                    ->whereHas('rates', function ($q) use ($rateData) {
+                        $q->where('origin_port_id', $rateData['origin_port_id'])
+                            ->where('destination_port_id', $rateData['destination_port_id']);
+                    })
+                    ->first();
 
-            foreach ($validated['rates'] as $rate) {
-                $proposal->rates()->create($rate);
+                if (! $proposal) {
+                    $proposal = $this->createProposal($client, $request);
+                }
+
+                $proposal->rates()->create($rateData);
+                $touchedProposals[$proposal->id] = $proposal;
             }
 
-            return $proposal;
+            return $touchedProposals;
         });
 
-        return response()->json(['success' => true, 'data' => $proposal->load('rates')], 201);
+        return response()->json([
+            'success' => true,
+            'data' => collect($touched)->map(fn($p) => $p->load('rates'))->values(),
+        ], 201);
+    }
+
+    protected function createProposal(ClientMaster $client, Request $request): ClientProposal
+    {
+        $yearMonth = Carbon::now()->format('Ym');
+        $last = ClientProposal::where('code', 'like', "CPR-{$yearMonth}%")
+            ->orderByDesc('id')->lockForUpdate()->first();
+        $seq = $last ? ((int) substr($last->code, -4)) + 1 : 1;
+
+        return ClientProposal::create([
+            'uuid' => (string) Str::uuid(),
+            'code' => sprintf('CPR-%s-%04d', $yearMonth, $seq),
+            'client_id' => $client->id,
+            'status' => ClientProposal::STATUS_PENDING,
+            'created_by' => $request->user()?->id,
+        ]);
+    }
+
+    public function updateStatus(Request $request, ClientProposal $proposal)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'integer', Rule::in(array_keys(ClientProposal::STATUS_LABELS))],
+        ]);
+
+        $proposal->update(['status' => $validated['status']]);
+
+        return response()->json(['success' => true, 'data' => $proposal]);
+    }
+
+    public function destroyRate(ClientProposalRate $rate)
+    {
+        $rate->delete();
+
+        return response()->json(['success' => true, 'data' => null]);
     }
 }

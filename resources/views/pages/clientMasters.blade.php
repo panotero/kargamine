@@ -72,12 +72,42 @@
                     Proposal</button>
             </div>
             <div id="cdProposalsContainer" class="space-y-3"></div>
+            <div id="cdProposalsPagination"></div>
+
         </div>
 
         <div class="clientDetailPanel hidden" data-panel="contracts">
             <div id="cdContractsContainer" class="space-y-3"></div>
         </div>
 
+    </div>
+</x-modal>
+<x-modal id="RateContractModal">
+    <div class="p-5 border-b flex justify-between items-center">
+        <p class="text-lg font-semibold">Create Contract</p>
+        <button class="modal-close">✕</button>
+    </div>
+    <div class="p-5 space-y-4">
+        <div id="rateContractSummary" class="text-sm bg-zinc-50 border rounded-lg p-3 text-zinc-600"></div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-xs font-medium text-zinc-400 uppercase">Valid From *</label>
+                <input type="date" id="rateContractValidFrom" class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="text-xs font-medium text-zinc-400 uppercase">Valid To *</label>
+                <input type="date" id="rateContractValidTo" class="w-full border rounded-lg px-3 py-2 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="text-xs font-medium text-zinc-400 uppercase">Signed Date</label>
+            <input type="date" id="rateContractSignedDate" class="w-full border rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div class="border-t px-5 py-4 flex justify-end gap-2">
+        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Cancel</button>
+        <button id="rateContractSaveBtn"
+            class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save Contract</button>
     </div>
 </x-modal>
 
@@ -239,7 +269,7 @@
                 <p><span class="text-zinc-400">Billed To:</span> ${c.billing?.billed_to ?? '-'}</p>
             `;
 
-            loadProposals(uuid);
+            loadProposals(uuid, 1);
             loadContracts(uuid);
 
             initModal({
@@ -263,50 +293,303 @@
         });
 
         // ================= PROPOSALS LIST =================
-        async function loadProposals(uuid) {
+        const PROPOSAL_STATUS_LABEL = {
+            1: 'Pending',
+            2: 'Approved',
+            3: 'Disapproved',
+            4: 'Accepted',
+            5: 'Rejected'
+        };
+        const PROPOSAL_STATUS_BADGE = {
+            1: 'bg-amber-100 text-amber-600',
+            2: 'bg-green-100 text-green-700',
+            3: 'bg-red-100 text-red-600',
+            4: 'bg-blue-100 text-blue-700',
+            5: 'bg-zinc-200 text-zinc-600',
+        };
+
+        let currentProposalsPage = 1;
+        let rateContractContext = null;
+
+        async function loadProposals(uuid, page = 1) {
+            currentProposalsPage = page;
             const container = document.getElementById('cdProposalsContainer');
             container.innerHTML = `<p class="text-sm text-zinc-400">Loading...</p>`;
 
             const response = await apiCall({
                 mode: 'GET',
-                url: `/api/clientMasters/${uuid}/proposals`
+                url: `/api/clientMasters/${uuid}/proposals?page=${page}&per_page=5`
             });
-            if (!response.success || !response.data.length) {
-                container.innerHTML = `<p class="text-sm text-zinc-400 text-center py-6">No proposals yet.</p>`;
+
+            if (!response.success) {
+                container.innerHTML =
+                    `<p class="text-sm text-red-400 text-center py-6">Unable to load proposals.</p>`;
                 return;
             }
 
-            container.innerHTML = response.data.map((p) => `
-                <div class="border rounded-xl p-4">
-                    <div class="flex justify-between mb-2">
-                        <p class="font-semibold text-sm">${p.code}</p>
-                        <p class="text-xs text-zinc-400">${formatDateTime(p.created_at)}</p>
-                    </div>
-                    <table class="w-full text-xs">
-                        <thead class="text-zinc-400 uppercase">
-                            <tr>
-                                <th class="text-left py-1">Route</th>
-                                <th class="text-left py-1">Container</th>
-                                <th class="text-right py-1">Base Rate</th>
-                                <th class="text-right py-1">Discount</th>
-                                <th class="text-right py-1">Final Rate</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${p.rates.map((r) => `
-                                <tr class="border-t">
-                                    <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
-                                    <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
-                                    <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
-                                    <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
-                                    <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `).join('');
+            const meta = response.data;
+            const proposals = meta.data ?? [];
+
+            if (!proposals.length) {
+                container.innerHTML =
+                    `<p class="text-sm text-zinc-400 text-center py-6">No proposals yet.</p>`;
+                renderProposalsPagination(null);
+                return;
+            }
+
+            container.innerHTML = proposals.map((p) => buildProposalCard(p)).join('');
+            wireProposalCards(uuid);
+            renderProposalsPagination(meta);
         }
+
+        function buildProposalCard(p) {
+            const badgeClass = PROPOSAL_STATUS_BADGE[p.status] ?? 'bg-zinc-100 text-zinc-500';
+            const isApproved = p.status === 2;
+
+            return `
+        <div class="border rounded-xl p-4" data-proposal-id="${p.id}" data-proposal-status="${p.status}">
+            <div class="flex justify-between items-center mb-2 gap-3">
+                <div class="flex items-center gap-2">
+                    <p class="font-semibold text-sm">${p.code}</p>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${badgeClass}">${PROPOSAL_STATUS_LABEL[p.status] ?? 'Unknown'}</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <p class="text-xs text-zinc-400 whitespace-nowrap">${formatDateTime(p.created_at)}</p>
+                    <select class="proposal-status-select text-xs border rounded-lg px-2 py-1" data-proposal-id="${p.id}">
+                        ${Object.entries(PROPOSAL_STATUS_LABEL).map(([val, label]) =>
+                            `<option value="${val}" ${Number(val) === p.status ? 'selected' : ''}>${label}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            </div>
+            <table class="w-full text-xs">
+                <thead class="text-zinc-400 uppercase">
+                    <tr>
+                        <th class="text-left py-1">Route</th>
+                        <th class="text-left py-1">Container</th>
+                        <th class="text-right py-1">Base Rate</th>
+                        <th class="text-right py-1">Discount</th>
+                        <th class="text-right py-1">Final Rate</th>
+                        <th class="text-right py-1">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${p.rates.map((r) => `
+                        <tr class="border-t" data-rate-id="${r.id}">
+                            <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
+                            <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
+                            <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
+                            <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
+                            <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
+                            <td class="py-1.5 text-right whitespace-nowrap">
+                                ${isApproved ? `<button type="button" class="rate-create-contract-btn text-blue-600 hover:text-blue-700 font-medium mr-2" data-rate-id="${r.id}" data-proposal-id="${p.id}">Contract</button>` : ''}
+                                <button type="button" class="rate-delete-btn text-zinc-400 hover:text-red-600 font-medium" data-rate-id="${r.id}">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+        }
+
+        function wireProposalCards(uuid) {
+            document.querySelectorAll('.proposal-status-select').forEach((sel) => {
+                sel.addEventListener('change', async function() {
+                    const response = await apiCall({
+                        mode: 'PATCH',
+                        isJson: true,
+                        payload: {
+                            status: Number(this.value)
+                        },
+                        url: `/api/clientMasters/proposals/${this.dataset.proposalId}/status`,
+                    });
+
+                    if (!response.success) {
+                        showMessage({
+                            status: 'error',
+                            title: 'Error',
+                            message: 'Unable to update status.'
+                        });
+                        return;
+                    }
+
+                    showMessage({
+                        status: 'success',
+                        title: 'Status updated'
+                    });
+                    loadProposals(uuid, currentProposalsPage);
+                });
+            });
+
+            document.querySelectorAll('.rate-delete-btn').forEach((btn) => {
+                btn.addEventListener('click', async function() {
+                    const confirmed = await customConfirm(
+                        'Remove this container from the proposal?');
+                    if (!confirmed) return;
+
+                    const response = await apiCall({
+                        mode: 'DELETE',
+                        isJson: true,
+                        payload: {},
+                        url: `/api/clientMasters/proposals/rates/${this.dataset.rateId}`,
+                    });
+
+                    if (!response.success) {
+                        showMessage({
+                            status: 'error',
+                            title: 'Error',
+                            message: 'Unable to delete this container.'
+                        });
+                        return;
+                    }
+
+                    showMessage({
+                        status: 'success',
+                        title: 'Container removed'
+                    });
+                    loadProposals(uuid, currentProposalsPage);
+                });
+            });
+
+            document.querySelectorAll('.rate-create-contract-btn').forEach((btn) => {
+                btn.addEventListener('click', function() {
+                    openRateContractModal(uuid, this.dataset.proposalId, this.dataset
+                        .rateId);
+                });
+            });
+        }
+
+        function renderProposalsPagination(meta) {
+            const el = document.getElementById('cdProposalsPagination');
+            if (!el) return;
+
+            if (!meta || meta.last_page <= 1) {
+                el.innerHTML = '';
+                return;
+            }
+
+            el.innerHTML = `
+        <div class="flex items-center justify-between px-1 py-2">
+            <p class="text-xs text-zinc-400">Showing ${meta.from ?? 0}-${meta.to ?? 0} of ${meta.total ?? 0}</p>
+            <div class="flex items-center gap-1">
+                <button type="button" id="proposalsPrevBtn" ${meta.prev_page_url ? '' : 'disabled'}
+                    class="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30">Prev</button>
+                <span class="text-xs text-zinc-500 px-1">${meta.current_page} / ${meta.last_page}</span>
+                <button type="button" id="proposalsNextBtn" ${meta.next_page_url ? '' : 'disabled'}
+                    class="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30">Next</button>
+            </div>
+        </div>
+    `;
+
+            document.getElementById('proposalsPrevBtn')?.addEventListener('click', () => {
+                if (meta.prev_page_url) loadProposals(currentClientUuid, meta.current_page - 1);
+            });
+            document.getElementById('proposalsNextBtn')?.addEventListener('click', () => {
+                if (meta.next_page_url) loadProposals(currentClientUuid, meta.current_page + 1);
+            });
+        }
+
+        function openRateContractModal(clientUuid, proposalId, rateId) {
+            rateContractContext = {
+                clientUuid,
+                proposalId,
+                rateId
+            };
+
+            const row = document.querySelector(`[data-rate-id="${rateId}"]`);
+            document.getElementById('rateContractSummary').textContent = row ? row.innerText.replace(/\s+/g,
+                ' ').trim() : '';
+
+            document.getElementById('rateContractValidFrom').value = '';
+            document.getElementById('rateContractValidTo').value = '';
+            document.getElementById('rateContractSignedDate').value = '';
+
+            initModal({
+                modalId: 'RateContractModal'
+            });
+        }
+
+        document.getElementById('rateContractSaveBtn').addEventListener('click', async function() {
+            if (!rateContractContext) return;
+
+            const validFrom = document.getElementById('rateContractValidFrom').value;
+            const validTo = document.getElementById('rateContractValidTo').value;
+
+            if (!validFrom || !validTo) {
+                showMessage({
+                    status: 'error',
+                    title: 'Missing dates',
+                    message: 'Valid From and Valid To are required.'
+                });
+                return;
+            }
+
+            // Re-fetch to get clean, authoritative rate values instead of scraping the DOM.
+            const response = await apiCall({
+                mode: 'GET',
+                url: `/api/clientMasters/${rateContractContext.clientUuid}/proposals?per_page=100`,
+            });
+            if (!response.success) return;
+
+            const proposal = (response.data.data ?? []).find((p) => String(p.id) === String(
+                rateContractContext.proposalId));
+            const rate = proposal?.rates.find((r) => String(r.id) === String(rateContractContext
+                .rateId));
+
+            if (!rate) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to locate this container.'
+                });
+                return;
+            }
+
+            const payload = {
+                client_proposal_id: proposal.id,
+                signed_date: document.getElementById('rateContractSignedDate').value ||
+                    null,
+                valid_from: validFrom,
+                valid_to: validTo,
+                rates: [{
+                    origin_port_id: rate.origin_port_id,
+                    destination_port_id: rate.destination_port_id,
+                    container_id: rate.container_id,
+                    container_class_id: rate.container_class_id,
+                    container_size_id: rate.container_size_id,
+                    container_variant_id: rate.container_variant_id,
+                    base_rate: rate.base_rate,
+                    discount_type: rate.discount_type,
+                    discount_value: rate.discount_value,
+                    final_rate: rate.final_rate,
+                }],
+            };
+
+            const saveResponse = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload,
+                url: `/api/clientMasters/${rateContractContext.clientUuid}/contracts`,
+                button: this,
+            });
+
+            if (!saveResponse.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to create contract.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Contract created!'
+            });
+            closemodals();
+            loadContracts(rateContractContext.clientUuid);
+        });
 
         document.getElementById('cdAddProposalBtn').addEventListener('click', function() {
             document.getElementById('cpRatesContainer').innerHTML = '';
@@ -459,7 +742,7 @@
                 sizeSel.innerHTML = `<option value="">Select</option>` +
                     sizes.map((v) =>
                         `<option value="${v.container_size.id}" data-variant-id="${v.id}">${v.container_size.size}</option>`
-                        ).join('');
+                    ).join('');
                 variantInput.value = '';
                 resetRate(baseRateInput, finalRateInput);
             });
@@ -586,7 +869,7 @@
                 title: 'Proposal saved!'
             });
             closeSideModal('AddClientProposalModal');
-            loadProposals(currentClientUuid);
+            loadProposals(currentClientUuid, 1);
         });
 
         // ================= CONTRACTS LIST (basic) =================

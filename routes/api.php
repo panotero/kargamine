@@ -194,6 +194,8 @@ Route::middleware(['auth'])->group(function () {
 
         // literal route before the {uuid} wildcard ones below
         Route::get('/proposals/rateLookup', [ClientProposalController::class, 'rateLookup']);
+        Route::patch('/proposals/{proposal}/status', [ClientProposalController::class, 'updateStatus']);
+        Route::delete('/proposals/rates/{rate}', [ClientProposalController::class, 'destroyRate']);
 
         Route::get('/{uuid}/proposals', [ClientProposalController::class, 'index']);
         Route::post('/{uuid}/proposals', [ClientProposalController::class, 'store']);
