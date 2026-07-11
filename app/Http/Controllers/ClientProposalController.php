@@ -8,6 +8,7 @@ use App\Models\ClientProposalRate;
 use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -73,18 +74,78 @@ class ClientProposalController extends Controller
     }
 
     /**
-     * Adds one or more container/rate lines. For each line:
-     *  - If a PENDING proposal already exists for this client on the same
-     *    origin/destination lane, the new container is appended to it.
-     *  - Otherwise a brand new (pending) proposal is created for that lane.
-     * Once a proposal leaves pending (approved/disapproved/accepted/rejected),
-     * any further container added on that same lane starts a fresh proposal.
+     * Always creates a brand new proposal record. No more auto-matching
+     * against an existing pending proposal on the same lane - that
+     * ambiguity is gone. Appending to an existing proposal is now an
+     * explicit, separate action (see addRates()).
      */
     public function store(Request $request, $clientUuid)
     {
         $client = ClientMaster::where('uuid', $clientUuid)->firstOrFail();
 
-        $validated = $request->validate([
+        $validated = $request->validate($this->rateRules());
+
+        $proposal = DB::transaction(function () use ($client, $validated, $request) {
+            $proposal = $this->createProposal($client, $request);
+
+            foreach ($validated['rates'] as $rateData) {
+                $proposal->rates()->create($rateData);
+            }
+
+            return $proposal;
+        });
+
+        return response()->json(['success' => true, 'data' => $proposal->load('rates')], 201);
+    }
+
+    /**
+     * Appends container lines to an EXISTING proposal. Used by the
+     * "Add Container" button on a proposal card - only allowed while
+     * that proposal is still pending review.
+     */
+    public function addRates(Request $request, ClientProposal $proposal)
+    {
+        if ($proposal->status !== ClientProposal::STATUS_PENDING) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Containers can only be added while the proposal is pending.',
+            ], 422);
+        }
+
+        $validated = $request->validate($this->rateRules());
+
+        DB::transaction(function () use ($proposal, $validated) {
+            foreach ($validated['rates'] as $rateData) {
+                $proposal->rates()->create($rateData);
+            }
+        });
+
+        return response()->json(['success' => true, 'data' => $proposal->load('rates')]);
+    }
+
+    /**
+     * Generates the downloadable PDF for an approved proposal.
+     */
+    public function downloadPdf(ClientProposal $proposal)
+    {
+        $proposal->load([
+            'client',
+            'creator',
+            'rates.originPort',
+            'rates.destinationPort',
+            'rates.container',
+            'rates.containerClass',
+            'rates.containerSize',
+        ]);
+
+        $pdf = Pdf::loadView('pdf.client-proposal', ['proposal' => $proposal]);
+
+        return $pdf->download($proposal->code . '.pdf');
+    }
+
+    protected function rateRules(): array
+    {
+        return [
             'rates' => ['required', 'array', 'min:1'],
             'rates.*.origin_port_id' => ['required', 'integer', 'exists:ports,port_id'],
             'rates.*.destination_port_id' => ['required', 'integer', 'exists:ports,port_id'],
@@ -96,35 +157,7 @@ class ClientProposalController extends Controller
             'rates.*.discount_type' => ['nullable', 'in:percentage,fixed'],
             'rates.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'rates.*.final_rate' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        $touched = DB::transaction(function () use ($client, $validated, $request) {
-            $touchedProposals = [];
-
-            foreach ($validated['rates'] as $rateData) {
-                $proposal = ClientProposal::where('client_id', $client->id)
-                    ->where('status', ClientProposal::STATUS_PENDING)
-                    ->whereHas('rates', function ($q) use ($rateData) {
-                        $q->where('origin_port_id', $rateData['origin_port_id'])
-                            ->where('destination_port_id', $rateData['destination_port_id']);
-                    })
-                    ->first();
-
-                if (! $proposal) {
-                    $proposal = $this->createProposal($client, $request);
-                }
-
-                $proposal->rates()->create($rateData);
-                $touchedProposals[$proposal->id] = $proposal;
-            }
-
-            return $touchedProposals;
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => collect($touched)->map(fn($p) => $p->load('rates'))->values(),
-        ], 201);
+        ];
     }
 
     protected function createProposal(ClientMaster $client, Request $request): ClientProposal

@@ -196,6 +196,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposals/rateLookup', [ClientProposalController::class, 'rateLookup']);
         Route::patch('/proposals/{proposal}/status', [ClientProposalController::class, 'updateStatus']);
         Route::delete('/proposals/rates/{rate}', [ClientProposalController::class, 'destroyRate']);
+        Route::post('/proposals/{proposal}/rates', [ClientProposalController::class, 'addRates']); // NEW - append container
+        Route::get('/proposals/{proposal}/pdf', [ClientProposalController::class, 'downloadPdf']);  // NEW - download
 
         Route::get('/{uuid}/proposals', [ClientProposalController::class, 'index']);
         Route::post('/{uuid}/proposals', [ClientProposalController::class, 'store']);
