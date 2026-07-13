@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientContract;
 use App\Models\ClientMaster;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,9 @@ use Illuminate\Support\Str;
 
 class ClientContractController extends Controller
 {
+    /**
+     * Contracts for ONE client - used inside the Client Master detail modal.
+     */
     public function index($clientUuid)
     {
         $client = ClientMaster::where('uuid', $clientUuid)->firstOrFail();
@@ -21,6 +25,106 @@ class ClientContractController extends Controller
             ->get();
 
         return response()->json(['success' => true, 'data' => $contracts]);
+    }
+
+    /**
+     * ALL contracts across ALL clients - used by the Contracts page.
+     */
+    public function indexAll(Request $request)
+    {
+        $contracts = ClientContract::with([
+            'client:id,uuid,company_name,customer_code',
+            'proposal:id,code',
+        ])
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $s = $request->search;
+                $q->where('code', 'like', "%{$s}%")
+                    ->orWhereHas('client', fn($q) => $q->where('company_name', 'like', "%{$s}%"))
+                    ->orWhereHas('proposal', fn($q) => $q->where('code', 'like', "%{$s}%"));
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                switch (strtolower($request->status)) {
+                    case 'draft':
+                        $q->where('status', ClientContract::STATUS_DRAFT);
+                        break;
+                    case 'active':
+                        $q->where('status', ClientContract::STATUS_ACTIVE);
+                        break;
+                    case 'expired':
+                        $q->where('status', ClientContract::STATUS_EXPIRED);
+                        break;
+                    case 'terminated':
+                        $q->where('status', ClientContract::STATUS_TERMINATED);
+                        break;
+                    case 'expiring':
+                        $q->where('status', ClientContract::STATUS_ACTIVE)
+                            ->whereDate('valid_to', '>=', Carbon::today())
+                            ->whereDate('valid_to', '<=', Carbon::today()->addMonth());
+                        break;
+                    case 'all':
+                    default:
+                        break;
+                }
+            })
+            ->latest('updated_at')
+            ->paginate($request->get('per_page', 15))
+            ->appends($request->query());
+
+        $allContracts = ClientContract::all();
+
+        $statusCounts = $allContracts->groupBy('status')->map(fn($group) => $group->count());
+
+        $expiring = ClientContract::where('status', ClientContract::STATUS_ACTIVE)
+            ->whereDate('valid_to', '>=', Carbon::today())
+            ->whereDate('valid_to', '<=', Carbon::today()->addMonth())
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => $contracts,
+            'status_counts' => [
+                'all' => $allContracts->count(),
+                'draft' => $statusCounts->get(ClientContract::STATUS_DRAFT, 0),
+                'active' => $statusCounts->get(ClientContract::STATUS_ACTIVE, 0),
+                'expired' => $statusCounts->get(ClientContract::STATUS_EXPIRED, 0),
+                'terminated' => $statusCounts->get(ClientContract::STATUS_TERMINATED, 0),
+                'expiring' => $expiring,
+            ],
+        ]);
+    }
+
+    public function show(ClientContract $contract)
+    {
+        $contract->load([
+            'client',
+            'proposal',
+            'creator',
+            'rates.originPort',
+            'rates.destinationPort',
+            'rates.container',
+            'rates.containerClass',
+            'rates.containerSize',
+        ]);
+
+        return response()->json(['success' => true, 'data' => $contract]);
+    }
+
+    public function downloadPdf(ClientContract $contract)
+    {
+        $contract->load([
+            'client',
+            'proposal',
+            'creator',
+            'rates.originPort',
+            'rates.destinationPort',
+            'rates.container',
+            'rates.containerClass',
+            'rates.containerSize',
+        ]);
+
+        $pdf = Pdf::loadView('pdf.client-contract', ['contract' => $contract]);
+
+        return $pdf->download($contract->code . '.pdf');
     }
 
     public function store(Request $request, $clientUuid)

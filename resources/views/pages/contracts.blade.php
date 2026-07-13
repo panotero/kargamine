@@ -1,21 +1,14 @@
-{{-- Contracts - loaded into the SPA content area, not a full page --}}
 <div class="container mx-auto px-4 py-6">
 
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-semibold text-zinc-900">Contracts</h1>
-            <p class="text-sm text-zinc-500 mt-1">Signed client contracts and the discounted rates they carry into
-                booking.</p>
+            <p class="text-sm text-zinc-500 mt-1">Signed client contracts created from approved proposals. New
+                contracts are created from the Clients page.</p>
         </div>
-        <button type="button" id="newContractBtn"
-            class="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-orange-700 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            New Contract
-        </button>
     </div>
-    <!-- Contract Status Cards -->
+
+    {{-- Contract Status Cards --}}
     <section class="w-full my-5">
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
 
@@ -50,51 +43,69 @@
             <div class="contractStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
                 data-status="terminated">
                 <div class="w-full py-1 rounded-full bg-zinc-500"></div>
-                <p class="text-xs text-zinc-400 font-semibold mt-2">CANCELLED</p>
-                <p class="text-2xl font-bold text-black" id="countCancelled">0</p>
+                <p class="text-xs text-zinc-400 font-semibold mt-2">TERMINATED</p>
+                <p class="text-2xl font-bold text-black" id="countTerminated">0</p>
             </div>
 
         </div>
     </section>
 
-
-    <x-table id="tableContracts" />
+    <x-table id="tableClientContracts" />
 </div>
 
-
-{{-- View Contract slide-over (read-only) --}}
-<x-side-modal id="viewContractModal">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
-        <h3 class="text-base font-semibold text-zinc-900">Contract Details</h3>
-        <button type="button" id="viewContractCloseBtn" class="text-zinc-400 hover:text-zinc-600">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-        </button>
+{{-- View Contract modal (read-only, with download) --}}
+<x-modal id="viewClientContractModal">
+    <div class="p-5 border-b flex justify-between items-center">
+        <div>
+            <div class="flex items-center gap-2">
+                <p class="text-lg font-semibold" id="vcContractCode">-</p>
+                <span id="vcStatusBadge"></span>
+            </div>
+            <p class="text-xs text-zinc-400" id="vcClientName">-</p>
+        </div>
+        <button class="modal-close">✕</button>
     </div>
 
-    <div id="viewContractBody" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 text-sm text-zinc-700"></div>
-</x-side-modal>
+    <div class="max-h-[65vh] overflow-y-auto p-5 space-y-4 text-sm text-zinc-700">
+        <div id="vcInfoContainer" class="grid grid-cols-2 gap-3 text-sm"></div>
 
-<x-contract-modal />
+        <div>
+            <p class="font-semibold text-sm text-zinc-700 mb-2">Contracted Rates</p>
+            <table class="min-w-full border border-zinc-200 rounded-lg text-xs">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-zinc-500 uppercase">Route</th>
+                        <th class="px-3 py-2 text-left text-zinc-500 uppercase">Container</th>
+                        <th class="px-3 py-2 text-right text-zinc-500 uppercase">Base Rate</th>
+                        <th class="px-3 py-2 text-right text-zinc-500 uppercase">Discount</th>
+                        <th class="px-3 py-2 text-right text-zinc-500 uppercase">Final Rate</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100" id="vcRatesBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="border-t px-5 py-4 flex justify-end gap-2">
+        <a href="#" id="vcDownloadBtn" target="_blank"
+            class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
+            Download PDF
+        </a>
+        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Close</button>
+    </div>
+</x-modal>
 
 
 <script>
     (function() {
         /**
-         * Contracts list page (SPA content-area script).
+         * Contracts page (SPA content-area script).
          *
-         * Contract creation itself lives entirely in create-contract-modal.js
-         * (loaded via the _create-contract-modal partial) so it can be reused
-         * on other pages (e.g. the CRM proposal tab). This file only lists,
-         * filters, and views contracts, and refreshes the list whenever a
-         * 'contract:created' event fires from that other module.
+         * Contracts are now created exclusively from the Clients page
+         * (Client Master detail modal -> Proposals tab -> "Create Contract").
+         * This page only lists ALL client contracts across ALL clients,
+         * lets you filter by status, and view/download any one of them.
          */
-
-        function rows(response) {
-            // ADJUST ME if your pagination shape differs.
-            return response?.data?.data ?? [];
-        }
 
         const CONTRACT_STATUS_MAPPING = {
             1: {
@@ -127,14 +138,15 @@
         // List
         // -----------------------------------------------------------------
         async function loadContracts() {
-
             const response = await apiCall({
                 mode: 'GET',
-                url: '/api/contracts',
+                url: '/api/clientContracts',
             });
+
+            if (!response.success) return;
+
             updateContractCounts(response.status_counts);
             renderTable().load(1);
-
         }
 
         function renderTable() {
@@ -144,11 +156,18 @@
                 },
                 {
                     title: "Client",
-                    key: "lead.contact_name",
+                    key: "client.company_name",
+                    render: (r) => r.client?.company_name ?? '-',
                 },
                 {
-                    title: "Proposal",
+                    title: "Customer Code",
+                    key: "client.customer_code",
+                    render: (r) => r.client?.customer_code ?? '-',
+                },
+                {
+                    title: "Source Proposal",
                     key: "proposal.code",
+                    render: (r) => r.proposal?.code ?? '-',
                 },
                 {
                     title: "Valid From",
@@ -161,25 +180,23 @@
                 {
                     title: "Status",
                     key: "status",
+                    render: (r) => statusBadge(r.status),
                 },
             ];
 
             const table = renderRemoteTable({
-                url: '/api/contracts',
-                tableId: "tableContracts",
+                url: '/api/clientContracts',
+                tableId: "tableClientContracts",
                 afterRenderFunction: handleClick,
                 thead: thead,
             });
-
 
             return table;
         }
 
         function handleClick(row) {
-            row.addEventListener("click", async function() {
+            row.addEventListener("click", function() {
                 const data = JSON.parse(row.dataset.row);
-                console.log(data);
-                // Your code here
                 openViewContract(data.id);
             });
         }
@@ -188,36 +205,23 @@
             btn.addEventListener("click", function() {
                 document
                     .querySelectorAll(".contractStatusBtn")
-                    .forEach((card) => card.classList.remove("ring-2", "ring-orange-500"));
+                    .forEach((card) => card.classList.remove("ring-2", "ring-orange-500",
+                        "ring-blue-500"));
 
                 this.classList.add("ring-2", "ring-orange-500");
 
                 const status = this.dataset.status;
-
                 renderTable().setFilter("status", status);
             });
         });
 
-        function buildContractRow(contract) {
-            return `
-            <tr data-view-id="${contract.id}">
-                <td class="px-4 py-2.5 text-zinc-700 font-medium">${contract.code}</td>
-                <td class="px-4 py-2.5 text-zinc-700">${contract.lead?.contact_name ?? '-'}</td>
-                <td class="px-4 py-2.5 text-zinc-700">${contract.proposal?.code ?? '-'}</td>
-                <td class="px-4 py-2.5 text-zinc-700">${contract.valid_from ?? '-'}</td>
-                <td class="px-4 py-2.5 text-zinc-700">${contract.valid_to ?? '-'}</td>
-                <td class="px-4 py-2.5">${statusBadge(contract.status)}</td>
-            </tr>
-        `;
-        }
-
         // -----------------------------------------------------------------
-        // View
+        // View + download
         // -----------------------------------------------------------------
         async function openViewContract(id) {
             const response = await apiCall({
                 mode: 'GET',
-                url: `/api/contracts/${id}`
+                url: `/api/clientContracts/${id}`
             });
 
             if (!response.success) {
@@ -230,44 +234,46 @@
             }
 
             const contract = response.data;
-            const body = document.getElementById('viewContractBody');
 
-            const rateRows = (contract.rates ?? [])
-                .map(
-                    (r) => `
-                    <tr>
-                        <td class="px-3 py-2">${r.route_from} &rarr; ${r.route_to}</td>
-                        <td class="px-3 py-2">${r.discount_type === 'PERCENTAGE' ? `${r.discount_value}%` : r.discount_value}</td>
-                    </tr>
-                `
-                )
-                .join('');
+            document.getElementById('vcContractCode').textContent = contract.code;
+            document.getElementById('vcClientName').textContent =
+                `${contract.client?.company_name ?? '-'} (${contract.client?.customer_code ?? '-'})`;
+            document.getElementById('vcStatusBadge').innerHTML = statusBadge(contract.status);
 
-            body.innerHTML = `
-            <div class="grid grid-cols-2 gap-3 text-sm">
-                <div><span class="text-zinc-400">Code</span><div class="font-medium text-zinc-900">${contract.code}</div></div>
-                <div><span class="text-zinc-400">Status</span><div>${statusBadge(contract.status)}</div></div>
-                <div><span class="text-zinc-400">Valid From</span><div>${contract.valid_from}</div></div>
-                <div><span class="text-zinc-400">Valid To</span><div>${contract.valid_to}</div></div>
-            </div>
+            document.getElementById('vcInfoContainer').innerHTML = `
+                <div><span class="text-zinc-400">Source Proposal:</span> <div class="font-medium">${contract.proposal?.code ?? '-'}</div></div>
+                <div><span class="text-zinc-400">Prepared By:</span> <div class="font-medium">${contract.creator?.name ?? '-'}</div></div>
+                <div><span class="text-zinc-400">Signed Date:</span> <div class="font-medium">${contract.signed_date ?? '-'}</div></div>
+                <div><span class="text-zinc-400">Valid From:</span> <div class="font-medium">${contract.valid_from}</div></div>
+                <div><span class="text-zinc-400">Valid To:</span> <div class="font-medium">${contract.valid_to}</div></div>
+            `;
 
-            <div class="mt-4">
-                <div class="text-sm font-medium text-zinc-700 mb-2">Rate Lines</div>
-                <table class="min-w-full border border-zinc-200 rounded-lg text-xs">
-                    <thead class="bg-zinc-50">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-zinc-500 uppercase">Route</th>
-                            <th class="px-3 py-2 text-left text-zinc-500 uppercase">Discount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-100">${rateRows || '<tr><td colspan="2" class="px-3 py-4 text-center text-zinc-400">No rate lines.</td></tr>'}</tbody>
-                </table>
-            </div>
-        `;
+            const rateRows = (contract.rates ?? []).map((r) => `
+                <tr>
+                    <td class="px-3 py-2">${r.origin_port?.code ?? '-'} &rarr; ${r.destination_port?.code ?? '-'}</td>
+                    <td class="px-3 py-2">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
+                    <td class="px-3 py-2 text-right">${Number(r.base_rate).toLocaleString()}</td>
+                    <td class="px-3 py-2 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
+                    <td class="px-3 py-2 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
+                </tr>
+            `).join('');
 
-            initSideModal({
-                modalId: 'viewContractModal'
+            document.getElementById('vcRatesBody').innerHTML = rateRows ||
+                '<tr><td colspan="5" class="px-3 py-4 text-center text-zinc-400">No rate lines.</td></tr>';
+
+            document.getElementById('vcDownloadBtn').href = `/api/clientContracts/${contract.id}/pdf`;
+
+            initModal({
+                modalId: 'viewClientContractModal'
             });
+        }
+
+        function updateContractCounts(counts) {
+            document.getElementById("countAll").textContent = counts.all;
+            document.getElementById("countActive").textContent = counts.active;
+            document.getElementById("countExpiring").textContent = counts?.expiring ?? 0;
+            document.getElementById("countExpired").textContent = counts.expired;
+            document.getElementById("countTerminated").textContent = counts.terminated;
         }
 
         // -----------------------------------------------------------------
@@ -275,32 +281,8 @@
         // -----------------------------------------------------------------
         function init() {
             loadContracts();
-
-
-            // Opens the standalone modal from create-contract-modal.js -
-            // this page has no idea how that modal works internally.
-            document.getElementById('newContractBtn').addEventListener('click', () => window
-                .openCreateContractModal());
-
-            document.getElementById('viewContractCloseBtn').addEventListener('click', () => closeSideModal(
-                'viewContractModal'));
-
-            // Refresh the list whenever a contract is created from anywhere,
-            // including this page's own modal.
-            document.addEventListener('contract:created', loadContracts);
         }
 
         init();
-
-        function updateContractCounts(counts) {
-
-
-
-            document.getElementById("countAll").textContent = counts.all;
-            document.getElementById("countActive").textContent = counts.active;
-            document.getElementById("countExpiring").textContent = counts?.expiring ?? 0;
-            document.getElementById("countExpired").textContent = counts.expired;
-            document.getElementById("countCancelled").textContent = counts.terminated;
-        }
     })();
 </script>

@@ -12,6 +12,13 @@ class ClientContract extends Model
     public const STATUS_EXPIRED = 3;
     public const STATUS_TERMINATED = 4;
 
+    public const STATUS_LABELS = [
+        self::STATUS_DRAFT => 'Draft',
+        self::STATUS_ACTIVE => 'Active',
+        self::STATUS_EXPIRED => 'Expired',
+        self::STATUS_TERMINATED => 'Terminated',
+    ];
+
     protected $fillable = [
         'uuid',
         'code',
@@ -25,16 +32,29 @@ class ClientContract extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'signed_date' => 'date',
+        'valid_from' => 'date',
+        'valid_to' => 'date',
+    ];
+
     public function client()
     {
         return $this->belongsTo(ClientMaster::class, 'client_id');
     }
+
     public function proposal()
     {
         return $this->belongsTo(ClientProposal::class, 'client_proposal_id');
     }
+
     public function rates()
     {
         return $this->hasMany(ClientContractRate::class, 'contract_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

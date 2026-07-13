@@ -178,6 +178,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{proposal}/attachSigned', [ClientProposalController::class, 'attachSigned']);
         Route::get('/{proposal}/pdf', [ClientProposalController::class, 'downloadPdf']);
     });
+    Route::prefix('clientContracts')->group(function () {
+        Route::get('/', [ClientContractController::class, 'indexAll']);
+        Route::get('/{contract}', [ClientContractController::class, 'show']);
+        Route::get('/{contract}/pdf', [ClientContractController::class, 'downloadPdf']);
+    });
 
     require __DIR__ . '/api_maintenance.php';
 });

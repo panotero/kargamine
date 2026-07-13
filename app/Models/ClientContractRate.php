@@ -25,4 +25,34 @@ class ClientContractRate extends Model
     {
         return $this->belongsTo(ClientContract::class, 'contract_id');
     }
+
+    public function originPort()
+    {
+        return $this->belongsTo(Port::class, 'origin_port_id', 'port_id');
+    }
+
+    public function destinationPort()
+    {
+        return $this->belongsTo(Port::class, 'destination_port_id', 'port_id');
+    }
+
+    public function container()
+    {
+        return $this->belongsTo(Container::class, 'container_id');
+    }
+
+    public function containerClass()
+    {
+        return $this->belongsTo(ContainerClass::class, 'container_class_id');
+    }
+
+    public function containerSize()
+    {
+        return $this->belongsTo(ContainerSize::class, 'container_size_id');
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(ContainerVariant::class, 'container_variant_id');
+    }
 }
