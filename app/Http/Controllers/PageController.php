@@ -138,4 +138,8 @@ class PageController extends Controller
     {
         return view('pages.clientMasterForm');
     }
+    public function page_crmLeadForm()
+    {
+        return view('pages.crmLeadForm');
+    }
 }

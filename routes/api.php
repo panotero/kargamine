@@ -124,6 +124,8 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/note', [CrmNoteController::class, 'store']);
         Route::post('/activity', [CrmActivityController::class, 'store']);
+        Route::post('/leads/stage1', [CrmLeadController::class, 'saveStage1']);
+        Route::post('/leads/{uuid}/stage2', [CrmLeadController::class, 'saveStage2']);
     });
 
 
@@ -133,6 +135,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vanclass', [LovController::class, 'vanclass']);
         Route::get('/vantype', [LovController::class, 'vantype']);
         Route::get('/vansize', [LovController::class, 'vansize']);
+        Route::get('/typeofbusiness', [LovController::class, 'typeOfBusiness']);
     });
 
 

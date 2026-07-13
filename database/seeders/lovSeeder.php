@@ -38,7 +38,7 @@ class lovSeeder extends Seeder
         ]);
 
         DB::table('container_type')->insert([
-            ['type' => 'DRY VAN/CON VAN'],
+            ['type' => 'CONVAN'],
             ['type' => 'FLATRACK (PLATFORM)'],
             ['type' => 'REEFER'],
             ['type' => 'HIGH CUBE'],

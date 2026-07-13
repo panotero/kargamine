@@ -226,7 +226,8 @@
             </div>
         </div>
         <div class="h-full items-center">
-            <button id="NewProposalBtn" class="p-2  bg-orange-600 rounded-lg text-white"> <b class="font-black">+</b>
+            <button id="createClientMasterBtn" class="p-2  bg-orange-600 rounded-lg text-white"> <b
+                    class="font-black">+</b>
                 Record</button>
         </div>
     </div>

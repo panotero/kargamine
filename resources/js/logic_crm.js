@@ -149,9 +149,18 @@ window.initCrmLogic = function initCrmLogic() {
 
     function handleClick(row) {
       row.addEventListener("click", function () {
-        loadLeadInfo(JSON.parse(row.dataset.row).uuid);
-        initModal({ modalId: "LeadInfoModal" });
+        const data = JSON.parse(row.dataset.row);
+
+        if (data.is_complete) {
+          loadLeadInfo(data.uuid);
+          initModal({ modalId: "LeadInfoModal" });
+        } else {
+          window.crmLeadFormUuid = data.uuid;
+          loadPage({ title: "Edit Lead", link: "/page_crmLeadForm" });
+        }
       });
+
+      return table;
     }
 
     return table;
@@ -240,6 +249,24 @@ window.initCrmLogic = function initCrmLogic() {
     const lead = response.data;
     const value = Number(lead?.estimated_value || 0);
     const statusClass = getStatusBadgeClass(lead.status.status);
+    const opportunityBtn = document.getElementById("createClientMasterBtn");
+    const isOpportunityOrLater = !["LEAD", "QUALIFIED"].includes(
+      lead.crm_status.status,
+    );
+    opportunityBtn.classList.toggle("hidden", !isOpportunityOrLater);
+    opportunityBtn.onclick = function () {
+      window.clientMasterFormUuid = null;
+      window.clientMasterFormLeadId = lead.id;
+      window.clientMasterFormPrefill = {
+        company_name: lead.company?.company_name ?? "",
+        registered_address: lead.company?.company_address ?? "",
+        contact_number_1: lead.mobile ?? "",
+      };
+      loadPage({
+        title: "New Client Master Data",
+        link: "/page_clientMasterForm",
+      });
+    };
 
     $("#leadCompanyName").html(lead.company.company_name.toUpperCase() ?? "");
     $("#leadStatus").html(`
@@ -643,7 +670,7 @@ window.initCrmLogic = function initCrmLogic() {
   // ============================================================
 
   document
-    .getElementById("NewProposalBtn")
+    .getElementById("createClientMasterBtn")
     .addEventListener("click", function () {
       // leadInfo is already populated by loadLeadInfo() whenever the
       // LeadInfoModal is open, so we can prefill straight from it.
@@ -683,9 +710,12 @@ window.initCrmLogic = function initCrmLogic() {
     updateLeadDetails();
     getStatuses();
 
-    $("#btnNewLead").click(function () {
-      initSideModal({ modalId: "LeadDetailsSideModal" });
-    });
+    document
+      .getElementById("btnNewLead")
+      .addEventListener("click", function () {
+        window.crmLeadFormUuid = null;
+        loadPage({ title: "New Lead", link: "/page_crmLeadForm" });
+      });
   }
 
   initializePage();
