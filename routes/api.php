@@ -175,14 +175,6 @@ Route::middleware(['auth'])->group(function () {
             'message' => 'API successfully triggered!',
         ]);
     });
-    Route::prefix('clientMasters')->group(function () {
-        Route::get('/', [ClientMasterController::class, 'index']);
-        Route::get('/{uuid}', [ClientMasterController::class, 'show']);
-        Route::post('/stage1', [ClientMasterController::class, 'saveStage1']);
-        Route::post('/{uuid}/stage2', [ClientMasterController::class, 'saveStage2']);
-        Route::post('/{uuid}/stage3', [ClientMasterController::class, 'saveStage3']);
-        Route::delete('/{uuid}', [ClientMasterController::class, 'destroy']);
-    });
 
     Route::prefix('clientMasters')->group(function () {
         Route::get('/', [ClientMasterController::class, 'index']);
@@ -192,18 +184,29 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{uuid}/stage3', [ClientMasterController::class, 'saveStage3']);
         Route::delete('/{uuid}', [ClientMasterController::class, 'destroy']);
 
-        // literal route before the {uuid} wildcard ones below
-        Route::get('/proposals/rateLookup', [ClientProposalController::class, 'rateLookup']);
-        Route::patch('/proposals/{proposal}/status', [ClientProposalController::class, 'updateStatus']);
-        Route::delete('/proposals/rates/{rate}', [ClientProposalController::class, 'destroyRate']);
-        Route::post('/proposals/{proposal}/rates', [ClientProposalController::class, 'addRates']); // NEW - append container
-        Route::get('/proposals/{proposal}/pdf', [ClientProposalController::class, 'downloadPdf']);  // NEW - download
-
+        // Client-scoped proposal list/create (used inside the Client Master modal)
         Route::get('/{uuid}/proposals', [ClientProposalController::class, 'index']);
         Route::post('/{uuid}/proposals', [ClientProposalController::class, 'store']);
 
         Route::get('/{uuid}/contracts', [ClientContractController::class, 'index']);
         Route::post('/{uuid}/contracts', [ClientContractController::class, 'store']);
+    });
+
+    // Global proposal actions - used by the Proposals tab (and re-used by the
+    // client modal for container/status actions). Static segments MUST come
+    // before the {proposal} wildcard route.
+    Route::prefix('clientProposals')->group(function () {
+        Route::get('/', [ClientProposalController::class, 'indexAll']);
+        Route::get('/rateLookup', [ClientProposalController::class, 'rateLookup']);
+        Route::delete('/rates/{rate}', [ClientProposalController::class, 'destroyRate']);
+
+        Route::get('/{proposal}', [ClientProposalController::class, 'show']);
+        Route::post('/{proposal}/rates', [ClientProposalController::class, 'addRates']);
+        Route::post('/{proposal}/approve', [ClientProposalController::class, 'approve']);
+        Route::post('/{proposal}/disapprove', [ClientProposalController::class, 'disapprove']);
+        Route::post('/{proposal}/reject', [ClientProposalController::class, 'reject']);
+        Route::post('/{proposal}/attachSigned', [ClientProposalController::class, 'attachSigned']);
+        Route::get('/{proposal}/pdf', [ClientProposalController::class, 'downloadPdf']);
     });
 
     require __DIR__ . '/api_maintenance.php';

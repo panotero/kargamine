@@ -1,342 +1,312 @@
+{{-- resources/views/pages/proposals.blade.php --}}
 <div class="container mx-auto space-y-2">
 
     <div class="flex justify-between items-center mb-5 p-2">
-
         <div>
             <h1 class="text-2xl font-bold">Proposals</h1>
-            <p class="text-zinc-500">Manage Proposals</p>
+            <p class="text-zinc-500">Review, approve, and track client proposals</p>
         </div>
-
-        <button id="newProposalBtn" class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-lg">
-            + New Proposal
-        </button>
-
     </div>
-    <x-table id="tableProposal" />
 
+    {{-- Status filter tabs --}}
+    <div class="flex gap-2 flex-wrap px-2 mb-3">
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border ring-2 ring-orange-500"
+            data-status="all">All</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="1">Pending</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="2">Approved</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="3">Disapproved</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="4">Accepted</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="5">Rejected</button>
+    </div>
+
+    <x-table id="tableClientProposals" />
 </div>
 
-<x-new-proposal-modal />
-<x-proposal-modal />
-<x-contract-modal />
+{{-- Detail / action modal --}}
+<x-modal id="ClientProposalModal">
+    <div class="p-5 border-b flex justify-between items-center">
+        <div>
+            <div class="flex items-center gap-2">
+                <p class="text-lg font-semibold" id="cpmCode">-</p>
+                <span id="cpmStatusBadge"></span>
+            </div>
+            <p class="text-xs text-zinc-400" id="cpmClientName">-</p>
+        </div>
+        <button class="modal-close">✕</button>
+    </div>
 
+    <div class="max-h-[65vh] overflow-y-auto p-5 space-y-5">
+
+        <div id="cpmDecisionInfo" class="text-xs text-zinc-500 hidden"></div>
+
+        <table class="w-full text-xs">
+            <thead class="text-zinc-400 uppercase">
+                <tr>
+                    <th class="text-left py-1">Route</th>
+                    <th class="text-left py-1">Container</th>
+                    <th class="text-right py-1">Base Rate</th>
+                    <th class="text-right py-1">Discount</th>
+                    <th class="text-right py-1">Final Rate</th>
+                </tr>
+            </thead>
+            <tbody id="cpmRatesBody"></tbody>
+        </table>
+
+        {{-- Attach signed document - only shown when APPROVED --}}
+        <div id="cpmSignedSection" class="hidden border-t pt-4">
+            <p class="font-semibold text-sm text-zinc-700 mb-2">Attach Signed Proposal</p>
+            <div class="flex items-center gap-2">
+                <input type="file" id="cpmSignedFile" accept=".pdf,.jpg,.jpeg,.png"
+                    class="flex-1 border rounded-lg px-2 py-1.5 text-sm">
+                <button id="cpmUploadSignedBtn"
+                    class="px-4 py-2 text-sm rounded-lg bg-green-600 hover:bg-green-700 text-white shrink-0">
+                    Upload & Accept
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="border-t px-5 py-4 flex justify-between items-center gap-2">
+        <div class="flex gap-2">
+            <a href="#" id="cpmDownloadLink" target="_blank"
+                class="hidden px-4 py-2 text-sm rounded-lg border hover:bg-zinc-50">Download</a>
+            <button id="cpmCreateContractBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                Create Contract
+            </button>
+        </div>
+        <div class="flex gap-2">
+            <button id="cpmRejectBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white">Reject</button>
+            <button id="cpmDisapproveBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-amber-500 hover:bg-amber-600 text-white">Disapprove</button>
+            <button id="cpmApproveBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-green-600 hover:bg-green-700 text-white">Approve</button>
+        </div>
+    </div>
+</x-modal>
 
 <script>
     (function() {
+        const STATUS_LABEL = {
+            1: 'Pending',
+            2: 'Approved',
+            3: 'Disapproved',
+            4: 'Accepted',
+            5: 'Rejected'
+        };
+        const STATUS_BADGE = {
+            1: 'bg-amber-100 text-amber-600',
+            2: 'bg-green-100 text-green-700',
+            3: 'bg-red-100 text-red-600',
+            4: 'bg-blue-100 text-blue-700',
+            5: 'bg-zinc-200 text-zinc-600',
+        };
+
+        let currentProposalId = null;
+        let activeStatusFilter = 'all';
 
         renderTable().load(1);
-        // ============================================================
-        // CONSTANTS & STATE
-        // ============================================================
 
-        const modal = document.getElementById("proposalModal");
-        const approveBtn = modal.querySelector("#approveBtn");
-        const onHoldBtn = modal.querySelector("#onHoldBtn");
-        const rejectBtn = modal.querySelector("#rejectBtn");
-
-        let proposalCode = "";
-
-        const STATUS = {
-            PENDING: 1,
-            APPROVED: 2,
-            REJECTED: 3,
-            ON_HOLD: 6,
-        };
-
-        const LEAD_INFO_MAPPING = {
-            company_name: "leadInfoCompanyName",
-            company_address: "leadCompanyAddress",
-            contact_name: "leadContactName",
-            email: "leadEmail",
-            mobile: "leadMobile",
-            signatory: "leadSignatory",
-            signatory_position: "leadSignatoryPosition",
-            source: "leadSource",
-            estimated_value: "leadEstimatedValue",
-            created_at: "leadCreatedAt",
-            expected_close_date: "leadExpectedCloseDate",
-            proposalCode: "proposalCode",
-            proposedBy: "proposalProposedBy",
-            proposalDate: "proposalCreatedAt",
-            proposalEditDate: "proposalUpdatedAt",
-            proposalModalCode: "proposalModalCode",
-            proposalModalStatus: "proposalModalStatus",
-        };
-
-        // ============================================================
-        // INIT
-        // ============================================================
-
-        document.getElementById("newProposalBtn").addEventListener("click", function() {
-            if (!document.querySelector("#generateProposal")) return;
-            initSideModal({
-                modalId: "generateProposal"
-            });
-        });
-
-
-        // ============================================================
-        // LOAD PROPOSAL INFO
-        // ============================================================
-
-        async function loadProposalInfo(code) {
-
-            const response = await apiCall({
-                mode: "GET",
-                url: `/api/proposal/${code}`,
-            });
-            console.log(response);
-
-            if (!response.success) {
-                showMessage({
-                    status: "error",
-                    title: "Error Fetching Proposal",
-                    message: "There is an error fetching your information. Please contact the system administrator.",
-                });
-                return;
-            }
-
-            const proposal = response.data;
-
-            renderLeadInfo(proposal);
-            renderRates(proposal);
-            document.getElementById("createContractBtn").dataset.proposalCode = proposal.code;
+        function statusPill(status) {
+            return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[status] ?? 'bg-zinc-100 text-zinc-500'}">${STATUS_LABEL[status] ?? 'Unknown'}</span>`;
         }
-
-        // ============================================================
-        // RENDER LEAD INFO
-        // ============================================================
-
-        function renderLeadInfo(proposal) {
-
-            const {
-                lead,
-                creator,
-                status,
-                code
-            } = proposal;
-
-            const data = {
-                company_name: lead.company.company_name,
-                company_address: lead.company.company_address,
-                contact_name: lead.contact_name,
-                email: lead.email,
-                mobile: lead.mobile,
-                signatory: lead.company.authorized_signatory_name,
-                signatory_position: lead.company.authorized_signatory_position,
-                source: lead.source,
-                estimated_value: lead.estimated_value,
-                created_at: lead.created_at,
-                expected_close_date: lead.expected_close_date,
-                proposalCode: code,
-                proposedBy: creator.name,
-                proposalDate: formatDateTime(proposal.created_at),
-                proposalEditDate: formatDateTime(proposal.updated_at),
-                proposalModalCode: code,
-                proposalModalStatus: status.status,
-            };
-
-            Object.entries(LEAD_INFO_MAPPING).forEach(([key, elementId]) => {
-                const el = modal.querySelector(`#${elementId}`);
-                if (el) el.textContent = data[key] ?? "-";
-            });
-
-            // Toggle action button visibility based on status
-            const approvalButtons = modal.querySelector(".approval-buttons");
-            const contractButtons = modal.querySelector(".generate-contract-button");
-
-            approvalButtons.classList.toggle("hidden", status.id !== STATUS.PENDING);
-            contractButtons.classList.toggle("hidden", status.id !== STATUS.APPROVED);
-        }
-
-        // ============================================================
-        // RENDER RATES
-        // ============================================================
-
-        function renderRates(proposal) {
-
-            const container = modal.querySelector("#proposedRateContainer");
-            const isEditable = proposal.status.id === STATUS.PENDING;
-
-            container.innerHTML = proposal.rates.map(rate => `
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <div class="grid grid-cols-[1fr_1fr_auto] gap-4 items-start">
-
-                <!-- Route -->
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-1.5">Route</p>
-                    <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 grid grid-cols-2 gap-x-4 gap-y-3">
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Origin</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.route_from?.code ?? "-"}</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Destination</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.route_to?.code ?? "-"}</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Origin Service</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.service_origin?.mode ?? "-"}</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Dest. Service</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.service_destination?.mode ?? "-"}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Container -->
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-1.5">Container</p>
-                    <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 grid grid-cols-2 gap-x-4">
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Class</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.van_class?.class ?? "-"}</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Type</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.van_type?.type ?? "-"}</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-zinc-400 mb-0.5">Size</p>
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">${rate?.van_size?.size ?? "-"}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rate + Actions -->
-                <div class="flex flex-col items-end gap-3 pt-6">
-                    <div class="text-right">
-                        <p class="text-[11px] text-zinc-400 mb-0.5">Proposed Rate</p>
-                        <p class="text-base font-medium text-zinc-800 dark:text-zinc-100">${rate?.proposed_rate ?? "-"}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[11px] text-zinc-400 mb-0.5">Min. Quantity</p>
-                        <p class="text-base font-medium text-zinc-800 dark:text-zinc-100">${rate?.min_van_qty ?? "-"}</p>
-                    </div>
-                    <div class="flex gap-1.5 ${isEditable ? "" : "hidden"}">
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 flex items-center justify-center rounded-lg transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487a1.875 1.875 0 1 1 2.651 2.651L7.5 19.151 3 21l1.849-4.5L16.862 4.487Z" />
-                            </svg>
-                        </button>
-                        <button class="bg-red-600 hover:bg-red-700 text-white w-8 h-8 flex items-center justify-center rounded-lg transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21H8.084a2.25 2.25 0 0 1-2.244-1.327L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0V4.875c0-1.036-.84-1.875-1.875-1.875h-3.75c-1.035 0-1.875.839-1.875 1.875V5.25m7.5 0h-7.5" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    `).join("");
-        }
-
-        // ============================================================
-        // UPDATE PROPOSAL STATUS
-        // ============================================================
-
-        async function updateProposalStatus(code, status, button) {
-
-            const response = await apiCall({
-                mode: "POST",
-                isJson: true,
-                payload: {
-                    proposalCode: code,
-                    status
-                },
-                url: "/api/proposal/approvals",
-                button,
-            });
-
-            if (!response.success) {
-                showMessage({
-                    status: "error",
-                    title: "Error Processing Information",
-                    message: "There is some error processing your information. Please contact the system administrator.",
-                });
-                return false;
-            }
-
-            return true;
-        }
-
-        // ============================================================
-        // APPROVAL BUTTON LISTENERS
-        // ============================================================
-
-        async function handleStatusUpdate(status) {
-            await updateProposalStatus(proposalCode, status, null);
-            await loadProposalInfo(proposalCode);
-        }
-
-        approveBtn.addEventListener("click", () => handleStatusUpdate(STATUS.APPROVED));
-        onHoldBtn.addEventListener("click", () => handleStatusUpdate(STATUS.ON_HOLD));
-        rejectBtn.addEventListener("click", () => handleStatusUpdate(STATUS.REJECTED));
-
-        document.getElementById("createContractBtn").addEventListener("click", function() {
-            if (typeof window.openCreateContractModal !== "function")
-                return; // partial/script not on this page
-
-            const proposalCode = this.dataset.proposalCode;
-            window.openCreateContractModal(proposalCode);
-        });
-
-
 
         function renderTable() {
             const thead = [{
-                    title: "Code",
-                    key: "code",
+                    title: 'Code',
+                    key: 'code'
                 },
                 {
-                    title: "Company",
-                    key: "lead.company.company_name",
+                    title: 'Client',
+                    key: 'client.company_name',
+                    render: (r) => r.client?.company_name ?? '-'
                 },
                 {
-                    title: "Contact Name",
-                    key: "lead.contact_name",
+                    title: 'Customer Code',
+                    key: 'client.customer_code',
+                    render: (r) => r.client?.customer_code ?? '-'
                 },
                 {
-                    title: "Proposed",
-                    key: "rates",
-                    render: (row) => row.rates.length,
+                    title: 'Status',
+                    key: 'status',
+                    render: (r) => statusPill(r.status)
                 },
                 {
-                    title: "Status",
-                    key: "status.status",
+                    title: 'Decided By',
+                    key: 'decided_by.name',
+                    render: (r) => r.decided_by?.name ?? '-'
                 },
                 {
-                    title: "Proposed By",
-                    key: "creator.name",
-                },
-                {
-                    title: "Created",
-                    key: "created_at",
-                    render: (row) => formatDateTime(row.created_at),
+                    title: 'Created',
+                    key: 'created_at',
+                    render: (r) => formatDateTime(r.created_at)
                 },
             ];
 
             const table = renderRemoteTable({
-                url: "/api/proposal",
-                tableId: "tableProposal",
-                afterRenderFunction: handleClick,
+                url: '/api/clientProposals',
+                tableId: 'tableClientProposals',
+                afterRenderFunction: (row) => row.addEventListener('click', function() {
+                    openProposalModal(JSON.parse(row.dataset.row).id);
+                }),
                 thead: thead,
             });
 
-            function handleClick(row) {
-                row.addEventListener("click", async function() {
-                    console.log(JSON.parse(row.dataset.row).code);
-                    await loadProposalInfo(JSON.parse(row.dataset.row).code);
-
-                    initModal({
-                        modalId: "proposalModal",
-                    });
-                });
-            }
             return table;
         }
 
+        document.querySelectorAll('.proposalStatusBtn').forEach((btn) => {
+            btn.addEventListener('click', function() {
+                activeStatusFilter = this.dataset.status;
+                document.querySelectorAll('.proposalStatusBtn').forEach((b) => b.classList.remove(
+                    'ring-2', 'ring-orange-500'));
+                this.classList.add('ring-2', 'ring-orange-500');
+                renderTable().setFilter('status', activeStatusFilter);
+            });
+        });
+
+        async function openProposalModal(id) {
+            const response = await apiCall({
+                mode: 'GET',
+                url: `/api/clientProposals/${id}`
+            });
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to load this proposal.'
+                });
+                return;
+            }
+
+            const p = response.data;
+            currentProposalId = p.id;
+
+            document.getElementById('cpmCode').textContent = p.code;
+            document.getElementById('cpmClientName').textContent =
+                `${p.client?.company_name ?? '-'} (${p.client?.customer_code ?? '-'})`;
+            document.getElementById('cpmStatusBadge').innerHTML = statusPill(p.status);
+
+            const decisionInfo = document.getElementById('cpmDecisionInfo');
+            if (p.decided_by) {
+                decisionInfo.textContent =
+                    `${STATUS_LABEL[p.status]} by ${p.decided_by.name} on ${formatDateTime(p.decided_at)}${p.decision_remarks ? ' — ' + p.decision_remarks : ''}`;
+                decisionInfo.classList.remove('hidden');
+            } else {
+                decisionInfo.classList.add('hidden');
+            }
+
+            document.getElementById('cpmRatesBody').innerHTML = p.rates.map((r) => `
+                <tr class="border-t">
+                    <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
+                    <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
+                    <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
+                    <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
+                    <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
+                </tr>
+            `).join('');
+
+            // Buttons are permission-gated server-side (p.can_approve / p.can_reject)
+            // AND status-gated here - both checks matter, one is authorization,
+            // the other is workflow state.
+            toggle('cpmApproveBtn', p.status === 1 && p.can_approve);
+            toggle('cpmDisapproveBtn', p.status === 1 && p.can_approve);
+            toggle('cpmRejectBtn', [1, 2].includes(p.status) && p.can_reject);
+            toggle('cpmSignedSection', p.status === 2);
+            toggle('cpmDownloadLink', [2, 4].includes(p.status));
+            toggle('cpmCreateContractBtn', p.status === 4);
+
+            if ([2, 4].includes(p.status)) {
+                document.getElementById('cpmDownloadLink').href = `/api/clientProposals/${p.id}/pdf`;
+            }
+
+            initModal({
+                modalId: 'ClientProposalModal'
+            });
+        }
+
+        function toggle(id, visible) {
+            document.getElementById(id).classList.toggle('hidden', !visible);
+        }
+
+        async function decisionAction(action, successMessage) {
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: {},
+                url: `/api/clientProposals/${currentProposalId}/${action}`,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: response.message ?? 'Action failed.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: successMessage
+            });
+            closemodals();
+            renderTable().reload();
+        }
+
+        document.getElementById('cpmApproveBtn').addEventListener('click', () => decisionAction('approve',
+            'Proposal approved'));
+        document.getElementById('cpmDisapproveBtn').addEventListener('click', () => decisionAction('disapprove',
+            'Proposal disapproved'));
+        document.getElementById('cpmRejectBtn').addEventListener('click', async () => {
+            const confirmed = await customConfirm('Reject this proposal? This cannot be undone.');
+            if (confirmed) decisionAction('reject', 'Proposal rejected');
+        });
+
+        document.getElementById('cpmUploadSignedBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('cpmSignedFile');
+            if (!fileInput.files.length) {
+                showMessage({
+                    status: 'error',
+                    title: 'Select a file first'
+                });
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('signed_document', fileInput.files[0]);
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: false,
+                payload: formData,
+                url: `/api/clientProposals/${currentProposalId}/attachSigned`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: response.message ?? 'Upload failed.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Signed document uploaded — proposal accepted!'
+            });
+            closemodals();
+            renderTable().reload();
+        });
+
+        document.getElementById('cpmCreateContractBtn').addEventListener('click', function() {
+            loadPage({
+                title: 'Client Master',
+                link: `/page_clientMasters?openContractFor=${currentProposalId}`
+            });
+        });
     })();
 </script>
