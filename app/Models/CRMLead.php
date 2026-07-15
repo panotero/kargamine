@@ -39,7 +39,7 @@ class CrmLead extends Model
 
         $stage1 = (bool) (
             $this->contact_name && $this->mobile && $this->source &&
-            $company && $company->company_name && $company->company_address &&
+            $company && $company->company_name  &&
             $company->address_no && $company->address_building && $company->address_street &&
             $company->address_barangay && $company->address_town_city &&
             $company->address_province && $company->address_country &&

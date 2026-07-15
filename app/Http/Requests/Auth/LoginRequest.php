@@ -41,7 +41,6 @@ class LoginRequest extends FormRequest
     public function authenticate()
     {
         $user = \App\Models\User::where('email', $this->email)->first();
-
         if (!$user) {
             Log::warning('Login attempt for non-existing user', ['email' => $this->email]);
             throw \Illuminate\Validation\ValidationException::withMessages([
@@ -56,7 +55,7 @@ class LoginRequest extends FormRequest
         ]);
 
         // Check if user is deactivated
-        if ($user->status === 'deactivated') {
+        if ($user->status === 1) {
             Log::warning('Deactivated user tried to login', ['email' => $this->email]);
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'email' => __('Your account is deactivated. Please contact admin.'),

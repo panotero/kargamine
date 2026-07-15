@@ -16,9 +16,42 @@ use App\Models\UserStatus;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(User::with('role')->orderBy('created_at', 'desc')->get());
+        $users = User::query()
+            ->select(
+                'id',
+                'name',
+                'email',
+                'role_id',
+                'status',
+                'created_at',
+                'updated_at'
+            )
+            ->with([
+                'role:id,role_name',
+            ])
+
+            // Search
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+
+                $q->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('role', function ($q) use ($search) {
+                            $q->where('role_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+
+            ->orderByDesc('created_at')
+            ->paginate($request->integer('per_page', 10));
+
+        return response()->json([
+            'success' => true,
+            'data' => $users,
+        ]);
     }
 
     public function create()
@@ -34,10 +67,6 @@ class UserController extends Controller
 
             return response()->json($user, 200);
         } catch (\Exception $e) {
-            Log::error('Failed to fetch user', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
 
             return response()->json(['error' => 'User not found.'], 404);
         }
@@ -47,12 +76,16 @@ class UserController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-            $user->status = 'deactivated';
+            $user->status = 1;
             $user->save();
 
             Log::info('User deactivated successfully', ['id' => $id]);
 
-            return response()->json(['message' => 'User deactivated successfully.'], 200);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User Deactivated successfully',
+            ], 200);
         } catch (\Exception $e) {
             Log::error('Failed to deactivate user', [
                 'id' => $id,
@@ -68,12 +101,16 @@ class UserController extends Controller
 
         try {
             $user = User::findOrFail($id);
-            $user->status = 'active';
+            $user->status = 0;
             $user->save();
 
             Log::info('User deactivated successfully', ['id' => $id]);
 
-            return response()->json(['message' => 'User deactivated successfully.'], 200);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User Deactivated successfully',
+            ], 200);
         } catch (\Exception $e) {
             Log::error('Failed to deactivate user', [
                 'id' => $id,
@@ -88,69 +125,15 @@ class UserController extends Controller
     {
 
 
-        $validator = Validator::make($request->all(), [
-            'name' => [
-                'nullable',
-                'string',
-                'max:255',
-
-            ],
-            'email' => [
-                'nullable',
-                'email',
-                'unique:users,email,' . $id
-            ],
-            [
-                'email.exists' => 'The provided email does not exist in our records.',
-            ],
-            'password' => [
-                'nullable',
-                'string',
-                'min:6',
-            ],
-            'role' => [
-                'nullable',
-                'string',
-
-            ],
-            'office_id' => [
-                'nullable',
-                'integer'
-            ],
-            'role_id' => [
-                'nullable',
-                'integer'
-            ],
-            'authSignatory' => [
-                'nullable',
-                'integer'
-            ],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid input detected.',
-                'invalid_fields' => $validator->errors(),
-            ], 422);
-        }
-
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:6',
-            'role' => 'nullable|string',
-            'office_id' => 'nullable|integer',
             'role_id' => 'nullable|integer',
-            'authSignatory' => 'nullable|integer',
-        ]);
-
-        Log::info('save user info triggered', [
-            'inputs' => $request->all(),
-            'id' => $id,
         ]);
 
         try {
+            DB::beginTransaction();
             $data = array_filter($validated, function ($value) {
                 return !is_null($value) && $value !== '';
             });
@@ -162,6 +145,7 @@ class UserController extends Controller
                 $user = User::findOrFail($id);
                 $user->update($data);
             }
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -169,11 +153,7 @@ class UserController extends Controller
                 'data' => $user,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Failed to save user', [
-                'error' => $e->getMessage(),
-                'data' => $validated,
-            ]);
-
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save user information',
@@ -184,85 +164,35 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
-
-        $validator = Validator::make($request->all(), [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-
-            ],
-            'email' => [
-                'required',
-                'email',
-                'unique:users,email'
-            ],
-            'password' => [
-                'required',
-                'string',
-                'min:6',
-            ],
-            'role' => [
-                'nullable',
-                'string',
-
-            ],
-            'office_id' => [
-                'nullable',
-                'integer'
-            ],
-            'role_id' => [
-                'nullable',
-                'integer'
-            ],
-            'authSignatory' => [
-                'nullable',
-                'integer'
-            ],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid input detected.',
-                'invalid_fields' => $validator->errors(),
-            ], 422);
-        }
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'nullable|string',
-            'office_id' => 'nullable|integer',
-            'role_id' => 'nullable|integer',
-            'authSignatory' => 'nullable|integer',
+            'role_id' => 'required|integer',
         ]);
 
         try {
+            DB::beginTransaction();
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'role' => $validated['role'] ?? null,
-                'office_id' => $validated['office_id'] ?? null,
                 'role_id' => $validated['role_id'] ?? null,
-                'authorize_signatory' => $validated['authSignatory'] ?? null,
-                'status' => 'active',
             ]);
-
-            Log::info('User created successfully', ['user_id' => $user->id]);
-
-            return response()->json($user, 201);
-        } catch (\Exception $e) {
-            Log::error('Failed to create user', [
-                'error' => $e->getMessage(),
-                'data' => $validated,
-            ]);
+            DB::commit();
 
             return response()->json([
-                'error' => 'Failed to create user.'
-            ], 500);
+                'success' => true,
+                "message" => "User Created"
+            ], 201);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

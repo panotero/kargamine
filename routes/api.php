@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);
 
 
+
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/settings', [UserController::class, 'getUserSettings']);

@@ -17,7 +17,7 @@ class CheckUserStatus
         if (Auth::check()) {
             $user = Auth::user();
 
-            if ($user->status === 'deactivated') {
+            if ($user->status === 1) {
                 // Log the deactivated login attempt
                 Log::warning('Deactivated user attempted access', [
                     'user_id' => $user->id,

@@ -709,7 +709,7 @@
 
         }
 
-        function populateSelect(select, items, valueField, textField, placeholder) {
+        function populateSelect(select, items, placeholder) {
 
             resetSelect(select, placeholder);
 
@@ -717,8 +717,10 @@
 
                 const option = document.createElement("option");
 
-                option.value = item[valueField];
-                option.textContent = item[textField];
+                option.value = item.name;
+                option.textContent = item.name;
+
+                option.dataset.code = item.code;
 
                 select.appendChild(option);
 
@@ -765,8 +767,10 @@
                     return;
                 }
 
+                const provinceCode = this.selectedOptions[0].dataset.code;
+
                 const cities = await request(
-                    `${API}/provinces/${this.value}/cities-municipalities`
+                    `${API}/provinces/${provinceCode}/cities-municipalities`
                 );
 
                 cities.sort((a, b) => a.name.localeCompare(b.name));
@@ -790,8 +794,10 @@
                     return;
                 }
 
+                const cityCode = this.selectedOptions[0].dataset.code;
+
                 const barangays = await request(
-                    `${API}/cities-municipalities/${this.value}/barangays`
+                    `${API}/cities-municipalities/${cityCode}/barangays`
                 );
 
                 barangays.sort((a, b) => a.name.localeCompare(b.name));

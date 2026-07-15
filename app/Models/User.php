@@ -17,17 +17,27 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    public const STATUS_ACTIVE = 0;
+    public const STATUS_INACTIVE = 1;
     protected $primaryKey = 'id';
     protected $fillable = [
         'name',
         'email',
         'password',
         'role_id',
-        'role',
-        'office_id',
-        'authorize_signatory',
 
     ];
+
+    protected $appends = ['status_label'];
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_ACTIVE => 'Active',
+            self::STATUS_INACTIVE => 'Inactive',
+            default => 'Unknown',
+        };
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -47,6 +57,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'created_at' => 'datetime:Y-m-d h:i:s A',
+        'updated_at' => 'datetime:Y-m-d h:i:s A',
     ];
 
     public function role()
