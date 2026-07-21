@@ -56,7 +56,7 @@
                                     <td valign="middle" style="padding-left:12px;">
                                         <p
                                             style="margin:0; color:#fafafa; font-size:15px; font-weight:600; letter-spacing:0.2px;">
-                                            {{ $body['app_name'] ?? 'Document Monitoring Tool' }}
+                                            {{ $body['app_name'] }}
                                         </p>
                                     </td>
                                 </tr>

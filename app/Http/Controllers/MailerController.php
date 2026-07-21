@@ -218,7 +218,7 @@ class MailerController extends Controller
                 'title'    => 'New Proposal Upload',
                 'message'  => 'There is new proposal uploaded for your review and approval',
                 'Header'   => $proposalCode,
-                'app_name' => 'Document Monitoring Tool',
+                'app_name' => 'System Notification',
                 'logo'     => asset('images/logo.png'),
                 'button'   => [
                     'url'  => url('/app'),

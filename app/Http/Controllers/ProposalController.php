@@ -117,25 +117,6 @@ class ProposalController extends Controller
                 ];
                 $proposal = Proposal::create($payload);
             }
-            //get all users with role type manager
-            // $userId = 1;
-            // $proposalCode = "TESTPRCODE123";
-            // $this->mailer->send(
-            //     [
-            //         'subject'  => 'New Proposal',
-            //         'title'    => 'New Proposal Upload',
-            //         'message'  => 'There is new proposal uploaded for your review and approval',
-            //         'Header'   => $proposalCode,
-            //         'app_name' => 'Document Monitoring Tool',
-            //         'logo'     => asset('images/logo.png'),
-            //         'button'   => [
-            //             'url'  => url('/dashboard'),
-            //             'text' => 'Go to Dashboard',
-            //         ],
-            //         'footer'   => 'Please do not reply to this email. Thank you.',
-            //     ],
-            //     $userId
-            // );
 
             //if there is a record get the proposal id and create additional porposal rates with the proposal id
             $proposalRatePayload = [

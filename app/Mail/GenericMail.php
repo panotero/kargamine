@@ -13,7 +13,7 @@ class GenericMail extends Mailable
     {
         $this->subjectText = $subject;
         $this->body = array_merge([
-            'app_name' => config('app.name', 'Document Monitoring Tool'),
+            'app_name' => config('app.name', 'Kargamine System'),
             'logo'     => asset('images/logo.png'),
             'footer'   => 'Please do not reply to this email. Thank you.',
         ], $body);
