@@ -1,29 +1,26 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-
+use App\Http\Controllers\AppThemeController;
+use App\Http\Controllers\ClientContractController;
+use App\Http\Controllers\ClientMasterController;
+use App\Http\Controllers\ClientProposalController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CrmActivityController;
+use App\Http\Controllers\CrmLeadController;
+use App\Http\Controllers\CrmNoteController;
+use App\Http\Controllers\CrmStatusController;
+use App\Http\Controllers\ListOfValueController;
+use App\Http\Controllers\LovController;
 use App\Http\Controllers\MailerController;
 use App\Http\Controllers\MenusController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\RoutingController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\OptionController;
-use App\Http\Controllers\ListOfValueController;
-use App\Http\Controllers\CrmLeadController;
-use App\Http\Controllers\CrmStatusController;
-use App\Http\Controllers\CrmActivityController;
-use App\Http\Controllers\CrmNoteController;
-use App\Http\Controllers\ProposalController;
-use App\Http\Controllers\LovController;
-use App\Http\Controllers\ContractController;
-use App\Http\Controllers\ClientMasterController;
-use App\Http\Controllers\ClientContractController;
-use App\Http\Controllers\ClientProposalController;
-
+use App\Http\Controllers\RoutingController;
+use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,12 +38,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [NotificationController::class, 'getNotifications']);
     });
 
-
     Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);
-
-
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
@@ -58,10 +52,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/reactivate/{id}', [UserController::class, 'reactivate']);
     });
 
-
-
     Route::post('/send-mail', [MailerController::class, 'send']);
-
 
     Route::prefix('nav_menus')->group(function () {
         Route::get('/list', [MenusController::class, 'menulist']);
@@ -71,7 +62,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/swap', [MenusController::class, 'swapMenuOrder']);
     });
 
-
+    Route::prefix('app-theme')->group(function () {
+        Route::get('/', [AppThemeController::class, 'show']);
+        Route::post('/', [AppThemeController::class, 'update']);
+    });
 
     Route::prefix('options')->group(function () {
         Route::get('/', [OptionController::class, 'index']);
@@ -80,10 +74,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [OptionController::class, 'update']);
         Route::delete('/', [OptionController::class, 'destroy']);
 
-        Route::get('/{optionId}/values', [ListOfValueController::class, 'byOption']);
-        Route::post('/{optionId}/values', [ListOfValueController::class, 'storeByOption']);
+        Route::get('/{optionId}/values', [OptionController::class, 'byOption']);
+        Route::post('/{optionId}/values', [OptionController::class, 'storeByOption']);
     });
-
 
     // Global LOV routes (if you still want independent access)
     Route::prefix('lov')->group(function () {
@@ -103,7 +96,6 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [CompanyController::class, 'update']);
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
     });
-
 
     Route::prefix('crm')->group(function () {
 
@@ -126,9 +118,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/note', [CrmNoteController::class, 'store']);
         Route::post('/activity', [CrmActivityController::class, 'store']);
         Route::post('/leads/stage1', [CrmLeadController::class, 'saveStage1']);
-        Route::post('/leads/{uuid}/stage2', [CrmLeadController::class, 'saveStage2']);
-    });
+        Route::post('/leads/{uuid}/stage2', [CrmLeadController::class, 'saveStage2']); // routes/api.php - inside the existing `crm` prefix group
+        Route::post('/leads/{uuid}/containers', [CrmLeadController::class, 'storeContainer']);
+        Route::get('/leads/{uuid}/proposals', [ClientProposalController::class, 'indexByLead']);
+        Route::post('/leads/{uuid}/proposals', [ClientProposalController::class, 'storeForLead']);
+        Route::get('/leads/{uuid}/proposalContainerDefaults', [ClientProposalController::class, 'leadContainerDefaults']);
+        Route::get('/leads/{uuid}/customerCode', [CrmLeadController::class, 'getOrGenerateCustomerCode']);
 
+        Route::post('/leads/uploadDgDocument', [CrmLeadController::class, 'uploadDgDocument']);
+    });
 
     Route::prefix('listofval')->group(function () {
         Route::get('/route', [LovController::class, 'route']);
@@ -137,14 +135,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vantype', [LovController::class, 'vantype']);
         Route::get('/vansize', [LovController::class, 'vansize']);
         Route::get('/typeofbusiness', [LovController::class, 'typeOfBusiness']);
+        Route::get('/addresstype', [LovController::class, 'addressType']);
+        Route::get('/leadsource', [LovController::class, 'leadSource']);
     });
-    Route::post('/leads/uploadDgDocument', [CrmLeadController::class, 'uploadDgDocument']);
 
-
-    Route::get('/roles', fn() => DB::table('setting_role')->get());
+    Route::get('/roles', fn () => DB::table('setting_role')->get());
 
     Route::post('/test-api', function (Request $request) {
         Log::info('Test API triggered', $request->all());
+
         return response()->json([
             'success' => true,
             'message' => 'API successfully triggered!',
@@ -189,5 +188,5 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{contract}/pdf', [ClientContractController::class, 'downloadPdf']);
     });
 
-    require __DIR__ . '/api_maintenance.php';
+    require __DIR__.'/api_maintenance.php';
 });

@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Option;
 use App\Models\ListOfValue;
+use App\Models\Option;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OptionController extends Controller
 {
-    //Display all options
+    // Display all options
     public function index()
     {
         $options = Option::with('values')->get();
+
         return response()->json($options);
     }
 
@@ -25,11 +26,9 @@ class OptionController extends Controller
             'option_description' => 'nullable|string',
         ]);
 
-
-        //enclose the database transaction logic
+        // enclose the database transaction logic
 
         $result = DB::transaction(function () use ($request) {
-
 
             // 1. Create Option
             $option = Option::create([
@@ -50,7 +49,6 @@ class OptionController extends Controller
             return $option;
         });
 
-
         return response()->json([
             'success' => true,
             'message' => 'Option created successfully',
@@ -70,18 +68,18 @@ class OptionController extends Controller
         $option = Option::findOrFail($id);
 
         $request->validate([
-            'option_name' => 'required|string|max:255|unique:options_table,option_name,' . $id . ',option_id',
+            'option_name' => 'required|string|max:255|unique:options_table,option_name,'.$id.',option_id',
             'option_description' => 'nullable|string',
         ]);
 
         $option->update($request->only([
             'option_name',
-            'option_description'
+            'option_description',
         ]));
 
         return response()->json([
             'message' => 'Option updated successfully',
-            'data' => $option
+            'data' => $option,
         ]);
     }
 
@@ -100,17 +98,25 @@ class OptionController extends Controller
             'data' => $result,
         ]);
     }
-    public function byOption($optionId)
+
+    public function byOption(Request $request, $optionId)
     {
         $values = ListOfValue::where('lov_optionId', $optionId)
-            ->with('option')
-            ->get();
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+                $q->where(function ($q) use ($search) {
+                    $q->where('lov_name', 'like', "%{$search}%")
+                        ->orWhere('lov_code', 'like', "%{$search}%")
+                        ->orWhere('lov_description', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('lov_name')
+            ->paginate($request->get('per_page', 10))
+            ->appends($request->query());
 
-        return response()->json([
-            'option_id' => $optionId,
-            'data' => $values
-        ]);
+        return response()->json(['success' => true, 'data' => $values]);
     }
+
     public function storeByOption(Request $request, $optionId)
     {
         $request->validate([
@@ -121,9 +127,9 @@ class OptionController extends Controller
         // Ensure option exists
         $existsOption = \App\Models\Option::where('option_id', $optionId)->exists();
 
-        if (!$existsOption) {
+        if (! $existsOption) {
             return response()->json([
-                'message' => 'Option not found'
+                'message' => 'Option not found',
             ], 404);
         }
 
@@ -134,7 +140,7 @@ class OptionController extends Controller
 
         if ($duplicate) {
             return response()->json([
-                'message' => 'This value already exists under this option'
+                'message' => 'This value already exists under this option',
             ], 422);
         }
 
@@ -146,7 +152,7 @@ class OptionController extends Controller
 
         return response()->json([
             'message' => 'Value created successfully under option',
-            'data' => $lov
+            'data' => $lov,
         ]);
     }
 }

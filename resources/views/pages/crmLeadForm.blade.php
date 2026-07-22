@@ -28,7 +28,39 @@
         <div class="stage-panel" data-panel="1">
             <form id="stage1Form" class="space-y-6">
 
+                {{-- Lead Classification --}}
                 <div>
+                    <p class="font-semibold text-zinc-700 mb-3">Lead Classification</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Type *</label>
+                            <div class="flex items-center gap-4 mt-2">
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="client_type" value="corporate" checked
+                                        class="client-type-radio">
+                                    Corporate
+                                </label>
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="client_type" value="individual"
+                                        class="client-type-radio">
+                                    Individual
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Lead Source *</label>
+                            <select name="source_select" required
+                                class="leadSourceDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                <option value="">Select Source</option>
+                            </select>
+                            <input type="text" name="source_other" placeholder="Specify source"
+                                class="hidden w-full border rounded-lg px-3 py-2 text-sm mt-2">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Contact Information --}}
+                <div class="border-t pt-4">
                     <p class="font-semibold text-zinc-700 mb-3">Contact Information</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -41,88 +73,80 @@
                             <input type="text" name="position"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
                         </div>
+
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number *</label>
-                            <input type="text" name="mobile" required
-                                class="format-mobile w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            <div class="flex gap-2 mt-1">
+                                <input type="text" name="mobile" required
+                                    class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm">
+                                <select name="mobile_type" class="w-32 border rounded-lg px-2 py-2 text-sm">
+                                    <option value="">Type</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Landline Number</label>
+                            <div class="flex gap-2 mt-1">
+                                <input type="text" name="landline_number"
+                                    class="flex-1 border rounded-lg px-3 py-2 text-sm">
+                                <select name="landline_type" class="w-32 border rounded-lg px-2 py-2 text-sm">
+                                    <option value="">Type</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Email</label>
-                            <input type="email" name="email"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Source *</label>
-                            <input type="text" name="source" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            <div class="flex gap-2 mt-1">
+                                <input type="email" name="email" class="flex-1 border rounded-lg px-3 py-2 text-sm">
+                                <select name="email_type" class="w-32 border rounded-lg px-2 py-2 text-sm">
+                                    <option value="">Type</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="border-t pt-4" id="company_info">
+                {{-- Company Information - hidden entirely for Individual leads --}}
+                <div class="border-t pt-4" id="companyInfoSection">
                     <p class="font-semibold text-zinc-700 mb-3">Company Information</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Company Name *</label>
-                            <input type="text" name="company_name" required
+                            <input type="text" name="company_name"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Province *</label>
-                            <select name="address_province" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                                <option value="">Select Province</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Town/City *</label>
-                            <select name="address_town_city" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1" disabled>
-                                <option value="">Select Town/City</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Barangay *</label>
-                            <select name="address_barangay" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1" disabled>
-                                <option value="">Select Barangay</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">No. *</label>
-                            <input type="text" name="address_no" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Building *</label>
-                            <input type="text" name="address_building" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Street *</label>
-                            <input type="text" name="address_street" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Country *</label>
-                            <input type="text" name="address_country" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Postal Code *</label>
-                            <input type="text" name="address_postal_code" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business *</label>
-                            <select name="type_of_business" required
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business</label>
+                            <select name="type_of_business"
                                 class="typeOfBusinessDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1">
                                 <option value="">Select Type of Business</option>
                             </select>
                         </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Industry Description /
+                                Details</label>
+                            <textarea name="industry_description" rows="2"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                        </div>
                     </div>
+                </div>
+
+                {{-- Addresses - repeatable, one per address type --}}
+                <div class="border-t pt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-semibold text-zinc-700">Address(es) *</p>
+                        <button type="button" id="addAddressBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add
+                            Address</button>
+                    </div>
+                    <div id="addressesContainer" class="space-y-4"></div>
                 </div>
             </form>
             <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
@@ -153,8 +177,6 @@
         </div>
     </div>
 </div>
-
-<script></script>
 
 <script>
     (function() {
@@ -298,7 +320,23 @@
             btn.addEventListener('click', () => showStage(Number(btn.dataset.target)));
         });
 
-        // -------------------- TYPE OF BUSINESS DROPDOWN --------------------
+        // -------------------- CLIENT TYPE (individual vs corporate) --------------------
+        function applyClientTypeVisibility() {
+            const clientType = document.querySelector('input[name="client_type"]:checked')?.value ?? 'corporate';
+            const isIndividual = clientType === 'individual';
+
+            document.getElementById('companyInfoSection').classList.toggle('hidden', isIndividual);
+
+            const companyNameInput = document.querySelector('#stage1Form [name="company_name"]');
+            if (companyNameInput) companyNameInput.required = !isIndividual;
+        }
+
+        document.querySelectorAll('.client-type-radio').forEach(radio => {
+            radio.addEventListener('change', applyClientTypeVisibility);
+        });
+        applyClientTypeVisibility();
+
+        // -------------------- TYPE OF BUSINESS / LEAD SOURCE DROPDOWNS (LOV-backed) --------------------
         async function fillTypeOfBusiness() {
             const response = await apiCall({
                 mode: 'GET',
@@ -312,10 +350,59 @@
             });
         }
 
+        async function fillLeadSource() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/leadsource'
+            });
+            const select = document.querySelector('.leadSourceDropdown');
+            if (!select || !Array.isArray(response)) return;
+            response.forEach(lov => {
+                select.insertAdjacentHTML('beforeend',
+                    `<option value="${lov.lov_name}">${lov.lov_name}</option>`);
+            });
+        }
+
+        document.querySelector('.leadSourceDropdown').addEventListener('change', function() {
+            const otherInput = document.querySelector('[name="source_other"]');
+            const isOther = this.value === 'Other';
+            otherInput.classList.toggle('hidden', !isOther);
+            otherInput.required = isOther;
+            if (!isOther) otherInput.value = '';
+        });
+
         // -------------------- STAGE 1 --------------------
+        function collectAddresses() {
+            return Array.from(document.querySelectorAll('.address-card')).map(card => {
+                const obj = {};
+                card.querySelectorAll('[data-field]').forEach(el => {
+                    obj[el.dataset.field] = el.value;
+                });
+                obj.is_primary = card.querySelector('.primary-radio')?.checked ?? false;
+                return obj;
+            });
+        }
+
         document.getElementById('saveStage1Btn').addEventListener('click', async function() {
             const form = document.getElementById('stage1Form');
             const data = Object.fromEntries(new FormData(form).entries());
+
+            // "Other" reveals a text input - whatever was typed becomes the actual source.
+            data.source = data.source_select === 'Other' ? (data.source_other || '') : (data
+                .source_select || '');
+            delete data.source_select;
+            delete data.source_other;
+
+            const addresses = collectAddresses();
+            if (!addresses.length) {
+                showMessage({
+                    status: 'error',
+                    title: 'Add at least one address.'
+                });
+                return;
+            }
+            data.addresses = addresses;
+
             if (leadUuid) data.uuid = leadUuid;
 
             const response = await apiCall({
@@ -632,20 +719,48 @@
             const company = lead.company ?? {};
 
             const stage1Form = document.getElementById('stage1Form');
-            ['contact_name', 'position', 'mobile', 'email', 'source'].forEach(key => {
+            [
+                'contact_name', 'position', 'mobile', 'mobile_type',
+                'landline_number', 'landline_type', 'email', 'email_type',
+            ].forEach(key => {
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = lead[key] ?? '';
             });
-            [
-                'company_name', 'address_no', 'address_building',
-                'address_street', 'address_barangay', 'address_town_city',
-                'address_province', 'address_country', 'address_postal_code', 'type_of_business',
-            ].forEach(key => {
+
+            const clientType = lead.client_type || 'corporate';
+            const clientTypeRadio = stage1Form.querySelector(
+                `input[name="client_type"][value="${clientType}"]`);
+            if (clientTypeRadio) clientTypeRadio.checked = true;
+            applyClientTypeVisibility();
+
+            ['company_name', 'type_of_business', 'industry_description'].forEach(key => {
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = company[key] ?? '';
             });
 
-            document.getElementById('containersContainer').innerHTML = [];
+            // Lead source - select the matching option, or fall back to "Other" + the
+            // free-text input when the saved value isn't one of the known options.
+            const sourceSelect = document.querySelector('.leadSourceDropdown');
+            const sourceOtherInput = stage1Form.querySelector('[name="source_other"]');
+            const knownSource = Array.from(sourceSelect.options).some(o => o.value === lead
+                .source);
+            if (lead.source && knownSource) {
+                sourceSelect.value = lead.source;
+            } else if (lead.source) {
+                sourceSelect.value = 'Other';
+                sourceOtherInput.value = lead.source;
+            }
+            sourceSelect.dispatchEvent(new Event('change'));
+
+            document.getElementById('addressesContainer').innerHTML = '';
+            const addresses = (lead.addresses && lead.addresses.length) ? lead.addresses : [{
+                is_primary: true
+            }];
+            for (const address of addresses) {
+                const card = await addAddressCard();
+                await hydrateAddressCard(card, address);
+            }
+
             document.getElementById('containersContainer').innerHTML = '';
             (lead.containers || []).forEach(c => {
                 addContainerCard();
@@ -673,12 +788,17 @@
 
         // -------------------- INIT --------------------
         showStage(1);
-        fillTypeOfBusiness();
 
-        loadContainerLookups().then(() => {
+        Promise.all([
+            fillTypeOfBusiness(),
+            fillLeadSource(),
+            fillAddressTypeOptions(),
+            loadContainerLookups(),
+        ]).then(() => {
             if (leadUuid) {
                 hydrateExisting();
             } else {
+                addAddressCard(); // start with one blank address row
                 addContainerCard(); // start with one blank container row
             }
         });
@@ -730,88 +850,210 @@
 
         }
 
-        const companyContainer = document.getElementById("company_info");
-        initializePhilippineAddress(companyContainer);
+        // -------------------- ADDRESSES: repeatable cards --------------------
+        const COUNTRIES = [
+            'Philippines', 'United States', 'Singapore', 'Hong Kong', 'China', 'Japan',
+            'South Korea', 'Malaysia', 'Indonesia', 'Thailand', 'Vietnam', 'Taiwan',
+            'Australia', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Other',
+        ];
+        const countryOptionsHtml = COUNTRIES
+            .map(c => `<option value="${c}" ${c === 'Philippines' ? 'selected' : ''}>${c}</option>`)
+            .join('');
+
+        let addressTypeOptionsHtml = '<option value="">Select Address Type</option>';
+
+        async function fillAddressTypeOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/addresstype'
+            });
+            if (!Array.isArray(response)) return;
+            addressTypeOptionsHtml += response.map(lov =>
+                `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join('');
+        }
+
+        function addressCardHtml(index) {
+            return `
+    <div class="address-card border rounded-xl p-4 space-y-3" data-index="${index}">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold">
+                    ${addressTypeOptionsHtml}
+                </select>
+                <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
+                    <input type="radio" name="address_primary_radio" class="primary-radio">
+                    Primary
+                </label>
+            </div>
+            <button type="button" class="remove-address text-red-500 text-xs font-medium">✕ Remove</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">No.</label>
+                <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Building</label>
+                <input type="text" data-field="address_building" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Street</label>
+                <input type="text" data-field="address_street" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Country</label>
+                <select data-field="address_country" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                    ${countryOptionsHtml}
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Province</label>
+                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">Select Province</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Town/City</label>
+                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                    <option value="">Select Town/City</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Barangay</label>
+                <select data-field="address_barangay" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                    <option value="">Select Barangay</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Postal Code</label>
+                <input type="text" data-field="address_postal_code" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+        </div>
+    </div>`;
+        }
+
+        async function addAddressCard() {
+            const wrap = document.getElementById('addressesContainer');
+            const index = wrap.children.length;
+            wrap.insertAdjacentHTML('beforeend', addressCardHtml(index));
+            const card = wrap.lastElementChild;
+
+            card.querySelector('.remove-address').addEventListener('click', () => card.remove());
+            if (index === 0) card.querySelector('.primary-radio').checked = true;
+
+            await initializePhilippineAddress(card);
+            return card;
+        }
+
+        document.getElementById('addAddressBtn').addEventListener('click', () => addAddressCard());
+
+        async function hydrateAddressCard(card, address) {
+            ['address_no', 'address_building', 'address_street', 'address_postal_code']
+            .forEach(field => {
+                const el = card.querySelector(`[data-field="${field}"]`);
+                if (el) el.value = address[field] ?? '';
+            });
+
+            const typeSelect = card.querySelector('[data-field="address_type"]');
+            if (typeSelect) typeSelect.value = address.address_type ?? '';
+
+            const countrySelect = card.querySelector('[data-field="address_country"]');
+            if (countrySelect) countrySelect.value = address.address_country || 'Philippines';
+
+            card.querySelector('.primary-radio').checked = Boolean(address.is_primary);
+
+            const {
+                loadCitiesForProvince,
+                loadBarangaysForCity
+            } = card._addressLookups ?? {};
+            const provinceSelect = card.querySelector('[data-field="address_province"]');
+            const citySelect = card.querySelector('[data-field="address_town_city"]');
+            const barangaySelect = card.querySelector('[data-field="address_barangay"]');
+
+            if (address.address_province && provinceSelect) {
+                provinceSelect.value = address.address_province;
+                const provinceCode = provinceSelect.selectedOptions[0]?.dataset.code;
+
+                if (loadCitiesForProvince) await loadCitiesForProvince(provinceCode);
+
+                if (address.address_town_city && citySelect) {
+                    citySelect.value = address.address_town_city;
+                    const cityCode = citySelect.selectedOptions[0]?.dataset.code;
+
+                    if (loadBarangaysForCity) await loadBarangaysForCity(cityCode);
+
+                    if (address.address_barangay && barangaySelect) {
+                        barangaySelect.value = address.address_barangay;
+                    }
+                }
+            }
+        }
+
         async function initializePhilippineAddress(container) {
 
-            const province = container.querySelector('[name="address_province"]');
-            const city = container.querySelector('[name="address_town_city"]');
-            const barangay = container.querySelector('[name="address_barangay"]');
-            console.log(container);
+            const province = container.querySelector('[data-field="address_province"]');
+            const city = container.querySelector('[data-field="address_town_city"]');
+            const barangay = container.querySelector('[data-field="address_barangay"]');
 
             if (!province || !city || !barangay) return;
 
             resetSelect(city, "Select Town/City");
             resetSelect(barangay, "Select Barangay");
 
-            // Load Provinces
-            const provinces = await request(`${API}/provinces`);
-
-            provinces.sort((a, b) => a.name.localeCompare(b.name));
-
-            populateSelect(
-                province,
-                provinces,
-                "code",
-                "name",
-                "Select Province"
-            );
-
-            province.addEventListener("change", async function() {
-
+            async function loadCitiesForProvince(provinceCode) {
                 resetSelect(city, "Loading...");
                 resetSelect(barangay, "Select Barangay");
 
-                if (!this.value) {
+                if (!provinceCode) {
                     resetSelect(city, "Select Town/City");
                     return;
                 }
 
-                const provinceCode = this.selectedOptions[0].dataset.code;
-
                 const cities = await request(
                     `${API}/provinces/${provinceCode}/cities-municipalities`
                 );
-
                 cities.sort((a, b) => a.name.localeCompare(b.name));
+                populateSelect(city, cities, "Select Town/City");
+            }
 
-                populateSelect(
-                    city,
-                    cities,
-                    "code",
-                    "name",
-                    "Select Town/City"
-                );
-
-            });
-
-            city.addEventListener("change", async function() {
-
+            async function loadBarangaysForCity(cityCode) {
                 resetSelect(barangay, "Loading...");
 
-                if (!this.value) {
+                if (!cityCode) {
                     resetSelect(barangay, "Select Barangay");
                     return;
                 }
 
-                const cityCode = this.selectedOptions[0].dataset.code;
-
                 const barangays = await request(
                     `${API}/cities-municipalities/${cityCode}/barangays`
                 );
-
                 barangays.sort((a, b) => a.name.localeCompare(b.name));
+                populateSelect(barangay, barangays, "Select Barangay");
+            }
 
-                populateSelect(
-                    barangay,
-                    barangays,
-                    "code",
-                    "name",
-                    "Select Barangay"
-                );
+            // Load Provinces
+            const provinces = await request(`${API}/provinces`);
+            provinces.sort((a, b) => a.name.localeCompare(b.name));
+            populateSelect(province, provinces, "Select Province");
 
+            province.addEventListener("change", function() {
+                const provinceCode = this.selectedOptions[0]?.dataset.code;
+                loadCitiesForProvince(provinceCode);
             });
 
+            city.addEventListener("change", function() {
+                const cityCode = this.selectedOptions[0]?.dataset.code;
+                loadBarangaysForCity(cityCode);
+            });
+
+            // Exposed so hydrateAddressCard() can cascade a saved province/city
+            // selection exactly the way a manual selection would, without
+            // re-registering listeners or re-fetching the province list.
+            container._addressLookups = {
+                loadCitiesForProvince,
+                loadBarangaysForCity
+            };
         }
 
     })();

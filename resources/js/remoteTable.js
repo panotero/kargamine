@@ -116,7 +116,7 @@ function createRemoteTable(options) {
     const rows = paginated ? (meta.data ?? []) : (response.data ?? []);
 
     if (!rows.length) {
-      body.innerHTML = `<tr ><td colspan="${colspan}" class="px-4 py-10 text-center text-sm text-zinc-400 hover:bg-slate-500 ">${emptyMessage}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="${colspan}" class="px-4 py-10 text-center text-sm text-zinc-400 dark:text-zinc-500">${emptyMessage}</td></tr>`;
       renderPagination(null);
       return;
     }
@@ -205,7 +205,7 @@ function createRemoteTable(options) {
 
         return `
                         <button type="button" data-page="${p}"
-                                class="min-w-[2rem] px-2 py-1 text-sm rounded-md ${isActive ? "bg-orange-600 text-white" : "text-zinc-600 hover:bg-zinc-100"}">
+                                class="min-w-[2rem] px-2 py-1 text-sm rounded-md ${isActive ? "bg-orange-600 text-white" : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"}">
                             ${p}
                         </button>
                     `;
@@ -213,16 +213,16 @@ function createRemoteTable(options) {
       .join("");
 
     container.innerHTML = `
-                <div class="flex items-center justify-between px-4 py-3 border-t border-zinc-200">
-                    <p class="text-xs text-zinc-500">${info}</p>
+                <div class="flex items-center justify-between px-4 py-3">
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">${info}</p>
                     <div class="flex items-center gap-1">
                         <button type="button" data-page="${meta.current_page - 1}" ${meta.prev_page_url ? "" : "disabled"}
-                                class="px-2 py-1 text-sm rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                                class="px-2 py-1 text-sm rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed">
                             Prev
                         </button>
                         ${pageButtons}
                         <button type="button" data-page="${meta.current_page + 1}" ${meta.next_page_url ? "" : "disabled"}
-                                class="px-2 py-1 text-sm rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                                class="px-2 py-1 text-sm rounded-md text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed">
                             Next
                         </button>
                     </div>
@@ -322,7 +322,7 @@ window.renderRemoteTable = function renderRemoteTable(payload) {
   const headCells = header
     .map(
       (col) =>
-        `<th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">${col.title}</th>`,
+        `<th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white whitespace-nowrap">${col.title}</th>`,
     )
     .join("");
   tableHeader.innerHTML = headCells;
@@ -354,7 +354,7 @@ window.renderRemoteTable = function renderRemoteTable(payload) {
           : (getValueByPath(row, col.key) ?? "-");
 
         return `
-            <td class="px-4 py-2.5 text-zinc-700">
+            <td class="px-4 py-2.5 text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
                 ${value}
             </td>
         `;
@@ -362,7 +362,7 @@ window.renderRemoteTable = function renderRemoteTable(payload) {
       .join("");
 
     return `
-    <tr class="table-row cursor-pointer hover:bg-orange-300"
+    <tr class="table-row cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800"
     data-row='${JSON.stringify(row)}'>
         ${cells}
     </tr>

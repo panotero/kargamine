@@ -42,24 +42,27 @@
 
 {{-- Complete-client detail modal --}}
 <x-modal id="ClientDetailModal">
-    <div class="p-5 border-b flex justify-between items-center">
+    <div
+        class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
         <div>
-            <p class="text-lg font-semibold" id="cdClientName">-</p>
+            <p class="text-lg font-semibold text-zinc-900 dark:text-white" id="cdClientName">-</p>
             <p class="text-xs text-zinc-400" id="cdClientCode">-</p>
         </div>
-        <button class="modal-close">✕</button>
+        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
     </div>
 
-    <div class="border-b flex gap-1 px-5">
+    <div class="border-b border-zinc-200 dark:border-zinc-800 flex gap-1 px-5 bg-white dark:bg-zinc-900">
         <button class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-orange-500 text-orange-600"
             data-tab="info">Client Information</button>
-        <button class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500"
+        <button
+            class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500 dark:text-zinc-400"
             data-tab="proposals">Proposals</button>
-        <button class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500"
+        <button
+            class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500 dark:text-zinc-400"
             data-tab="contracts">Contracts</button>
     </div>
 
-    <div class="max-h-[65vh] overflow-y-auto p-5">
+    <div class="max-h-[65vh] overflow-y-auto p-5 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
 
         <div class="clientDetailPanel" data-panel="info">
             <div id="cdInfoContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"></div>
@@ -83,29 +86,35 @@
     </div>
 </x-modal>
 <x-modal id="RateContractModal">
-    <div class="p-5 border-b flex justify-between items-center">
-        <p class="text-lg font-semibold">Create Contract</p>
-        <button class="modal-close">✕</button>
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+        <p class="text-lg font-semibold text-zinc-900 dark:text-white">Create Contract</p>
+        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
     </div>
-    <div class="p-5 space-y-4">
-        <div id="rateContractSummary" class="text-sm bg-zinc-50 border rounded-lg p-3 text-zinc-600"></div>
+    <div class="p-5 space-y-4 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+        <div id="rateContractSummary"
+            class="text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 text-zinc-600 dark:text-zinc-300">
+        </div>
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="text-xs font-medium text-zinc-400 uppercase">Valid From *</label>
-                <input type="date" id="rateContractValidFrom" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="date" id="rateContractValidFrom"
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
             <div>
                 <label class="text-xs font-medium text-zinc-400 uppercase">Valid To *</label>
-                <input type="date" id="rateContractValidTo" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <input type="date" id="rateContractValidTo"
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
         </div>
         <div>
             <label class="text-xs font-medium text-zinc-400 uppercase">Signed Date</label>
-            <input type="date" id="rateContractSignedDate" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <input type="date" id="rateContractSignedDate"
+                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
     </div>
-    <div class="border-t px-5 py-4 flex justify-end gap-2">
-        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Cancel</button>
+    <div class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 bg-white dark:bg-zinc-900">
+        <button
+            class="modal-close rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">Cancel</button>
         <button id="rateContractSaveBtn"
             class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save Contract</button>
     </div>
@@ -113,22 +122,26 @@
 
 {{-- Add Proposal side-modal --}}
 <x-side-modal id="AddClientProposalModal">
-    <div class="p-5 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-        <p class="text-lg font-semibold">New Proposal</p>
-        <button class="modal-close">✕</button>
+    <div
+        class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
+        <p class="text-lg font-semibold dark:text-white">New Proposal</p>
+        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
     </div>
 
     <div class="p-5">
         <div class="flex justify-between items-center mb-3">
-            <p class="font-semibold text-zinc-700 text-sm">Container Lines</p>
+            <p class="font-semibold text-zinc-700 dark:text-zinc-300 text-sm">Container Lines</p>
             <button type="button" id="cpAddRowBtn"
-                class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add Container</button>
+                class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                Add Container</button>
         </div>
         <div id="cpRatesContainer" class="space-y-3"></div>
     </div>
 
-    <div class="border-t px-5 py-4 flex justify-end gap-2 sticky bottom-0 bg-white">
-        <button type="button" class="modal-close px-4 py-2 text-sm rounded-lg border">Cancel</button>
+    <div
+        class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 sticky bottom-0 bg-white dark:bg-zinc-900">
+        <button type="button"
+            class="modal-close px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">Cancel</button>
         <button type="button" id="cpSaveBtn"
             class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save Proposal</button>
     </div>
@@ -142,8 +155,8 @@
 
         function statusBadge(isComplete) {
             return isComplete ?
-                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Complete</span>` :
-                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-600"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Incomplete</span>`;
+                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Complete</span>` :
+                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Incomplete</span>`;
         }
 
         async function loadCounts() {
@@ -257,16 +270,16 @@
             document.getElementById('cdClientCode').textContent = c.customer_code ?? '-';
 
             document.getElementById('cdInfoContainer').innerHTML = `
-                <p><span class="text-zinc-400">Registered Address:</span> ${c.registered_address ?? '-'}</p>
-                <p><span class="text-zinc-400">Contact No. 1:</span> ${c.contact_number_1 ?? '-'}</p>
-                <p><span class="text-zinc-400">Contact No. 2:</span> ${c.contact_number_2 ?? '-'}</p>
-                <p><span class="text-zinc-400">Industry:</span> ${c.industry ?? '-'}</p>
-                <p><span class="text-zinc-400">Organization Type:</span> ${c.organization_type ?? '-'}</p>
-                <p><span class="text-zinc-400">TIN:</span> ${c.tin ?? '-'}</p>
-                <p><span class="text-zinc-400">Sales Rep:</span> ${c.sales_rep?.name ?? '-'}</p>
-                <p><span class="text-zinc-400">Credit Terms:</span> ${c.finance?.credit_terms ?? '-'}</p>
-                <p><span class="text-zinc-400">Payment Mode:</span> ${c.finance?.payment_mode ?? '-'}</p>
-                <p><span class="text-zinc-400">Billed To:</span> ${c.billing?.billed_to ?? '-'}</p>
+                <p><span class="text-zinc-400">Registered Address:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.registered_address ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Contact No. 1:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.contact_number_1 ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Contact No. 2:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.contact_number_2 ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Industry:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.industry ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Organization Type:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.organization_type ?? '-'}</span></p>
+                <p><span class="text-zinc-400">TIN:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.tin ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Sales Rep:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.sales_rep?.name ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Credit Terms:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.finance?.credit_terms ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Payment Mode:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.finance?.payment_mode ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Billed To:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.billing?.billed_to ?? '-'}</span></p>
             `;
 
             loadProposals(uuid, 1);
@@ -301,11 +314,11 @@
             5: 'Rejected'
         };
         const PROPOSAL_STATUS_BADGE = {
-            1: 'bg-amber-100 text-amber-600',
-            2: 'bg-green-100 text-green-700',
-            3: 'bg-red-100 text-red-600',
-            4: 'bg-blue-100 text-blue-700',
-            5: 'bg-zinc-200 text-zinc-600',
+            1: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
+            2: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',
+            3: 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400',
+            4: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400',
+            5: 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300',
         };
 
         let currentProposalsPage = 1;
@@ -343,12 +356,12 @@
         }
 
         function buildProposalCard(p) {
-            const badgeClass = PROPOSAL_STATUS_BADGE[p.status] ?? 'bg-zinc-100 text-zinc-500';
+            const badgeClass = PROPOSAL_STATUS_BADGE[p.status] ?? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400';
             const isPending = p.status === 1;
             const isApproved = p.status === 2;
 
             return `
-        <div class="border rounded-xl p-4" data-proposal-id="${p.id}" data-proposal-status="${p.status}">
+        <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 text-zinc-900 dark:text-zinc-100" data-proposal-id="${p.id}" data-proposal-status="${p.status}">
             <div class="flex justify-between items-center mb-2 gap-3">
                 <div class="flex items-center gap-2">
                     <p class="font-semibold text-sm">${p.code}</p>
@@ -356,7 +369,7 @@
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                     <p class="text-xs text-zinc-400 whitespace-nowrap">${formatDateTime(p.created_at)}</p>
-                    <select class="proposal-status-select text-xs border rounded-lg px-2 py-1" data-proposal-id="${p.id}">
+                    <select class="proposal-status-select text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1" data-proposal-id="${p.id}">
                         ${Object.entries(PROPOSAL_STATUS_LABEL).map(([val, label]) =>
                             `<option value="${val}" ${Number(val) === p.status ? 'selected' : ''}>${label}</option>`
                         ).join('')}
@@ -377,14 +390,14 @@
                 </thead>
                 <tbody>
                     ${p.rates.map((r) => `
-                        <tr class="border-t" data-rate-id="${r.id}">
+                        <tr class="border-t border-zinc-100 dark:border-zinc-800" data-rate-id="${r.id}">
                             <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
                             <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                             <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
                             <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
                             <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
                             <td class="py-1.5 text-right whitespace-nowrap">
-                                ${isPending ? `<button type="button" class="rate-delete-btn text-zinc-400 hover:text-red-600 font-medium" data-rate-id="${r.id}">Delete</button>` : ''}
+                                ${isPending ? `<button type="button" class="rate-delete-btn text-zinc-400 hover:text-red-600 dark:hover:text-red-400 font-medium" data-rate-id="${r.id}">Delete</button>` : ''}
                             </td>
                         </tr>
                     `).join('')}
@@ -392,15 +405,15 @@
             </table>
 
             {{-- Row-container-level actions - not per rate anymore --}}
-            <div class="flex justify-end gap-2 mt-3 pt-3 border-t">
+            <div class="flex justify-end gap-2 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                 ${isPending ? `
-                    <button type="button" class="add-container-btn text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100" data-proposal-id="${p.id}">
+                    <button type="button" class="add-container-btn text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700" data-proposal-id="${p.id}">
                         + Add Container
                     </button>
                 ` : ''}
                 ${isApproved ? `
                     <a href="/api/clientMasters/proposals/${p.id}/pdf" target="_blank"
-                       class="download-proposal-btn text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 text-zinc-700">
+                       class="download-proposal-btn text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
                         Download
                     </a>
                     <button type="button" class="create-contract-btn text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white" data-proposal-id="${p.id}">
@@ -499,10 +512,10 @@
             <p class="text-xs text-zinc-400">Showing ${meta.from ?? 0}-${meta.to ?? 0} of ${meta.total ?? 0}</p>
             <div class="flex items-center gap-1">
                 <button type="button" id="proposalsPrevBtn" ${meta.prev_page_url ? '' : 'disabled'}
-                    class="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30">Prev</button>
+                    class="px-2 py-1 text-xs rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30">Prev</button>
                 <span class="text-xs text-zinc-500 px-1">${meta.current_page} / ${meta.last_page}</span>
                 <button type="button" id="proposalsNextBtn" ${meta.next_page_url ? '' : 'disabled'}
-                    class="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30">Next</button>
+                    class="px-2 py-1 text-xs rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30">Next</button>
             </div>
         </div>
     `;
@@ -617,309 +630,6 @@
             mode: 'create',
             proposalId: null
         };
-        document.getElementById('cdAddProposalBtn').addEventListener('click', function() {
-            proposalModalContext = {
-                mode: 'create',
-                proposalId: null
-            };
-            document.getElementById('cpRatesContainer').innerHTML = '';
-            loadContainerLookups().then(() => addProposalRow());
-            initSideModal({
-                modalId: 'AddClientProposalModal'
-            });
-        });
-
-        function openAddContainerModal(clientUuid, proposalId) {
-            proposalModalContext = {
-                mode: 'append',
-                proposalId
-            };
-            document.getElementById('cpRatesContainer').innerHTML = '';
-            loadContainerLookups().then(() => addProposalRow());
-            initSideModal({
-                modalId: 'AddClientProposalModal'
-            });
-        }
-
-        // ================= PROPOSAL ROW BUILDER =================
-        let portsOptionsHtml = '';
-        let containerVariantsData = [];
-
-        async function loadContainerLookups() {
-            const [portsRes, variantsRes] = await Promise.all([
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/ports?per_page=200'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containers/variants'
-                }),
-            ]);
-
-            if (portsRes.success) {
-                portsOptionsHtml = portsRes.data.data
-                    .map((p) => `<option value="${p.port_id}">${p.code} - ${p.name}</option>`)
-                    .join('');
-            }
-            if (variantsRes.success) {
-                containerVariantsData = variantsRes.data;
-            }
-        }
-
-        function uniqueContainerOptions() {
-            const seen = new Set();
-            return containerVariantsData
-                .filter((v) => {
-                    if (seen.has(v.container.id)) return false;
-                    seen.add(v.container.id);
-                    return true;
-                })
-                .map((v) => `<option value="${v.container.id}">${v.container.name}</option>`)
-                .join('');
-        }
-
-        function addProposalRow() {
-            const wrap = document.getElementById('cpRatesContainer');
-            const div = document.createElement('div');
-            div.className = 'border rounded-lg p-3 space-y-2';
-            div.dataset.row = '';
-            div.innerHTML = `
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                        <select data-field="origin_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select</option>${portsOptionsHtml}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                        <select data-field="destination_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select</option>${portsOptionsHtml}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Container</label>
-                        <select data-field="container_id" class="container-select w-full border rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select</option>${uniqueContainerOptions()}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Class</label>
-                        <select data-field="container_class_id" class="class-select w-full border rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select container first</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Size</label>
-                        <select data-field="container_size_id" class="size-select w-full border rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select class first</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
-                        <input type="text" data-field="base_rate" readonly class="base-rate w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50" value="0.00">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Discount Type</label>
-                        <select data-field="discount_type" class="discount-type w-full border rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">None</option>
-                            <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Amount</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Discount Value</label>
-                        <input type="number" step="0.01" min="0" data-field="discount_value" class="discount-value w-full border rounded-lg px-2 py-1.5 text-sm" value="0">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Final Rate</label>
-                        <input type="text" data-field="final_rate" readonly class="final-rate w-full border rounded-lg px-2 py-1.5 text-sm bg-blue-50 font-semibold" value="0.00">
-                    </div>
-                </div>
-                <div class="flex justify-end">
-                    <button type="button" class="remove-row text-red-500 text-xs">✕ Remove container</button>
-                </div>
-                <input type="hidden" data-field="container_variant_id">
-            `;
-            wrap.appendChild(div);
-            wireRow(div);
-        }
-
-        function wireRow(row) {
-            const originSel = row.querySelector('[data-field="origin_port_id"]');
-            const destSel = row.querySelector('[data-field="destination_port_id"]');
-            const containerSel = row.querySelector('.container-select');
-            const classSel = row.querySelector('.class-select');
-            const sizeSel = row.querySelector('.size-select');
-            const variantInput = row.querySelector('[data-field="container_variant_id"]');
-            const baseRateInput = row.querySelector('.base-rate');
-            const discountTypeSel = row.querySelector('.discount-type');
-            const discountValueInput = row.querySelector('.discount-value');
-            const finalRateInput = row.querySelector('.final-rate');
-
-            containerSel.addEventListener('change', () => {
-                const containerId = containerSel.value;
-                const classes = [...new Map(
-                    containerVariantsData
-                    .filter((v) => String(v.container.id) === containerId)
-                    .map((v) => [v.container_class.id, v.container_class])
-                ).values()];
-
-                classSel.innerHTML = `<option value="">Select</option>` +
-                    classes.map((c) => `<option value="${c.id}">${c.class}</option>`).join('');
-                sizeSel.innerHTML = `<option value="">Select class first</option>`;
-                variantInput.value = '';
-                resetRate(baseRateInput, finalRateInput);
-            });
-
-            classSel.addEventListener('change', () => {
-                const containerId = containerSel.value;
-                const classId = classSel.value;
-                const sizes = containerVariantsData.filter(
-                    (v) => String(v.container.id) === containerId && String(v.container_class.id) ===
-                    classId
-                );
-
-                sizeSel.innerHTML = `<option value="">Select</option>` +
-                    sizes.map((v) =>
-                        `<option value="${v.container_size.id}" data-variant-id="${v.id}">${v.container_size.size}</option>`
-                    ).join('');
-                variantInput.value = '';
-                resetRate(baseRateInput, finalRateInput);
-            });
-
-            sizeSel.addEventListener('change', () => {
-                const selected = sizeSel.options[sizeSel.selectedIndex];
-                variantInput.value = selected?.dataset.variantId ?? '';
-                lookupRate(row);
-            });
-
-            [originSel, destSel].forEach((sel) => sel.addEventListener('change', () => lookupRate(row)));
-            discountTypeSel.addEventListener('change', () => recomputeFinalRate(row));
-            discountValueInput.addEventListener('input', () => recomputeFinalRate(row));
-
-            row.querySelector('.remove-row').addEventListener('click', () => row.remove());
-
-            function resetRate(baseEl, finalEl) {
-                baseEl.value = '0.00';
-                finalEl.value = '0.00';
-            }
-        }
-
-        async function lookupRate(row) {
-            const originId = row.querySelector('[data-field="origin_port_id"]').value;
-            const destId = row.querySelector('[data-field="destination_port_id"]').value;
-            const variantId = row.querySelector('[data-field="container_variant_id"]').value;
-            const baseRateInput = row.querySelector('.base-rate');
-
-            if (!originId || !destId || !variantId) return;
-
-            const response = await apiCall({
-                mode: 'GET',
-                url: `/api/clientMasters/proposals/rateLookup?origin_port_id=${originId}&destination_port_id=${destId}&container_variant_id=${variantId}`,
-            });
-
-            if (!response.success) {
-                showMessage({
-                    status: 'error',
-                    title: 'Rate Not Found',
-                    message: response.message ?? 'No rate configured for this combination.'
-                });
-                baseRateInput.value = '0.00';
-                recomputeFinalRate(row);
-                return;
-            }
-
-            baseRateInput.value = Number(response.data.frt).toFixed(2);
-            recomputeFinalRate(row);
-        }
-
-        function recomputeFinalRate(row) {
-            const base = parseFloat(row.querySelector('.base-rate').value) || 0;
-            const type = row.querySelector('.discount-type').value;
-            const value = parseFloat(row.querySelector('.discount-value').value) || 0;
-            const finalRateInput = row.querySelector('.final-rate');
-
-            let final = base;
-            if (type === 'percentage') final = base - (base * value / 100);
-            if (type === 'fixed') final = Math.max(0, base - value);
-
-            finalRateInput.value = final.toFixed(2);
-        }
-
-        document.getElementById('cpAddRowBtn').addEventListener('click', addProposalRow);
-
-        document.getElementById('cpSaveBtn').addEventListener('click', async function() {
-            const rows = Array.from(document.querySelectorAll('#cpRatesContainer [data-row]'));
-
-            if (!rows.length) {
-                showMessage({
-                    status: 'error',
-                    title: 'Add at least one container line.'
-                });
-                return;
-            }
-
-            const rates = rows.map((row) => ({
-                origin_port_id: row.querySelector('[data-field="origin_port_id"]').value,
-                destination_port_id: row.querySelector('[data-field="destination_port_id"]')
-                    .value,
-                container_id: row.querySelector('[data-field="container_id"]').value,
-                container_class_id: row.querySelector('[data-field="container_class_id"]')
-                    .value,
-                container_size_id: row.querySelector('[data-field="container_size_id"]')
-                    .value,
-                container_variant_id: row.querySelector(
-                    '[data-field="container_variant_id"]').value,
-                base_rate: parseFloat(row.querySelector('.base-rate').value) || 0,
-                discount_type: row.querySelector('.discount-type').value || null,
-                discount_value: parseFloat(row.querySelector('.discount-value').value) || 0,
-                final_rate: parseFloat(row.querySelector('.final-rate').value) || 0,
-            }));
-
-            if (rates.some((r) => !r.origin_port_id || !r.destination_port_id || !r
-                    .container_variant_id)) {
-                showMessage({
-                    status: 'error',
-                    title: 'Incomplete',
-                    message: 'Complete origin, destination, and container for every line.'
-                });
-                return;
-            }
-
-            const url = proposalModalContext.mode === 'append' ?
-                `/api/clientMasters/proposals/${proposalModalContext.proposalId}/rates` :
-                `/api/clientMasters/${currentClientUuid}/proposals`;
-
-            const response = await apiCall({
-                mode: 'POST',
-                isJson: true,
-                payload: {
-                    rates
-                },
-                url,
-                button: this,
-            });
-
-            if (!response.success) {
-                showMessage({
-                    status: 'error',
-                    title: response.message ? 'Error' : 'Error Saving Proposal',
-                    message: response.message ?? ''
-                });
-                return;
-            }
-
-            showMessage({
-                status: 'success',
-                title: proposalModalContext.mode === 'append' ? 'Container(s) added!' :
-                    'Proposal saved!'
-            });
-            closeSideModal('AddClientProposalModal');
-            loadProposals(currentClientUuid, proposalModalContext.mode === 'append' ?
-                currentProposalsPage : 1);
-        });
 
         // ================= CONTRACTS LIST (basic) =================
         async function loadContracts(uuid) {
@@ -936,12 +646,12 @@
             }
 
             container.innerHTML = response.data.map((c) => `
-                <div class="border rounded-xl p-4 flex justify-between items-center">
+                <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 flex justify-between items-center text-zinc-900 dark:text-zinc-100">
                     <div>
                         <p class="font-semibold text-sm">${c.code}</p>
                         <p class="text-xs text-zinc-400">${c.valid_from} → ${c.valid_to}</p>
                     </div>
-                    <p class="text-xs text-zinc-500">${c.rates.length} rate line(s)</p>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">${c.rates.length} rate line(s)</p>
                 </div>
             `).join('');
         }

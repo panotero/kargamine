@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,17 +19,19 @@ class DatabaseSeeder extends Seeder
         // ]);
         // $this->call(UserSeeder::class);
         $this->call([
-            //template seeder
+            // template seeder
             NavMenuSeeder::class,
             UserSeeder::class,
             Setting_roleSeeder::class,
 
-            //kargamine seeder
+            // kargamine seeder
             CrmStatusSeeder::class,
             lovSeeder::class,
             PortSeeder::class,
             departmentSeeder::class,
-            userstatusSeeder::class
+            userstatusSeeder::class,
+            AddressTypeSeeder::class,
+            LeadSourceSeeder::class,
         ]);
     }
 }

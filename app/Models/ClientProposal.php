@@ -25,6 +25,7 @@ class ClientProposal extends Model
         'uuid',
         'code',
         'client_id',
+        'lead_id',
         'status',
         'created_by',
         'signed_document_path',
@@ -91,5 +92,9 @@ class ClientProposal extends Model
     public function getCanRejectAttribute(): bool
     {
         return $this->canBeRejectedBy(auth()->user());
+    }
+    public function lead()
+    {
+        return $this->belongsTo(CrmLead::class, 'lead_id');
     }
 }

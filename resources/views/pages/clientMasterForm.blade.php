@@ -23,7 +23,7 @@
         </button>
         <button type="button" class="stage-btn flex-1 px-3 py-2 rounded-lg text-sm font-semibold border-2"
             data-stage="3">
-            3. Finance, Billing & Sales
+            3. Finance & Billing
         </button>
     </div>
 
@@ -31,55 +31,72 @@
 
         {{-- ===================== STAGE 1 ===================== --}}
         <div class="stage-panel" data-panel="1">
-            <form id="stage1Form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form id="stage1Form" class="space-y-6">
+
                 <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Customer Code</label>
-                    <input type="text" name="customer_code" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                    <p class="font-semibold text-zinc-700 mb-3">Company Information</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Customer Code</label>
+                            <input type="text" name="customer_code" readonly placeholder="Generated on save"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
+                            <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number
+                                (Primary)</label>
+                            <input type="text" name="contact_number_1"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number
+                                (Secondary)</label>
+                            <input type="text" name="contact_number_2"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Industry</label>
+                            <input type="text" name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Type of Organization</label>
+                            <input type="text" name="organization_type"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
+                            <input type="text" name="tin" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Business Established
+                                Date</label>
+                            <input type="date" name="business_start_date"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Estimated Annual Revenue</label>
+                            <input type="number" step="0.01" name="estimated_annual_revenue"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Company URL</label>
+                            <input type="url" name="company_url" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
-                    <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Registered Company Address</label>
-                    <textarea name="registered_address" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number (Primary)</label>
-                    <input type="text" name="contact_number_1"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number (Secondary)</label>
-                    <input type="text" name="contact_number_2"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Industry</label>
-                    <input type="text" name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Type of Organization</label>
-                    <input type="text" name="organization_type"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
-                    <input type="text" name="tin" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Business Established Date</label>
-                    <input type="date" name="business_start_date"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Estimated Annual Revenue</label>
-                    <input type="number" step="0.01" name="estimated_annual_revenue"
-                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Company URL</label>
-                    <input type="url" name="company_url" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+
+                {{-- Addresses - repeatable, one per address type --}}
+                <div class="border-t pt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-semibold text-zinc-700">Address(es) *</p>
+                        <button type="button" id="addAddressBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add
+                            Address</button>
+                    </div>
+                    <div id="addressesContainer" class="space-y-4"></div>
                 </div>
             </form>
             <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
@@ -122,14 +139,6 @@
             <form id="stage3Form" class="space-y-6">
 
                 <div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Sales Representative</label>
-                    <select name="sales_rep_id"
-                        class="salesRepDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1">
-                        <option value="">Select Sales Rep</option>
-                    </select>
-                </div>
-
-                <div class="border-t pt-4">
                     <p class="font-semibold text-zinc-700 mb-3">Company Finance</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -276,7 +285,6 @@
 
 <script>
     (function() {
-        const params = new URLSearchParams(window.location.search);
         let clientUuid = window.clientMasterFormUuid || null;
         window.clientMasterFormUuid = null;
 
@@ -317,11 +325,32 @@
         });
 
         // -------------------- STAGE 1 --------------------
+        function collectAddresses() {
+            return Array.from(document.querySelectorAll('.address-card')).map(card => {
+                const obj = {};
+                card.querySelectorAll('[data-field]').forEach(el => {
+                    obj[el.dataset.field] = el.value;
+                });
+                obj.is_primary = card.querySelector('.primary-radio')?.checked ?? false;
+                return obj;
+            });
+        }
+
         document.getElementById('saveStage1Btn').addEventListener('click', async function() {
             const form = document.getElementById('stage1Form');
             const data = Object.fromEntries(new FormData(form).entries());
             if (clientUuid) data.uuid = clientUuid;
             if (leadId) data.lead_id = leadId;
+
+            const addresses = collectAddresses();
+            if (!addresses.length) {
+                showMessage({
+                    status: 'error',
+                    title: 'Add at least one address.'
+                });
+                return;
+            }
+            data.addresses = addresses;
 
             const response = await apiCall({
                 mode: 'POST',
@@ -341,6 +370,7 @@
             }
 
             clientUuid = response.data.uuid;
+            document.querySelector('#stage1Form [name="customer_code"]').value = response.data.customer_code ?? '';
             showMessage({
                 status: 'success',
                 title: 'Company Information Saved'
@@ -354,6 +384,7 @@
             document.getElementById('stage3Form').reset();
             document.getElementById('contactsContainer').innerHTML = '';
             document.getElementById('tradeRefsContainer').innerHTML = '';
+            document.getElementById('addressesContainer').innerHTML = '';
             document.getElementById('invoiceElectronicFields').classList.add('hidden');
             document.getElementById('invoiceCourierFields').classList.add('hidden');
             document.getElementById('checkPickupFields').classList.add('hidden');
@@ -363,10 +394,23 @@
             if (prefillData) {
                 const stage1Form = document.getElementById('stage1Form');
                 Object.entries(prefillData).forEach(([key, val]) => {
+                    if (key === 'addresses') return;
                     const el = stage1Form.querySelector(`[name="${key}"]`);
                     if (el && val) el.value = val;
                 });
                 document.getElementById('formPageTitle').textContent = 'New Client Master Data (from Lead)';
+            }
+
+            const addresses = prefillData?.addresses?.length ? prefillData.addresses : [{
+                is_primary: true
+            }];
+            addAddressCardsFrom(addresses);
+        }
+
+        async function addAddressCardsFrom(addresses) {
+            for (const address of addresses) {
+                const card = await addAddressCard();
+                await hydrateAddressCard(card, address);
             }
         }
 
@@ -375,8 +419,22 @@
             return `
             <div class="contact-row grid grid-cols-1 md:grid-cols-5 gap-2 border rounded-lg p-3 relative">
                 <input type="text" data-field="contact_name" placeholder="Contact Name" class="border rounded-lg px-2 py-1.5 text-sm">
-                <input type="text" data-field="contact_number" placeholder="Contact Number" class="border rounded-lg px-2 py-1.5 text-sm">
-                <input type="email" data-field="contact_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm">
+                <div class="flex gap-1">
+                    <input type="text" data-field="contact_number" placeholder="Contact Number" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
+                    <select data-field="contact_number_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0">
+                        <option value="">Type</option>
+                        <option value="mobile">Mobile</option>
+                        <option value="landline">Landline</option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <input type="email" data-field="contact_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
+                    <select data-field="contact_email_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0">
+                        <option value="">Type</option>
+                        <option value="personal">Personal</option>
+                        <option value="business">Business</option>
+                    </select>
+                </div>
                 <input type="text" data-field="role" placeholder="Role" class="border rounded-lg px-2 py-1.5 text-sm">
                 <div class="flex gap-2">
                     <input type="text" data-field="position" placeholder="Position" class="border rounded-lg px-2 py-1.5 text-sm flex-1">
@@ -556,19 +614,6 @@
             });
         });
 
-        // -------------------- SALES REP DROPDOWN --------------------
-        async function fillSalesRepDropdown() {
-            const response = await apiCall({
-                mode: 'GET',
-                url: '/api/users'
-            });
-            const select = document.querySelector('.salesRepDropdown');
-            if (!select || !Array.isArray(response)) return;
-            response.forEach(u => {
-                select.insertAdjacentHTML('beforeend', `<option value="${u.id}">${u.name}</option>`);
-            });
-        }
-
         // -------------------- EDIT MODE: hydrate existing record --------------------
         async function hydrateExisting() {
             if (!clientUuid) return;
@@ -587,6 +632,12 @@
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = val ?? '';
             });
+
+            document.getElementById('addressesContainer').innerHTML = '';
+            const addresses = (c.addresses && c.addresses.length) ? c.addresses : [{
+                is_primary: true
+            }];
+            await addAddressCardsFrom(addresses);
 
             document.getElementById('contactsContainer').innerHTML = '';
             (c.contacts || []).forEach(contact => {
@@ -630,21 +681,272 @@
                 });
             }
 
-            if (c.sales_rep_id) {
-                document.querySelector('.salesRepDropdown').value = c.sales_rep_id;
-            }
-
             showStage(c.current_stage || 1);
         }
 
         // -------------------- INIT --------------------
         showStage(1);
-        if (clientUuid) {
-            fillSalesRepDropdown().then(hydrateExisting);
-        } else {
-            resetFormToBlank();
-            fillSalesRepDropdown();
+
+        fillAddressTypeOptions().then(() => {
+            if (clientUuid) {
+                hydrateExisting();
+            } else {
+                resetFormToBlank();
+            }
+        });
+
+
+        const API = "https://psgc.cloud/api";
+
+        async function request(url) {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch ${url}`);
+            }
+
+            return response.json();
         }
-        fillSalesRepDropdown().then(hydrateExisting);
+
+        function resetSelect(select, placeholder) {
+
+            select.innerHTML = "";
+
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = placeholder;
+
+            select.appendChild(option);
+            select.disabled = true;
+
+        }
+
+        function populateSelect(select, items, placeholder) {
+
+            resetSelect(select, placeholder);
+
+            items.forEach(item => {
+
+                const option = document.createElement("option");
+
+                option.value = item.name;
+                option.textContent = item.name;
+
+                option.dataset.code = item.code;
+
+                select.appendChild(option);
+
+            });
+
+            select.disabled = false;
+
+        }
+
+        // -------------------- ADDRESSES: repeatable cards --------------------
+        const COUNTRIES = [
+            'Philippines', 'United States', 'Singapore', 'Hong Kong', 'China', 'Japan',
+            'South Korea', 'Malaysia', 'Indonesia', 'Thailand', 'Vietnam', 'Taiwan',
+            'Australia', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Other',
+        ];
+        const countryOptionsHtml = COUNTRIES
+            .map(c => `<option value="${c}" ${c === 'Philippines' ? 'selected' : ''}>${c}</option>`)
+            .join('');
+
+        let addressTypeOptionsHtml = '<option value="">Select Address Type</option>';
+
+        async function fillAddressTypeOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/addresstype'
+            });
+            if (!Array.isArray(response)) return;
+            addressTypeOptionsHtml += response.map(lov =>
+                `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join('');
+        }
+
+        function addressCardHtml(index) {
+            return `
+    <div class="address-card border rounded-xl p-4 space-y-3" data-index="${index}">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold">
+                    ${addressTypeOptionsHtml}
+                </select>
+                <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
+                    <input type="radio" name="address_primary_radio" class="primary-radio">
+                    Primary
+                </label>
+            </div>
+            <button type="button" class="remove-address text-red-500 text-xs font-medium">✕ Remove</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">No.</label>
+                <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Building</label>
+                <input type="text" data-field="address_building" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Street</label>
+                <input type="text" data-field="address_street" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Country</label>
+                <select data-field="address_country" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                    ${countryOptionsHtml}
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Province</label>
+                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">Select Province</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Town/City</label>
+                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                    <option value="">Select Town/City</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Barangay</label>
+                <select data-field="address_barangay" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                    <option value="">Select Barangay</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Postal Code</label>
+                <input type="text" data-field="address_postal_code" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+            </div>
+        </div>
+    </div>`;
+        }
+
+        async function addAddressCard() {
+            const wrap = document.getElementById('addressesContainer');
+            const index = wrap.children.length;
+            wrap.insertAdjacentHTML('beforeend', addressCardHtml(index));
+            const card = wrap.lastElementChild;
+
+            card.querySelector('.remove-address').addEventListener('click', () => card.remove());
+            if (index === 0) card.querySelector('.primary-radio').checked = true;
+
+            await initializePhilippineAddress(card);
+            return card;
+        }
+
+        document.getElementById('addAddressBtn').addEventListener('click', () => addAddressCard());
+
+        async function hydrateAddressCard(card, address) {
+            ['address_no', 'address_building', 'address_street', 'address_postal_code']
+            .forEach(field => {
+                const el = card.querySelector(`[data-field="${field}"]`);
+                if (el) el.value = address[field] ?? '';
+            });
+
+            const typeSelect = card.querySelector('[data-field="address_type"]');
+            if (typeSelect) typeSelect.value = address.address_type ?? '';
+
+            const countrySelect = card.querySelector('[data-field="address_country"]');
+            if (countrySelect) countrySelect.value = address.address_country || 'Philippines';
+
+            card.querySelector('.primary-radio').checked = Boolean(address.is_primary);
+
+            const {
+                loadCitiesForProvince,
+                loadBarangaysForCity
+            } = card._addressLookups ?? {};
+            const provinceSelect = card.querySelector('[data-field="address_province"]');
+            const citySelect = card.querySelector('[data-field="address_town_city"]');
+            const barangaySelect = card.querySelector('[data-field="address_barangay"]');
+
+            if (address.address_province && provinceSelect) {
+                provinceSelect.value = address.address_province;
+                const provinceCode = provinceSelect.selectedOptions[0]?.dataset.code;
+
+                if (loadCitiesForProvince) await loadCitiesForProvince(provinceCode);
+
+                if (address.address_town_city && citySelect) {
+                    citySelect.value = address.address_town_city;
+                    const cityCode = citySelect.selectedOptions[0]?.dataset.code;
+
+                    if (loadBarangaysForCity) await loadBarangaysForCity(cityCode);
+
+                    if (address.address_barangay && barangaySelect) {
+                        barangaySelect.value = address.address_barangay;
+                    }
+                }
+            }
+        }
+
+        async function initializePhilippineAddress(container) {
+
+            const province = container.querySelector('[data-field="address_province"]');
+            const city = container.querySelector('[data-field="address_town_city"]');
+            const barangay = container.querySelector('[data-field="address_barangay"]');
+
+            if (!province || !city || !barangay) return;
+
+            resetSelect(city, "Select Town/City");
+            resetSelect(barangay, "Select Barangay");
+
+            async function loadCitiesForProvince(provinceCode) {
+                resetSelect(city, "Loading...");
+                resetSelect(barangay, "Select Barangay");
+
+                if (!provinceCode) {
+                    resetSelect(city, "Select Town/City");
+                    return;
+                }
+
+                const cities = await request(
+                    `${API}/provinces/${provinceCode}/cities-municipalities`
+                );
+                cities.sort((a, b) => a.name.localeCompare(b.name));
+                populateSelect(city, cities, "Select Town/City");
+            }
+
+            async function loadBarangaysForCity(cityCode) {
+                resetSelect(barangay, "Loading...");
+
+                if (!cityCode) {
+                    resetSelect(barangay, "Select Barangay");
+                    return;
+                }
+
+                const barangays = await request(
+                    `${API}/cities-municipalities/${cityCode}/barangays`
+                );
+                barangays.sort((a, b) => a.name.localeCompare(b.name));
+                populateSelect(barangay, barangays, "Select Barangay");
+            }
+
+            // Load Provinces
+            const provinces = await request(`${API}/provinces`);
+            provinces.sort((a, b) => a.name.localeCompare(b.name));
+            populateSelect(province, provinces, "Select Province");
+
+            province.addEventListener("change", function() {
+                const provinceCode = this.selectedOptions[0]?.dataset.code;
+                loadCitiesForProvince(provinceCode);
+            });
+
+            city.addEventListener("change", function() {
+                const cityCode = this.selectedOptions[0]?.dataset.code;
+                loadBarangaysForCity(cityCode);
+            });
+
+            // Exposed so hydrateAddressCard() can cascade a saved province/city
+            // selection exactly the way a manual selection would, without
+            // re-registering listeners or re-fetching the province list.
+            container._addressLookups = {
+                loadCitiesForProvince,
+                loadBarangaysForCity
+            };
+        }
+
     })();
 </script>

@@ -39,8 +39,8 @@ class ClientContractController extends Controller
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
-                    ->orWhereHas('client', fn($q) => $q->where('company_name', 'like', "%{$s}%"))
-                    ->orWhereHas('proposal', fn($q) => $q->where('code', 'like', "%{$s}%"));
+                    ->orWhereHas('client', fn ($q) => $q->where('company_name', 'like', "%{$s}%"))
+                    ->orWhereHas('proposal', fn ($q) => $q->where('code', 'like', "%{$s}%"));
             })
             ->when($request->filled('status'), function ($q) use ($request) {
                 switch (strtolower($request->status)) {
@@ -72,7 +72,7 @@ class ClientContractController extends Controller
 
         $allContracts = ClientContract::all();
 
-        $statusCounts = $allContracts->groupBy('status')->map(fn($group) => $group->count());
+        $statusCounts = $allContracts->groupBy('status')->map(fn ($group) => $group->count());
 
         $expiring = ClientContract::where('status', ClientContract::STATUS_ACTIVE)
             ->whereDate('valid_to', '>=', Carbon::today())
@@ -113,6 +113,7 @@ class ClientContractController extends Controller
     {
         $contract->load([
             'client',
+            'client.addresses',
             'proposal',
             'creator',
             'rates.originPort',
@@ -124,7 +125,7 @@ class ClientContractController extends Controller
 
         $pdf = Pdf::loadView('pdf.client-contract', ['contract' => $contract]);
 
-        return $pdf->download($contract->code . '.pdf');
+        return $pdf->download($contract->code.'.pdf');
     }
 
     public function store(Request $request, $clientUuid)

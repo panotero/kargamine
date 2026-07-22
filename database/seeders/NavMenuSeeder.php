@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\NavMenu;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Seeder;
 
 class NavMenuSeeder extends Seeder
 {
@@ -21,7 +19,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_dashboard',
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0',
-                'menu_order' => '0'
+                'menu_order' => '0',
             ],
             [
                 'title' => 'User Management',
@@ -29,7 +27,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_users',
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0',
-                'menu_order' => '6'
+                'menu_order' => '6',
             ],
             [
                 'title' => 'Developer Option',
@@ -37,7 +35,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '#',
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0',
-                'menu_order' => '8'
+                'menu_order' => '8',
             ],
             [
                 'title' => 'Mailer',
@@ -45,7 +43,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_mailer',
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '3',
-                'menu_order' => '1'
+                'menu_order' => '1',
             ],
             [
                 'title' => 'Menus',
@@ -53,7 +51,15 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_menus',
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '3',
-                'menu_order' => '2'
+                'menu_order' => '2',
+            ],
+            [
+                'title' => 'Theme',
+                'icon' => '',
+                'link' => '/page_theme',
+                'allowed_roles' => json_encode(['1']),
+                'parent_menu' => '3',
+                'menu_order' => '3',
             ],
             [
                 'title' => 'Settings',
@@ -61,7 +67,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '#',
                 'allowed_roles' => json_encode(['1', '2', '3', '4']),
                 'parent_menu' => '0',
-                'menu_order' => '7'
+                'menu_order' => '7',
             ],
             [
                 'title' => 'App Settings',
@@ -69,15 +75,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_maintenance',
                 'allowed_roles' => json_encode(['1', '2', '3', '4']),
                 'parent_menu' => '6',
-                'menu_order' => '1'
-            ],
-            [
-                'title' => 'Shipper/Consignee',
-                'icon' => '',
-                'link' => '/page_shipperConsignee',
-                'allowed_roles' => json_encode(['1', '2', '3', '4']),
-                'parent_menu' => '0',
-                'menu_order' => '3'
+                'menu_order' => '1',
             ],
             [
                 'title' => 'Contracts',
@@ -85,7 +83,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_contracts',
                 'allowed_roles' => json_encode(['1', '2', '3', '4']),
                 'parent_menu' => '0',
-                'menu_order' => '4'
+                'menu_order' => '4',
             ],
             [
                 'title' => 'Reports',
@@ -93,15 +91,7 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_reports',
                 'allowed_roles' => json_encode(['1', '2', '3', '4']),
                 'parent_menu' => '0',
-                'menu_order' => '5'
-            ],
-            [
-                'title' => 'Lookup Values',
-                'icon' => '',
-                'link' => '/page_lookupValues',
-                'allowed_roles' => json_encode(['1']),
-                'parent_menu' => '3',
-                'menu_order' => '3'
+                'menu_order' => '5',
             ],
             [
                 'title' => 'CRM',
@@ -109,22 +99,22 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_crm',
                 'allowed_roles' => json_encode(['1']),
                 'parent_menu' => '0',
-                'menu_order' => '2'
-            ]
+                'menu_order' => '2',
+            ],
         ];
 
         foreach ($menu_array as $menu) {
 
             NavMenu::updateOrCreate(
                 [
-                    'title' => $menu['title']
+                    'title' => $menu['title'],
                 ],
                 [
                     'icon' => $menu['icon'],
                     'link' => $menu['link'],
                     'allowed_roles' => $menu['allowed_roles'],
                     'parent_menu' => $menu['parent_menu'],
-                    'menu_order' => $menu['menu_order']
+                    'menu_order' => $menu['menu_order'],
                 ]
             );
         }

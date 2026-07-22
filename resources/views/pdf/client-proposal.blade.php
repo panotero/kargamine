@@ -120,7 +120,7 @@
             </tr>
             <tr>
                 <td><strong>Registered Address</strong></td>
-                <td>{{ $proposal->client->registered_address }}</td>
+                <td>{{ $proposal->client->formattedPrimaryAddress() }}</td>
             </tr>
             <tr>
                 <td><strong>Contact Number</strong></td>

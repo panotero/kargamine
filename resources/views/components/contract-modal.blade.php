@@ -10,9 +10,11 @@
         window.openCreateContractModal('PR-202607-0004');  // prefilled + auto-searched
 --}}
 <x-side-modal id="createContractModal">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
-        <h3 class="text-base font-semibold text-zinc-900">New Contract</h3>
-        <button type="button" id="createContractCloseBtn" class="text-zinc-400 hover:text-zinc-600">
+    <div
+        class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <h3 class="text-base font-semibold text-zinc-900 dark:text-white">New Contract</h3>
+        <button type="button" id="createContractCloseBtn"
+            class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
@@ -23,10 +25,10 @@
 
         {{-- Search --}}
         <div>
-            <label class="block text-sm font-medium text-zinc-700 mb-1">Proposal Code</label>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Proposal Code</label>
             <div class="flex gap-2">
                 <input type="text" id="contractProposalCodeInput" placeholder="e.g. PR-202607-0004"
-                    class="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
                 <button type="button" id="contractProposalSearchBtn"
                     class="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-900">
                     Search
@@ -39,14 +41,14 @@
         {{-- Autofilled, read-only once a proposal is found --}}
         <div class="grid grid-cols-2 gap-3 hidden" id="contractSummarySection">
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">Client</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Client</label>
                 <input type="text" id="contractClientDisplay" readonly
-                    class="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+                    class="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300">
             </div>
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">Proposal</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Proposal</label>
                 <input type="text" id="contractProposalDisplay" readonly
-                    class="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+                    class="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300">
             </div>
         </div>
 
@@ -56,29 +58,30 @@
         {{-- Contract details - shown once a proposal is loaded --}}
         <div class="grid grid-cols-2 gap-3 hidden" id="contractDetailsSection">
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">Signed Date</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Signed Date</label>
                 <input type="date" name="signed_date"
-                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
 
             <div></div>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">Valid From *</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valid From *</label>
                 <input type="date" name="valid_from" required
-                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">Valid To *</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valid To *</label>
                 <input type="date" name="valid_to" required
-                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
 
             <div class="col-span-2">
-                <label class="block text-sm font-medium text-zinc-700 mb-1">Signed Document Path</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Signed Document
+                    Path</label>
                 <input type="text" name="signed_document_path" placeholder="e.g. contracts/2026/ctr-0001.pdf"
-                    class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
 
             <p class="col-span-2 text-xs text-zinc-400">Contract code is generated automatically on save.</p>
@@ -86,27 +89,27 @@
 
         {{-- Rate lines pulled from the proposal --}}
         <div class="hidden" id="contractRatesSection">
-            <label class="block text-sm font-medium text-zinc-700 mb-2">Contract Rates</label>
-            <div class="border border-zinc-200 rounded-lg overflow-hidden">
-                <table class="min-w-full divide-y divide-zinc-200 text-xs">
-                    <thead class="bg-zinc-50">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Contract Rates</label>
+            <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                    <thead class="bg-zinc-50 dark:bg-zinc-800">
                         <tr>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 uppercase">Route</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 uppercase">Container</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 uppercase">Min Qty</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 uppercase">Discount Type</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 uppercase">Discount Value</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Route</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Container</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Min Qty</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Discount Type</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Discount Value</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-100" id="contractRatesBody"></tbody>
+                    <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800" id="contractRatesBody"></tbody>
                 </table>
             </div>
         </div>
     </form>
 
-    <div class="px-5 py-4 border-t border-zinc-200 flex justify-end gap-2">
+    <div class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
         <button type="button" id="createContractCancelBtn"
-            class="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+            class="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
             Cancel
         </button>
         <button type="submit" form="createContractForm" id="createContractSubmitBtn" disabled
@@ -268,12 +271,12 @@
 
             return `
             <tr data-rate-line>
-                <td class="px-3 py-2 text-zinc-700 whitespace-nowrap">
+                <td class="px-3 py-2 text-zinc-700 dark:text-zinc-200 whitespace-nowrap">
                     ${routeLabel}
                     <input type="hidden" data-field="route_from" value="${routeFromId}">
                     <input type="hidden" data-field="route_to" value="${routeToId}">
                 </td>
-                <td class="px-3 py-2 text-zinc-500 whitespace-nowrap">
+                <td class="px-3 py-2 text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
                     ${containerLabel}
                     <input type="hidden" data-field="container_class" value="${containerClassId}">
                     <input type="hidden" data-field="container_type" value="${containerTypeId}">
@@ -281,19 +284,19 @@
                     <input type="hidden" data-field="origin_service_type" value="${originServiceId}">
                     <input type="hidden" data-field="destination_service_type" value="${destinationServiceId}">
                 </td>
-                <td class="px-3 py-2 text-zinc-700">
+                <td class="px-3 py-2 text-zinc-700 dark:text-zinc-200">
                     ${rate.min_van_qty}
                     <input type="hidden" data-field="min_van_qty" value="${rate.min_van_qty}">
                 </td>
                 <td class="px-3 py-2">
-                    <select data-field="discount_type" required class="w-full rounded border border-zinc-300 px-2 py-1 text-xs focus:border-orange-500 focus:ring-orange-500">
+                    <select data-field="discount_type" required class="w-full rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1 text-xs focus:border-orange-500 focus:ring-orange-500">
                         <option value="PERCENTAGE">Percentage</option>
                         <option value="FIXED">Fixed Amount</option>
                     </select>
                 </td>
                 <td class="px-3 py-2">
                     <input type="number" step="0.01" min="0" data-field="discount_value" required
-                           class="w-full rounded border border-zinc-300 px-2 py-1 text-xs focus:border-orange-500 focus:ring-orange-500">
+                           class="w-full rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1 text-xs focus:border-orange-500 focus:ring-orange-500">
                 </td>
             </tr>
         `;

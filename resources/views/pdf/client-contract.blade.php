@@ -137,7 +137,7 @@
             </tr>
             <tr>
                 <td><strong>Registered Address</strong></td>
-                <td>{{ $contract->client->registered_address }}</td>
+                <td>{{ $contract->client->formattedPrimaryAddress() }}</td>
             </tr>
             <tr>
                 <td><strong>Source Proposal</strong></td>

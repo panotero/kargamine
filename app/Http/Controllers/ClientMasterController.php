@@ -1,19 +1,14 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\ClientMaster;
-use App\Models\ClientContact;
-use App\Models\ClientTradeReference;
-use App\Models\ClientFinance;
-use App\Models\ClientBilling;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use App\Models\CrmLead;
 use App\Models\CrmStatus;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ClientMasterController extends Controller
 {
@@ -58,8 +53,10 @@ class ClientMasterController extends Controller
 
     public function show($uuid)
     {
-        $client = ClientMaster::with(['contacts', 'tradeReferences', 'finance', 'billing', 'salesRep'])
+        $client = ClientMaster::with(['contacts', 'tradeReferences', 'finance', 'billing', 'salesRep', 'addresses'])
             ->where('uuid', $uuid)->firstOrFail();
+
+        $client->setAttribute('primary_address_text', $client->formattedPrimaryAddress());
 
         return response()->json(['success' => true, 'data' => $client]);
     }
@@ -74,7 +71,6 @@ class ClientMasterController extends Controller
             'lead_id' => ['nullable', 'exists:crm_leads,id'],
             'customer_code' => ['nullable', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
-            'registered_address' => ['nullable', 'string'],
             'contact_number_1' => ['nullable', 'string', 'max:255'],
             'contact_number_2' => ['nullable', 'string', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
@@ -83,6 +79,18 @@ class ClientMasterController extends Controller
             'business_start_date' => ['nullable', 'date'],
             'estimated_annual_revenue' => ['nullable', 'numeric'],
             'company_url' => ['nullable', 'string', 'max:255'],
+
+            'addresses' => ['required', 'array', 'min:1'],
+            'addresses.*.address_type' => ['nullable', 'string', 'max:255'],
+            'addresses.*.is_primary' => ['nullable', 'boolean'],
+            'addresses.*.address_no' => ['nullable', 'string', 'max:100'],
+            'addresses.*.address_building' => ['nullable', 'string', 'max:255'],
+            'addresses.*.address_street' => ['nullable', 'string', 'max:255'],
+            'addresses.*.address_barangay' => ['nullable', 'string', 'max:255'],
+            'addresses.*.address_town_city' => ['nullable', 'string', 'max:255'],
+            'addresses.*.address_province' => ['nullable', 'string', 'max:255'],
+            'addresses.*.address_country' => ['nullable', 'string', 'max:255'],
+            'addresses.*.address_postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         if ($validator->fails()) {
@@ -96,38 +104,75 @@ class ClientMasterController extends Controller
 
         $client = DB::transaction(function () use ($data) {
 
-            $client = !empty($data['uuid'])
+            $client = ! empty($data['uuid'])
                 ? ClientMaster::where('uuid', $data['uuid'])->firstOrFail()
                 : new ClientMaster([
                     'uuid' => (string) Str::uuid(),
                 ]);
 
-            // Only set lead_id during creation.
-            if (!$client->exists) {
-                if (!empty($data['lead_id'])) {
+            $isNew = ! $client->exists;
+
+            $lead = null;
+
+            if ($isNew) {
+                if (! empty($data['lead_id'])) {
                     $client->lead_id = $data['lead_id'];
+                    $lead = CrmLead::find($data['lead_id']);
                 }
 
+                // The code is either already reserved on the lead (locked
+                // there the moment the "Create Client Master" flow was
+                // opened - see CrmLeadController::getOrGenerateCustomerCode)
+                // or generated fresh right here for a lead-less client.
+                $client->customer_code = $lead?->customer_code
+                    ?? $data['customer_code']
+                    ?? ClientMaster::generateNextCustomerCode();
+
+                $client->sales_rep_id = auth()->id();
                 $client->created_by = auth()->id();
             }
 
             $client->fill(
                 collect($data)
-                    ->except(['uuid', 'lead_id'])
+                    ->except(['uuid', 'lead_id', 'customer_code', 'addresses'])
                     ->toArray()
             );
 
             $client->current_stage = max($client->current_stage ?? 1, 1);
 
             $client->save();
+
+            $client->addresses()->delete();
+            $addresses = $data['addresses'];
+            if (! collect($addresses)->contains(fn ($a) => ! empty($a['is_primary']))) {
+                $addresses[0]['is_primary'] = true;
+            }
+            foreach ($addresses as $address) {
+                $client->addresses()->create($address);
+            }
+
             $client->recomputeCompletion();
+
+            // A Client Master record existing at all - even incomplete - is
+            // the deal being won; the lead doesn't wait for stage 2/3 to
+            // reflect that.
+            if ($isNew && $lead) {
+                $winStatus = CrmStatus::where('status', 'WIN')->first();
+
+                if ($winStatus) {
+                    $lead->update([
+                        'status' => $winStatus->id,
+                        'status_updated_at' => now(),
+                    ]);
+                }
+            }
 
             return $client;
         });
 
         return response()->json([
             'success' => true,
-            'data' => $client,
+            'data' => $client->load('addresses'),
         ]);
     }
 
@@ -143,7 +188,9 @@ class ClientMasterController extends Controller
             'contacts' => ['nullable', 'array'],
             'contacts.*.contact_name' => ['nullable', 'string', 'max:255'],
             'contacts.*.contact_number' => ['nullable', 'string', 'max:255'],
+            'contacts.*.contact_number_type' => ['nullable', 'in:mobile,landline'],
             'contacts.*.contact_email' => ['nullable', 'email', 'max:255'],
+            'contacts.*.contact_email_type' => ['nullable', 'in:personal,business'],
             'contacts.*.role' => ['nullable', 'string', 'max:255'],
             'contacts.*.position' => ['nullable', 'string', 'max:255'],
 
@@ -187,8 +234,6 @@ class ClientMasterController extends Controller
         $client = ClientMaster::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
-            'sales_rep_id' => ['nullable', 'integer', 'exists:users,id'],
-
             'finance.credit_terms' => ['nullable', 'string', 'max:255'],
             'finance.payment_mode' => ['nullable', 'string', 'max:255'],
             'finance.standard_billing_service' => ['nullable', 'boolean'],
@@ -213,16 +258,14 @@ class ClientMasterController extends Controller
 
         DB::transaction(function () use ($client, $validated) {
 
-            $client->sales_rep_id = $validated['sales_rep_id'] ?? $client->sales_rep_id;
-
-            if (!empty($validated['finance'])) {
+            if (! empty($validated['finance'])) {
                 $client->finance()->updateOrCreate(
                     ['client_id' => $client->id],
                     $validated['finance']
                 );
             }
 
-            if (!empty($validated['billing'])) {
+            if (! empty($validated['billing'])) {
                 $client->billing()->updateOrCreate(
                     ['client_id' => $client->id],
                     $validated['billing']
@@ -234,19 +277,9 @@ class ClientMasterController extends Controller
             $client->save();
 
             $client->recomputeCompletion();
-
-            // If created from CRM Lead, move it to Opportunity.
-            if ($client->lead_id) {
-
-                $opportunityStatus = CrmStatus::where('status', 'OPPORTUNITY')->first();
-
-                if ($opportunityStatus) {
-                    CrmLead::where('id', $client->lead_id)->update([
-                        'status' => $opportunityStatus->id,
-                        'status_updated_at' => now(),
-                    ]);
-                }
-            }
+            // Lead status is already flipped to WIN as soon as the Client
+            // Master record was first created (saveStage1) - nothing further
+            // to do here.
         });
 
         $client->load([

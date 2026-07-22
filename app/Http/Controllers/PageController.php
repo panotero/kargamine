@@ -2,12 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\MailerSetting;
-use App\Models\User;
-use App\Models\SettingRole;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class PageController extends Controller
 {
@@ -19,15 +14,17 @@ class PageController extends Controller
     public function page_UserManagement()
     {
 
-
         return view('pages.settings.usersmanagement');
     }
+
     public function page_Mailer()
     {
 
         $config = MailerSetting::latest()->first();
+
         return view('pages.settings.mailer', compact('config'));
     }
+
     public function page_Menus()
     {
         return view('pages.settings.menus');
@@ -37,10 +34,12 @@ class PageController extends Controller
     {
         return view('pages.settings.theme');
     }
+
     public function page_Users()
     {
         return view('pages.settings.users');
     }
+
     public function page_Forms()
     {
         return view('pages.settings.forms');
@@ -55,6 +54,7 @@ class PageController extends Controller
     {
         return view('pages.settings.settings');
     }
+
     public function page_documents()
     {
         return view('pages.documents');
@@ -76,6 +76,7 @@ class PageController extends Controller
     {
         return view('pages.reports.users');
     }
+
     public function page_finance_tracker()
     {
 
@@ -84,35 +85,22 @@ class PageController extends Controller
 
     public function profile()
     {
-        return "page profile";
+        return 'page profile';
     }
 
     public function settings()
     {
-        return "page settings";
+        return 'page settings';
     }
 
-
-    public function page_bookings()
-    {
-        return view('pages.bookings');
-    }
-    public function page_shipperConsignee()
-    {
-        return view('pages.shipperConsignee');
-    }
     public function page_contracts()
     {
         return view('pages.contracts');
     }
+
     public function page_reports()
     {
         return view('pages.reports');
-    }
-
-    public function page_lookupValues()
-    {
-        return view('pages.settings.lookupVal');
     }
 
     public function page_crm()
@@ -125,10 +113,12 @@ class PageController extends Controller
     {
         return view('pages.proposals');
     }
+
     public function page_maintenance()
     {
         return view('pages.maintenance');
     }
+
     public function page_clientMasters()
     {
         return view('pages.clientMasters');
@@ -138,6 +128,7 @@ class PageController extends Controller
     {
         return view('pages.clientMasterForm');
     }
+
     public function page_crmLeadForm()
     {
         return view('pages.crmLeadForm');

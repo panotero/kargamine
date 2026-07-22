@@ -18,5 +18,9 @@ export default {
   },
 
   plugins: [forms],
-  safelist: [],
+  safelist: [
+    {
+      pattern: /dark:.+/,
+    },
+  ],
 };

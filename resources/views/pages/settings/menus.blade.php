@@ -1,427 +1,111 @@
-<div class="lg:m-5 p-5 rounded-lg bg-white text-black dark:bg-gray-800 dark:text-white ">
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Navigation Menus</h2>
-        <button id="addMenuBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+<div class="container mx-auto p-3">
+
+    {{-- PAGE HEADER --}}
+    <div class="flex justify-between items-center mb-5 p-2">
+        <div>
+            <h1 class="text-2xl font-bold dark:text-white">Navigation Menus</h1>
+            <p class="text-zinc-500">Manage the sidebar structure and which roles can see each menu</p>
+        </div>
+        <button id="addMenuBtn"
+            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
             + Add New Menu
         </button>
     </div>
 
-    <table class="w-full border  p-5" id="navMenuTable">
-        <thead class="bg-gray-200 text-black">
-            <tr>
-                <th class="p-2 border">Title</th>
-                <th class="p-2 border">Page</th>
-                <th class="p-2 border">Allowed Roles</th>
-                <th class="p-2 border">Parent</th>
-                <th class="p-2 border text-center">Order</th>
-                <th class="p-2 border text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody id="navMenuTbody">
-        </tbody>
-    </table>
+    {{-- MENUS TABLE --}}
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+        <table class="w-full text-sm" id="navMenuTable">
+            <thead>
+                <tr>
+                    <th
+                        class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Title</th>
+                    <th
+                        class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Page</th>
+                    <th
+                        class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Allowed Roles</th>
+                    <th
+                        class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Parent</th>
+                    <th
+                        class="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Order</th>
+                    <th
+                        class="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Action</th>
+                </tr>
+            </thead>
+            <tbody id="navMenuTbody" class="divide-y divide-zinc-100 dark:divide-zinc-800">
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<div id="menuModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center modal">
-    <div class="bg-white text-black w-full max-w-md max-h-[70vh] overflow-auto rounded shadow p-6 relative">
-        <h3 id="modalTitle" class="text-lg font-semibold mb-4">Add New Menu</h3>
+{{-- ADD / EDIT MENU MODAL --}}
+<div id="menuModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center modal z-50 p-4">
+    <div
+        class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 w-full max-w-md max-h-[85vh] rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/40 border border-zinc-200 dark:border-zinc-700 flex flex-col">
 
-        <form id="menuForm" class="space-y-3">
+        {{-- Header --}}
+        <div class="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+            <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Navigation Menus</p>
+            <p id="modalTitle" class="text-lg font-semibold mt-0.5">Add New Menu</p>
+        </div>
+
+        {{-- Form --}}
+        <form id="menuForm" class="p-5 space-y-4 overflow-y-auto">
             <input type="hidden" id="menuId">
 
-            <div>
-                <label class="block font-medium">Title</label>
-                <input id="menuTitle" type="text" class="w-full border p-2 rounded text-black">
+            <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Title</label>
+                <input id="menuTitle" type="text"
+                    class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
             </div>
 
-            <div>
-                <label class="block font-medium">Icon</label>
-                <input id="menuIcon" type="text" class="w-full border p-2 rounded text-black">
+            <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Icon</label>
+                <input id="menuIcon" type="text"
+                    class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
             </div>
 
-            <div>
-                <label class="block font-medium">Link</label>
-                <div class="w-full h-full flex my-auto">
-                    <h1 class="p-2 text-center text-xl">
-                        /</h1><input id="menuLink" type="text" class="w-full border p-2 rounded text-black">
-                </div>
-
-            </div>
-
-            <div>
-                <label class="block font-medium">Allowed Roles</label>
-                <div id="menuRolesContainer" class="grid grid-cols-2 gap-2 text-black">
+            <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Link</label>
+                <div class="flex items-center gap-2">
+                    <span class="text-zinc-400 text-sm">/</span>
+                    <input id="menuLink" type="text"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
                 </div>
             </div>
 
-            <div>
-                <label class="block font-medium">Parent Menu</label>
-                <select id="menuParent" class="w-full border p-2 rounded text-black">
+            <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Allowed Roles</label>
+                <div id="menuRolesContainer" class="grid grid-cols-2 gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Parent Menu</label>
+                <select id="menuParent"
+                    class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
                 </select>
             </div>
-
-            <div class="flex justify-end gap-2 pt-4">
-                <button type="button" id="cancelModalBtn" class="px-4 py-2 rounded bg-gray-300">Cancel</button>
-                <button type="submit" id="saveMenuBtn" class="px-4 py-2 rounded bg-green-600 text-white">Save</button>
-            </div>
         </form>
+
+        {{-- Footer --}}
+        <div class="border-t border-zinc-100 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 shrink-0">
+            <button type="button" id="cancelModalBtn"
+                class="px-4 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
+                Cancel
+            </button>
+            <button type="submit" form="menuForm" id="saveMenuBtn"
+                class="px-4 py-1.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition">
+                Save
+            </button>
+        </div>
     </div>
 </div>
 <script>
-    (function() {
-        const modal = document.getElementById("menuModal");
-        const cancelBtn = document.getElementById("cancelModalBtn");
-        const form = document.getElementById("menuForm");
-        const saveBtn = document.getElementById("saveMenuBtn");
-        const modalTitle = document.getElementById("modalTitle");
-
-        const fields = {
-            id: document.getElementById("menuId"),
-            title: document.getElementById("menuTitle"),
-            icon: document.getElementById("menuIcon"),
-            link: document.getElementById("menuLink"),
-            rolesContainer: document.getElementById("menuRolesContainer"),
-            parent: document.getElementById("menuParent"),
-        };
-
-        const tableBody = document.getElementById("navMenuTbody");
-        let menusData = [];
-
-        cancelBtn.addEventListener("click", () => {
-            closeModal();
-        });
-
-        function openModal(mode = "Add", menu = null) {
-            modalTitle.textContent = mode === "Add" ? "Add New Menu" : "Modify Menu";
-            saveBtn.textContent = mode === "Add" ? "Save" : "Modify";
-            // console.log(mode);
-            if (menu) {
-                fields.id.value = menu.id;
-                fields.title.value = menu.title || "";
-                fields.icon.value = menu.icon || "";
-                fields.link.value = menu.link || "";
-                fields.parent.value = menu.parent_menu || 0;
-
-                const allowedRoles = JSON.parse(menu.allowed_roles || "[]");
-                document.querySelectorAll(".roleCheckbox").forEach(cb => {
-                    cb.checked = allowedRoles.includes(cb.value);
-                    cb.disabled = menu.parent_menu !== 0;
-                });
-            } else {
-                fields.id.value = "";
-                fields.title.value = "";
-                fields.icon.value = "";
-                fields.link.value = "";
-                fields.parent.value = 0;
-                document.querySelectorAll(".roleCheckbox").forEach(cb => {
-                    cb.checked = false;
-                    cb.disabled = false;
-                });
-            }
-
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-
-        function closeModal() {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        }
-
-        async function loadRoles() {
-            const roles = await fetchWithRetry(`/api/roles`, {
-                headers: {
-                    Accept: "application/json"
-                }
-            });
-
-            const container = fields.rolesContainer;
-            if (!container) return;
-
-            container.innerHTML = "";
-
-            // ---- Check All ----
-            const checkAllWrapper = document.createElement("label");
-            checkAllWrapper.className = "flex items-center gap-2 mb-2";
-
-            const checkAllBox = document.createElement("input");
-            checkAllBox.type = "checkbox";
-            checkAllBox.id = "checkAllRoles";
-            checkAllBox.className = "cursor-pointer";
-
-            const checkAllText = document.createElement("span");
-            checkAllText.className = "font-medium text-gray-700";
-            checkAllText.textContent = "Check All";
-
-            checkAllWrapper.append(checkAllBox, checkAllText);
-            container.appendChild(checkAllWrapper);
-
-            // ---- Role Checkboxes ----
-            roles.forEach(({
-                id,
-                role_name
-            }) => {
-                const wrapper = document.createElement("label");
-                wrapper.className = "flex items-center gap-2";
-
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.value = id; // ✅ use role ID (important)
-                checkbox.dataset.roleName = role_name; // optional if you need name later
-                checkbox.className = "roleCheckbox cursor-pointer";
-
-                const labelText = document.createElement("span");
-                labelText.textContent = role_name;
-
-                wrapper.append(checkbox, labelText);
-                container.appendChild(wrapper);
-            });
-
-            // ---- Check All Logic ----
-            checkAllBox.addEventListener("change", () => {
-                container
-                    .querySelectorAll(".roleCheckbox")
-                    .forEach(cb => (cb.checked = checkAllBox.checked));
-            });
-        }
-
-        async function loadMenus() {
-            menusData = await fetchWithRetry(`api/nav_menus/list`, {
-                credentials: 'include',
-                headers: {
-                    Accept: "application/json"
-                }
-            });
-            // menusData = await res.json();
-            tableBody.innerHTML = "";
-
-            const menuMap = {};
-            menusData.forEach(menu => menuMap[menu.id] = menu.title);
-
-            function renderMenuRows(parentId = 0, level = 0) {
-                const children = menusData
-                    .filter(m => m.parent_menu === parentId)
-                    .sort((a, b) => a.menu_order - b.menu_order);
-
-                children.forEach(menu => {
-                    const tr = document.createElement("tr");
-                    tr.classList.add("cursor-pointer", "hover:bg-gray-100");
-
-                    const parentName = menu.parent_menu === 0 ?
-                        "Main Menu" :
-                        (menuMap[menu.parent_menu] || "Unknown");
-
-                    const siblings = menusData
-                        .filter(m => m.parent_menu === menu.parent_menu)
-                        .sort((a, b) => a.menu_order - b.menu_order);
-                    const index = siblings.findIndex(m => m.id === menu.id);
-
-                    const moveUpHidden = index === 0 ? "hidden" : "";
-                    const moveDownHidden = index === siblings.length - 1 ? "hidden" : "";
-                    const roles = JSON.parse(menu.allowed_roles).join(', ');
-                    const targetpage = menu.link.replace(/^\//, '');
-
-                    const indent = "&nbsp;".repeat(level * 6) + (level > 0 ? "↳ " : "");
-
-                    tr.innerHTML = `
-                <td class="border p-2">${indent}${menu.title}</td>
-                <td class="border p-2">${targetpage || ""}</td>
-                <td class="border p-2">${roles || ""}</td>
-                <td class="border p-2">${parentName}</td>
-                <td class="border menubuttons p-2 text-center">
-                    <button class="move-up bg-blue-600 hover:bg-blue-800 text-white px-2 py-1 rounded-md ${moveUpHidden}" data-id="${menu.id}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 15l7-7 7 7" />
-                        </svg>
-                    </button>
-                    <button class="move-down bg-blue-600 hover:bg-blue-800 text-white px-2 py-1 rounded-md ${moveDownHidden}" data-id="${menu.id}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                </td>
-                <td class="border menubuttons p-2 text-center">
-                    <button class="delete-button bg-red-600 hover:bg-red-800 py-1 px-2 rounded text-white" data-id="${menu.id}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5a1 1 0 0 1-1 .5H8a1 1 0 0 1-1-.5L5 9zm5 2v8h2v-8H10zm4 0v8h2v-8h-2zM9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1h5v2H4V4h5z"/>
-                        </svg>
-                    </button>
-                </td>
-            `;
-
-                    tr.addEventListener("click", (e) => {
-                        if (e.target.closest("td.menubuttons")) {
-                            return;
-                        }
-
-                        modalTitle.textContent = "Modify Menu";
-                        saveBtn.textContent = "Modify";
-
-                        fields.id.value = menu.id;
-                        fields.title.value = menu.title || "";
-                        fields.icon.value = menu.icon || "";
-                        fields.link.value = menu.link || "";
-                        fields.parent.value = menu.parent_menu || 0;
-
-                        const allowedRoles = JSON.parse(menu.allowed_roles || "[]");
-                        document.querySelectorAll('.roleCheckbox').forEach(cb => {
-                            cb.checked = allowedRoles.includes(cb.value);
-                        });
-
-
-                        modal.classList.remove("hidden");
-                        modal.classList.add("flex");
-                    });
-
-                    tableBody.appendChild(tr);
-
-                    renderMenuRows(menu.id, level + 1);
-                });
-            }
-
-            renderMenuRows(0);
-
-            const parentSelect = fields.parent;
-            parentSelect.innerHTML = `<option value="0">Main Menu</option>`;
-            menusData
-                .filter(m => m.parent_menu === 0)
-                .forEach(menu => {
-                    const opt = document.createElement("option");
-                    opt.value = menu.id;
-                    opt.textContent = menu.title;
-                    parentSelect.appendChild(opt);
-                });
-        }
-
-
-        fields.parent.addEventListener("change", () => {
-            const parentId = parseInt(fields.parent.value);
-            if (parentId === 0) {
-                document.querySelectorAll(".roleCheckbox").forEach(cb => {
-                    cb.disabled = false;
-                    cb.checked = false;
-                });
-            } else {
-                const parentMenu = menusData.find(m => m.id === parentId);
-                const parentRoles = parentMenu ? JSON.parse(parentMenu.allowed_roles || "[]") : [];
-                document.querySelectorAll(".roleCheckbox").forEach(cb => {
-                    cb.checked = parentRoles.includes(cb.value);
-                    cb.disabled = true;
-                });
-            }
-        });
-
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            let checkedRoles = Array.from(document.querySelectorAll(".roleCheckbox:checked"))
-                .map(cb => cb.value);
-
-
-            const parentId = parseInt(fields.parent.value);
-
-            if (parentId !== 0) {
-                const parentMenu = menusData.find(m => m.id === parentId);
-
-                checkedRoles = parentMenu ? JSON.parse(parentMenu.allowed_roles || "[]") : [];
-            }
-
-            const payload = {
-                title: fields.title.value,
-                icon: fields.icon.value,
-                link: fields.link.value,
-                allowed_roles: JSON.stringify(checkedRoles),
-                parent_menu: fields.parent.value,
-            };
-
-            let url = `api/nav_menus`;
-            let method = "POST";
-
-            if (fields.id.value) {
-                url = `api/nav_menus/${fields.id.value}`;
-                method = "PUT";
-            }
-            console.log(payload);
-
-            const res = await fetchWithRetry(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                        .content,
-                },
-                body: JSON.stringify(payload)
-            });
-
-            closeModal();
-            await loadMenus();
-            await loadRoles();
-        });
-
-        tableBody.addEventListener("click", async (e) => {
-            const btn = e.target.closest("button");
-            if (!btn) return;
-
-            const id = parseInt(btn.dataset.id);
-            if (btn.classList.contains("move-up")) await swapMenu(id, "up");
-            else if (btn.classList.contains("move-down")) await swapMenu(id, "down");
-            else if (btn.classList.contains("delete-button")) await deleteMenu(id);
-        });
-
-        async function swapMenu(id, direction) {
-            const current = menusData.find(m => m.id === id);
-            const siblings = menusData.filter(m => m.parent_menu === current.parent_menu).sort((a, b) => a
-                .menu_order - b.menu_order);
-            const index = siblings.findIndex(m => m.id === id);
-
-            let swapWith = null;
-            if (direction === "up" && index > 0) swapWith = siblings[index - 1];
-            if (direction === "down" && index < siblings.length - 1) swapWith = siblings[index + 1];
-
-            // return;
-
-            if (!swapWith) return;
-
-            await fetchWithRetry(`api/nav_menus/swap`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                        .content,
-                },
-                body: JSON.stringify({
-                    id1: current.id,
-                    id2: swapWith.id
-                }),
-                credentials: "include"
-            });
-
-            loadMenus();
-        }
-
-        async function deleteMenu(id) {
-
-            const confirmed = await customConfirm("Delete this menu?");
-            if (!confirmed) return;
-            await fetchWithRetry(`api/nav_menus/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                        .content,
-                },
-                credentials: "include"
-            });
-            loadMenus();
-        }
-
-        const addBtn = document.getElementById("addMenuBtn");
-        addBtn.addEventListener("click", () => openModal("Add"));
-
-        loadRoles();
-        loadMenus();
-    })();
+    if (window.initMenuSettingsPage) window.initMenuSettingsPage();
 </script>

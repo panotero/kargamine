@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\CrmActivity;
-use Illuminate\Support\Facades\DB;
 use App\Models\CrmLead;
+use App\Services\FileUploadService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CrmActivityController extends Controller
 {
-    //
+    protected $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
+
     public function index()
     {
         return CrmActivity::all();
@@ -17,9 +24,10 @@ class CrmActivityController extends Controller
 
     public function store(Request $request)
     {
+        $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            dd($file);
+            $urls = $this->fileUploadService->uploadFile($request->file('attachment'), 'uploads/crm/activities');
+            $attachmentPath = $urls[0] ?? null;
         }
 
         try {
@@ -32,13 +40,15 @@ class CrmActivityController extends Controller
                 'lead_id' => $lead->id,
                 'type' => $request->type,
                 'description' => $request->activity,
+                'attachment' => $attachmentPath,
                 'created_by' => auth()->id(),
             ]);
             $lead->update($updatepayload);
             DB::commit();
+
             return response()->json([
                 'success' => true,
-                'message' => 'activity saved!'
+                'message' => 'activity saved!',
             ]);
         } catch (\Exception $ex) {
             DB::rollBack();
@@ -66,6 +76,7 @@ class CrmActivityController extends Controller
     public function destroy($id)
     {
         CrmActivity::findOrFail($id)->delete();
+
         return response()->json(['message' => 'Deleted']);
     }
 }
