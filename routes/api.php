@@ -42,9 +42,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
     Route::get('/notifications/stream', [NotificationController::class, 'stream']);
 
+
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/settings', [UserController::class, 'getUserSettings']);
+        Route::get('/counts', [UserController::class, 'counts']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::post('/', [UserController::class, 'store']);
         Route::patch('/save/{id}', [UserController::class, 'save_info']);
@@ -139,7 +141,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leadsource', [LovController::class, 'leadSource']);
     });
 
-    Route::get('/roles', fn () => DB::table('setting_role')->get());
+    Route::get('/roles', fn() => DB::table('setting_role')->get());
 
     Route::post('/test-api', function (Request $request) {
         Log::info('Test API triggered', $request->all());
@@ -188,5 +190,5 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{contract}/pdf', [ClientContractController::class, 'downloadPdf']);
     });
 
-    require __DIR__.'/api_maintenance.php';
+    require __DIR__ . '/api_maintenance.php';
 });

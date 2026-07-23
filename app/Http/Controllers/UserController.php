@@ -205,4 +205,17 @@ class UserController extends Controller
             'statuses' => UserStatus::all(),
         ];
     }
+
+    public function counts()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total'    => (int) User::count(),
+                'active'   => (int) User::where('status', User::STATUS_ACTIVE)->count(),
+                'inactive' => (int) User::where('status', User::STATUS_INACTIVE)->count(),
+                'roles'    => (int) SettingRole::count(),
+            ],
+        ]);
+    }
 }

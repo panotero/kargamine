@@ -206,9 +206,28 @@
         (function() {
             const userForm = document.getElementById('userForm');
             const saveUserBtn = document.getElementById('saveUserBtn');
+            let rolesList = [];
+
             async function init() {
                 await loadRoles();
                 renderTable().load(1);
+                refreshCounts();
+            }
+
+            async function refreshCounts() {
+                const res = await apiCall({
+                    mode: 'GET',
+                    url: '/api/users/counts'
+                });
+                if (!res || !res.success || !res.data) return;
+                const set = (id, v) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = Number(v ?? 0).toLocaleString();
+                };
+                set('countAllUsers', res.data.total);
+                set('countActiveUsers', res.data.active);
+                set('countInactiveUsers', res.data.inactive);
+                set('countRoles', res.data.roles);
             }
 
             function renderTable() {
@@ -241,19 +260,19 @@
             ${
                 Number(row.status) === 0
                     ? `
-                                    <button
-                                        class="btn-deactivate-user px-2 py-1 bg-red-500 text-white rounded"
-                                        data-id="${row.id}">
-                                        Deactivate
-                                    </button>
-                                `
+                                        <button
+                                            class="btn-deactivate-user px-2 py-1 bg-red-500 text-white rounded"
+                                            data-id="${row.id}">
+                                            Deactivate
+                                        </button>
+                                    `
                     : `
-                                    <button
-                                        class="btn-reactivate-user px-2 py-1 bg-green-500 text-white rounded"
-                                        data-id="${row.id}">
-                                        Reactivate
-                                    </button>
-                                `
+                                        <button
+                                            class="btn-reactivate-user px-2 py-1 bg-green-500 text-white rounded"
+                                            data-id="${row.id}">
+                                            Reactivate
+                                        </button>
+                                    `
             }
         </div>
     `,
@@ -301,6 +320,7 @@
                             });
 
                             renderTable().load(1);
+                            refreshCounts();
                             return;
                         }
                         const reactivateBtn = e.target.closest('.btn-reactivate-user');
@@ -331,6 +351,7 @@
                             });
 
                             renderTable().load(1);
+                            refreshCounts();
                             return;
                         }
                         initSideModal({
@@ -385,6 +406,8 @@
             }
 
             function renderRoles() {
+                if (!Array.isArray(rolesList)) rolesList = [];
+
                 rolesContainer.innerHTML = '';
 
                 if (!rolesList.length) {
@@ -495,6 +518,7 @@
                         title: 'Role deleted!'
                     });
                     await loadRoles();
+                    refreshCounts();
                 }
             });
 
@@ -544,6 +568,7 @@
                 input.value = '';
                 document.getElementById('addRoleDropdown').classList.add('hidden');
                 await loadRoles();
+                refreshCounts();
             });
 
 
@@ -581,7 +606,7 @@
 
                 if (password) payload.password = password;
 
-                const isUpdate = userId != null && userId !== 0;
+                const isUpdate = Boolean(userId) && userId !== '0' && userId !== 0;
 
                 const url = isUpdate ?
                     `/api/users/save/${userId}` :
@@ -610,7 +635,7 @@
 
                 showMessage({
                     status: 'success',
-                    title: 'User created!'
+                    title: isUpdate ? 'User updated!' : 'User created!'
                 });
 
                 closeSideModal('NewUserSideModal');
@@ -618,6 +643,8 @@
                 editingUserId = null;
 
                 renderTable().reload();
+                await loadRoles();
+                refreshCounts();
             });
 
             function setModalMode(mode) {
