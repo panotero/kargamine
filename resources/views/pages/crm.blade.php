@@ -99,14 +99,16 @@
 
 <x-side-modal id="LeadDetailsSideModal">
 
-    <div
-        class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between sticky top-0 bg-white dark:bg-zinc-800 z-10">
+    <div class="p-5 border-b flex justify-between sticky top-0 bg-white dark:bg-zinc-800 z-10">
 
-        <p class="text-xl font-semibold text-zinc-900 dark:text-white">
+
+
+
+        <p class="text-xl font-semibold dark:text-white">
             New CRM Lead
         </p>
 
-        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+        <button class="modal-close">
             ✕
         </button>
 

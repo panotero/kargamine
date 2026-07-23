@@ -55,46 +55,43 @@
 
 {{-- View Contract modal (read-only, with download) --}}
 <x-modal id="viewClientContractModal">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+    <div class="p-5 border-b flex justify-between items-center">
         <div>
             <div class="flex items-center gap-2">
-                <p class="text-lg font-semibold text-zinc-900 dark:text-white" id="vcContractCode">-</p>
+                <p class="text-lg font-semibold" id="vcContractCode">-</p>
                 <span id="vcStatusBadge"></span>
             </div>
             <p class="text-xs text-zinc-400" id="vcClientName">-</p>
         </div>
-        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
+        <button class="modal-close">✕</button>
     </div>
 
-    <div
-        class="max-h-[65vh] overflow-y-auto p-5 space-y-4 text-sm text-zinc-700 dark:text-zinc-200 bg-white dark:bg-zinc-800">
+    <div class="max-h-[65vh] overflow-y-auto p-5 space-y-4 text-sm text-zinc-700">
         <div id="vcInfoContainer" class="grid grid-cols-2 gap-3 text-sm"></div>
 
         <div>
-            <p class="font-semibold text-sm text-zinc-700 dark:text-zinc-300 mb-2">Contracted Rates</p>
-            <table class="min-w-full border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs">
-                <thead class="bg-zinc-50 dark:bg-zinc-800">
+            <p class="font-semibold text-sm text-zinc-700 mb-2">Contracted Rates</p>
+            <table class="min-w-full border border-zinc-200 rounded-lg text-xs">
+                <thead class="bg-zinc-50">
                     <tr>
-                        <th class="px-3 py-2 text-left text-zinc-500 dark:text-zinc-400 uppercase">Route</th>
-                        <th class="px-3 py-2 text-left text-zinc-500 dark:text-zinc-400 uppercase">Container</th>
-                        <th class="px-3 py-2 text-right text-zinc-500 dark:text-zinc-400 uppercase">Base Rate</th>
-                        <th class="px-3 py-2 text-right text-zinc-500 dark:text-zinc-400 uppercase">Discount</th>
-                        <th class="px-3 py-2 text-right text-zinc-500 dark:text-zinc-400 uppercase">Final Rate</th>
+                        <th class="px-3 py-2 text-left text-zinc-500 uppercase">Route</th>
+                        <th class="px-3 py-2 text-left text-zinc-500 uppercase">Container</th>
+                        <th class="px-3 py-2 text-right text-zinc-500 uppercase">Base Rate</th>
+                        <th class="px-3 py-2 text-right text-zinc-500 uppercase">Discount</th>
+                        <th class="px-3 py-2 text-right text-zinc-500 uppercase">Final Rate</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-200"
-                    id="vcRatesBody"></tbody>
+                <tbody class="divide-y divide-zinc-100" id="vcRatesBody"></tbody>
             </table>
         </div>
     </div>
 
-    <div class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 bg-white dark:bg-zinc-900">
+    <div class="border-t px-5 py-4 flex justify-end gap-2">
         <a href="#" id="vcDownloadBtn" target="_blank"
             class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
             Download PDF
         </a>
-        <button
-            class="modal-close rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">Close</button>
+        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Close</button>
     </div>
 </x-modal>
 
@@ -113,26 +110,26 @@
         const CONTRACT_STATUS_MAPPING = {
             1: {
                 label: 'Draft',
-                classes: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
+                classes: 'bg-zinc-100 text-zinc-600'
             },
             2: {
                 label: 'Active',
-                classes: 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                classes: 'bg-emerald-50 text-emerald-700'
             },
             3: {
                 label: 'Expired',
-                classes: 'bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400'
+                classes: 'bg-amber-50 text-amber-700'
             },
             4: {
                 label: 'Terminated',
-                classes: 'bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-400'
+                classes: 'bg-red-50 text-red-700'
             },
         };
 
         function statusBadge(status) {
             const meta = CONTRACT_STATUS_MAPPING[status] ?? {
                 label: 'Unknown',
-                classes: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                classes: 'bg-zinc-100 text-zinc-500'
             };
             return `<span class="inline-flex items-center rounded-full ${meta.classes} px-2 py-0.5 text-xs font-medium">${meta.label}</span>`;
         }
@@ -244,15 +241,15 @@
             document.getElementById('vcStatusBadge').innerHTML = statusBadge(contract.status);
 
             document.getElementById('vcInfoContainer').innerHTML = `
-                <div><span class="text-zinc-400">Source Proposal:</span> <div class="font-medium text-zinc-900 dark:text-zinc-100">${contract.proposal?.code ?? '-'}</div></div>
-                <div><span class="text-zinc-400">Prepared By:</span> <div class="font-medium text-zinc-900 dark:text-zinc-100">${contract.creator?.name ?? '-'}</div></div>
-                <div><span class="text-zinc-400">Signed Date:</span> <div class="font-medium text-zinc-900 dark:text-zinc-100">${contract.signed_date ?? '-'}</div></div>
-                <div><span class="text-zinc-400">Valid From:</span> <div class="font-medium text-zinc-900 dark:text-zinc-100">${contract.valid_from}</div></div>
-                <div><span class="text-zinc-400">Valid To:</span> <div class="font-medium text-zinc-900 dark:text-zinc-100">${contract.valid_to}</div></div>
+                <div><span class="text-zinc-400">Source Proposal:</span> <div class="font-medium">${contract.proposal?.code ?? '-'}</div></div>
+                <div><span class="text-zinc-400">Prepared By:</span> <div class="font-medium">${contract.creator?.name ?? '-'}</div></div>
+                <div><span class="text-zinc-400">Signed Date:</span> <div class="font-medium">${contract.signed_date ?? '-'}</div></div>
+                <div><span class="text-zinc-400">Valid From:</span> <div class="font-medium">${contract.valid_from}</div></div>
+                <div><span class="text-zinc-400">Valid To:</span> <div class="font-medium">${contract.valid_to}</div></div>
             `;
 
             const rateRows = (contract.rates ?? []).map((r) => `
-                <tr class="border-t border-zinc-100 dark:border-zinc-800">
+                <tr>
                     <td class="px-3 py-2">${r.origin_port?.code ?? '-'} &rarr; ${r.destination_port?.code ?? '-'}</td>
                     <td class="px-3 py-2">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                     <td class="px-3 py-2 text-right">${Number(r.base_rate).toLocaleString()}</td>

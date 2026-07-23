@@ -1,9 +1,9 @@
 <x-modal id="proposalModal">
 
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+    <div class="p-5 border-b flex justify-between items-center">
         <div class="flex flex-col">
             <div class="flex gap-2">
-                <p class="text-lg font-semibold text-zinc-900 dark:text-white" id="proposalModalCode">Proposal Code</p>
+                <p class="text-lg font-semibold" id="proposalModalCode">Proposal Code</p>
                 <div class="items-center flex  flex-col">
 
                     <div class="px-3 my-auto text-sm rounded-full" id="proposalModalStatus">
@@ -11,7 +11,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex gap-2 text-md text-zinc-500 dark:text-zinc-400">
+            <div class="flex gap-2 text-md">
                 some info
             </div>
         </div>
@@ -220,10 +220,9 @@
 
         </div>
 
-        <div class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2">
+        <div class="border-t px-5 py-4 flex justify-end gap-2">
 
-            <button
-                class="modal-close rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            <button class="modal-close border px-4 py-2 rounded-lg">
                 Close
             </button>
 

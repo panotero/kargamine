@@ -1,5 +1,5 @@
 {{-- resources/views/pages/proposals.blade.php --}}
-<div class="container mx-auto space-y-2">
+<div class="container mx-auto p-3">
 
     <div class="flex justify-between items-center mb-5 p-2">
         <div>
@@ -10,24 +10,13 @@
 
     {{-- Status filter tabs --}}
     <div class="flex gap-2 flex-wrap px-2 mb-3">
-        <button
-            class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 ring-2 ring-orange-500"
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border ring-2 ring-orange-500"
             data-status="all">All</button>
-        <button
-            class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
-            data-status="1">Pending</button>
-        <button
-            class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
-            data-status="2">Approved</button>
-        <button
-            class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
-            data-status="3">Disapproved</button>
-        <button
-            class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
-            data-status="4">Accepted</button>
-        <button
-            class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
-            data-status="5">Rejected</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="1">Pending</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="2">Approved</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="3">Disapproved</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="4">Accepted</button>
+        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="5">Rejected</button>
     </div>
 
     <x-table id="tableClientProposals" />
@@ -35,20 +24,20 @@
 
 {{-- Detail / action modal --}}
 <x-modal id="ClientProposalModal">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+    <div class="p-5 border-b flex justify-between items-center">
         <div>
             <div class="flex items-center gap-2">
-                <p class="text-lg font-semibold text-zinc-900 dark:text-white" id="cpmCode">-</p>
+                <p class="text-lg font-semibold" id="cpmCode">-</p>
                 <span id="cpmStatusBadge"></span>
             </div>
             <p class="text-xs text-zinc-400" id="cpmClientName">-</p>
         </div>
-        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
+        <button class="modal-close">✕</button>
     </div>
 
-    <div class="max-h-[65vh] overflow-y-auto p-5 space-y-5 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+    <div class="max-h-[65vh] overflow-y-auto p-5 space-y-5">
 
-        <div id="cpmDecisionInfo" class="text-xs text-zinc-500 dark:text-zinc-400 hidden"></div>
+        <div id="cpmDecisionInfo" class="text-xs text-zinc-500 hidden"></div>
 
         <table class="w-full text-xs">
             <thead class="text-zinc-400 uppercase">
@@ -64,11 +53,11 @@
         </table>
 
         {{-- Attach signed document - only shown when APPROVED --}}
-        <div id="cpmSignedSection" class="hidden border-t border-zinc-200 dark:border-zinc-800 pt-4">
-            <p class="font-semibold text-sm text-zinc-700 dark:text-zinc-300 mb-2">Attach Signed Proposal</p>
+        <div id="cpmSignedSection" class="hidden border-t pt-4">
+            <p class="font-semibold text-sm text-zinc-700 mb-2">Attach Signed Proposal</p>
             <div class="flex items-center gap-2">
                 <input type="file" id="cpmSignedFile" accept=".pdf,.jpg,.jpeg,.png"
-                    class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm">
+                    class="flex-1 border rounded-lg px-2 py-1.5 text-sm">
                 <button id="cpmUploadSignedBtn"
                     class="px-4 py-2 text-sm rounded-lg bg-green-600 hover:bg-green-700 text-white shrink-0">
                     Upload & Accept
@@ -77,10 +66,10 @@
         </div>
     </div>
 
-    <div class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-between items-center gap-2 bg-white dark:bg-zinc-900">
+    <div class="border-t px-5 py-4 flex justify-between items-center gap-2">
         <div class="flex gap-2">
             <a href="#" id="cpmDownloadLink" target="_blank"
-                class="hidden px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800">Download</a>
+                class="hidden px-4 py-2 text-sm rounded-lg border hover:bg-zinc-50">Download</a>
             <button id="cpmCreateContractBtn"
                 class="hidden px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
                 Create Contract
@@ -111,11 +100,11 @@
             5: 'Rejected'
         };
         const STATUS_BADGE = {
-            1: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
-            2: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',
-            3: 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400',
-            4: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400',
-            5: 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300',
+            1: 'bg-amber-100 text-amber-600',
+            2: 'bg-green-100 text-green-700',
+            3: 'bg-red-100 text-red-600',
+            4: 'bg-blue-100 text-blue-700',
+            5: 'bg-zinc-200 text-zinc-600',
         };
 
         let currentProposalId = null;
@@ -125,7 +114,7 @@
         renderTable().load(1);
 
         function statusPill(status) {
-            return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[status] ?? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'}">${STATUS_LABEL[status] ?? 'Unknown'}</span>`;
+            return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[status] ?? 'bg-zinc-100 text-zinc-500'}">${STATUS_LABEL[status] ?? 'Unknown'}</span>`;
         }
 
         function renderTable() {
@@ -215,7 +204,7 @@
             }
 
             document.getElementById('cpmRatesBody').innerHTML = p.rates.map((r) => `
-                <tr class="border-t border-zinc-100 dark:border-zinc-800">
+                <tr class="border-t">
                     <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
                     <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                     <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>

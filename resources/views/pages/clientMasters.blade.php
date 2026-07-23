@@ -42,27 +42,24 @@
 
 {{-- Complete-client detail modal --}}
 <x-modal id="ClientDetailModal">
-    <div
-        class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
+    <div class="p-5 border-b flex justify-between items-center">
         <div>
-            <p class="text-lg font-semibold text-zinc-900 dark:text-white" id="cdClientName">-</p>
+            <p class="text-lg font-semibold" id="cdClientName">-</p>
             <p class="text-xs text-zinc-400" id="cdClientCode">-</p>
         </div>
-        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
+        <button class="modal-close">✕</button>
     </div>
 
-    <div class="border-b border-zinc-200 dark:border-zinc-800 flex gap-1 px-5 bg-white dark:bg-zinc-900">
+    <div class="border-b flex gap-1 px-5">
         <button class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-orange-500 text-orange-600"
             data-tab="info">Client Information</button>
-        <button
-            class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500 dark:text-zinc-400"
+        <button class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500"
             data-tab="proposals">Proposals</button>
-        <button
-            class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500 dark:text-zinc-400"
+        <button class="clientDetailTab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-zinc-500"
             data-tab="contracts">Contracts</button>
     </div>
 
-    <div class="max-h-[65vh] overflow-y-auto p-5 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+    <div class="max-h-[65vh] overflow-y-auto p-5">
 
         <div class="clientDetailPanel" data-panel="info">
             <div id="cdInfoContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm"></div>
@@ -86,35 +83,29 @@
     </div>
 </x-modal>
 <x-modal id="RateContractModal">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-        <p class="text-lg font-semibold text-zinc-900 dark:text-white">Create Contract</p>
-        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
+    <div class="p-5 border-b flex justify-between items-center">
+        <p class="text-lg font-semibold">Create Contract</p>
+        <button class="modal-close">✕</button>
     </div>
-    <div class="p-5 space-y-4 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
-        <div id="rateContractSummary"
-            class="text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 text-zinc-600 dark:text-zinc-300">
-        </div>
+    <div class="p-5 space-y-4">
+        <div id="rateContractSummary" class="text-sm bg-zinc-50 border rounded-lg p-3 text-zinc-600"></div>
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="text-xs font-medium text-zinc-400 uppercase">Valid From *</label>
-                <input type="date" id="rateContractValidFrom"
-                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <input type="date" id="rateContractValidFrom" class="w-full border rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="text-xs font-medium text-zinc-400 uppercase">Valid To *</label>
-                <input type="date" id="rateContractValidTo"
-                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <input type="date" id="rateContractValidTo" class="w-full border rounded-lg px-3 py-2 text-sm">
             </div>
         </div>
         <div>
             <label class="text-xs font-medium text-zinc-400 uppercase">Signed Date</label>
-            <input type="date" id="rateContractSignedDate"
-                class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            <input type="date" id="rateContractSignedDate" class="w-full border rounded-lg px-3 py-2 text-sm">
         </div>
     </div>
-    <div class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 bg-white dark:bg-zinc-900">
-        <button
-            class="modal-close rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">Cancel</button>
+    <div class="border-t px-5 py-4 flex justify-end gap-2">
+        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Cancel</button>
         <button id="rateContractSaveBtn"
             class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save Contract</button>
     </div>
@@ -155,8 +146,8 @@
 
         function statusBadge(isComplete) {
             return isComplete ?
-                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Complete</span>` :
-                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Incomplete</span>`;
+                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Complete</span>` :
+                `<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-600"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Incomplete</span>`;
         }
 
         async function loadCounts() {
@@ -270,16 +261,16 @@
             document.getElementById('cdClientCode').textContent = c.customer_code ?? '-';
 
             document.getElementById('cdInfoContainer').innerHTML = `
-                <p><span class="text-zinc-400">Registered Address:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.registered_address ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Contact No. 1:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.contact_number_1 ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Contact No. 2:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.contact_number_2 ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Industry:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.industry ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Organization Type:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.organization_type ?? '-'}</span></p>
-                <p><span class="text-zinc-400">TIN:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.tin ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Sales Rep:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.sales_rep?.name ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Credit Terms:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.finance?.credit_terms ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Payment Mode:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.finance?.payment_mode ?? '-'}</span></p>
-                <p><span class="text-zinc-400">Billed To:</span> <span class="text-zinc-700 dark:text-zinc-200">${c.billing?.billed_to ?? '-'}</span></p>
+                <p><span class="text-zinc-400">Registered Address:</span> ${c.registered_address ?? '-'}</p>
+                <p><span class="text-zinc-400">Contact No. 1:</span> ${c.contact_number_1 ?? '-'}</p>
+                <p><span class="text-zinc-400">Contact No. 2:</span> ${c.contact_number_2 ?? '-'}</p>
+                <p><span class="text-zinc-400">Industry:</span> ${c.industry ?? '-'}</p>
+                <p><span class="text-zinc-400">Organization Type:</span> ${c.organization_type ?? '-'}</p>
+                <p><span class="text-zinc-400">TIN:</span> ${c.tin ?? '-'}</p>
+                <p><span class="text-zinc-400">Sales Rep:</span> ${c.sales_rep?.name ?? '-'}</p>
+                <p><span class="text-zinc-400">Credit Terms:</span> ${c.finance?.credit_terms ?? '-'}</p>
+                <p><span class="text-zinc-400">Payment Mode:</span> ${c.finance?.payment_mode ?? '-'}</p>
+                <p><span class="text-zinc-400">Billed To:</span> ${c.billing?.billed_to ?? '-'}</p>
             `;
 
             loadProposals(uuid, 1);
@@ -314,11 +305,11 @@
             5: 'Rejected'
         };
         const PROPOSAL_STATUS_BADGE = {
-            1: 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
-            2: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',
-            3: 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400',
-            4: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400',
-            5: 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300',
+            1: 'bg-amber-100 text-amber-600',
+            2: 'bg-green-100 text-green-700',
+            3: 'bg-red-100 text-red-600',
+            4: 'bg-blue-100 text-blue-700',
+            5: 'bg-zinc-200 text-zinc-600',
         };
 
         let currentProposalsPage = 1;
@@ -356,12 +347,12 @@
         }
 
         function buildProposalCard(p) {
-            const badgeClass = PROPOSAL_STATUS_BADGE[p.status] ?? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400';
+            const badgeClass = PROPOSAL_STATUS_BADGE[p.status] ?? 'bg-zinc-100 text-zinc-500';
             const isPending = p.status === 1;
             const isApproved = p.status === 2;
 
             return `
-        <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 text-zinc-900 dark:text-zinc-100" data-proposal-id="${p.id}" data-proposal-status="${p.status}">
+        <div class="border rounded-xl p-4" data-proposal-id="${p.id}" data-proposal-status="${p.status}">
             <div class="flex justify-between items-center mb-2 gap-3">
                 <div class="flex items-center gap-2">
                     <p class="font-semibold text-sm">${p.code}</p>
@@ -369,7 +360,7 @@
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                     <p class="text-xs text-zinc-400 whitespace-nowrap">${formatDateTime(p.created_at)}</p>
-                    <select class="proposal-status-select text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1" data-proposal-id="${p.id}">
+                    <select class="proposal-status-select text-xs border rounded-lg px-2 py-1" data-proposal-id="${p.id}">
                         ${Object.entries(PROPOSAL_STATUS_LABEL).map(([val, label]) =>
                             `<option value="${val}" ${Number(val) === p.status ? 'selected' : ''}>${label}</option>`
                         ).join('')}
@@ -390,14 +381,14 @@
                 </thead>
                 <tbody>
                     ${p.rates.map((r) => `
-                        <tr class="border-t border-zinc-100 dark:border-zinc-800" data-rate-id="${r.id}">
+                        <tr class="border-t" data-rate-id="${r.id}">
                             <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
                             <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                             <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
                             <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
                             <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
                             <td class="py-1.5 text-right whitespace-nowrap">
-                                ${isPending ? `<button type="button" class="rate-delete-btn text-zinc-400 hover:text-red-600 dark:hover:text-red-400 font-medium" data-rate-id="${r.id}">Delete</button>` : ''}
+                                ${isPending ? `<button type="button" class="rate-delete-btn text-zinc-400 hover:text-red-600 font-medium" data-rate-id="${r.id}">Delete</button>` : ''}
                             </td>
                         </tr>
                     `).join('')}
@@ -405,15 +396,15 @@
             </table>
 
             {{-- Row-container-level actions - not per rate anymore --}}
-            <div class="flex justify-end gap-2 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            <div class="flex justify-end gap-2 mt-3 pt-3 border-t">
                 ${isPending ? `
-                    <button type="button" class="add-container-btn text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700" data-proposal-id="${p.id}">
+                    <button type="button" class="add-container-btn text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100" data-proposal-id="${p.id}">
                         + Add Container
                     </button>
                 ` : ''}
                 ${isApproved ? `
                     <a href="/api/clientMasters/proposals/${p.id}/pdf" target="_blank"
-                       class="download-proposal-btn text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                       class="download-proposal-btn text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 text-zinc-700">
                         Download
                     </a>
                     <button type="button" class="create-contract-btn text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white" data-proposal-id="${p.id}">
@@ -512,10 +503,10 @@
             <p class="text-xs text-zinc-400">Showing ${meta.from ?? 0}-${meta.to ?? 0} of ${meta.total ?? 0}</p>
             <div class="flex items-center gap-1">
                 <button type="button" id="proposalsPrevBtn" ${meta.prev_page_url ? '' : 'disabled'}
-                    class="px-2 py-1 text-xs rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30">Prev</button>
+                    class="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30">Prev</button>
                 <span class="text-xs text-zinc-500 px-1">${meta.current_page} / ${meta.last_page}</span>
                 <button type="button" id="proposalsNextBtn" ${meta.next_page_url ? '' : 'disabled'}
-                    class="px-2 py-1 text-xs rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30">Next</button>
+                    class="px-2 py-1 text-xs rounded-md text-zinc-600 hover:bg-zinc-100 disabled:opacity-30">Next</button>
             </div>
         </div>
     `;
@@ -646,12 +637,12 @@
             }
 
             container.innerHTML = response.data.map((c) => `
-                <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 flex justify-between items-center text-zinc-900 dark:text-zinc-100">
+                <div class="border rounded-xl p-4 flex justify-between items-center">
                     <div>
                         <p class="font-semibold text-sm">${c.code}</p>
                         <p class="text-xs text-zinc-400">${c.valid_from} → ${c.valid_to}</p>
                     </div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">${c.rates.length} rate line(s)</p>
+                    <p class="text-xs text-zinc-500">${c.rates.length} rate line(s)</p>
                 </div>
             `).join('');
         }

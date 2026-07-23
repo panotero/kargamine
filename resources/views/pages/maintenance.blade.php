@@ -1,9 +1,10 @@
 {{-- Rate Maintenance - loaded into the SPA content area, not a full page --}}
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="container mx-auto p-3">
 
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">Rate Maintenance</h1>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Manage the master data and rate tables used by the freight booking engine.
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Manage the master data and rate tables used by the
+            freight booking engine.
         </p>
     </div>
 
@@ -91,12 +92,14 @@
 
                 <x-search-bar :id="$key" placeholder="Search {{ strtolower($label) }}..." />
 
-                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                <div
+                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
                     <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
                         <thead class="bg-zinc-50 dark:bg-zinc-800">
                             <tr data-table-head="{{ $key }}"></tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800" data-table-body="{{ $key }}"></tbody>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800"
+                            data-table-body="{{ $key }}"></tbody>
                     </table>
                     <x-table-pagination :id="$key" />
                 </div>
@@ -222,34 +225,34 @@
 {{-- General Lookups modals (ported from the old /page_lookupValues page) --}}
 <x-modal id="NewOptionModal">
     <div
-        class="w-full p-5 flex justify-between items-center border-b border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white">
+        class="w-full p-5 flex justify-between items-center border-b border-gray-200 dark:border-zinc-700 text-black dark:text-white">
         <p class="text-xl font-semibold">Add New Option</p>
     </div>
 
     <div class="max-h-[70vh] overflow-y-auto p-5 space-y-6">
 
         {{-- Option Information --}}
-        <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
-            <p class="font-semibold text-lg text-zinc-900 dark:text-white">Option Information</p>
+        <div class="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
+            <p class="font-semibold text-lg dark:text-white">Option Information</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex flex-col">
-                    <label class="text-sm text-zinc-700 dark:text-white">Option Name</label>
+                    <label class="text-sm dark:text-white">Option Name</label>
                     <input type="text" name="OptionName" id="OptionName"
-                        class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-2 focus:border-orange-500 focus:ring-orange-500">
+                        class="border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
                 </div>
                 <div class="flex flex-col">
-                    <label class="text-sm text-zinc-700 dark:text-white">Option Description</label>
+                    <label class="text-sm dark:text-white">Option Description</label>
                     <input type="text" name="OptionDescription" id="OptionDescription"
-                        class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-2 focus:border-orange-500 focus:ring-orange-500">
+                        class="border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
                 </div>
             </div>
         </div>
 
         {{-- LOV Section --}}
-        <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
+        <div class="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
             <div class="flex justify-between items-center">
-                <p class="font-semibold text-lg text-zinc-900 dark:text-white">List of Values</p>
+                <p class="font-semibold text-lg dark:text-white">List of Values</p>
                 <button id="addLovButton"
                     class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium">
                     + Add LOV
@@ -260,13 +263,13 @@
         </div>
     </div>
 
-    <div class="border-t border-zinc-200 dark:border-zinc-700 px-6 py-4 flex justify-end gap-3">
+    <div class="border-t border-gray-200 dark:border-zinc-700 px-6 py-4 flex justify-end gap-3">
         <button id="SaveOption"
             class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium">
             Submit
         </button>
         <button
-            class="modal-close border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:bg-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-600 px-5 py-2 rounded-lg text-sm font-medium">
+            class="modal-close border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-600 px-5 py-2 rounded-lg text-sm font-medium">
             Cancel
         </button>
     </div>
@@ -274,7 +277,7 @@
 
 <x-modal id="addLOVModal">
     <div
-        class="w-full p-5 flex justify-between items-center border-b border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white">
+        class="w-full p-5 flex justify-between items-center border-b border-gray-200 dark:border-zinc-700 text-black dark:text-white">
         <p class="text-xl font-semibold">Add List of Value</p>
     </div>
 
@@ -283,31 +286,31 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col">
-                <label class="text-sm text-zinc-700 dark:text-white">LOV Code</label>
+                <label class="text-sm dark:text-white">LOV Code</label>
                 <input type="text"
-                    class="add-lov-code rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-2 focus:border-orange-500 focus:ring-orange-500">
+                    class="add-lov-code border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
             </div>
             <div class="flex flex-col">
-                <label class="text-sm text-zinc-700 dark:text-white">LOV Name</label>
+                <label class="text-sm dark:text-white">LOV Name</label>
                 <input type="text"
-                    class="add-lov-name rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-2 focus:border-orange-500 focus:ring-orange-500">
+                    class="add-lov-name border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
             </div>
         </div>
 
         <div class="flex flex-col">
-            <label class="text-sm text-zinc-700 dark:text-white">LOV Description</label>
+            <label class="text-sm dark:text-white">LOV Description</label>
             <input type="text"
-                class="add-lov-description rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-2 focus:border-orange-500 focus:ring-orange-500">
+                class="add-lov-description border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
         </div>
     </div>
 
-    <div class="border-t border-zinc-200 dark:border-zinc-700 px-6 py-4 flex justify-end gap-3">
+    <div class="border-t border-gray-200 dark:border-zinc-700 px-6 py-4 flex justify-end gap-3">
         <button id="SaveLOV"
             class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium">
             Submit
         </button>
         <button
-            class="modal-close border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:bg-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-600 px-5 py-2 rounded-lg text-sm font-medium">
+            class="modal-close border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-600 px-5 py-2 rounded-lg text-sm font-medium">
             Cancel
         </button>
     </div>
@@ -1930,7 +1933,8 @@
         const addLovButton = document.getElementById('addLovButton');
         addLovButton.addEventListener('click', function() {
             const lovTemplate = document.createElement('div');
-            lovTemplate.classList.add('lov-item', 'flex', 'p-2', 'rounded', 'border', 'border-zinc-300', 'dark:border-zinc-700', 'gap-4', 'mb-2',
+            lovTemplate.classList.add('lov-item', 'flex', 'p-2', 'rounded', 'border', 'border-zinc-300',
+                'dark:border-zinc-700', 'gap-4', 'mb-2',
                 'bg-white', 'dark:bg-zinc-800', 'text-black', 'dark:text-zinc-100');
 
             lovTemplate.innerHTML = `

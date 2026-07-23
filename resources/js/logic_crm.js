@@ -12,16 +12,13 @@ window.initCrmLogic = function initCrmLogic() {
   // ============================================================
 
   const STATUS_BADGE = {
-    LEAD: "bg-gray-100 dark:bg-gray-700/40 text-gray-700 dark:text-gray-300",
-    QUALIFIED:
-      "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
-    OPPORTUNITY:
-      "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
-    NEGOTIATION:
-      "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
-    WIN: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400",
-    LOST: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400",
-    DEFAULT: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300",
+    LEAD: "bg-gray-100 text-gray-700",
+    QUALIFIED: "bg-indigo-100 text-indigo-700",
+    OPPORTUNITY: "bg-purple-100 text-purple-700",
+    NEGOTIATION: "bg-amber-100 text-amber-700",
+    WIN: "bg-green-100 text-green-700",
+    LOST: "bg-red-100 text-red-700",
+    DEFAULT: "bg-zinc-100 text-zinc-700",
   };
 
   const CONTAINER_TYPE_LABELS = {
@@ -50,16 +47,11 @@ window.initCrmLogic = function initCrmLogic() {
   };
 
   const PROPOSAL_STATUS_BADGE = {
-    [PROPOSAL_STATUS.PENDING]:
-      "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400",
-    [PROPOSAL_STATUS.APPROVED]:
-      "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400",
-    [PROPOSAL_STATUS.DISAPPROVED]:
-      "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400",
-    [PROPOSAL_STATUS.ACCEPTED]:
-      "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
-    [PROPOSAL_STATUS.REJECTED]:
-      "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300",
+    [PROPOSAL_STATUS.PENDING]: "bg-amber-100 text-amber-600",
+    [PROPOSAL_STATUS.APPROVED]: "bg-green-100 text-green-700",
+    [PROPOSAL_STATUS.DISAPPROVED]: "bg-red-100 text-red-600",
+    [PROPOSAL_STATUS.ACCEPTED]: "bg-blue-100 text-blue-700",
+    [PROPOSAL_STATUS.REJECTED]: "bg-zinc-200 text-zinc-600",
   };
 
   // ============================================================
@@ -362,7 +354,7 @@ window.initCrmLogic = function initCrmLogic() {
         </span>`);
     if (lead.client_master?.customer_code) {
       $("#leadCustomerCode").html(`
-        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400">
+        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
             ${lead.client_master.customer_code}
         </span>`);
     } else {
