@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\CrmStatus;
+use Illuminate\Database\Seeder;
 
 class CrmStatusSeeder extends Seeder
 {
@@ -13,35 +12,38 @@ class CrmStatusSeeder extends Seeder
      */
     public function run(): void
     {
-        //
-
-        CrmStatus::truncate();
-
-        CrmStatus::insert([
+        $statuses = [
             [
                 'status' => 'LEAD',
-                'description' => 'New incoming lead'
+                'description' => 'New incoming lead',
             ],
             [
                 'status' => 'QUALIFIED',
-                'description' => 'Lead is qualified and potential'
+                'description' => 'Lead is qualified and potential',
             ],
             [
                 'status' => 'OPPORTUNITY',
-                'description' => 'Converted into sales opportunity'
+                'description' => 'Converted into sales opportunity',
             ],
             [
                 'status' => 'NEGOTIATION',
-                'description' => 'In negotiation stage'
+                'description' => 'In negotiation stage',
             ],
             [
                 'status' => 'WIN',
-                'description' => 'Final stage: won or lost'
+                'description' => 'Final stage: won or lost',
             ],
             [
                 'status' => 'LOST',
-                'description' => 'Final stage: won or lost'
+                'description' => 'Final stage: won or lost',
             ],
-        ]);
+        ];
+
+        foreach ($statuses as $status) {
+            CrmStatus::updateOrCreate(
+                ['status' => $status['status']],
+                ['description' => $status['description']]
+            );
+        }
     }
 }

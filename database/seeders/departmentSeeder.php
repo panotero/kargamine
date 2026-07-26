@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\UserDepartment;
-
+use Illuminate\Database\Seeder;
 
 class departmentSeeder extends Seeder
 {
@@ -14,20 +12,13 @@ class departmentSeeder extends Seeder
      */
     public function run(): void
     {
-
         $departments = [
-            [
-                'name' => 'Sales Department',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Operations Department',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            'Sales Department',
+            'Operations Department',
         ];
 
-        UserDepartment::insert($departments);
+        foreach ($departments as $name) {
+            UserDepartment::firstOrCreate(['name' => $name]);
+        }
     }
 }

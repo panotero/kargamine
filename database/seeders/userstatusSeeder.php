@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\UserStatus;
+use Illuminate\Database\Seeder;
 
 class userstatusSeeder extends Seeder
 {
@@ -13,30 +12,10 @@ class userstatusSeeder extends Seeder
      */
     public function run(): void
     {
-        //
-        $statuses = [
-            [
-                'name' => 'Active',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Inactive',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Suspended',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Pending',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
+        $statuses = ['Active', 'Inactive', 'Suspended', 'Pending'];
 
-        UserStatus::insert($statuses);
+        foreach ($statuses as $name) {
+            UserStatus::firstOrCreate(['name' => $name]);
+        }
     }
 }

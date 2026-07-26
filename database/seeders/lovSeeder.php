@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +12,7 @@ class lovSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('routes')->insert([
+        $routes = [
             ['route' => 'BUTUAN', 'port' => 'BUTUAN'],
             ['route' => 'CEBU', 'port' => 'CEBU'],
             ['route' => 'CAGAYAN', 'port' => 'CAGAYAN'],
@@ -35,54 +34,70 @@ class lovSeeder extends Seeder
             ['route' => 'COTABATO', 'port' => 'COTABATO'],
             ['route' => 'BATANGAS', 'port' => 'BATANGAS'],
             ['route' => 'MANILA', 'port' => 'MANILA'],
-        ]);
+        ];
+        foreach ($routes as $row) {
+            DB::table('routes')->updateOrInsert(
+                ['route' => $row['route']],
+                ['port' => $row['port'], 'updated_at' => now()]
+            );
+        }
 
-        DB::table('container_type')->insert([
-            ['type' => 'CONVAN'],
-            ['type' => 'FLATRACK (PLATFORM)'],
-            ['type' => 'REEFER'],
-            ['type' => 'HIGH CUBE'],
-            ['type' => 'CATTLE VAN'],
-            ['type' => 'TANK (ISO TANK)'],
-            ['type' => 'ROLLING CARGO'],
-            ['type' => 'SPECIAL CONTAINERS'],
-            ['type' => 'OPEN-TOP VAN'],
-        ]);
+        $containerTypes = [
+            'CONVAN', 'FLATRACK (PLATFORM)', 'REEFER', 'HIGH CUBE', 'CATTLE VAN',
+            'TANK (ISO TANK)', 'ROLLING CARGO', 'SPECIAL CONTAINERS', 'OPEN-TOP VAN',
+        ];
+        foreach ($containerTypes as $type) {
+            DB::table('container_type')->updateOrInsert(
+                ['type' => $type],
+                ['updated_at' => now()]
+            );
+        }
 
-        DB::table('service_type')->insert([
+        $serviceTypes = [
             ['type' => 'ORIGIN', 'mode' => 'DOOR'],
             ['type' => 'ORIGIN', 'mode' => 'PIER-STUFFING'],
             ['type' => 'ORIGIN', 'mode' => 'PIER-VANOUT'],
             ['type' => 'DESTINATION', 'mode' => 'DOOR'],
             ['type' => 'DESTINATION', 'mode' => 'PIER-STRIPPING'],
             ['type' => 'DESTINATION', 'mode' => 'PIER-VAN OUT'],
-        ]);
+        ];
+        foreach ($serviceTypes as $row) {
+            DB::table('service_type')->updateOrInsert(
+                ['type' => $row['type'], 'mode' => $row['mode']],
+                ['updated_at' => now()]
+            );
+        }
 
-        DB::table('proposal_status')->insert([
-            ['status' => 'Pending'],
-            ['status' => 'Approved'],
-            ['status' => 'Disapproved'],
-            ['status' => 'Accepted'],
-            ['status' => 'Rejected'],
-            ['status' => 'On-Hold'],
-        ]);
+        $proposalStatuses = ['Pending', 'Approved', 'Disapproved', 'Accepted', 'Rejected', 'On-Hold'];
+        foreach ($proposalStatuses as $status) {
+            DB::table('proposal_status')->updateOrInsert(
+                ['status' => $status],
+                ['updated_at' => now()]
+            );
+        }
 
-        DB::table('customer_type')->insert([
-            ['type' => 'SHIPPER'],
-            ['type' => 'CONSIGNEE'],
-            ['type' => 'SHIPPER-CONSIGNEE'],
-        ]);
-        DB::table('container_class')->insert([
-            ['class' => 'A'],
-            ['class' => 'B'],
-            ['class' => 'C'],
-            ['class' => 'D'],
-        ]);
-        DB::table('container_size')->insert([
-            ['size' => '10-FOOTER'],
-            ['size' => '20-FOOTER'],
-            ['size' => '40-FOOTER STD'],
-            ['size' => '40-FOOTER HC'],
-        ]);
+        $customerTypes = ['SHIPPER', 'CONSIGNEE', 'SHIPPER-CONSIGNEE'];
+        foreach ($customerTypes as $type) {
+            DB::table('customer_type')->updateOrInsert(
+                ['type' => $type],
+                ['updated_at' => now()]
+            );
+        }
+
+        $containerClasses = ['A', 'B', 'C', 'D'];
+        foreach ($containerClasses as $class) {
+            DB::table('container_class')->updateOrInsert(
+                ['class' => $class],
+                ['updated_at' => now()]
+            );
+        }
+
+        $containerSizes = ['10-FOOTER', '20-FOOTER', '40-FOOTER STD', '40-FOOTER HC'];
+        foreach ($containerSizes as $size) {
+            DB::table('container_size')->updateOrInsert(
+                ['size' => $size],
+                ['updated_at' => now()]
+            );
+        }
     }
 }

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             //
             $table->string('role_id')->nullable()->after('password');
-            $table->integer('status')->nullable()->default(0)->after('role_id');
         });
     }
 
