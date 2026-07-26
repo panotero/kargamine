@@ -62,6 +62,14 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '3',
             ],
             [
+                'title' => 'Notification Test',
+                'icon' => '',
+                'link' => '/page_notification_test',
+                'allowed_roles' => json_encode(['1']),
+                'parent_menu' => '3',
+                'menu_order' => '4',
+            ],
+            [
                 'title' => 'Settings',
                 'icon' => '',
                 'link' => '#',
@@ -115,6 +123,23 @@ class NavMenuSeeder extends Seeder
                     'allowed_roles' => $menu['allowed_roles'],
                     'parent_menu' => $menu['parent_menu'],
                     'menu_order' => $menu['menu_order'],
+                ]
+            );
+        }
+
+        // Added separately (not in $menu_array above) because its parent_menu must
+        // resolve to the actual "Settings" row id, which — unlike the hardcoded
+        // parent ids above — isn't reliably known until after the loop has run.
+        $settingsMenu = NavMenu::where('title', 'Settings')->first();
+        if ($settingsMenu) {
+            NavMenu::updateOrCreate(
+                ['title' => 'Team Management'],
+                [
+                    'icon' => '',
+                    'link' => '/page_team_management',
+                    'allowed_roles' => json_encode(['1']),
+                    'parent_menu' => $settingsMenu->id,
+                    'menu_order' => '2',
                 ]
             );
         }

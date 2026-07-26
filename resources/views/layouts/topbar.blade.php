@@ -1,12 +1,7 @@
 <div class="flex justify-end items-center bg-white shadow p-2">
     <!-- Notification Button -->
-    <div x-data="{ open: false }" class="relative mr-4">
-        <button @click="open = !open" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-            🔔
-        </button>
-        <div x-show="open" class="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded p-4">
-            <p class="text-gray-500">No notifications at the moment.</p>
-        </div>
+    <div class="relative mr-4">
+        @include('layouts.partials.notification-bell')
     </div>
 
     <!-- Account Dropdown -->

@@ -55,7 +55,7 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(funct
     Route::resource('users', UserController::class)->middleware('can:isSuperAdmin');
 
     Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'getNotifications']);
+        Route::get('/', [NotificationController::class, 'index']);
     });
 });
 require __DIR__ . '/auth.php';

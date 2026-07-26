@@ -2,81 +2,106 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Notification;
+use App\Services\NotificationService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class NotificationController extends Controller
 {
+    const PAGE_SIZE = 15;
 
-    public function getNotifications()
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        $notifications = Notification::with('document')->where(function ($query) use ($user) {
+        $query = Notification::with('sender:id,name')
+            ->where('user_id', Auth::id())
+            ->orderBy('id', 'desc');
 
-            $query->where('routed_to', $user->id)
-
-                ->orWhere(function ($sub) use ($user) {
-                    $sub->whereNull('routed_to')
-                        ->where('destination_office', $user->office->office_code);
-                });
-        })
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return response()->json($notifications);
-    }
-    public function stream()
-    {
-        $user = auth()->user();
-        if (!$user) {
-            abort(403);
+        if ($beforeId = $request->integer('before_id')) {
+            $query->where('id', '<', $beforeId);
         }
 
-        return response()->stream(function () use ($user) {
-            while (true) {
+        $notifications = $query->limit(self::PAGE_SIZE)
+            ->get([
+                'id',
+                'type',
+                'title',
+                'message',
+                'link_title',
+                'link_url',
+                'data',
+                'is_read',
+                'from_user_id',
+                'created_at',
+            ]);
 
-                $notifications = Notification::where('user_id', $user->id)
-                    ->with([
-                        'document.sender', // sender of the document
-                        'approvals',
-                        'sender',          // sender of the notification itself
-                    ])
-                    ->orderBy('created_at', 'desc')
-                    ->get([
-                        'id',
-                        'document_id',
-                        'message',
-                        'is_read',
-                        'from_user_id',   // make sure you select this!
-                        'created_at'
-                    ]);
-
-                echo "data: " . json_encode($notifications) . "\n\n";
-                ob_flush();
-                flush();
-
-                sleep(3);
-            }
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'X-Accel-Buffering' => 'no'
+        return response()->json([
+            'data' => $notifications,
+            'has_more' => $notifications->count() === self::PAGE_SIZE,
         ]);
     }
 
+    public function unreadCount()
+    {
+        $count = Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
 
     public function markRead(Request $request)
     {
+        $query = Notification::where('user_id', Auth::id());
 
-        $user = Auth::user();
-        foreach ($request->ids as $ids) {
+        if ($request->boolean('all')) {
+            $query->update(['is_read' => true]);
 
-            Notification::where('id', $ids)
-                ->update([
-                    'is_read' => 1,
-                ]);
+            return response()->json(['success' => true]);
         }
 
+        $ids = $request->input('ids', []);
+        $query->whereIn('id', $ids)->update(['is_read' => true]);
+
         return response()->json(['success' => true]);
+    }
+
+    public function testSend(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => ['required', 'string'],
+            'message' => ['required', 'string'],
+            'type' => ['nullable', 'string'],
+            'link.title' => ['nullable', 'string'],
+            'link.url' => ['nullable', 'string'],
+            'target.type' => ['required', 'in:user,role,department'],
+            'target.user_id' => ['required_if:target.type,user', 'integer'],
+            'target.role' => ['required_if:target.type,role', 'string'],
+            'target.department_id' => ['required_if:target.type,department', 'integer'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid input detected.',
+                'invalid_fields' => $validator->errors(),
+            ], 422);
+        }
+
+        $notifications = NotificationService::send([
+            'type' => $request->input('type'),
+            'title' => $request->input('title'),
+            'message' => $request->input('message'),
+            'from_user_id' => Auth::id(),
+            'link' => $request->input('link', []),
+            'target' => $request->input('target'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'created_count' => $notifications->count(),
+            'notifications' => $notifications,
+        ]);
     }
 }

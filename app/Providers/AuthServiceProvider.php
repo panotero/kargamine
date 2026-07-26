@@ -26,7 +26,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::define('isSuperAdmin', function ($user) {
-            return $user->role_name === 'superadmin'; // Adjust field as per your DB
+            return $user->role?->role_name === 'superadmin';
         });
     }
 }

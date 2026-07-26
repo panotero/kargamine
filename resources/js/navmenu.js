@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+  if (typeof window.initNotifications === "function") window.initNotifications();
+
   const sidebarWrapper = document.getElementById("sidebar-wrapper");
   const sidebarToggle = document.getElementById("sidebar-toggle");
   const sidebarOverlay = document.getElementById("sidebar-overlay");

@@ -25,6 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'team_id',
+        'is_team_leader',
 
     ];
 
@@ -59,10 +61,16 @@ class User extends Authenticatable
         'password' => 'hashed',
         'created_at' => 'datetime:Y-m-d h:i:s A',
         'updated_at' => 'datetime:Y-m-d h:i:s A',
+        'is_team_leader' => 'boolean',
     ];
 
     public function role()
     {
         return $this->belongsTo(SettingRole::class, 'role_id');
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

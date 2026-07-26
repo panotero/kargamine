@@ -1,254 +1,245 @@
-let allNotificationIds = [];
-let lastUnreadCount = 0;
-const NotifContainer = document.getElementById("notifcount");
-const notifIcon = document.getElementById("notificationIcon");
-const notificationWrapper = document.getElementById("notificationWrapper");
+const NOTIFICATION_POLL_INTERVAL_MS = 20000;
+const NOTIFICATION_SCROLL_LOAD_DELAY_MS = 2000;
+const NOTIFICATION_SCROLL_NEAR_BOTTOM_PX = 60;
 
-window.initNotificationStream = function initNotificationStream() {
-  const evtSource = new EventSource("/api/notifications/stream");
-  evtSource.onmessage = function (event) {
-    const notifications = JSON.parse(event.data);
+let notificationPollTimer = null;
+let scrollLoadTimer = null;
+let loadMoreController = null;
+let isNearBottom = false;
+let isLoadingMore = false;
+let hasMoreNotifications = true;
+let lastNotificationId = null;
 
-    const unreadCount = notifications.filter((n) => n.is_read === false).length;
-    if (unreadCount <= 0) {
-      NotifContainer.classList.add("hidden");
-    } else {
-      NotifContainer.classList.remove("hidden");
-    }
+window.initNotifications = function initNotifications() {
+  const notifIcon = document.getElementById("notificationIcon");
+  const notifCountEl = document.getElementById("notifcount");
+  const wrapper = document.getElementById("notificationWrapper");
+  if (!notifIcon || !notifCountEl || !wrapper) return;
 
-    NotifContainer.textContent = unreadCount > 0 ? unreadCount : "";
-    allNotificationIds = notifications.map((n) => n.id);
+  if (notificationPollTimer) clearInterval(notificationPollTimer);
 
-    // const notificationsArray = notifications.map((item) => ({
-    //   id: item.id,
-    //   message: item.message,
-    //   documentControlNumber: item.document?.document_control_number || null,
-    //   document_id: item.document?.document_id || null,
-    //   status: item.approvals?.status || null,
-    //   created_at: item.created_at,
-    //   is_read: item.is_read,
-    // }));
-    if (unreadCount !== lastUnreadCount) {
-      if (typeof window.getDocs === "function") {
-        getDocs();
-      } else {
-        console.warn("getDocs() not available yet.");
-      }
-      if (typeof window.updatetable === "function") {
-        updatetable();
-      } else {
-        console.warn("updatetable() not available yet.");
-      }
+  refreshUnreadCount();
+  notificationPollTimer = setInterval(refreshUnreadCount, NOTIFICATION_POLL_INTERVAL_MS);
 
-      lastUnreadCount = unreadCount;
-    }
+  notifIcon.addEventListener("click", () => {
+    resetPagination();
+    refreshNotifications();
+  });
 
-    populateNotifications(notifications);
-  };
+  wrapper.addEventListener("scroll", () => handleWrapperScroll(wrapper));
 
-  evtSource.onerror = (err) => {};
-  notifIcon.addEventListener("click", async () => {
-    if (allNotificationIds.length === 0) return;
-    try {
-      const res = await fetch("/api/notifications/mark-read", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-            .content,
-        },
-        body: JSON.stringify({ ids: allNotificationIds }),
-      });
-
-      if (res.ok) {
-        NotifContainer.textContent = "";
-
-        NotifContainer.classList.add("hidden");
-      } else {
-        console.error("Failed to mark notifications as read.");
-      }
-    } catch (err) {
-      console.error(err);
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-notification-mark-all]")) {
+      markAllRead();
     }
   });
 };
-async function getuser(user_id) {
-  const documents = await fetchWithRetry(`/api/users/${user_id}`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
+
+async function refreshUnreadCount() {
+  const res = await fetchWithRetry("/api/notifications/unread-count", {
+    headers: { Accept: "application/json" },
   });
+  if (!res) return;
+  updateBadge(res.count);
 }
 
-function populateNotifications(notificationsArray) {
+function updateBadge(count) {
+  const notifCountEl = document.getElementById("notifcount");
+  if (!notifCountEl) return;
+
+  if (count > 0) {
+    notifCountEl.textContent = count;
+    notifCountEl.classList.remove("hidden");
+  } else {
+    notifCountEl.textContent = "";
+    notifCountEl.classList.add("hidden");
+  }
+}
+
+function resetPagination() {
+  cancelPendingLoadMore();
+  lastNotificationId = null;
+  hasMoreNotifications = true;
+  isNearBottom = false;
+}
+
+async function refreshNotifications() {
+  const res = await fetchWithRetry("/api/notifications", {
+    headers: { Accept: "application/json" },
+  });
+  if (!res || res.success === false) return;
+
+  lastNotificationId = res.data.length ? res.data[res.data.length - 1].id : null;
+  hasMoreNotifications = res.has_more;
+  renderNotifications(res.data, { append: false });
+}
+
+// Fetches the next batch after the currently loaded list, appending below it.
+async function loadMoreNotifications() {
+  if (!hasMoreNotifications || isLoadingMore || lastNotificationId == null) return;
+
+  isLoadingMore = true;
+  loadMoreController = new AbortController();
+
+  const res = await fetchWithRetry(
+    `/api/notifications?before_id=${lastNotificationId}`,
+    { headers: { Accept: "application/json" } },
+    loadMoreController.signal,
+  );
+
+  removeLoadingIndicator();
+  isLoadingMore = false;
+  loadMoreController = null;
+
+  if (!res || res.aborted || res.success === false) return;
+
+  if (res.data.length) {
+    lastNotificationId = res.data[res.data.length - 1].id;
+  }
+  hasMoreNotifications = res.has_more;
+  renderNotifications(res.data, { append: true });
+
+  // Still pinned to the bottom (short viewport / small batch) - keep the chain going.
+  if (isNearBottom) scheduleLoadMore();
+}
+
+function handleWrapperScroll(wrapper) {
+  const nearBottom =
+    wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - NOTIFICATION_SCROLL_NEAR_BOTTOM_PX;
+
+  if (nearBottom) {
+    if (isNearBottom) return;
+    isNearBottom = true;
+    scheduleLoadMore();
+  } else {
+    isNearBottom = false;
+    cancelPendingLoadMore();
+  }
+}
+
+function scheduleLoadMore() {
+  if (!hasMoreNotifications || isLoadingMore) return;
+
+  showLoadingIndicator();
+
+  clearTimeout(scrollLoadTimer);
+  scrollLoadTimer = setTimeout(() => {
+    scrollLoadTimer = null;
+    loadMoreNotifications();
+  }, NOTIFICATION_SCROLL_LOAD_DELAY_MS);
+}
+
+// Cancels a pending debounce timer, and aborts an in-flight load-more request if one is running.
+function cancelPendingLoadMore() {
+  if (scrollLoadTimer) {
+    clearTimeout(scrollLoadTimer);
+    scrollLoadTimer = null;
+  }
+
+  if (loadMoreController) {
+    loadMoreController.abort();
+    loadMoreController = null;
+    isLoadingMore = false;
+  }
+
+  removeLoadingIndicator();
+}
+
+function showLoadingIndicator() {
+  removeLoadingIndicator();
   const container = document.getElementById("notificationsContainer");
   if (!container) return;
 
-  const authUser = window.authUser;
-  container.innerHTML = "";
-  const additionalMessage = "";
+  const el = document.createElement("div");
+  el.id = "notificationsLoadingMore";
+  el.className = "flex items-center justify-center py-3";
+  el.innerHTML = `<div class="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>`;
+  container.appendChild(el);
+}
 
-  notificationsArray.forEach(async (notification) => {
-    const li = document.createElement("div");
-    let sendarName = "";
+function removeLoadingIndicator() {
+  document.getElementById("notificationsLoadingMore")?.remove();
+}
 
-    if (notification.document.sender_id !== 0) {
-      sendarName = notification.sender.name;
-      //   console.log(sendarName);
-    }
+function renderNotifications(notifications, { append }) {
+  const container = document.getElementById("notificationsContainer");
+  if (!container) return;
 
-    li.className =
-      "cursor-pointer px-4 py-3 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600";
+  if (!append) container.innerHTML = "";
 
-    li.dataset.document_id = notification.document_id;
+  if (!append && notifications.length === 0) {
+    container.innerHTML = `<div class="px-4 py-6 text-sm text-center text-gray-500 dark:text-gray-400">No notifications</div>`;
+    return;
+  }
 
-    li.innerHTML = `
-  <div class="flex items-start space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-      <!-- Icon/avatar -->
-
-      <!-- Notification content -->
-      <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-800 dark:text-gray-200 font-medium">
-              ${formatNotificationMessage(
-                notification.message,
-                notification.document.document_control_number,
-                sendarName,
-              )}
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              ${formatTimestamp(notification.created_at)}
-          </p>
-      </div>
-  </div>
-        `;
-
-    li.addEventListener("click", () => {
-      //   console.log("Notification clicked:");
-      //   console.log("Message:", notification.document.status);
-      //   console.log("document ID", notification.document);
-
-      checkActionButtons(
-        notification.document.status,
-        notification.document.recipient_id,
-        notification.document.destination_office,
-        notification.document.receipt_confirmation,
-        notification.document.revision_status,
-      );
-
-      clearModalFields();
-      showSkeletonLoaders();
-
-      initModal({
-        modalId: "DocumentModal",
-      });
-      populateDocumentModal(notification.document_id);
-      notificationWrapper.style.display = "none";
-      logActivity(
-        "view",
-        notification.document_id,
-        notification.document.document_control_number,
-      );
-    });
-
-    container.appendChild(li);
+  notifications.forEach((notification) => {
+    container.appendChild(buildNotificationItem(notification));
   });
 }
 
-function formatNotificationMessage(msg, docctrlnumber, sendName) {
-  msg = msg.toLowerCase();
+function buildNotificationItem(notification) {
+  const item = document.createElement("div");
+  item.className =
+    "cursor-pointer px-4 py-3 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600" +
+    (notification.is_read ? "" : " bg-blue-50 dark:bg-zinc-700/40");
 
-  if (msg.includes("confirmed")) {
-    return (
-      sendName + " confirmed a document with control number <b>" + docctrlnumber
-    );
-  }
-  if (msg.includes("uploaded")) {
-    return (
-      sendName +
-      " uploaded a document with control number <b>" +
-      docctrlnumber +
-      "</b> to your office"
-    );
-  }
+  item.innerHTML = `
+    <p class="text-sm text-gray-800 dark:text-gray-200 font-medium">${escapeHtml(notification.title)}</p>
+    <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${escapeHtml(notification.message)}</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${formatTimestamp(notification.created_at)}</p>
+  `;
 
-  if (msg.includes("approval")) {
-    return (
-      sendName +
-      " routed a document with control number <b>" +
-      docctrlnumber +
-      "</b> for your approval"
-    );
-  } else if (msg.includes("routed")) {
-    return (
-      sendName +
-      " routed a document with control number <b>" +
-      docctrlnumber +
-      "</b> to you"
-    );
-  }
-
-  if (msg.includes("remanded")) {
-    return (
-      sendName +
-      " remanded the document with control number <b>" +
-      docctrlnumber +
-      "</b>"
-    );
-  }
-
-  if (msg.includes("signed")) {
-    return (
-      sendName +
-      " signed the document with control number <b>" +
-      docctrlnumber +
-      "</b>"
-    );
-  }
-
-  /* IMPORTANT: order matters here */
-  if (msg.includes("disapproved")) {
-    return (
-      sendName +
-      " Disapproved the document with control number <b>" +
-      docctrlnumber +
-      "</b>"
-    );
-  }
-
-  if (msg.includes("approved")) {
-    return (
-      sendName +
-      " approved the document with control number <b>" +
-      docctrlnumber +
-      "</b>"
-    );
-  }
-
-  if (msg.includes("3 days")) {
-    return (
-      "The document with control number <b>" +
-      docctrlnumber +
-      "</b> is due in 3 days"
-    );
-  }
-
-  if (msg.includes("due today")) {
-    return (
-      "The document with control number <b>" +
-      docctrlnumber +
-      "</b> is due today"
-    );
-  }
-
-  if (msg.includes("over due") || msg.includes("overdue")) {
-    return (
-      "The document with control number <b>" + docctrlnumber + "</b> is overdue"
-    );
-  }
-
-  return msg;
+  item.addEventListener("click", () => handleNotificationClick(notification));
+  return item;
 }
+
+async function handleNotificationClick(notification) {
+  markRead([notification.id]);
+
+  const wrapper = document.getElementById("notificationWrapper");
+  if (wrapper) wrapper.style.display = "none";
+
+  if (notification.link_url && typeof window.loadPage === "function") {
+    await window.loadPage({
+      title: notification.link_title || "",
+      link: notification.link_url,
+    });
+  }
+
+  const modalFn = notification.data?.modal_fn;
+  if (modalFn && typeof window[modalFn] === "function") {
+    window[modalFn](...(notification.data.modal_args || []));
+  }
+}
+
+async function markRead(ids) {
+  await fetchWithRetry("/api/notifications/mark-read", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content,
+    },
+    body: JSON.stringify({ ids }),
+  });
+  refreshUnreadCount();
+}
+
+async function markAllRead() {
+  await fetchWithRetry("/api/notifications/mark-read", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content,
+    },
+    body: JSON.stringify({ all: true }),
+  });
+  refreshUnreadCount();
+  resetPagination();
+  refreshNotifications();
+}
+
 function formatTimestamp(isoString) {
   const date = new Date(isoString);
   return date.toLocaleString("en-US", {
@@ -257,4 +248,10 @@ function formatTimestamp(isoString) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
 }

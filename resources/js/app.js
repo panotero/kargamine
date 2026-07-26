@@ -23,7 +23,8 @@ import "./apihandler";
 import "./customAlert";
 import "./navmenu";
 import "./menuSettings";
-// import "./notificationController";
+import "./teamManagement";
+import "./notificationController";
 import "./mailer";
 import "./toast";
 

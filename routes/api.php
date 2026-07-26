@@ -16,6 +16,7 @@ use App\Http\Controllers\MenusController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionController;
 use App\Http\Controllers\RoutingController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,12 +36,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/load_menu', [MenusController::class, 'index']);
     Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'getNotifications']);
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/mark-read', [NotificationController::class, 'markRead']);
     });
+    Route::post('/notifications/test-send', [NotificationController::class, 'testSend'])->middleware('can:isSuperAdmin');
 
-    Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
-    Route::get('/notifications/stream', [NotificationController::class, 'stream']);
 
 
     Route::prefix('users')->group(function () {
@@ -62,6 +64,18 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [MenusController::class, 'update']);
         Route::delete('/{id}', [MenusController::class, 'destroy']);
         Route::post('/swap', [MenusController::class, 'swapMenuOrder']);
+    });
+
+    Route::prefix('teams')->group(function () {
+        Route::get('/', [TeamController::class, 'index']);
+        Route::get('/users', [TeamController::class, 'availableUsers']);
+        Route::post('/', [TeamController::class, 'store'])->middleware('can:isSuperAdmin');
+        Route::put('/{id}', [TeamController::class, 'update'])->middleware('can:isSuperAdmin');
+        Route::delete('/{id}', [TeamController::class, 'destroy'])->middleware('can:isSuperAdmin');
+        Route::get('/{id}/members', [TeamController::class, 'members']);
+        Route::post('/{id}/members', [TeamController::class, 'addMember'])->middleware('can:isSuperAdmin');
+        Route::patch('/{id}/members/{userId}', [TeamController::class, 'updateMember'])->middleware('can:isSuperAdmin');
+        Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])->middleware('can:isSuperAdmin');
     });
 
     Route::prefix('app-theme')->group(function () {

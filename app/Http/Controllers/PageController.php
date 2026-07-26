@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\MailerSetting;
+use App\Models\SettingRole;
+use App\Models\User;
+use App\Models\UserDepartment;
 
 class PageController extends Controller
 {
@@ -33,6 +36,20 @@ class PageController extends Controller
     public function page_Themes()
     {
         return view('pages.settings.theme');
+    }
+
+    public function page_NotificationTest()
+    {
+        return view('pages.settings.notification_test', [
+            'roles' => SettingRole::orderBy('role_name')->get(['id', 'role_name']),
+            'departments' => UserDepartment::orderBy('name')->get(['id', 'name']),
+            'users' => User::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function page_TeamManagement()
+    {
+        return view('pages.settings.team_management');
     }
 
     public function page_Users()
