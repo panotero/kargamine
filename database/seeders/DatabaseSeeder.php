@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         // $this->call(UserSeeder::class);
         $this->call([
             // template seeder
+            NavIconSeeder::class,
             NavMenuSeeder::class,
             UserSeeder::class,
             Setting_roleSeeder::class,

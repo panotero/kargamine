@@ -64,10 +64,19 @@
                     class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
             </div>
 
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1 relative">
                 <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Icon</label>
-                <input id="menuIcon" type="text"
-                    class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+                <input type="hidden" id="menuIcon">
+                <button type="button" id="menuIconPickerBtn"
+                    class="flex items-center gap-2 w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+                    <span id="menuIconPreview"
+                        class="w-5 h-5 shrink-0 text-zinc-500 dark:text-zinc-300 flex items-center justify-center"></span>
+                    <span id="menuIconLabel" class="text-zinc-400">No icon selected</span>
+                </button>
+
+                <div id="menuIconPicker"
+                    class="hidden absolute z-20 top-full left-0 mt-1 w-full max-h-64 overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg p-2 grid grid-cols-6 gap-1">
+                </div>
             </div>
 
             <div class="flex flex-col gap-1">

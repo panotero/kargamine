@@ -30,13 +30,13 @@ class DashboardController extends Controller
             : TeamService::accessibleUserIds($user)->all();
 
         $leadsQuery = CrmLead::query()
-            ->when($visibleUserIds !== null, fn ($q) => $q->whereIn('assigned_to', $visibleUserIds));
+            ->when($visibleUserIds !== null, fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
 
         $proposalsQuery = ClientProposal::query()
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
                 $q->where(function ($q) use ($visibleUserIds) {
-                    $q->whereHas('lead', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds))
-                        ->orWhereHas('client.lead', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds));
+                    $q->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
+                        ->orWhereHas('client.lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
                 });
             });
 
@@ -51,7 +51,7 @@ class DashboardController extends Controller
                     'total_clients' => (clone $clientsQuery)->count(),
                     'open_leads' => (clone $leadsQuery)->whereHas(
                         'crmStatus',
-                        fn ($q) => $q->whereNotIn('status', ['WIN', 'LOST'])
+                        fn($q) => $q->whereNotIn('status', ['WIN', 'LOST'])
                     )->count(),
                     'pending_proposals' => (clone $proposalsQuery)->where('status', ClientProposal::STATUS_PENDING)->count(),
                     'active_contracts' => (clone $contractsQuery)->where('status', ClientContract::STATUS_ACTIVE)->count(),
@@ -87,7 +87,7 @@ class DashboardController extends Controller
             ->groupBy('crm_status.status')
             ->pluck('total', 'label');
 
-        return collect($labels)->mapWithKeys(fn ($label) => [$label => (int) ($counts[$label] ?? 0)])->all();
+        return collect($labels)->mapWithKeys(fn($label) => [$label => (int) ($counts[$label] ?? 0)])->all();
     }
 
     protected function proposalsByStatus($proposalsQuery): array
@@ -98,7 +98,7 @@ class DashboardController extends Controller
             ->pluck('total', 'status');
 
         return collect(ClientProposal::STATUS_LABELS)
-            ->mapWithKeys(fn ($label, $status) => [$label => (int) ($counts[$status] ?? 0)])
+            ->mapWithKeys(fn($label, $status) => [$label => (int) ($counts[$status] ?? 0)])
             ->all();
     }
 
@@ -110,7 +110,7 @@ class DashboardController extends Controller
             ->pluck('total', 'status');
 
         return collect(ClientContract::STATUS_LABELS)
-            ->mapWithKeys(fn ($label, $status) => [$label => (int) ($counts[$status] ?? 0)])
+            ->mapWithKeys(fn($label, $status) => [$label => (int) ($counts[$status] ?? 0)])
             ->all();
     }
 
@@ -122,7 +122,7 @@ class DashboardController extends Controller
             ->pluck('total', 'status');
 
         return collect(ContainerAsset::STATUS_LABELS)
-            ->mapWithKeys(fn ($label, $status) => [$label => (int) ($counts[$status] ?? 0)])
+            ->mapWithKeys(fn($label, $status) => [$label => (int) ($counts[$status] ?? 0)])
             ->all();
     }
 

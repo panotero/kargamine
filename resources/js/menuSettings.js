@@ -23,9 +23,74 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     parent: document.getElementById("menuParent"),
   };
 
+  const iconPickerBtn = document.getElementById("menuIconPickerBtn");
+  const iconPicker = document.getElementById("menuIconPicker");
+  const iconPreview = document.getElementById("menuIconPreview");
+  const iconLabel = document.getElementById("menuIconLabel");
+
   let menusData = [];
+  let iconsData = [];
+  let iconsById = {};
 
   cancelBtn.addEventListener("click", () => closeModal());
+
+  // -----------------------------------------------------------------
+  // Icon picker - fetches the nav_icons library once and lets the user
+  // pick visually instead of typing a class name (there's no icon font
+  // loaded in this app, so a free-text field never actually rendered
+  // anything).
+  // -----------------------------------------------------------------
+  async function loadIcons() {
+    const response = await fetchWithRetry(`/api/nav-icons`, {
+      headers: { Accept: "application/json" },
+    });
+    iconsData = response?.data ?? [];
+    iconsById = {};
+    iconsData.forEach((icon) => (iconsById[icon.key] = icon));
+
+    iconPicker.innerHTML = iconsData
+      .map(
+        (icon) => `
+        <button type="button" class="icon-option p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300" data-key="${icon.key}" title="${icon.label}">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${icon.svg}</svg>
+        </button>
+    `,
+      )
+      .join("");
+
+    iconPicker.querySelectorAll(".icon-option").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setSelectedIcon(btn.dataset.key);
+        iconPicker.classList.add("hidden");
+      });
+    });
+  }
+
+  function setSelectedIcon(key) {
+    fields.icon.value = key || "";
+    const icon = key ? iconsById[key] : null;
+
+    if (icon) {
+      iconPreview.innerHTML = `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${icon.svg}</svg>`;
+      iconLabel.textContent = icon.label;
+      iconLabel.classList.remove("text-zinc-400");
+    } else {
+      iconPreview.innerHTML = "";
+      iconLabel.textContent = "No icon selected";
+      iconLabel.classList.add("text-zinc-400");
+    }
+  }
+
+  iconPickerBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    iconPicker.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!iconPicker.classList.contains("hidden") && !iconPicker.contains(e.target) && e.target !== iconPickerBtn) {
+      iconPicker.classList.add("hidden");
+    }
+  });
 
   function openModal(mode = "Add", menu = null) {
     modalTitle.textContent = mode === "Add" ? "Add New Menu" : "Modify Menu";
@@ -34,7 +99,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     if (menu) {
       fields.id.value = menu.id;
       fields.title.value = menu.title || "";
-      fields.icon.value = menu.icon || "";
+      setSelectedIcon(menu.icon || "");
       fields.link.value = menu.link || "";
       fields.parent.value = menu.parent_menu || 0;
 
@@ -46,7 +111,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     } else {
       fields.id.value = "";
       fields.title.value = "";
-      fields.icon.value = "";
+      setSelectedIcon("");
       fields.link.value = "";
       fields.parent.value = 0;
       document.querySelectorAll(".roleCheckbox").forEach((cb) => {
@@ -55,6 +120,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
       });
     }
 
+    iconPicker.classList.add("hidden");
     modal.classList.remove("hidden");
     modal.classList.add("flex");
   }
@@ -235,8 +301,13 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
           "&nbsp;".repeat(level * 6) +
           (level > 0 ? '<span class="text-zinc-400">↳</span> ' : "");
 
+        const iconEntry = menu.icon ? iconsById[menu.icon] : null;
+        const iconPreviewHtml = iconEntry
+          ? `<svg class="w-4 h-4 inline-block align-text-bottom text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${iconEntry.svg}</svg>`
+          : "";
+
         tr.innerHTML = `
-                <td class="px-4 py-2.5 text-black dark:text-white">${indent}${menu.title}</td>
+                <td class="px-4 py-2.5 text-black dark:text-white">${indent}${iconPreviewHtml} ${menu.title}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${targetpage || ""}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${roles || ""}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${parentName}</td>
@@ -269,7 +340,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
 
           fields.id.value = menu.id;
           fields.title.value = menu.title || "";
-          fields.icon.value = menu.icon || "";
+          setSelectedIcon(menu.icon || "");
           fields.link.value = menu.link || "";
           fields.parent.value = menu.parent_menu || 0;
 
@@ -428,6 +499,9 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   const addBtn = document.getElementById("addMenuBtn");
   addBtn.addEventListener("click", () => openModal("Add"));
 
-  loadRoles();
-  loadMenus();
+  (async function init() {
+    await loadIcons();
+    loadRoles();
+    loadMenus();
+  })();
 };

@@ -309,20 +309,47 @@ class MenusController extends Controller
 
         try {
             DB::transaction(function () use ($menu1, $menu2) {
-                DB::table('nav_menus')
-                    ->where('id', $menu1->id)
-                    ->update(['menu_order' => $menu2->menu_order]);
+                // Renumber the WHOLE sibling group sequentially by swapping
+                // menu1/menu2's array position, rather than just exchanging
+                // their two menu_order values. A plain value-swap silently
+                // no-ops whenever two siblings already share the same
+                // menu_order (which can happen - e.g. a row added without an
+                // explicit order colliding with an existing one) - the
+                // button visibly does nothing because both rows just keep
+                // the same value they started with. Recomputing the whole
+                // group's sequence from its current position order is
+                // self-healing: it always produces a distinct, gapless
+                // 0..N-1 sequence regardless of what was there before.
+                $siblings = DB::table('nav_menus')
+                    ->where('parent_menu', $menu1->parent_menu)
+                    ->orderBy('menu_order')
+                    ->orderBy('id')
+                    ->get()
+                    ->all();
 
-                DB::table('nav_menus')
-                    ->where('id', $menu2->id)
-                    ->update(['menu_order' => $menu1->menu_order]);
+                $idx1 = null;
+                $idx2 = null;
+                foreach ($siblings as $i => $row) {
+                    if ($row->id === $menu1->id) {
+                        $idx1 = $i;
+                    }
+                    if ($row->id === $menu2->id) {
+                        $idx2 = $i;
+                    }
+                }
+
+                if ($idx1 !== null && $idx2 !== null) {
+                    [$siblings[$idx1], $siblings[$idx2]] = [$siblings[$idx2], $siblings[$idx1]];
+                }
+
+                foreach ($siblings as $position => $row) {
+                    DB::table('nav_menus')->where('id', $row->id)->update(['menu_order' => $position]);
+                }
             });
 
             Log::info('Swap completed successfully', [
-                'swapped' => [
-                    'menu1' => ['id' => $menu1->id, 'new_order' => $menu2->menu_order],
-                    'menu2' => ['id' => $menu2->id, 'new_order' => $menu1->menu_order],
-                ]
+                'menu1_id' => $menu1->id,
+                'menu2_id' => $menu2->id,
             ]);
 
             return response()->json(['status' => 'success']);

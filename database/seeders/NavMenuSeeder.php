@@ -19,13 +19,17 @@ class NavMenuSeeder extends Seeder
      * (parent_menu was hardcoded to '3'/'6', which stopped matching
      * "Developer Option"/"Settings" once the table changed). List each
      * parent before its children below; the lookup requires it.
+     *
+     * `icon` is a key into the nav_icons table (see NavIconSeeder), not a
+     * FontAwesome class - that library was never actually loaded in this
+     * app, so the old "fas fa-x" values here never rendered anything.
      */
     public function run(): void
     {
         $menu_array = [
             [
                 'title' => 'Dashboard',
-                'icon' => 'fas fa-home',
+                'icon' => 'home',
                 'link' => '/page_dashboard',
                 'allowed_roles' => ['1'],
                 'parent_title' => null,
@@ -33,7 +37,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'CRM',
-                'icon' => '',
+                'icon' => 'flag',
                 'link' => '/page_crm',
                 'allowed_roles' => ['1'],
                 'parent_title' => null,
@@ -41,7 +45,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Clients',
-                'icon' => '',
+                'icon' => 'building-office',
                 'link' => 'page_clientMasters',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => null,
@@ -49,7 +53,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Contracts',
-                'icon' => '',
+                'icon' => 'document-text',
                 'link' => '/page_contracts',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => null,
@@ -57,7 +61,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Container Inventory',
-                'icon' => 'fas fa-box',
+                'icon' => 'cube',
                 'link' => '/page_container_inventory',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => null,
@@ -65,7 +69,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Users',
-                'icon' => 'fas fa-users',
+                'icon' => 'users',
                 'link' => '/page_usermanagement',
                 'allowed_roles' => ['1'],
                 'parent_title' => null,
@@ -73,7 +77,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Proposals',
-                'icon' => '',
+                'icon' => 'paper-airplane',
                 'link' => 'page_proposals',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => null,
@@ -81,7 +85,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Settings',
-                'icon' => '',
+                'icon' => 'cog-6-tooth',
                 'link' => '#',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => null,
@@ -89,7 +93,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Developer Option',
-                'icon' => 'fas fa-users',
+                'icon' => 'shield-check',
                 'link' => '#',
                 'allowed_roles' => ['1'],
                 'parent_title' => null,
@@ -99,7 +103,7 @@ class NavMenuSeeder extends Seeder
             // --- children: each parent above must be seeded first ---
             [
                 'title' => 'Mailer',
-                'icon' => '',
+                'icon' => 'envelope',
                 'link' => '/page_mailer',
                 'allowed_roles' => ['1'],
                 'parent_title' => 'Developer Option',
@@ -107,7 +111,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Menus',
-                'icon' => '',
+                'icon' => 'bars-3',
                 'link' => '/page_menus',
                 'allowed_roles' => ['1'],
                 'parent_title' => 'Developer Option',
@@ -115,7 +119,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Theme',
-                'icon' => '',
+                'icon' => 'squares-2x2',
                 'link' => '/page_theme',
                 'allowed_roles' => ['1'],
                 'parent_title' => 'Developer Option',
@@ -123,7 +127,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Notification Test',
-                'icon' => '',
+                'icon' => 'bell',
                 'link' => '/page_notification_test',
                 'allowed_roles' => ['1'],
                 'parent_title' => 'Developer Option',
@@ -131,7 +135,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'App Settings',
-                'icon' => '',
+                'icon' => 'cog-6-tooth',
                 'link' => '/page_maintenance',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => 'Settings',
@@ -139,7 +143,7 @@ class NavMenuSeeder extends Seeder
             ],
             [
                 'title' => 'Team Management',
-                'icon' => '',
+                'icon' => 'briefcase',
                 'link' => '/page_team_management',
                 'allowed_roles' => ['1'],
                 'parent_title' => 'Settings',

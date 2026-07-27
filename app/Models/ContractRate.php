@@ -11,10 +11,18 @@ class ContractRate extends Model
     public const DISCOUNT_FIXED = 'FIXED';
 
     protected $fillable = [
-        'contract_id', 'route_from', 'route_to', 'min_van_qty',
-        'container_class', 'container_type', 'container_size',
-        'origin_service_type', 'destination_service_type',
-        'discount_type', 'discount_value', 'is_active',
+        'contract_id',
+        'route_from',
+        'route_to',
+        'min_van_qty',
+        'container_class',
+        'container_type',
+        'container_size',
+        'origin_service_type',
+        'destination_service_type',
+        'discount_type',
+        'discount_value',
+        'is_active',
     ];
 
     protected $casts = [

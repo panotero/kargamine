@@ -14,6 +14,7 @@ use App\Http\Controllers\ListOfValueController;
 use App\Http\Controllers\LovController;
 use App\Http\Controllers\MailerController;
 use App\Http\Controllers\MenusController;
+use App\Http\Controllers\NavIconController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionController;
 use App\Http\Controllers\RolesController;
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/load_menu', [MenusController::class, 'index']);
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('/nav-icons', [NavIconController::class, 'index']);
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
