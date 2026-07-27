@@ -9,10 +9,12 @@ class Port extends Model
 {
     protected $primaryKey = 'port_id';
 
-    protected $fillable = ['code', 'name', 'is_active'];
+    protected $fillable = ['code', 'name', 'is_active', 'latitude', 'longitude'];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
         'created_at' => 'datetime:Y-m-d h:i:s A',
         'updated_at' => 'datetime:Y-m-d h:i:s A',
     ];
@@ -30,6 +32,11 @@ class Port extends Model
     public function handlingFees(): HasMany
     {
         return $this->hasMany(HandlingFee::class, 'port_id', 'port_id');
+    }
+
+    public function containerAssets(): HasMany
+    {
+        return $this->hasMany(ContainerAsset::class, 'current_port_id', 'port_id');
     }
 
     public function lanesAsOrigin(): HasMany

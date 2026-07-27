@@ -31,3 +31,4 @@ import "./toast";
 import "./formatter";
 import "./logic_crm";
 import "./remoteTable";
+import "./containerAssetMap";

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             //
-            $table->integer('status')->default(1)->after('role_id');
+            $table->integer('status')->default(0)->after('role_id');
             $table->integer('department_id')->nullable()->after('password');
         });
     }

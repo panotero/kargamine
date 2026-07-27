@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ChargeTypeController;
+use App\Http\Controllers\ContainerAssetController;
+use App\Http\Controllers\ContainerClassController;
+use App\Http\Controllers\ContainerController;
+use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DeliveryTypeController;
 use App\Http\Controllers\GeneralChargeController;
@@ -14,10 +18,6 @@ use App\Http\Controllers\ServiceableAreaController;
 use App\Http\Controllers\TruckingTariffController;
 use App\Http\Controllers\VatRateController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ContainerController;
-use App\Http\Controllers\ContainerClassController;
-use App\Http\Controllers\ContainerSizeController;
-
 
 // =========================================================
 // Maintenance: master data
@@ -147,7 +147,6 @@ Route::prefix('proposals')->group(function () {
     Route::get('/{proposal}/ratesPrefill', [ContractController::class, 'ratesFromProposal']);
 });
 
-
 // -----------------------------------------------------------------
 // Containers (own class/size combinations, priced per lane tariff)
 // -----------------------------------------------------------------
@@ -160,8 +159,37 @@ Route::prefix('containers')->group(function () {
     Route::delete('/{container}', [ContainerController::class, 'destroy']);
 });
 
+// -----------------------------------------------------------------
+// Container Inventory (physical fleet - the actual boxes, not the
+// class/type/size catalog above). Read + availability lookup stay
+// behind plain auth; the management actions below are additionally
+// gated by nav.access, which checks nav_menus.allowed_roles for
+// /page_container_inventory (see EnsureNavMenuAccess) rather than a
+// separately-maintained role list.
+// -----------------------------------------------------------------
+Route::prefix('container-assets')->group(function () {
+    Route::get('/available', [ContainerAssetController::class, 'available']); // must stay above /{containerAsset}
+    Route::get('/', [ContainerAssetController::class, 'index']);
+    Route::get('/{containerAsset}', [ContainerAssetController::class, 'show']);
+    Route::post('/reserve', [ContainerAssetController::class, 'reserve']);
+    Route::post('/release', [ContainerAssetController::class, 'release']);
+
+    Route::post('/', [ContainerAssetController::class, 'store'])
+        ->middleware('nav.access:/page_container_inventory');
+    Route::put('/{containerAsset}', [ContainerAssetController::class, 'update'])
+        ->middleware('nav.access:/page_container_inventory');
+    Route::post('/{containerAsset}/mark-under-repair', [ContainerAssetController::class, 'markUnderRepair'])
+        ->middleware('nav.access:/page_container_inventory');
+    Route::post('/{containerAsset}/mark-available', [ContainerAssetController::class, 'markAvailable'])
+        ->middleware('nav.access:/page_container_inventory');
+    Route::post('/{containerAsset}/mark-out-of-service', [ContainerAssetController::class, 'markOutOfService'])
+        ->middleware('nav.access:/page_container_inventory');
+    Route::post('/{containerAsset}/relocate', [ContainerAssetController::class, 'relocate'])
+        ->middleware('nav.access:/page_container_inventory');
+});
+
 // Simple lookups used by the Container form's dropdowns
-Route::get('/containerTypes', fn() => response()->json([
+Route::get('/containerTypes', fn () => response()->json([
     'success' => true,
     'data' => \DB::table('container_type')->orderBy('type')->get(),
 ]));

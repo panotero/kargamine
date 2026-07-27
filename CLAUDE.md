@@ -28,6 +28,8 @@ vendor/bin/pint                           # code style (Laravel Pint)
 
 There is no JS test runner or linter configured — `npm run build`/`npm run dev` are the only frontend scripts.
 
+**Do not run `npm run build`.** The user normally has `npm run dev` (Vite dev server with HMR) running already, and builds manually whenever they actually need a production build. Editing files under `resources/js/` or `resources/css/` is fine — the dev server picks them up — but don't invoke `npm run build` yourself.
+
 ## Architecture
 
 ### Routing is split across many files, and not all of them are wired up

@@ -150,4 +150,9 @@ class PageController extends Controller
     {
         return view('pages.crmLeadForm');
     }
+
+    public function page_ContainerInventory()
+    {
+        return view('pages.containerInventory');
+    }
 }
