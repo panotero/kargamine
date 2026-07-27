@@ -50,11 +50,11 @@
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Lead Source *</label>
                             <select name="source_select" required
-                                class="leadSourceDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="leadSourceDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Source</option>
                             </select>
                             <input type="text" name="source_other" placeholder="Specify source"
-                                class="hidden w-full border rounded-lg px-3 py-2 text-sm mt-2">
+                                class="hidden w-full border rounded-lg px-3 py-2 text-sm mt-2 dark:text-zinc-900">
                         </div>
                     </div>
                 </div>
@@ -66,20 +66,20 @@
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Contact Name *</label>
                             <input type="text" name="contact_name" required
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Position</label>
                             <input type="text" name="position"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
 
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number *</label>
                             <div class="flex gap-2 mt-1">
                                 <input type="text" name="mobile" required
-                                    class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm">
-                                <select name="mobile_type" class="w-32 border rounded-lg px-2 py-2 text-sm">
+                                    class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                <select name="mobile_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
                                     <option value="">Type</option>
                                     <option value="personal">Personal</option>
                                     <option value="business">Business</option>
@@ -90,8 +90,8 @@
                             <label class="text-xs font-medium text-zinc-400 uppercase">Landline Number</label>
                             <div class="flex gap-2 mt-1">
                                 <input type="text" name="landline_number"
-                                    class="flex-1 border rounded-lg px-3 py-2 text-sm">
-                                <select name="landline_type" class="w-32 border rounded-lg px-2 py-2 text-sm">
+                                    class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                <select name="landline_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
                                     <option value="">Type</option>
                                     <option value="personal">Personal</option>
                                     <option value="business">Business</option>
@@ -102,8 +102,8 @@
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Email</label>
                             <div class="flex gap-2 mt-1">
-                                <input type="email" name="email" class="flex-1 border rounded-lg px-3 py-2 text-sm">
-                                <select name="email_type" class="w-32 border rounded-lg px-2 py-2 text-sm">
+                                <input type="email" name="email" class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                <select name="email_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
                                     <option value="">Type</option>
                                     <option value="personal">Personal</option>
                                     <option value="business">Business</option>
@@ -120,12 +120,12 @@
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Company Name *</label>
                             <input type="text" name="company_name"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business</label>
                             <select name="type_of_business"
-                                class="typeOfBusinessDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="typeOfBusinessDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Type of Business</option>
                             </select>
                         </div>
@@ -133,7 +133,7 @@
                             <label class="text-xs font-medium text-zinc-400 uppercase">Industry Description /
                                 Details</label>
                             <textarea name="industry_description" rows="2"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                         </div>
                     </div>
                 </div>
@@ -143,7 +143,7 @@
                     <div class="flex justify-between items-center mb-3">
                         <p class="font-semibold text-zinc-700">Address(es) *</p>
                         <button type="button" id="addAddressBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add
                             Address</button>
                     </div>
                     <div id="addressesContainer" class="space-y-4"></div>
@@ -159,10 +159,10 @@
 
         {{-- ===================== STAGE 2 ===================== --}}
         <div class="stage-panel hidden" data-panel="2">
-            <div class="flex justify-between items-center mb-3">
+            <div class="flex justify-between items-center mb-3">x
                 <p class="font-semibold text-zinc-700">Container Requirements</p>
                 <button type="button" id="addContainerBtn"
-                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add Container</button>
+                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add Container</button>
             </div>
             <div id="containersContainer" class="space-y-4"></div>
 
@@ -435,7 +435,7 @@
             return `
     <div class="container-card border rounded-xl p-4 space-y-3" data-index="${index}">
         <div class="flex justify-between items-center">
-            <select data-field="container_type" class="type-select border rounded-lg px-3 py-2 text-sm font-semibold">
+            <select data-field="container_type" class="type-select border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900">
                 ${CONTAINER_TYPES.map(t => `<option value="${t.value}">${t.label}</option>`).join('')}
             </select>
             <button type="button" class="remove-container text-red-500 text-xs font-medium">✕ Remove</button>
@@ -446,55 +446,55 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                <select data-field="origin_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="origin_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Port</option>${portsOptionsHtml}
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                <select data-field="destination_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="destination_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Port</option>${portsOptionsHtml}
                 </select>
             </div>
 
             <div class="field-convan-class hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Class</label>
-                <select data-field="container_class_id" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="container_class_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Class</option>${classOptionsHtml}
                 </select>
             </div>
             <div class="field-convan-size hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Size</label>
-                <select data-field="container_size_id" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="container_size_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Size</option>${sizeOptionsHtml}
                 </select>
             </div>
             <div class="field-temperature hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">Required Temperature (°C)</label>
-                <input type="number" step="0.1" data-field="required_temperature" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="number" step="0.1" data-field="required_temperature" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                <input type="number" data-field="quantity" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="number" data-field="quantity" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
             <div class="field-cbm-ton hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">Estimated CBM/s</label>
-                <input type="number" step="0.01" data-field="estimated_cbm" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="number" step="0.01" data-field="estimated_cbm" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div class="field-cbm-ton hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">Estimated Ton/s</label>
-                <input type="number" step="0.01" data-field="estimated_ton" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="number" step="0.01" data-field="estimated_ton" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Declared Value per Unit</label>
-                <input type="number" step="0.01" data-field="declared_value_per_unit" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="number" step="0.01" data-field="declared_value_per_unit" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
     <label class="text-[11px] text-zinc-400 uppercase">Frequency</label>
-    <select data-field="frequency" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+    <select data-field="frequency" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
         <option value="">Select Frequency</option>
         <option value="Weekly">Weekly</option>
         <option value="Monthly">Monthly</option>
@@ -503,24 +503,24 @@
 
             <div class="md:col-span-2">
                 <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description</label>
-                <textarea data-field="general_cargo_description" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm"></textarea>
+                <textarea data-field="general_cargo_description" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
             </div>
 
             <div class="field-split-service hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Origin</label>
-                <select data-field="service_mode_origin" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="service_mode_origin" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
             <div class="field-split-service hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Destination</label>
-                <select data-field="service_mode_destination" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="service_mode_destination" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
             <div class="field-single-service hidden md:col-span-2">
                 <label class="text-[11px] text-zinc-400 uppercase">Service Mode</label>
-                <select data-field="service_mode" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="service_mode" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
@@ -533,7 +533,7 @@
             </div>
             <div class="md:col-span-2">
                 <label class="text-[11px] text-zinc-400 uppercase">DG Documentary Requirement</label>
-                <input type="file" class="dg-file-input w-full border rounded-lg px-2 py-1.5 text-sm"
+                <input type="file" class="dg-file-input w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"
                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                 <p class="text-xs text-zinc-400 mt-1">
                     Upload the supporting DG document (e.g. MSDS, DG declaration). PDF, JPG, PNG, DOC/DOCX up to 10MB.
@@ -543,11 +543,11 @@
             </div>
             <div class="md:col-span-2">
                 <label class="text-[11px] text-zinc-400 uppercase">Special Requirements</label>
-                <textarea data-field="special_requirements" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm"></textarea>
+                <textarea data-field="special_requirements" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
             </div>
             <div class="md:col-span-2">
                 <label class="text-[11px] text-zinc-400 uppercase">Special Notes</label>
-                <textarea data-field="special_notes" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm"></textarea>
+                <textarea data-field="special_notes" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
             </div>
         </div>
     </div>`;
@@ -877,7 +877,7 @@
     <div class="address-card border rounded-xl p-4 space-y-3" data-index="${index}">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold">
+                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900">
                     ${addressTypeOptionsHtml}
                 </select>
                 <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
@@ -891,43 +891,43 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">No.</label>
-                <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Building</label>
-                <input type="text" data-field="address_building" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_building" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Street</label>
-                <input type="text" data-field="address_street" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_street" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Country</label>
-                <select data-field="address_country" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="address_country" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${countryOptionsHtml}
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Province</label>
-                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Province</option>
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Town/City</label>
-                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900" disabled>
                     <option value="">Select Town/City</option>
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Barangay</label>
-                <select data-field="address_barangay" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                <select data-field="address_barangay" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900" disabled>
                     <option value="">Select Barangay</option>
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Postal Code</label>
-                <input type="text" data-field="address_postal_code" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_postal_code" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
         </div>
     </div>`;

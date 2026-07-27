@@ -21,6 +21,8 @@ class PermissionSeeder extends Seeder
             ['key' => 'booking.confirm', 'label' => 'Confirm a booking', 'module' => 'Booking'],
             ['key' => 'booking.cancel', 'label' => 'Cancel a booking', 'module' => 'Booking'],
             ['key' => 'booking.advance-status', 'label' => 'Advance a booking\'s status', 'module' => 'Booking'],
+            ['key' => 'contract.create', 'label' => 'Create a contract from an accepted proposal', 'module' => 'Contract'],
+            ['key' => 'contract.terminate', 'label' => 'Terminate a contract', 'module' => 'Contract'],
         ];
 
         foreach ($permissions as $permission) {

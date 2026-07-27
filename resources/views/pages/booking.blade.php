@@ -113,7 +113,7 @@
             <div id="vbCancelReasonPanel" class="hidden pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
                 <label class="block text-[11px] font-semibold text-zinc-500 uppercase">Cancellation Reason</label>
                 <textarea id="vbCancelReasonInput" rows="2" maxlength="500"
-                    class="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-xs bg-white dark:bg-zinc-900"
+                    class="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-xs bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                     placeholder="Why is this booking being cancelled?"></textarea>
                 <div class="flex gap-2">
                     <button type="button" id="vbCancelConfirmBtn" class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Confirm Cancellation</button>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientContract;
 use App\Models\ClientMaster;
+use App\Models\ClientProposal;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -12,6 +13,23 @@ use Illuminate\Support\Str;
 
 class ClientContractController extends Controller
 {
+    /**
+     * Relations loaded on show() and the two new endpoints below, so every
+     * "here's the contract" response has the same shape.
+     */
+    protected const DETAIL_RELATIONS = [
+        'client',
+        'proposal',
+        'creator',
+        'terminator',
+        'rates.originPort',
+        'rates.destinationPort',
+        'rates.container',
+        'rates.containerClass',
+        'rates.containerSize',
+        'rates.variant',
+    ];
+
     /**
      * Contracts for ONE client - used inside the Client Master detail modal.
      */
@@ -95,16 +113,7 @@ class ClientContractController extends Controller
 
     public function show(ClientContract $contract)
     {
-        $contract->load([
-            'client',
-            'proposal',
-            'creator',
-            'rates.originPort',
-            'rates.destinationPort',
-            'rates.container',
-            'rates.containerClass',
-            'rates.containerSize',
-        ]);
+        $contract->load(self::DETAIL_RELATIONS);
 
         return response()->json(['success' => true, 'data' => $contract]);
     }
@@ -152,14 +161,9 @@ class ClientContractController extends Controller
         ]);
 
         $contract = DB::transaction(function () use ($client, $validated, $request) {
-            $yearMonth = Carbon::now()->format('Ym');
-            $last = ClientContract::where('code', 'like', "CCT-{$yearMonth}%")
-                ->orderByDesc('id')->lockForUpdate()->first();
-            $seq = $last ? ((int) substr($last->code, -4)) + 1 : 1;
-
             $contract = ClientContract::create([
                 'uuid' => (string) Str::uuid(),
-                'code' => sprintf('CCT-%s-%04d', $yearMonth, $seq),
+                'code' => $this->nextContractCode(),
                 'client_id' => $client->id,
                 'client_proposal_id' => $validated['client_proposal_id'] ?? null,
                 'signed_date' => $validated['signed_date'] ?? null,
@@ -178,5 +182,138 @@ class ClientContractController extends Controller
         });
 
         return response()->json(['success' => true, 'data' => $contract->load('rates')], 201);
+    }
+
+    /**
+     * CCT-{Ym}-0001, resetting each month. Shared by store() and
+     * createFromProposal() so both creation paths generate codes the same
+     * way and can never collide with each other.
+     */
+    protected function nextContractCode(): string
+    {
+        $yearMonth = Carbon::now()->format('Ym');
+        $last = ClientContract::where('code', 'like', "CCT-{$yearMonth}%")
+            ->orderByDesc('id')->lockForUpdate()->first();
+        $seq = $last ? ((int) substr($last->code, -4)) + 1 : 1;
+
+        return sprintf('CCT-%s-%04d', $yearMonth, $seq);
+    }
+
+    /**
+     * Converts an Accepted proposal directly into an Active contract - the
+     * only creation path reachable from the Proposals page. The client
+     * master modal's own store() above is untouched and stays available
+     * for that page's separate flow.
+     */
+    public function createFromProposal(Request $request, ClientProposal $proposal)
+    {
+        if ($proposal->status !== ClientProposal::STATUS_ACCEPTED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only an Accepted proposal can be converted to a contract.',
+            ], 422);
+        }
+
+        if (! $proposal->client_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This proposal has no client assigned yet.',
+            ], 422);
+        }
+
+        $hasActiveContract = ClientContract::where('client_proposal_id', $proposal->id)
+            ->where('status', ClientContract::STATUS_ACTIVE)
+            ->exists();
+
+        if ($hasActiveContract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This proposal already has an active contract.',
+            ], 422);
+        }
+
+        $proposalRates = $proposal->rates()->get();
+
+        if ($proposalRates->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This proposal has no rate lines.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'signed_date' => ['nullable', 'date'],
+            'valid_from' => ['required', 'date'],
+            'valid_to' => ['required', 'date', 'after_or_equal:valid_from'],
+            'rate_overrides' => ['sometimes', 'array'],
+            'rate_overrides.*.base_rate' => ['sometimes', 'numeric', 'min:0'],
+            'rate_overrides.*.discount_type' => ['sometimes', 'nullable', 'in:percentage,fixed'],
+            'rate_overrides.*.discount_value' => ['sometimes', 'numeric', 'min:0'],
+            'rate_overrides.*.final_rate' => ['sometimes', 'numeric', 'min:0'],
+        ]);
+
+        $overrides = $validated['rate_overrides'] ?? [];
+
+        $contract = DB::transaction(function () use ($proposal, $validated, $overrides, $proposalRates, $request) {
+            $contract = ClientContract::create([
+                'uuid' => (string) Str::uuid(),
+                'code' => $this->nextContractCode(),
+                'client_id' => $proposal->client_id,
+                'client_proposal_id' => $proposal->id,
+                'signed_date' => $validated['signed_date'] ?? null,
+                'valid_from' => $validated['valid_from'],
+                'valid_to' => $validated['valid_to'],
+                'status' => ClientContract::STATUS_ACTIVE,
+                'created_by' => $request->user()?->id,
+            ]);
+
+            foreach ($proposalRates as $proposalRate) {
+                $override = $overrides[$proposalRate->id] ?? [];
+
+                $contract->rates()->create([
+                    'origin_port_id' => $proposalRate->origin_port_id,
+                    'destination_port_id' => $proposalRate->destination_port_id,
+                    'container_id' => $proposalRate->container_id,
+                    'container_class_id' => $proposalRate->container_class_id,
+                    'container_size_id' => $proposalRate->container_size_id,
+                    'container_variant_id' => $proposalRate->container_variant_id,
+                    'base_rate' => $override['base_rate'] ?? $proposalRate->base_rate,
+                    'discount_type' => array_key_exists('discount_type', $override) ? $override['discount_type'] : $proposalRate->discount_type,
+                    'discount_value' => $override['discount_value'] ?? $proposalRate->discount_value,
+                    'final_rate' => $override['final_rate'] ?? $proposalRate->final_rate,
+                ]);
+            }
+
+            return $contract;
+        });
+
+        $contract->load(self::DETAIL_RELATIONS);
+
+        return response()->json(['success' => true, 'data' => $contract], 201);
+    }
+
+    public function terminate(Request $request, ClientContract $contract)
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        if ($contract->status !== ClientContract::STATUS_ACTIVE) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only an Active contract can be terminated.',
+            ], 422);
+        }
+
+        $contract->update([
+            'status' => ClientContract::STATUS_TERMINATED,
+            'terminated_reason' => $validated['reason'],
+            'terminated_by' => $request->user()?->id,
+            'terminated_at' => now(),
+        ]);
+
+        $contract->load(self::DETAIL_RELATIONS);
+
+        return response()->json(['success' => true, 'data' => $contract]);
     }
 }

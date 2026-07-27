@@ -64,27 +64,27 @@
             <label class="block text-xs font-semibold text-zinc-500 mb-1">Container No. <span
                     class="text-red-500">*</span></label>
             <input type="text" name="container_no" required maxlength="20"
-                class="w-full border border-zinc-200 rounded-lg px-3 py-2 uppercase"
+                class="w-full border border-zinc-200 rounded-lg px-3 py-2 uppercase dark:text-zinc-900"
                 placeholder="e.g. MSCU1234567">
         </div>
         <div>
             <label class="block text-xs font-semibold text-zinc-500 mb-1">Variant (Type / Class / Size) <span
                     class="text-red-500">*</span></label>
             <select name="container_variant_id" required
-                class="w-full border border-zinc-200 rounded-lg px-3 py-2 registerVariantSelect">
+                class="w-full border border-zinc-200 rounded-lg px-3 py-2 registerVariantSelect dark:text-zinc-900">
                 <option value="">Select variant</option>
             </select>
         </div>
         <div>
             <label class="block text-xs font-semibold text-zinc-500 mb-1">Current Port</label>
-            <select name="current_port_id" class="w-full border border-zinc-200 rounded-lg px-3 py-2 registerPortSelect">
+            <select name="current_port_id" class="w-full border border-zinc-200 rounded-lg px-3 py-2 registerPortSelect dark:text-zinc-900">
                 <option value="">Not set yet</option>
             </select>
         </div>
         <div>
             <label class="block text-xs font-semibold text-zinc-500 mb-1">Pier / Yard Reference</label>
             <input type="text" name="current_pier_reference" maxlength="100"
-                class="w-full border border-zinc-200 rounded-lg px-3 py-2" placeholder="e.g. Pier 3 / Yard B">
+                class="w-full border border-zinc-200 rounded-lg px-3 py-2 dark:text-zinc-900" placeholder="e.g. Pier 3 / Yard B">
         </div>
 
         <div class="border-t pt-4 flex justify-end gap-2">
@@ -147,13 +147,13 @@
             <div class="flex flex-wrap items-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <div class="flex-1 min-w-[10rem]">
                     <label class="block text-[11px] font-semibold text-zinc-500 mb-1">Relocate to port</label>
-                    <select id="caRelocatePort" class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs">
+                    <select id="caRelocatePort" class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900">
                         <option value="">Select port</option>
                     </select>
                 </div>
                 <div class="flex-1 min-w-[10rem]">
                     <label class="block text-[11px] font-semibold text-zinc-500 mb-1">Pier / Yard reference</label>
-                    <input type="text" id="caRelocatePierRef" class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs">
+                    <input type="text" id="caRelocatePierRef" class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900">
                 </div>
                 <button type="button" id="caRelocateBtn"
                     class="px-3 py-1.5 text-xs rounded-lg bg-zinc-700 hover:bg-zinc-800 text-white">

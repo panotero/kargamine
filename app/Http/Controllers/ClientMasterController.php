@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientMaster;
+use App\Models\ClientProposal;
 use App\Models\CrmLead;
 use App\Models\CrmStatus;
 use Illuminate\Http\Request;
@@ -165,6 +166,15 @@ class ClientMasterController extends Controller
                         'status_updated_at' => now(),
                     ]);
                 }
+
+                // Any proposal created while this was still just a lead
+                // (client_id null, lead_id set) now belongs to the client
+                // it just became - otherwise it stays invisible to every
+                // client-scoped proposal list (Client Master modal) despite
+                // still showing up on the global Proposals page.
+                ClientProposal::where('lead_id', $lead->id)
+                    ->whereNull('client_id')
+                    ->update(['client_id' => $client->id]);
             }
 
             return $client;

@@ -84,14 +84,37 @@
                 <tbody class="divide-y divide-zinc-100" id="vcRatesBody"></tbody>
             </table>
         </div>
+
+        <div id="vcTerminationInfo" class="hidden border-t pt-4 text-xs text-zinc-500 space-y-1"></div>
     </div>
 
-    <div class="border-t px-5 py-4 flex justify-end gap-2">
-        <a href="#" id="vcDownloadBtn" target="_blank"
-            class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
-            Download PDF
-        </a>
-        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Close</button>
+    <div class="border-t px-5 py-4 space-y-2">
+        <div class="flex justify-between items-center gap-2">
+            <button type="button" id="vcTerminateBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white">
+                Terminate Contract
+            </button>
+            <div class="flex justify-end gap-2 flex-1">
+                <a href="#" id="vcDownloadBtn" target="_blank"
+                    class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
+                    Download PDF
+                </a>
+                <button class="modal-close border px-4 py-2 rounded-lg text-sm">Close</button>
+            </div>
+        </div>
+
+        <div id="vcTerminateReasonPanel" class="hidden pt-2 border-t border-zinc-100 space-y-2">
+            <label class="block text-[11px] font-semibold text-zinc-500 uppercase">Termination Reason</label>
+            <textarea id="vcTerminateReasonInput" rows="2" maxlength="500"
+                class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"
+                placeholder="Why is this contract being terminated?"></textarea>
+            <div class="flex gap-2">
+                <button type="button" id="vcTerminateConfirmBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Confirm
+                    Termination</button>
+                <button type="button" id="vcTerminateDismissBtn" class="px-3 py-1.5 text-xs rounded-lg border">Nevermind</button>
+            </div>
+        </div>
     </div>
 </x-modal>
 
@@ -125,6 +148,8 @@
                 classes: 'bg-red-50 text-red-700'
             },
         };
+
+        let currentContractId = null;
 
         function statusBadge(status) {
             const meta = CONTRACT_STATUS_MAPPING[status] ?? {
@@ -234,6 +259,7 @@
             }
 
             const contract = response.data;
+            currentContractId = contract.id;
 
             document.getElementById('vcContractCode').textContent = contract.code;
             document.getElementById('vcClientName').textContent =
@@ -263,10 +289,66 @@
 
             document.getElementById('vcDownloadBtn').href = `/api/clientContracts/${contract.id}/pdf`;
 
+            const terminationInfo = document.getElementById('vcTerminationInfo');
+            if (contract.status === 4) {
+                terminationInfo.innerHTML = `
+                    <div><span class="text-zinc-400">Terminated By:</span> <span class="font-medium">${contract.terminator?.name ?? '-'}</span></div>
+                    <div><span class="text-zinc-400">Terminated At:</span> <span class="font-medium">${formatDateTime(contract.terminated_at)}</span></div>
+                    <div><span class="text-zinc-400">Reason:</span> <span class="font-medium">${contract.terminated_reason ?? '-'}</span></div>
+                `;
+                terminationInfo.classList.remove('hidden');
+            } else {
+                terminationInfo.classList.add('hidden');
+            }
+
+            document.getElementById('vcTerminateBtn').classList.toggle('hidden', contract.status !== 2);
+            document.getElementById('vcTerminateReasonPanel').classList.add('hidden');
+            document.getElementById('vcTerminateReasonInput').value = '';
+
             initModal({
                 modalId: 'viewClientContractModal'
             });
         }
+
+        document.getElementById('vcTerminateBtn').addEventListener('click', function() {
+            document.getElementById('vcTerminateReasonPanel').classList.remove('hidden');
+            document.getElementById('vcTerminateReasonInput').focus();
+        });
+
+        document.getElementById('vcTerminateDismissBtn').addEventListener('click', function() {
+            document.getElementById('vcTerminateReasonPanel').classList.add('hidden');
+            document.getElementById('vcTerminateReasonInput').value = '';
+        });
+
+        document.getElementById('vcTerminateConfirmBtn').addEventListener('click', async function() {
+            const reason = document.getElementById('vcTerminateReasonInput').value.trim();
+
+            if (!reason) {
+                document.getElementById('vcTerminateReasonInput').focus();
+                return;
+            }
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: { reason },
+                url: `/api/clientContracts/${currentContractId}/terminate`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to terminate contract',
+                    message: response.message ?? '',
+                });
+                return;
+            }
+
+            showMessage({ status: 'success', title: 'Contract terminated' });
+            await openViewContract(currentContractId);
+            renderTable().reload();
+        });
 
         function updateContractCounts(counts) {
             document.getElementById("countAll").textContent = counts.all;
@@ -281,6 +363,12 @@
         // -----------------------------------------------------------------
         function init() {
             loadContracts();
+
+            if (window.contractsOpenId) {
+                const openId = window.contractsOpenId;
+                window.contractsOpenId = null;
+                openViewContract(openId);
+            }
         }
 
         init();

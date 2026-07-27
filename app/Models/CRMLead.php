@@ -146,4 +146,24 @@ class CrmLead extends Model
     {
         return $this->clientProposals()->where('status', ClientProposal::STATUS_ACCEPTED)->exists();
     }
+
+    public function formattedPrimaryAddress(): string
+    {
+        $address = $this->addresses->firstWhere('is_primary', true) ?? $this->addresses->first();
+
+        if (! $address) {
+            return '-';
+        }
+
+        return collect([
+            $address->address_no,
+            $address->address_building,
+            $address->address_street,
+            $address->address_barangay,
+            $address->address_town_city,
+            $address->address_province,
+            $address->address_country,
+            $address->address_postal_code,
+        ])->filter()->implode(', ') ?: '-';
+    }
 }

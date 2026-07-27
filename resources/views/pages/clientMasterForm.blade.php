@@ -43,47 +43,47 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
-                            <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number
                                 (Primary)</label>
                             <input type="text" name="contact_number_1"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number
                                 (Secondary)</label>
                             <input type="text" name="contact_number_2"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Industry</label>
-                            <input type="text" name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            <input type="text" name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Type of Organization</label>
                             <input type="text" name="organization_type"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
-                            <input type="text" name="tin" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            <input type="text" name="tin" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Business Established
                                 Date</label>
                             <input type="date" name="business_start_date"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Estimated Annual Revenue</label>
                             <input type="number" step="0.01" name="estimated_annual_revenue"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Company URL</label>
-                            <input type="url" name="company_url" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            <input type="url" name="company_url" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                     </div>
                 </div>
@@ -144,12 +144,12 @@
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Credit Terms</label>
                             <input type="text" name="finance[credit_terms]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Payment Mode</label>
                             <input type="text" name="finance[payment_mode]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <label class="flex items-center gap-2 md:col-span-2">
                             <input type="checkbox" name="finance[standard_billing_service]" value="1">
@@ -175,23 +175,23 @@
                     <div id="invoiceElectronicFields" class="hidden">
                         <label class="text-xs font-medium text-zinc-400 uppercase">Invoice Email Address</label>
                         <input type="email" name="finance[invoice_email_address]"
-                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                     </div>
                     <div id="invoiceCourierFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Recipient Name</label>
                             <input type="text" name="finance[invoice_courier_recipient]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Recipient Contact</label>
                             <input type="text" name="finance[invoice_courier_contact]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Courier Address</label>
                             <textarea name="finance[invoice_courier_address]" rows="2"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                         </div>
                     </div>
                 </div>
@@ -213,18 +213,18 @@
                     <div id="checkPickupFields" class="hidden">
                         <label class="text-xs font-medium text-zinc-400 uppercase">Pickup Address</label>
                         <textarea name="finance[check_pickup_address]" rows="2"
-                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                     </div>
                     <div id="directRemittanceFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Bank Name</label>
                             <input type="text" name="finance[bank_name]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Bank Account Number</label>
                             <input type="text" name="finance[bank_account_number]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
                         </label>
                     </div>
                     <label class="text-xs font-medium text-zinc-400 uppercase">Others</label>
-                    <textarea name="finance[other_requests]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                    <textarea name="finance[other_requests]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                 </div>
 
                 <div class="border-t pt-4">
@@ -251,21 +251,21 @@
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Billed To</label>
                             <input type="text" name="billing[billed_to]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
                             <input type="text" name="billing[company_name]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Address</label>
-                            <textarea name="billing[address]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></textarea>
+                            <textarea name="billing[address]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
                             <input type="text" name="billing[tin]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                     </div>
                 </div>
@@ -418,26 +418,26 @@
         function contactRowHtml() {
             return `
             <div class="contact-row grid grid-cols-1 md:grid-cols-5 gap-2 border rounded-lg p-3 relative">
-                <input type="text" data-field="contact_name" placeholder="Contact Name" class="border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="contact_name" placeholder="Contact Name" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                 <div class="flex gap-1">
-                    <input type="text" data-field="contact_number" placeholder="Contact Number" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
-                    <select data-field="contact_number_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0">
+                    <input type="text" data-field="contact_number" placeholder="Contact Number" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
+                    <select data-field="contact_number_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
                         <option value="">Type</option>
                         <option value="mobile">Mobile</option>
                         <option value="landline">Landline</option>
                     </select>
                 </div>
                 <div class="flex gap-1">
-                    <input type="email" data-field="contact_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
-                    <select data-field="contact_email_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0">
+                    <input type="email" data-field="contact_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
+                    <select data-field="contact_email_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
                         <option value="">Type</option>
                         <option value="personal">Personal</option>
                         <option value="business">Business</option>
                     </select>
                 </div>
-                <input type="text" data-field="role" placeholder="Role" class="border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="role" placeholder="Role" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                 <div class="flex gap-2">
-                    <input type="text" data-field="position" placeholder="Position" class="border rounded-lg px-2 py-1.5 text-sm flex-1">
+                    <input type="text" data-field="position" placeholder="Position" class="border rounded-lg px-2 py-1.5 text-sm flex-1 dark:text-zinc-900">
                     <button type="button" class="remove-row text-red-500 px-2">✕</button>
                 </div>
             </div>`;
@@ -446,13 +446,13 @@
         function tradeRefRowHtml() {
             return `
             <div class="trade-ref-row grid grid-cols-1 md:grid-cols-3 gap-2 border rounded-lg p-3 relative">
-                <input type="text" data-field="business_name" placeholder="Business Name" class="border rounded-lg px-2 py-1.5 text-sm">
-                <input type="text" data-field="relationship" placeholder="Nature of Relationship" class="border rounded-lg px-2 py-1.5 text-sm">
-                <input type="text" data-field="contact_person_name" placeholder="Contact Person" class="border rounded-lg px-2 py-1.5 text-sm">
-                <input type="text" data-field="contact_person_phone" placeholder="Phone" class="border rounded-lg px-2 py-1.5 text-sm">
-                <input type="text" data-field="contact_person_mobile" placeholder="Mobile" class="border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="business_name" placeholder="Business Name" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" data-field="relationship" placeholder="Nature of Relationship" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" data-field="contact_person_name" placeholder="Contact Person" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" data-field="contact_person_phone" placeholder="Phone" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" data-field="contact_person_mobile" placeholder="Mobile" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                 <div class="flex gap-2">
-                    <input type="email" data-field="contact_person_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1">
+                    <input type="email" data-field="contact_person_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 dark:text-zinc-900">
                     <button type="button" class="remove-row text-red-500 px-2">✕</button>
                 </div>
             </div>`;
@@ -769,7 +769,7 @@
     <div class="address-card border rounded-xl p-4 space-y-3" data-index="${index}">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold">
+                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900">
                     ${addressTypeOptionsHtml}
                 </select>
                 <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
@@ -783,43 +783,43 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">No.</label>
-                <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Building</label>
-                <input type="text" data-field="address_building" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_building" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Street</label>
-                <input type="text" data-field="address_street" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_street" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Country</label>
-                <select data-field="address_country" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="address_country" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${countryOptionsHtml}
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Province</label>
-                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Province</option>
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Town/City</label>
-                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900" disabled>
                     <option value="">Select Town/City</option>
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Barangay</label>
-                <select data-field="address_barangay" class="w-full border rounded-lg px-2 py-1.5 text-sm" disabled>
+                <select data-field="address_barangay" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900" disabled>
                     <option value="">Select Barangay</option>
                 </select>
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Postal Code</label>
-                <input type="text" data-field="address_postal_code" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_postal_code" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
         </div>
     </div>`;

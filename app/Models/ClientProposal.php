@@ -54,6 +54,17 @@ class ClientProposal extends Model
         return $this->hasMany(ClientProposalRate::class, 'proposal_id');
     }
 
+    /**
+     * The contract this proposal converted into, if any and still Active -
+     * used to swap the Proposals page's "Create Contract" button to
+     * "View Contract" once one already exists.
+     */
+    public function activeContract()
+    {
+        return $this->hasOne(ClientContract::class, 'client_proposal_id')
+            ->where('status', ClientContract::STATUS_ACTIVE);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

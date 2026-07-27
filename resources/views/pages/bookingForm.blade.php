@@ -26,7 +26,7 @@
                 </div>
                 <div id="clientSearchWrap" class="relative">
                     <input type="text" id="clientSearchInput" placeholder="Search client by company name or code..."
-                        class="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-zinc-900">
+                        class="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
                     <div id="clientSearchResults"
                         class="hidden absolute z-20 mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg max-h-56 overflow-y-auto"></div>
                 </div>
@@ -38,37 +38,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-medium text-zinc-400 uppercase">Origin Port</label>
-                        <select id="originPort" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        <select id="originPort" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                             <option value="">Select port</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-zinc-400 uppercase">Destination Port</label>
-                        <select id="destinationPort" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        <select id="destinationPort" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                             <option value="">Select port</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-zinc-400 uppercase">Origin Area</label>
-                        <select id="originArea" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        <select id="originArea" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                             <option value="">Select origin port first</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-zinc-400 uppercase">Destination Area</label>
-                        <select id="destinationArea" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        <select id="destinationArea" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                             <option value="">Select destination port first</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-zinc-400 uppercase">Delivery Type</label>
-                        <select id="deliveryType" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        <select id="deliveryType" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                             <option value="">Select delivery type</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-medium text-zinc-400 uppercase">Booking Date</label>
-                        <input type="date" id="bookingDate" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                        <input type="date" id="bookingDate" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                     </div>
                 </div>
             </div>
@@ -247,25 +247,25 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="md:col-span-2">
                         <label class="text-[11px] text-zinc-400 uppercase">Container</label>
-                        <select data-field="container_variant_id" class="line-variant w-full border rounded-lg px-2 py-1.5 text-sm">
+                        <select data-field="container_variant_id" class="line-variant w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                             ${variantOptions}
                         </select>
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                        <input type="number" min="1" value="1" data-field="quantity" class="line-quantity w-full border rounded-lg px-2 py-1.5 text-sm">
+                        <input type="number" min="1" value="1" data-field="quantity" class="line-quantity w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Description</label>
-                        <input type="text" data-field="description" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                        <input type="text" data-field="description" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Weight (kg)</label>
-                        <input type="number" step="0.01" min="0" data-field="weight_kg" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                        <input type="number" step="0.01" min="0" data-field="weight_kg" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Volume (m&sup3;)</label>
-                        <input type="number" step="0.01" min="0" data-field="volume_cbm" class="w-full border rounded-lg px-2 py-1.5 text-sm">
+                        <input type="number" step="0.01" min="0" data-field="volume_cbm" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                     <div class="flex items-center gap-4 md:col-span-2">
                         <label class="flex items-center gap-2 text-sm">

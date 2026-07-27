@@ -109,18 +109,18 @@
         <h3 class="text-lg font-semibold mb-4">Add New Office</h3>
         <form id="officeForm">
             <input type="text" name="office_name" placeholder="Office Name"
-                class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2"
+                class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2"
                 required>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="office_name"></p>
 
             <input type="text" name="office_code" placeholder="Office Code"
-                class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2"
+                class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2"
                 required>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="office_code"></p>
 
             <!-- Parent Office Dropdown -->
             <select name="parentOffice" id="parentOffice"
-                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
+                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2" required>
                 <option value="0">Select Parent Office (Optional)</option>
             </select>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="parentOffice"></p>
@@ -140,11 +140,11 @@
         <h3 class="text-lg font-semibold mb-4">Add New User Config</h3>
         <form id="userForm">
             <input type="text" name="designation" placeholder="Designation"
-                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2" required>
+                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2" required>
 
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="designation"></p>
             <select name="approval_type"
-                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 p-2">
+                class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2">
                 <option value="routing">Routing</option>
                 <option value="pre-approval">Pre-Approval</option>
                 <option value="final-approval">Final-Approval</option>
@@ -167,12 +167,12 @@
         <form id="documentTypeForm">
             <input type="text" name="document_type" placeholder="Document Type"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
-                          dark:bg-gray-900 p-2"
+                          dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2"
                 required>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="document_type"></p>
             <textarea name="description" placeholder="Description (optional)"
                 class="no-special-chars w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
-                             dark:bg-gray-900 p-2 h-24"></textarea>
+                             dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2 h-24"></textarea>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="description"></p>
 
             <div class="flex justify-end gap-3">
@@ -196,7 +196,7 @@
         <form id="labelTypeForm">
             <input type="text" name="label_name" placeholder="Label"
                 class="w-full mb-3 rounded-lg border-gray-300 dark:border-gray-700
-                          dark:bg-gray-900 p-2"
+                          dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-2"
                 required>
             <p class="mt-1 text-sm text-red-600 hidden" data-error-for="label_name"></p>
 

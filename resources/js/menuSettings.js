@@ -65,9 +65,10 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   }
 
   async function loadRoles() {
-    const roles = await fetchWithRetry(`/api/roles`, {
+    const response = await fetchWithRetry(`/api/roles`, {
       headers: { Accept: "application/json" },
     });
+    const roles = Array.isArray(response) ? response : (response?.data ?? []);
 
     const container = fields.rolesContainer;
     if (!container) return;

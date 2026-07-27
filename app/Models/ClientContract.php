@@ -30,12 +30,16 @@ class ClientContract extends Model
         'status',
         'signed_document_path',
         'created_by',
+        'terminated_reason',
+        'terminated_by',
+        'terminated_at',
     ];
 
     protected $casts = [
         'signed_date' => 'date',
         'valid_from' => 'date',
         'valid_to' => 'date',
+        'terminated_at' => 'datetime',
     ];
 
     public function client()
@@ -56,5 +60,10 @@ class ClientContract extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function terminator()
+    {
+        return $this->belongsTo(User::class, 'terminated_by');
     }
 }

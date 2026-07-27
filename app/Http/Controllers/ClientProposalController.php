@@ -42,6 +42,7 @@ class ClientProposalController extends Controller
             'rates.containerSize',
             'creator:id,name',
             'decidedBy:id,name',
+            'activeContract',
         ])->where('client_id', $client->id)
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 5))
@@ -86,6 +87,7 @@ class ClientProposalController extends Controller
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
+            'activeContract',
         ]);
 
         return response()->json(['success' => true, 'data' => $proposal]);
@@ -276,6 +278,8 @@ class ClientProposalController extends Controller
         $proposal->load([
             'client',
             'client.addresses',
+            'lead.company',
+            'lead.addresses',
             'creator',
             'rates.originPort',
             'rates.destinationPort',
