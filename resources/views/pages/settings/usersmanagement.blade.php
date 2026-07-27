@@ -65,37 +65,13 @@
                         <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Settings</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100 mt-0.5">Roles</p>
                     </div>
-                    <div class="relative">
-                        <button id="addRoleBtn"
-                            class="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                        </button>
-
-                        {{-- Add Role Dropdown --}}
-                        <div id="addRoleDropdown"
-                            class="hidden absolute right-0 top-9 w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 z-50 flex flex-col gap-3 shadow-xl shadow-black/10 dark:shadow-black/40">
-                            <p class="text-xs font-medium text-zinc-400 uppercase tracking-widest">Add Role</p>
-                            <div class="flex flex-col gap-1">
-                                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Role
-                                    Name</label>
-                                <input type="text" id="roleNameInput" placeholder="e.g. manager"
-                                    class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                            </div>
-                            <div class="flex justify-end gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                                <button id="cancelRoleBtn"
-                                    class="px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
-                                    Cancel
-                                </button>
-                                <button id="saveRoleBtn"
-                                    class="px-3 py-1.5 text-xs font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition">
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <button id="addRoleBtn"
+                        class="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="divide-y divide-zinc-100 dark:divide-zinc-800" id="rolesContainer">
@@ -200,6 +176,39 @@
 
     </x-side-modal>
 
+    {{-- ROLE FORM MODAL (create + edit, with permissions checklist) --}}
+    <x-modal id="roleFormModal">
+        <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+            <p class="text-lg font-semibold dark:text-white" id="roleFormTitle">New Role</p>
+            <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
+        </div>
+
+        <div class="p-5 space-y-4 text-sm max-h-[65vh] overflow-y-auto">
+            <input type="hidden" id="roleFormId">
+
+            <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Role Name</label>
+                <input type="text" id="roleFormName" placeholder="e.g. Sales Rep"
+                    class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            </div>
+
+            <div>
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest block mb-2">Permissions</label>
+                <div id="roleFormPermissions" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <div class="border-t border-zinc-100 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2">
+            <button type="button" class="modal-close px-4 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
+                Cancel
+            </button>
+            <button type="button" id="roleFormSaveBtn"
+                class="px-4 py-1.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition">
+                Save Role
+            </button>
+        </div>
+    </x-modal>
+
 
     {{-- JS --}}
     <script>
@@ -207,11 +216,60 @@
             const userForm = document.getElementById('userForm');
             const saveUserBtn = document.getElementById('saveUserBtn');
             let rolesList = [];
+            let permissionsGrouped = {};
 
             async function init() {
+                await loadPermissions();
                 await loadRoles();
                 renderTable().load(1);
                 refreshCounts();
+            }
+
+            async function loadPermissions() {
+                const response = await apiCall({
+                    mode: 'GET',
+                    url: '/api/permissions'
+                });
+                permissionsGrouped = response?.success ? (response.data ?? {}) : {};
+            }
+
+            function renderPermissionChecklist(selectedIds = []) {
+                const container = document.getElementById('roleFormPermissions');
+                const modules = Object.keys(permissionsGrouped);
+
+                if (!modules.length) {
+                    container.innerHTML =
+                        '<p class="text-xs text-zinc-400">No permissions defined yet.</p>';
+                    return;
+                }
+
+                container.innerHTML = modules.map(module => `
+                    <div>
+                        <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">${module}</p>
+                        <div class="space-y-1.5">
+                            ${permissionsGrouped[module].map(p => `
+                                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200 cursor-pointer">
+                                    <input type="checkbox" class="rolePermissionCheckbox rounded border-zinc-300 text-orange-500 focus:ring-orange-400"
+                                        value="${p.id}" ${selectedIds.includes(p.id) ? 'checked' : ''}>
+                                    ${p.label}
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function openRoleForm(role = null) {
+                document.getElementById('roleFormId').value = role?.id ?? '';
+                document.getElementById('roleFormName').value = role?.role_name ?? '';
+                document.getElementById('roleFormTitle').textContent = role ? 'Edit Role' : 'New Role';
+
+                const selectedIds = (role?.permissions ?? []).map(p => p.id);
+                renderPermissionChecklist(selectedIds);
+
+                initModal({
+                    modalId: 'roleFormModal'
+                });
             }
 
             async function refreshCounts() {
@@ -420,16 +478,23 @@
                     row.className = 'flex items-center gap-2 px-4 py-2.5';
                     row.dataset.roleId = role.id;
 
+                    const canDelete = !role.is_system && (role.users_count ?? 0) === 0;
+                    const deleteTitle = role.is_system ?
+                        'System roles cannot be deleted' :
+                        (canDelete ? 'Delete' : 'Reassign users before deleting');
+
                     row.innerHTML = `
-                    <input type="text" value="${role.role_name}" data-role-name-input readonly
-                        class="flex-1 min-w-0 bg-transparent border-none text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-0 p-0 truncate" />
+                    <div class="flex-1 min-w-0 flex items-center gap-1.5">
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">${role.role_name}</p>
+                        ${role.is_system ? '<span class="text-[9px] font-semibold text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-0.5 shrink-0">SYSTEM</span>' : ''}
+                    </div>
                     <span class="text-[10px] font-semibold text-zinc-400 shrink-0">${role.users_count ?? 0} user${(role.users_count ?? 0) !== 1 ? 's' : ''}</span>
-                    <button type="button" class="btn-edit-role p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition shrink-0" data-id="${role.id}" data-editing="false" title="Edit">
+                    <button type="button" class="btn-edit-role p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition shrink-0" data-id="${role.id}" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                         </svg>
                     </button>
-                    <button type="button" class="btn-delete-role p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0" data-id="${role.id}" title="Delete">
+                    <button type="button" class="btn-delete-role p-1.5 rounded-lg transition shrink-0 ${canDelete ? 'text-zinc-400 hover:text-red-600 hover:bg-red-50' : 'text-zinc-200 dark:text-zinc-700 cursor-not-allowed'}" data-id="${role.id}" title="${deleteTitle}" ${canDelete ? '' : 'disabled'}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -444,54 +509,12 @@
                 const editBtn = e.target.closest('.btn-edit-role');
                 const deleteBtn = e.target.closest('.btn-delete-role');
 
-                // ---- EDIT (toggle -> save) ----
                 if (editBtn) {
-                    const row = editBtn.closest('[data-role-id]');
-                    const input = row.querySelector('[data-role-name-input]');
-                    const isEditing = editBtn.dataset.editing === 'true';
-
-                    if (!isEditing) {
-                        input.readOnly = false;
-                        input.classList.add('border', 'border-blue-300', 'rounded-md', 'px-2', 'py-1');
-                        input.focus();
-                        editBtn.dataset.editing = 'true';
-                        editBtn.innerHTML = '<span class="text-xs font-bold text-blue-600 px-0.5">✓</span>';
-                        return;
-                    }
-
-                    const roleId = editBtn.dataset.id;
-                    const newName = input.value.trim();
-                    if (!newName) return;
-
-                    const response = await apiCall({
-                        mode: 'PUT',
-                        isJson: true,
-                        payload: {
-                            role_name: newName
-                        },
-                        url: `/api/roles/${roleId}`,
-                    });
-
-                    if (!response.success) {
-                        showMessage({
-                            status: 'error',
-                            title: 'Error',
-                            message: response.invalid_fields ?
-                                Object.values(response.invalid_fields).flat().join(' ') : (response
-                                    .message ?? 'Failed to update role.'),
-                        });
-                        return;
-                    }
-
-                    showMessage({
-                        status: 'success',
-                        title: 'Role updated!'
-                    });
-                    await loadRoles();
+                    const role = rolesList.find(r => String(r.id) === String(editBtn.dataset.id));
+                    if (role) openRoleForm(role);
                     return;
                 }
 
-                // ---- DELETE ----
                 if (deleteBtn) {
                     const roleId = deleteBtn.dataset.id;
                     const confirmed = await customConfirm(
@@ -522,32 +545,32 @@
                 }
             });
 
-            document.getElementById('addRoleBtn').addEventListener('click', () => {
-                document.getElementById('addRoleDropdown').classList.toggle('hidden');
-            });
+            document.getElementById('addRoleBtn').addEventListener('click', () => openRoleForm(null));
 
-            document.getElementById('cancelRoleBtn').addEventListener('click', () => {
-                document.getElementById('roleNameInput').value = '';
-                document.getElementById('addRoleDropdown').classList.add('hidden');
-            });
-
-            document.getElementById('saveRoleBtn').addEventListener('click', async () => {
-                const input = document.getElementById('roleNameInput');
-                const roleName = input.value.trim();
+            document.getElementById('roleFormSaveBtn').addEventListener('click', async function() {
+                const roleId = document.getElementById('roleFormId').value;
+                const roleName = document.getElementById('roleFormName').value.trim();
 
                 if (!roleName) {
-                    input.focus();
+                    document.getElementById('roleFormName').focus();
                     return;
                 }
 
+                const permissionIds = Array.from(
+                    document.querySelectorAll('.rolePermissionCheckbox:checked')
+                ).map(cb => Number(cb.value));
+
+                const isUpdate = Boolean(roleId);
+
                 const response = await apiCall({
-                    mode: 'POST',
+                    mode: isUpdate ? 'PUT' : 'POST',
                     isJson: true,
                     payload: {
-                        role_name: roleName
+                        role_name: roleName,
+                        permission_ids: permissionIds
                     },
-                    url: '/api/roles',
-                    button: document.getElementById('saveRoleBtn'),
+                    url: isUpdate ? `/api/roles/${roleId}` : '/api/roles',
+                    button: this,
                 });
 
                 if (!response.success) {
@@ -556,17 +579,16 @@
                         title: 'Error',
                         message: response.invalid_fields ?
                             Object.values(response.invalid_fields).flat().join(' ') : (response
-                                .message ?? 'Failed to create role.'),
+                                .message ?? 'Failed to save role.'),
                     });
                     return;
                 }
 
                 showMessage({
                     status: 'success',
-                    title: 'Role created!'
+                    title: isUpdate ? 'Role updated!' : 'Role created!'
                 });
-                input.value = '';
-                document.getElementById('addRoleDropdown').classList.add('hidden');
+                document.querySelector('#roleFormModal .modal-close').click();
                 await loadRoles();
                 refreshCounts();
             });

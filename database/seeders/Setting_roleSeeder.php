@@ -16,13 +16,13 @@ class Setting_roleSeeder extends Seeder
     {
         DB::table('setting_role')->upsert(
             [
-                ['id' => 1, 'role_name' => 'superadmin'],
-                ['id' => 2, 'role_name' => 'admin'],
-                ['id' => 3, 'role_name' => 'user'],
-                ['id' => 4, 'role_name' => 'developer'],
+                ['id' => 1, 'role_name' => 'superadmin', 'is_system' => true],
+                ['id' => 2, 'role_name' => 'admin', 'is_system' => true],
+                ['id' => 3, 'role_name' => 'user', 'is_system' => true],
+                ['id' => 4, 'role_name' => 'developer', 'is_system' => true],
             ],
             ['role_name'], // unique key to check
-            ['role_name']  // columns to update if exists
+            ['role_name', 'is_system']  // columns to update if exists
         );
     }
 }

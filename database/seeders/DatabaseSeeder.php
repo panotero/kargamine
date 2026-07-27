@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             NavMenuSeeder::class,
             UserSeeder::class,
             Setting_roleSeeder::class,
+            PermissionSeeder::class,
 
             // kargamine seeder
             CrmStatusSeeder::class,

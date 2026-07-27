@@ -33,6 +33,7 @@ class Kernel extends HttpKernel
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
         'safe.text' => \App\Http\Middleware\SafeText::class,
         'nav.access' => \App\Http\Middleware\EnsureNavMenuAccess::class,
+        'permission' => \App\Http\Middleware\EnsurePermission::class,
     ];
 
     /**

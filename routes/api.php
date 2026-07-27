@@ -15,11 +15,11 @@ use App\Http\Controllers\MailerController;
 use App\Http\Controllers\MenusController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionController;
+use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
@@ -155,7 +155,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leadsource', [LovController::class, 'leadSource']);
     });
 
-    Route::get('/roles', fn() => DB::table('setting_role')->get());
+    // Read is open to any authenticated user (populates role-select
+    // dropdowns e.g. on the Users page); mutations require roles.manage.
+    Route::prefix('roles')->group(function () {
+        Route::get('/', [RolesController::class, 'index']);
+        Route::post('/', [RolesController::class, 'store'])->middleware('permission:roles.manage');
+        Route::put('/{role}', [RolesController::class, 'update'])->middleware('permission:roles.manage');
+        Route::delete('/{role}', [RolesController::class, 'destroy'])->middleware('permission:roles.manage');
+    });
+
+    Route::get('/permissions', [RolesController::class, 'permissions']);
 
     Route::post('/test-api', function (Request $request) {
         Log::info('Test API triggered', $request->all());

@@ -155,4 +155,14 @@ class PageController extends Controller
     {
         return view('pages.containerInventory');
     }
+
+    public function page_Booking()
+    {
+        return view('pages.booking');
+    }
+
+    public function page_BookingForm()
+    {
+        return view('pages.bookingForm');
+    }
 }

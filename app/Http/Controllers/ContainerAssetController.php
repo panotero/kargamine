@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\ContainerAsset;
 use App\Models\ContainerAssetLocationHistory;
+use App\Services\ContainerReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class ContainerAssetController extends Controller
 {
+    public function __construct(protected ContainerReservationService $reservationService) {}
+
     protected function withDisplayRelations($query)
     {
         return $query->with([
@@ -235,7 +239,12 @@ class ContainerAssetController extends Controller
             'quantity' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $assets = $this->rankedAvailableQuery($validated)
+        $assets = $this->withDisplayRelations(
+            $this->reservationService->rankedAvailableQuery(
+                $validated['container_variant_id'],
+                $validated['origin_port_id'] ?? null
+            )
+        )
             ->when($validated['quantity'] ?? null, fn ($q, $qty) => $q->limit($qty))
             ->get();
 
@@ -243,18 +252,6 @@ class ContainerAssetController extends Controller
             'success' => true,
             'data' => $assets,
         ]);
-    }
-
-    protected function rankedAvailableQuery(array $criteria)
-    {
-        return $this->withDisplayRelations(ContainerAsset::query())
-            ->where('container_variant_id', $criteria['container_variant_id'])
-            ->where('status', ContainerAsset::STATUS_AVAILABLE)
-            ->when(
-                $criteria['origin_port_id'] ?? null,
-                fn ($q, $portId) => $q->orderByRaw('CASE WHEN current_port_id = ? THEN 0 ELSE 1 END', [$portId])
-            )
-            ->orderBy('last_movement_at');
     }
 
     public function reserve(Request $request)
@@ -268,47 +265,27 @@ class ContainerAssetController extends Controller
             'quantity' => ['required_if:auto,true', 'integer', 'min:1'],
         ]);
 
-        return DB::transaction(function () use ($validated, $request) {
-            if ($request->boolean('auto')) {
-                $candidates = $this->rankedAvailableQuery($validated)
-                    ->lockForUpdate()
-                    ->limit($validated['quantity'])
-                    ->get();
-
-                if ($candidates->count() < $validated['quantity']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Not enough available containers of this type to auto-assign.',
-                    ], 422);
+        try {
+            $assets = DB::transaction(function () use ($validated, $request) {
+                if ($request->boolean('auto')) {
+                    return $this->reservationService->reserveAuto(
+                        $validated['container_variant_id'],
+                        $validated['origin_port_id'] ?? null,
+                        $validated['quantity'],
+                        $request->user()?->id
+                    );
                 }
 
-                $ids = $candidates->pluck('id')->all();
-            } else {
-                $ids = $validated['container_asset_ids'];
-            }
-
-            $assets = ContainerAsset::whereIn('id', $ids)->lockForUpdate()->get();
-
-            if ($assets->count() !== count($ids) || $assets->contains(fn ($a) => $a->status !== ContainerAsset::STATUS_AVAILABLE)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'One or more selected containers are no longer available.',
-                ], 422);
-            }
-
-            $assets->each(function (ContainerAsset $asset) use ($request) {
-                $asset->applyChange(
-                    ['status' => ContainerAsset::STATUS_BOOKED],
-                    ContainerAssetLocationHistory::SOURCE_BOOKING_ASSIGNMENT,
+                return $this->reservationService->reserveExplicit(
+                    $validated['container_asset_ids'],
                     $request->user()?->id
                 );
             });
+        } catch (RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
-            return response()->json([
-                'success' => true,
-                'data' => ContainerAsset::whereIn('id', $ids)->get(),
-            ]);
-        });
+        return response()->json(['success' => true, 'data' => $assets]);
     }
 
     public function release(Request $request)
@@ -318,28 +295,14 @@ class ContainerAssetController extends Controller
             'container_asset_ids.*' => ['integer', 'exists:container_assets,id'],
         ]);
 
-        return DB::transaction(function () use ($validated, $request) {
-            $assets = ContainerAsset::whereIn('id', $validated['container_asset_ids'])->lockForUpdate()->get();
+        try {
+            $assets = DB::transaction(
+                fn () => $this->reservationService->release($validated['container_asset_ids'], $request->user()?->id)
+            );
+        } catch (RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
-            if ($assets->contains(fn ($a) => $a->status !== ContainerAsset::STATUS_BOOKED)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'One or more selected containers are not currently booked.',
-                ], 422);
-            }
-
-            $assets->each(function (ContainerAsset $asset) use ($request) {
-                $asset->applyChange(
-                    ['status' => ContainerAsset::STATUS_AVAILABLE],
-                    ContainerAssetLocationHistory::SOURCE_BOOKING_RELEASE,
-                    $request->user()?->id
-                );
-            });
-
-            return response()->json([
-                'success' => true,
-                'data' => ContainerAsset::whereIn('id', $validated['container_asset_ids'])->get(),
-            ]);
-        });
+        return response()->json(['success' => true, 'data' => $assets]);
     }
 }

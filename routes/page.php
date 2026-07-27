@@ -25,3 +25,5 @@ Route::get('/page_theme', [PageController::class, 'page_Themes']);
 Route::get('/page_notification_test', [PageController::class, 'page_NotificationTest']);
 Route::get('/page_team_management', [PageController::class, 'page_TeamManagement']);
 Route::get('/page_container_inventory', [PageController::class, 'page_ContainerInventory']);
+Route::get('/page_booking', [PageController::class, 'page_Booking']);
+Route::get('/page_bookingForm', [PageController::class, 'page_BookingForm']);

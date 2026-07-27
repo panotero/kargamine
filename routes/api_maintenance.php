@@ -124,9 +124,18 @@ Route::prefix('vatRates')->group(function () {
 
 Route::prefix('bookings')->group(function () {
     Route::get('/', [BookingController::class, 'index']);
+    Route::post('/quote', [BookingController::class, 'quote']); // live rate preview, no save - must stay above /{booking}
     Route::get('/{booking}', [BookingController::class, 'show']);
-    Route::post('/quote', [BookingController::class, 'quote']); // live rate preview, no save
-    Route::post('/', [BookingController::class, 'store']);
+    Route::post('/', [BookingController::class, 'store'])->middleware('permission:booking.create');
+    Route::put('/{booking}', [BookingController::class, 'update'])->middleware('permission:booking.create');
+    Route::post('/{booking}/confirm', [BookingController::class, 'confirm'])->middleware('permission:booking.confirm');
+    Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->middleware('permission:booking.cancel');
+    Route::post('/{booking}/mark-in-transit', [BookingController::class, 'markInTransit'])->middleware('permission:booking.advance-status');
+    Route::post('/{booking}/mark-delivered', [BookingController::class, 'markDelivered'])->middleware('permission:booking.advance-status');
+    Route::post('/{booking}/mark-completed', [BookingController::class, 'markCompleted'])->middleware('permission:booking.advance-status');
+    // Downloading an already-issued document is a read action, not gated
+    // behind the same permission that created it.
+    Route::get('/{booking}/bol', [BookingController::class, 'downloadBol']);
 });
 
 // =========================================================
