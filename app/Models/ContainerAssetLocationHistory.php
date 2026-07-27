@@ -28,7 +28,9 @@ class ContainerAssetLocationHistory extends Model
     ];
 
     protected $casts = [
-        'recorded_at' => 'datetime',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'recorded_at' => 'datetime:M d, Y, h:i A',
     ];
 
     public function containerAsset(): BelongsTo

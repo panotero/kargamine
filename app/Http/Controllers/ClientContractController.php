@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ClientContract;
 use App\Models\ClientMaster;
 use App\Models\ClientProposal;
+use App\Services\TeamService;
+use App\Support\RoleHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -37,7 +39,14 @@ class ClientContractController extends Controller
     {
         $client = ClientMaster::where('uuid', $clientUuid)->firstOrFail();
 
-        $contracts = ClientContract::with('rates', 'proposal:id,code')
+        $contracts = ClientContract::with([
+            'proposal:id,code',
+            'rates.originPort',
+            'rates.destinationPort',
+            'rates.container',
+            'rates.containerClass',
+            'rates.containerSize',
+        ])
             ->where('client_id', $client->id)
             ->orderByDesc('created_at')
             ->get();
@@ -50,10 +59,18 @@ class ClientContractController extends Controller
      */
     public function indexAll(Request $request)
     {
+        // Team-scoped visibility, same rule as CRM leads/Proposals/Clients: a
+        // member only sees their own clients' contracts, a team leader sees
+        // their subtree, superadmin sees everything.
+        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+            ? null
+            : TeamService::accessibleUserIds($request->user())->all();
+
         $contracts = ClientContract::with([
             'client:id,uuid,company_name,customer_code',
             'proposal:id,code',
         ])
+            ->visibleTo($visibleUserIds)
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
@@ -88,11 +105,12 @@ class ClientContractController extends Controller
             ->paginate($request->get('per_page', 15))
             ->appends($request->query());
 
-        $allContracts = ClientContract::all();
+        $allContracts = ClientContract::visibleTo($visibleUserIds)->get();
 
         $statusCounts = $allContracts->groupBy('status')->map(fn ($group) => $group->count());
 
-        $expiring = ClientContract::where('status', ClientContract::STATUS_ACTIVE)
+        $expiring = ClientContract::visibleTo($visibleUserIds)
+            ->where('status', ClientContract::STATUS_ACTIVE)
             ->whereDate('valid_to', '>=', Carbon::today())
             ->whereDate('valid_to', '<=', Carbon::today()->addMonth())
             ->count();

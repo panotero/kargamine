@@ -18,6 +18,8 @@ class ContractRate extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'discount_value' => 'decimal:2',
         'is_active' => 'boolean',
     ];

@@ -11,7 +11,11 @@ use App\Models\CrmLead;
 use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
+use App\Models\User;
 use App\Services\FileUploadService;
+use App\Services\TeamNotifier;
+use App\Services\TeamService;
+use App\Support\RoleHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -43,6 +47,7 @@ class ClientProposalController extends Controller
             'creator:id,name',
             'decidedBy:id,name',
             'activeContract',
+            'lead.user:id,name,team_id',
         ])->where('client_id', $client->id)
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 5))
@@ -56,11 +61,29 @@ class ClientProposalController extends Controller
      */
     public function indexAll(Request $request)
     {
+        // Team-scoped visibility, same rule as the CRM lead list: a regular
+        // member only sees proposals for their own leads; a team leader sees
+        // their team's subtree; superadmin bypasses entirely. A proposal's
+        // "owner" is its lead's assigned rep - checked via the proposal's own
+        // lead_id first, falling back to the client's originating lead for
+        // proposals created via the client-scoped store() path (which never
+        // sets lead_id directly).
+        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+            ? null
+            : TeamService::accessibleUserIds($request->user());
+
         $proposals = ClientProposal::with([
             'client:id,uuid,company_name,customer_code,sales_rep_id',
             'creator:id,name',
             'decidedBy:id,name',
+            'lead.user:id,name,team_id',
         ])
+            ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
+                $q->where(function ($q) use ($visibleUserIds) {
+                    $q->whereHas('lead', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds))
+                        ->orWhereHas('client.lead', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds));
+                });
+            })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
@@ -82,6 +105,15 @@ class ClientProposalController extends Controller
             'decidedBy',
             'lead.company',
             'lead.addresses',
+            // team_id is required here, not just display fields - canBeApprovedBy()/
+            // canBeSignedBy() read it via ownerUser()->team_id, and a column-
+            // restricted eager load silently nulls out anything not selected.
+            'lead.user:id,name,team_id',
+            // Client-scoped proposals (created via store()) never set lead_id
+            // directly - this is the same fallback as ClientProposal::ownerUser(),
+            // so the modal can still show lead info for those.
+            'client.lead.company',
+            'client.lead.user:id,name,team_id',
             'rates.originPort',
             'rates.destinationPort',
             'rates.container',
@@ -143,6 +175,8 @@ class ClientProposalController extends Controller
             return $proposal;
         });
 
+        $this->notifyProposalPending($proposal);
+
         return response()->json(['success' => true, 'data' => $proposal->load('rates')], 201);
     }
 
@@ -199,6 +233,8 @@ class ClientProposalController extends Controller
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
 
+        $this->notifyProposalDecision($proposal, $request->user(), 'approved');
+
         return response()->json(['success' => true, 'data' => $proposal]);
     }
 
@@ -220,6 +256,8 @@ class ClientProposalController extends Controller
             'decided_at' => now(),
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
+
+        $this->notifyProposalDecision($proposal, $request->user(), 'disapproved');
 
         return response()->json(['success' => true, 'data' => $proposal]);
     }
@@ -243,6 +281,8 @@ class ClientProposalController extends Controller
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
 
+        $this->notifyProposalDecision($proposal, $request->user(), 'rejected');
+
         return response()->json(['success' => true, 'data' => $proposal]);
     }
 
@@ -251,6 +291,10 @@ class ClientProposalController extends Controller
      */
     public function attachSigned(Request $request, ClientProposal $proposal)
     {
+        if (! $proposal->canBeSignedBy($request->user())) {
+            return response()->json(['success' => false, 'message' => 'Only the lead\'s team can upload the signed document.'], 403);
+        }
+
         if ($proposal->status !== ClientProposal::STATUS_APPROVED) {
             return response()->json(['success' => false, 'message' => 'Only approved proposals can be marked as signed.'], 422);
         }
@@ -326,6 +370,60 @@ class ClientProposalController extends Controller
         ]);
     }
 
+    /**
+     * A freshly-created (PENDING) proposal notifies the direct team leader(s)
+     * of its owner (the lead's assigned rep) that it needs approval - same
+     * direct-only rule as the CRM new-lead notification, not the wider
+     * cascading pyramid that canBeApprovedBy() allows for actually approving.
+     */
+    protected function notifyProposalPending(ClientProposal $proposal): void
+    {
+        $owner = $proposal->ownerUser();
+
+        if (!$owner) {
+            return;
+        }
+
+        TeamNotifier::notify(TeamNotifier::directLeaderIds($owner), [
+            'type' => 'proposal.pending',
+            'title' => 'Proposal awaiting your approval',
+            'message' => "{$proposal->code} for {$owner->name} needs your approval.",
+            'from_user_id' => $owner->id,
+            'notifiable' => $proposal,
+            'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
+            'email_subject' => "Approval needed — {$proposal->code}",
+            // Clicking this notification opens the Proposals page AND the
+            // specific proposal's modal - this one needs the team leader's
+            // eyes on it, not just a landing on the page (unlike the CRM
+            // new-lead notification, which only opens the CRM page).
+            'data' => ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
+        ]);
+    }
+
+    /**
+     * Once a decision is made (approved/disapproved/rejected), notify the
+     * proposal's creator - regardless of which authorization path decided it.
+     */
+    protected function notifyProposalDecision(ClientProposal $proposal, User $decidedBy, string $decision): void
+    {
+        $creator = $proposal->creator;
+
+        if (!$creator) {
+            return;
+        }
+
+        TeamNotifier::notify([$creator->id], [
+            'type' => "proposal.{$decision}",
+            'title' => "Proposal {$decision}",
+            'message' => "{$proposal->code} was {$decision} by {$decidedBy->name}.",
+            'from_user_id' => $decidedBy->id,
+            'notifiable' => $proposal,
+            'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
+            'email_subject' => "Your proposal was {$decision} — {$proposal->code}",
+            'data' => ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
+        ]);
+    }
+
     public function indexByLead(Request $request, $leadUuid)
     {
         $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
@@ -372,6 +470,8 @@ class ClientProposalController extends Controller
 
             return $proposal;
         });
+
+        $this->notifyProposalPending($proposal);
 
         return response()->json(['success' => true, 'data' => $proposal->load('rates')], 201);
     }

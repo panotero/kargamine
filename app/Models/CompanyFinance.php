@@ -27,6 +27,8 @@ class CompanyFinance extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'standard_billing_service' => 'boolean',
         'invoice_email' => 'boolean',
         'invoice_courier' => 'boolean',

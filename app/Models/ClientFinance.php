@@ -29,6 +29,8 @@ class ClientFinance extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'standard_billing_service' => 'boolean',
         'document_handling' => 'boolean',
         'billing_summary_report' => 'boolean',

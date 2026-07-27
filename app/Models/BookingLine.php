@@ -28,6 +28,8 @@ class BookingLine extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'quantity' => 'integer',
         'weight_kg' => 'decimal:2',
         'volume_cbm' => 'decimal:2',

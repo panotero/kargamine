@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class CourierInvoice extends Model
 {
+    protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+    ];
+
     use HasFactory;
 
     protected $table = 'courier_invoice';

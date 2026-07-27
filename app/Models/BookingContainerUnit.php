@@ -32,6 +32,8 @@ class BookingContainerUnit extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'unit_index' => 'integer',
         'status' => 'integer',
     ];

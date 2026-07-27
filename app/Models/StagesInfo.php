@@ -23,12 +23,14 @@ class StagesInfo extends Model
     ];
 
     protected $casts = [
-        'proposal_requested_date' => 'date',
-        'proposal_submitted_date' => 'date',
-        'negotiation_date' => 'date',
-        'won_awarded_date' => 'date',
-        'lost_closed_date' => 'date',
-        'forecast_transaction_month' => 'date',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'proposal_requested_date' => 'date:M d, Y',
+        'proposal_submitted_date' => 'date:M d, Y',
+        'negotiation_date' => 'date:M d, Y',
+        'won_awarded_date' => 'date:M d, Y',
+        'lost_closed_date' => 'date:M d, Y',
+        'forecast_transaction_month' => 'date:M d, Y',
         'monthly_sales_forecast' => 'decimal:2',
     ];
 

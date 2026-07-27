@@ -10,6 +10,8 @@ class Activity extends Model
     use HasFactory;
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'involved_office' => 'array',
     ];
     protected $fillable = [

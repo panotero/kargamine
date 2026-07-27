@@ -28,29 +28,6 @@
             {{ \App\Support\TailwindPalette::cssVariables('danger', $__theme->button_danger_color) }}
         }
     </style>
-    <script>
-        // Applies the app-wide dark-mode preference before first paint, to
-        // avoid a light/dark flash. Tailwind is set to `darkMode: 'class'`
-        // (see tailwind.config.js) precisely so this can force a mode
-        // instead of only ever following the OS (the old `media` default).
-        (function() {
-            const mode = @json($__theme->dark_mode);
-            const root = document.documentElement;
-
-            function applySystem() {
-                root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
-            }
-
-            if (mode === 'dark') {
-                root.classList.add('dark');
-            } else if (mode === 'light') {
-                root.classList.remove('dark');
-            } else {
-                applySystem();
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystem);
-            }
-        })();
-    </script>
 </head>
 
 <body class="font-sans antialiased [&_*]:duration-300">

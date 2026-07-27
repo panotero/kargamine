@@ -31,6 +31,8 @@ class CrmLeadContainer extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'dangerous_cargo' => 'boolean',
         'declared_value_per_unit' => 'decimal:2',
         'required_temperature' => 'decimal:2',

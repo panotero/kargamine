@@ -153,7 +153,7 @@ function showLoadingIndicator() {
   const el = document.createElement("div");
   el.id = "notificationsLoadingMore";
   el.className = "flex items-center justify-center py-3";
-  el.innerHTML = `<div class="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>`;
+  el.innerHTML = `<div class="w-5 h-5 border-2 border-zinc-300 dark:border-zinc-700 border-t-blue-500 rounded-full animate-spin"></div>`;
   container.appendChild(el);
 }
 
@@ -168,7 +168,7 @@ function renderNotifications(notifications, { append }) {
   if (!append) container.innerHTML = "";
 
   if (!append && notifications.length === 0) {
-    container.innerHTML = `<div class="px-4 py-6 text-sm text-center text-gray-500 dark:text-gray-400">No notifications</div>`;
+    container.innerHTML = `<div class="px-4 py-6 text-sm text-center text-zinc-400 dark:text-zinc-500">No notifications</div>`;
     return;
   }
 
@@ -180,13 +180,15 @@ function renderNotifications(notifications, { append }) {
 function buildNotificationItem(notification) {
   const item = document.createElement("div");
   item.className =
-    "cursor-pointer px-4 py-3 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600" +
-    (notification.is_read ? "" : " bg-blue-50 dark:bg-zinc-700/40");
+    "cursor-pointer flex items-start gap-3 px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800";
 
   item.innerHTML = `
-    <p class="text-sm text-gray-800 dark:text-gray-200 font-medium">${escapeHtml(notification.title)}</p>
-    <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${escapeHtml(notification.message)}</p>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${formatTimestamp(notification.created_at)}</p>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm text-zinc-900 dark:text-zinc-100 font-medium">${escapeHtml(notification.title)}</p>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">${escapeHtml(notification.message)}</p>
+      <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">${formatTimestamp(notification.created_at)}</p>
+    </div>
+    ${notification.is_read ? "" : `<span class="mt-1.5 h-2 w-2 rounded-full bg-red-500 shrink-0" title="Unread"></span>`}
   `;
 
   item.addEventListener("click", () => handleNotificationClick(notification));

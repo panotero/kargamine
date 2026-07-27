@@ -28,9 +28,11 @@ class Contract extends Model
     ];
 
     protected $casts = [
-        'signed_date' => 'datetime:Y-m-d h:i:s A',
-        'valid_from' => 'datetime:Y-m-d h:i:s A',
-        'valid_to' => 'datetime:Y-m-d h:i:s A',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'signed_date' => 'datetime:M d, Y, h:i A',
+        'valid_from' => 'datetime:M d, Y, h:i A',
+        'valid_to' => 'datetime:M d, Y, h:i A',
         'status' => 'integer',
     ];
 

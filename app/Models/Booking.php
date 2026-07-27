@@ -39,11 +39,13 @@ class Booking extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'status' => 'integer',
         'trucking_snapshot' => 'decimal:2',
         'vat_amount_snapshot' => 'decimal:2',
         'grand_total_snapshot' => 'decimal:2',
-        'booking_date' => 'date',
+        'booking_date' => 'date:M d, Y',
     ];
 
     public function uniqueIds(): array

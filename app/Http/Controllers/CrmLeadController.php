@@ -6,6 +6,9 @@ use App\Models\CrmCompanyInfo;
 use App\Models\CrmLead;
 use App\Models\CrmNote;
 use App\Services\FileUploadService;
+use App\Services\TeamNotifier;
+use App\Services\TeamService;
+use App\Support\RoleHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +27,14 @@ class CrmLeadController extends Controller
     //
     public function index(Request $request)
     {
+        // Team-scoped visibility: a regular member only sees leads assigned
+        // to them; a team leader sees leads assigned to anyone in their
+        // team's subtree (their team's members, and any descendant team's
+        // members/leaders). superadmin bypasses this entirely.
+        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+            ? null
+            : TeamService::accessibleUserIds($request->user());
+
         $leads = CrmLead::query()
             ->select(
                 'id',
@@ -41,6 +52,9 @@ class CrmLeadController extends Controller
                 'crmStatus:id,status',
                 'user:id,name',
             ])
+            ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
+                $q->whereIn('assigned_to', $visibleUserIds);
+            })
 
             // Search
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -73,7 +87,11 @@ class CrmLeadController extends Controller
             ->paginate($request->get('per_page', 25))
             ->appends($request->query());
 
-        $allLeads = CrmLead::with('crmStatus')->get();
+        $allLeads = CrmLead::with('crmStatus')
+            ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
+                $q->whereIn('assigned_to', $visibleUserIds);
+            })
+            ->get();
 
         $statusCounts = $allLeads
             ->groupBy(fn ($lead) => optional($lead->crmStatus)->status)
@@ -135,8 +153,9 @@ class CrmLeadController extends Controller
         }
 
         $data = $validator->validated();
+        $isNew = false;
 
-        $lead = DB::transaction(function () use ($data) {
+        $lead = DB::transaction(function () use ($data, &$isNew) {
             $lead = ! empty($data['uuid'])
                 ? CrmLead::where('uuid', $data['uuid'])->firstOrFail()
                 : new CrmLead(['uuid' => (string) Str::uuid()]);
@@ -190,6 +209,18 @@ class CrmLeadController extends Controller
 
             return $lead;
         });
+
+        if ($isNew) {
+            TeamNotifier::notify(TeamNotifier::directLeaderIds($request->user()), [
+                'type' => 'crm.lead_created',
+                'title' => 'New lead created',
+                'message' => "{$request->user()->name} added a new lead — {$lead->contact_name}.",
+                'from_user_id' => $request->user()->id,
+                'notifiable' => $lead,
+                'link' => ['title' => 'View in CRM', 'url' => '/page_crm'],
+                'email_subject' => "New Lead — {$lead->contact_name}",
+            ]);
+        }
 
         return response()->json(['success' => true, 'data' => $lead->load('company', 'addresses')]);
     }

@@ -39,6 +39,19 @@
 
         <div id="cpmDecisionInfo" class="text-xs text-zinc-500 hidden"></div>
 
+        {{-- Basic lead information --}}
+        <div id="cpmLeadInfo" class="border rounded-lg p-3 hidden">
+            <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Lead Information</p>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                <div><span class="text-zinc-400">Contact:</span> <span id="cpmLeadContact" class="font-medium">-</span></div>
+                <div><span class="text-zinc-400">Company:</span> <span id="cpmLeadCompany" class="font-medium">-</span></div>
+                <div><span class="text-zinc-400">Mobile:</span> <span id="cpmLeadMobile" class="font-medium">-</span></div>
+                <div><span class="text-zinc-400">Email:</span> <span id="cpmLeadEmail" class="font-medium">-</span></div>
+                <div><span class="text-zinc-400">Source:</span> <span id="cpmLeadSource" class="font-medium">-</span></div>
+                <div><span class="text-zinc-400">Assigned To:</span> <span id="cpmLeadAssignedTo" class="font-medium">-</span></div>
+            </div>
+        </div>
+
         <table class="w-full text-xs">
             <thead class="text-zinc-400 uppercase">
                 <tr>
@@ -233,6 +246,11 @@
             });
         });
 
+        // Exposed globally so notificationController.js's data.modal_fn hook
+        // (fired after navigating here from a proposal notification) can
+        // call it directly by name once this page's script has run.
+        window.openProposalModal = openProposalModal;
+
         async function openProposalModal(id) {
             const response = await apiCall({
                 mode: 'GET',
@@ -256,6 +274,23 @@
             document.getElementById('cpmClientName').textContent =
                 `${p.client?.company_name ?? '-'} (${p.client?.customer_code ?? '-'})`;
             document.getElementById('cpmStatusBadge').innerHTML = statusPill(p.status);
+
+            // Client-scoped proposals don't carry lead_id directly - fall back
+            // to the client's originating lead, same as ClientProposal::ownerUser().
+            const leadInfo = p.lead ?? p.client?.lead ?? null;
+            const leadInfoEl = document.getElementById('cpmLeadInfo');
+            if (leadInfo) {
+                document.getElementById('cpmLeadContact').textContent =
+                    leadInfo.position ? `${leadInfo.contact_name} (${leadInfo.position})` : (leadInfo.contact_name ?? '-');
+                document.getElementById('cpmLeadCompany').textContent = leadInfo.company?.company_name ?? '-';
+                document.getElementById('cpmLeadMobile').textContent = leadInfo.mobile ?? '-';
+                document.getElementById('cpmLeadEmail').textContent = leadInfo.email ?? '-';
+                document.getElementById('cpmLeadSource').textContent = leadInfo.source ?? '-';
+                document.getElementById('cpmLeadAssignedTo').textContent = leadInfo.user?.name ?? '-';
+                leadInfoEl.classList.remove('hidden');
+            } else {
+                leadInfoEl.classList.add('hidden');
+            }
 
             const decisionInfo = document.getElementById('cpmDecisionInfo');
             if (p.decided_by) {
@@ -282,7 +317,7 @@
             toggle('cpmApproveBtn', p.status === 1 && p.can_approve);
             toggle('cpmDisapproveBtn', p.status === 1 && p.can_approve);
             toggle('cpmRejectBtn', [1, 2].includes(p.status) && p.can_reject);
-            toggle('cpmSignedSection', p.status === 2);
+            toggle('cpmSignedSection', p.status === 2 && p.can_upload_signed);
             toggle('cpmDownloadLink', [2, 4].includes(p.status));
             // A lead-scoped accepted proposal (no client yet) has nowhere to
             // attach a contract - it needs to become a client first.

@@ -56,6 +56,14 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '6',
             ],
             [
+                'title' => 'Container Inventory',
+                'icon' => 'fas fa-box',
+                'link' => '/page_container_inventory',
+                'allowed_roles' => ['1', '2', '3', '4'],
+                'parent_title' => null,
+                'menu_order' => '5',
+            ],
+            [
                 'title' => 'Users',
                 'icon' => 'fas fa-users',
                 'link' => '/page_usermanagement',

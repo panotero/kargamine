@@ -45,17 +45,17 @@ class MailerController extends Controller
                 'required'
             ],
             'mail_username' => [
-                'required',
+                'nullable',
                 'string',
 
             ],
             'mail_password' => [
-                'required',
+                'nullable',
                 'string',
 
             ],
             'mail_encryption' => [
-                'required',
+                'nullable',
                 'string',
 
             ],
@@ -83,9 +83,9 @@ class MailerController extends Controller
                 'mail_mailer' => 'required|string',
                 'mail_host' => 'required|string',
                 'mail_port' => 'required',
-                'mail_username' => 'required|string',
-                'mail_password' => 'required|string',
-                'mail_encryption' => 'required|string',
+                'mail_username' => 'nullable|string',
+                'mail_password' => 'nullable|string',
+                'mail_encryption' => 'nullable|string',
                 'mail_from_address' => 'required|email',
                 'mail_from_name' => 'required|string',
             ]);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TeamService;
 use App\Support\RoleHelper;
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,13 +37,15 @@ class ClientProposal extends Model
     ];
 
     protected $casts = [
-        'signed_at' => 'datetime',
-        'decided_at' => 'datetime',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'signed_at' => 'datetime:M d, Y, h:i A',
+        'decided_at' => 'datetime:M d, Y, h:i A',
     ];
 
     // Computed permission flags travel with every JSON response, so the
-    // frontend never re-implements this logic - it just reads p.can_approve / p.can_reject.
-    protected $appends = ['can_approve', 'can_reject'];
+    // frontend never re-implements this logic - it just reads p.can_approve / p.can_reject / p.can_upload_signed.
+    protected $appends = ['can_approve', 'can_reject', 'can_upload_signed'];
 
     public function client()
     {
@@ -75,9 +78,33 @@ class ClientProposal extends Model
         return $this->belongsTo(User::class, 'decided_by');
     }
 
+    /**
+     * Approval now follows the team hierarchy instead of the old
+     * approver_roles config: only the team leader over the lead's assigned
+     * rep (their own team leader, or a leader further up the pyramid) may
+     * approve/disapprove - superadmin always can, regardless of team.
+     */
     public function canBeApprovedBy(?User $user): bool
     {
-        return RoleHelper::hasAnyRole($user, config('client_proposal_workflow.approver_roles', []));
+        if (!$user) {
+            return false;
+        }
+
+        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+            return true;
+        }
+
+        if (!$user->is_team_leader || !$user->team_id) {
+            return false;
+        }
+
+        $ownerTeamId = $this->ownerUser()?->team_id;
+
+        if (!$ownerTeamId) {
+            return false;
+        }
+
+        return TeamService::accessibleTeamIds($user)->contains($ownerTeamId);
     }
 
     public function canBeRejectedBy(?User $user): bool
@@ -95,6 +122,30 @@ class ClientProposal extends Model
         return $this->client && (int) $this->client->sales_rep_id === (int) $user->id;
     }
 
+    /**
+     * Uploading the signed document is a team-member action (leader
+     * included): anyone within the lead's assigned rep's team, or within a
+     * leader's accessible subtree that reaches that team, can upload it.
+     */
+    public function canBeSignedBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+            return true;
+        }
+
+        $ownerTeamId = $this->ownerUser()?->team_id;
+
+        if (!$ownerTeamId || !$user->team_id) {
+            return false;
+        }
+
+        return TeamService::accessibleTeamIds($user)->contains($ownerTeamId);
+    }
+
     public function getCanApproveAttribute(): bool
     {
         return $this->canBeApprovedBy(auth()->user());
@@ -104,8 +155,24 @@ class ClientProposal extends Model
     {
         return $this->canBeRejectedBy(auth()->user());
     }
+
+    public function getCanUploadSignedAttribute(): bool
+    {
+        return $this->canBeSignedBy(auth()->user());
+    }
     public function lead()
     {
         return $this->belongsTo(CrmLead::class, 'lead_id');
+    }
+
+    /**
+     * The user this proposal "belongs to" for team-scoping purposes: its own
+     * lead's assigned rep, or - for proposals created via the client-scoped
+     * store() path, which never sets lead_id - the client's originating
+     * lead's assigned rep instead.
+     */
+    public function ownerUser(): ?User
+    {
+        return $this->lead?->user ?? $this->client?->lead?->user;
     }
 }

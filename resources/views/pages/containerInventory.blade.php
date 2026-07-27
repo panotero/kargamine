@@ -1,9 +1,10 @@
 <div class="container mx-auto px-4 py-6">
 
     <div class="flex items-center justify-between mb-6">
+
         <div>
-            <h1 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Container Inventory</h1>
-            <p class="text-sm text-zinc-500 mt-1">The company's physical container fleet — status, and where each
+            <h1 class="text-2xl font-bold">Container Inventory</h1>
+            <p class="text-zinc-500">The company's physical container fleet — status, and where each
                 one currently is.</p>
         </div>
         <button type="button" id="btnRegisterContainer"
@@ -77,14 +78,16 @@
         </div>
         <div>
             <label class="block text-xs font-semibold text-zinc-500 mb-1">Current Port</label>
-            <select name="current_port_id" class="w-full border border-zinc-200 rounded-lg px-3 py-2 registerPortSelect dark:text-zinc-900">
+            <select name="current_port_id"
+                class="w-full border border-zinc-200 rounded-lg px-3 py-2 registerPortSelect dark:text-zinc-900">
                 <option value="">Not set yet</option>
             </select>
         </div>
         <div>
             <label class="block text-xs font-semibold text-zinc-500 mb-1">Pier / Yard Reference</label>
             <input type="text" name="current_pier_reference" maxlength="100"
-                class="w-full border border-zinc-200 rounded-lg px-3 py-2 dark:text-zinc-900" placeholder="e.g. Pier 3 / Yard B">
+                class="w-full border border-zinc-200 rounded-lg px-3 py-2 dark:text-zinc-900"
+                placeholder="e.g. Pier 3 / Yard B">
         </div>
 
         <div class="border-t pt-4 flex justify-end gap-2">
@@ -121,7 +124,8 @@
 
         <div>
             <p class="font-semibold text-xs text-zinc-500 uppercase mb-2">Location</p>
-            <div id="caMap" class="w-full h-56 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-xs text-zinc-400">
+            <div id="caMap"
+                class="w-full h-56 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-xs text-zinc-400">
                 Loading map…
             </div>
         </div>
@@ -147,13 +151,15 @@
             <div class="flex flex-wrap items-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <div class="flex-1 min-w-[10rem]">
                     <label class="block text-[11px] font-semibold text-zinc-500 mb-1">Relocate to port</label>
-                    <select id="caRelocatePort" class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900">
+                    <select id="caRelocatePort"
+                        class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900">
                         <option value="">Select port</option>
                     </select>
                 </div>
                 <div class="flex-1 min-w-[10rem]">
                     <label class="block text-[11px] font-semibold text-zinc-500 mb-1">Pier / Yard reference</label>
-                    <input type="text" id="caRelocatePierRef" class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900">
+                    <input type="text" id="caRelocatePierRef"
+                        class="w-full border border-zinc-200 rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900">
                 </div>
                 <button type="button" id="caRelocateBtn"
                     class="px-3 py-1.5 text-xs rounded-lg bg-zinc-700 hover:bg-zinc-800 text-white">
@@ -239,7 +245,8 @@
             ).join('');
 
             document.getElementById('filterVariant').insertAdjacentHTML('beforeend', options);
-            document.querySelectorAll('.registerVariantSelect').forEach((el) => el.insertAdjacentHTML('beforeend', options));
+            document.querySelectorAll('.registerVariantSelect').forEach((el) => el.insertAdjacentHTML(
+                'beforeend', options));
         }
 
         async function loadPortOptions() {
@@ -250,9 +257,11 @@
             if (!response.success) return;
 
             const rows = response.data?.data ?? [];
-            const options = rows.map((p) => `<option value="${p.port_id}">${p.name} (${p.code})</option>`).join('');
+            const options = rows.map((p) => `<option value="${p.port_id}">${p.name} (${p.code})</option>`).join(
+                '');
 
-            document.querySelectorAll('.registerPortSelect').forEach((el) => el.insertAdjacentHTML('beforeend', options));
+            document.querySelectorAll('.registerPortSelect').forEach((el) => el.insertAdjacentHTML('beforeend',
+                options));
             document.getElementById('caRelocatePort').insertAdjacentHTML('beforeend', options);
         }
 
@@ -305,7 +314,8 @@
 
         document.querySelectorAll('.assetStatusBtn').forEach((btn) => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.assetStatusBtn').forEach((b) => b.classList.remove('ring-2', 'ring-blue-500'));
+                document.querySelectorAll('.assetStatusBtn').forEach((b) => b.classList.remove(
+                    'ring-2', 'ring-blue-500'));
                 this.classList.add('ring-2', 'ring-blue-500');
                 table.setFilter('status', this.dataset.status);
             });

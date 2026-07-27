@@ -22,8 +22,9 @@ class NotificationService
      *     link?: array{title?: string, url?: string},
      *     data?: array,
      *     target: array{
-     *         type: 'user'|'role'|'department',
+     *         type: 'user'|'users'|'role'|'department',
      *         user_id?: int,
+     *         user_ids?: int[],
      *         role?: string,
      *         department_id?: int,
      *     },
@@ -74,6 +75,7 @@ class NotificationService
 
         return match ($type) {
             'user' => collect([$target['user_id'] ?? null])->filter()->map(fn ($id) => (int) $id),
+            'users' => collect($target['user_ids'] ?? [])->filter()->map(fn ($id) => (int) $id)->unique()->values(),
             'role' => static::resolveRoleUserIds($target['role'] ?? null),
             'department' => static::resolveDepartmentUserIds($target['department_id'] ?? null),
             default => throw new InvalidArgumentException("Invalid notification target type: {$type}"),

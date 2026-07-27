@@ -554,6 +554,12 @@
         let currentClientUuid = null;
         let currentClientData = null;
 
+        // Exposed globally so callers on other pages (e.g. the Dashboard's
+        // Top Clients widget) can navigate here then open a specific
+        // client's modal, same pattern as notificationController.js's
+        // data.modal_fn hook.
+        window.openClientDetailModal = openClientDetailModal;
+
         async function openClientDetailModal(uuid) {
             currentClientUuid = uuid;
 
@@ -1226,15 +1232,32 @@
             }
 
             container.innerHTML = response.data.map((c) => `
-                <div class="contract-row border rounded-xl p-4 flex justify-between items-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800" data-contract-id="${c.id}">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <p class="font-semibold text-sm">${c.code}</p>
-                            ${contractStatusBadge(c.status)}
+                <div class="contract-row border rounded-xl p-4 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800" data-contract-id="${c.id}">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="font-semibold text-sm">${c.code}</p>
+                                ${contractStatusBadge(c.status)}
+                            </div>
+                            <p class="text-xs text-zinc-400">${c.valid_from} → ${c.valid_to}</p>
                         </div>
-                        <p class="text-xs text-zinc-400">${c.valid_from} → ${c.valid_to}</p>
+                        ${c.status === 2 ? `
+                            <button type="button" class="contract-terminate-btn shrink-0 text-[11px] px-2 py-1 rounded-md border border-red-200 dark:border-red-900 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40" data-contract-id="${c.id}" title="Terminate this contract">
+                                Terminate
+                            </button>
+                        ` : ''}
                     </div>
-                    <p class="text-xs text-zinc-500">${c.rates?.length ?? 0} rate line(s)</p>
+
+                    ${(c.rates ?? []).length ? `
+                        <div class="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-1">
+                            ${c.rates.map((r) => `
+                                <div class="flex justify-between items-center gap-3 text-xs">
+                                    <span class="text-zinc-500 dark:text-zinc-400 truncate">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'} · ${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</span>
+                                    <span class="font-medium text-zinc-700 dark:text-zinc-200 shrink-0">${Number(r.final_rate).toLocaleString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `<p class="text-xs text-zinc-400 mt-2">No rate lines.</p>`}
                 </div>
             `).join('');
 
@@ -1248,6 +1271,51 @@
                     });
                 });
             });
+
+            document.querySelectorAll('.contract-terminate-btn').forEach((btn) => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    terminateContractFromCard(Number(this.dataset.contractId), uuid);
+                });
+            });
+        }
+
+        async function terminateContractFromCard(contractId, uuid) {
+            const reason = window.prompt('Reason for terminating this contract:');
+            if (reason === null) return;
+
+            if (!reason.trim()) {
+                showMessage({
+                    status: 'error',
+                    title: 'Reason required',
+                    message: 'Please provide a reason to terminate this contract.'
+                });
+                return;
+            }
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: {
+                    reason: reason.trim()
+                },
+                url: `/api/clientContracts/${contractId}/terminate`,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to terminate contract',
+                    message: response.message ?? 'An unexpected error occurred.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Contract terminated'
+            });
+            loadContracts(uuid);
         }
 
         // ================= PROPOSALS LIST =================
@@ -1347,7 +1415,7 @@
                 </tbody>
             </table>
 
-            ${p.status === 2 ? `
+            ${p.status === 2 && p.can_upload_signed ? `
                 <div class="flex items-center gap-2 mt-3 pt-3 border-t">
                     <input type="file" class="cpm-signed-file flex-1 border rounded-lg px-2 py-1.5 text-xs dark:text-zinc-900" accept=".pdf,.jpg,.jpeg,.png">
                     <button type="button" class="cpm-upload-signed-btn text-xs px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white shrink-0" data-proposal-id="${p.id}">
@@ -1630,7 +1698,7 @@
                             ${edited ? '<span class="ml-1 text-[10px] font-normal text-amber-600">(edited)</span>' : ''}
                         </td>
                         <td class="py-1.5 px-2 text-right">
-                            <button type="button" class="cc-edit-btn text-zinc-400 hover:text-zinc-700" title="Edit this rate">✎</button>
+                            <button type="button" class="cc-edit-btn text-base leading-none px-1.5 py-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Edit this rate">✎</button>
                         </td>
                     </tr>`;
             }
@@ -1656,8 +1724,10 @@
                         <input type="number" step="0.01" min="0" class="cc-input-final w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.final_rate}">
                     </td>
                     <td class="py-1.5 px-2 text-right whitespace-nowrap">
-                        <button type="button" class="cc-apply-btn text-green-600 hover:text-green-700" title="Apply">✓</button>
-                        <button type="button" class="cc-cancel-btn text-zinc-400 hover:text-zinc-700" title="Cancel">✕</button>
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button type="button" class="cc-apply-btn text-base leading-none px-1.5 py-1 rounded text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/40" title="Apply">✓</button>
+                            <button type="button" class="cc-cancel-btn text-base leading-none px-1.5 py-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Cancel">✕</button>
+                        </div>
                     </td>
                 </tr>`;
         }

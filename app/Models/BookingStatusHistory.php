@@ -19,9 +19,11 @@ class BookingStatusHistory extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'from_status' => 'integer',
         'to_status' => 'integer',
-        'changed_at' => 'datetime',
+        'changed_at' => 'datetime:M d, Y, h:i A',
     ];
 
     public function booking(): BelongsTo

@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class AppThemeSetting extends Model
 {
+    protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+    ];
+
     protected $fillable = [
         'main_color',
         'accent_color',

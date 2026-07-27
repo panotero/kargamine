@@ -9,6 +9,7 @@ use App\Http\Controllers\CrmActivityController;
 use App\Http\Controllers\CrmLeadController;
 use App\Http\Controllers\CrmNoteController;
 use App\Http\Controllers\CrmStatusController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ListOfValueController;
 use App\Http\Controllers\LovController;
 use App\Http\Controllers\MailerController;
@@ -35,6 +36,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/load_menu', [MenusController::class, 'index']);
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread-count', [NotificationController::class, 'unreadCount']);

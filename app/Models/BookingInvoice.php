@@ -30,9 +30,11 @@ class BookingInvoice extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'status' => 'integer',
         'amount' => 'decimal:2',
-        'due_date' => 'date',
+        'due_date' => 'date:M d, Y',
     ];
 
     /**

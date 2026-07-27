@@ -20,8 +20,10 @@ class LaneTariffRate extends Model
     ];
 
     protected $casts = [
-        'effective_date' => 'date',
-        'end_date' => 'date',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'effective_date' => 'date:M d, Y',
+        'end_date' => 'date:M d, Y',
         'is_active' => 'boolean',
     ];
 

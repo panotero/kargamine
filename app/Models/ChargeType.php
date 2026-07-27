@@ -16,6 +16,8 @@ class ChargeType extends Model
     protected $fillable = ['code', 'name', 'applicable_to', 'is_active'];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'is_active' => 'boolean',
     ];
 

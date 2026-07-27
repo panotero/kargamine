@@ -1,9 +1,10 @@
 <div class="container mx-auto px-4 py-6">
 
     <div class="flex items-center justify-between mb-6">
+
         <div>
-            <h1 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Bookings</h1>
-            <p class="text-sm text-zinc-500 mt-1">Client shipments — from Draft through Delivered.</p>
+            <h1 class="text-2xl font-bold">Bookings</h1>
+            <p class="text-zinc-500">Client shipments — from Draft through Delivered.</p>
         </div>
         <button type="button" id="btnNewBooking"
             class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
@@ -97,17 +98,30 @@
             </div>
         </div>
 
-        <div id="vbChargesContainer" class="grid grid-cols-2 gap-3 text-sm border-t border-zinc-100 dark:border-zinc-800 pt-3"></div>
+        <div id="vbChargesContainer"
+            class="grid grid-cols-2 gap-3 text-sm border-t border-zinc-100 dark:border-zinc-800 pt-3"></div>
 
         <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 space-y-3" id="vbActions">
             <p class="font-semibold text-xs text-zinc-500 uppercase">Actions</p>
             <div class="flex flex-wrap gap-2">
-                <button type="button" id="vbConfirmBtn" class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white">Confirm Booking</button>
-                <button type="button" id="vbMarkInTransitBtn" class="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Mark In Transit</button>
-                <button type="button" id="vbMarkDeliveredBtn" class="px-3 py-1.5 text-xs rounded-lg bg-teal-600 hover:bg-teal-700 text-white">Mark Delivered</button>
-                <button type="button" id="vbMarkCompletedBtn" class="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white">Close Out</button>
-                <button type="button" id="vbCancelBtn" class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Cancel Booking</button>
-                <a href="#" id="vbDownloadBolBtn" target="_blank" class="hidden px-3 py-1.5 text-xs rounded-lg bg-zinc-700 hover:bg-zinc-800 text-white">Download Bill of Lading</a>
+                <button type="button" id="vbConfirmBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-700 text-white">Confirm
+                    Booking</button>
+                <button type="button" id="vbMarkInTransitBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Mark In
+                    Transit</button>
+                <button type="button" id="vbMarkDeliveredBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-teal-600 hover:bg-teal-700 text-white">Mark
+                    Delivered</button>
+                <button type="button" id="vbMarkCompletedBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white">Close
+                    Out</button>
+                <button type="button" id="vbCancelBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Cancel
+                    Booking</button>
+                <a href="#" id="vbDownloadBolBtn" target="_blank"
+                    class="hidden px-3 py-1.5 text-xs rounded-lg bg-zinc-700 hover:bg-zinc-800 text-white">Download
+                    Bill of Lading</a>
             </div>
 
             <div id="vbCancelReasonPanel" class="hidden pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
@@ -116,8 +130,11 @@
                     class="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-xs bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                     placeholder="Why is this booking being cancelled?"></textarea>
                 <div class="flex gap-2">
-                    <button type="button" id="vbCancelConfirmBtn" class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Confirm Cancellation</button>
-                    <button type="button" id="vbCancelDismissBtn" class="px-3 py-1.5 text-xs rounded-lg border">Nevermind</button>
+                    <button type="button" id="vbCancelConfirmBtn"
+                        class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Confirm
+                        Cancellation</button>
+                    <button type="button" id="vbCancelDismissBtn"
+                        class="px-3 py-1.5 text-xs rounded-lg border">Nevermind</button>
                 </div>
             </div>
         </div>
@@ -141,33 +158,65 @@
 <script>
     (function() {
         const STATUS_MAPPING = {
-            1: { label: 'Draft', classes: 'bg-zinc-100 text-zinc-600' },
-            2: { label: 'Confirmed', classes: 'bg-blue-50 text-blue-700' },
-            3: { label: 'In Transit', classes: 'bg-indigo-50 text-indigo-700' },
-            4: { label: 'Delivered', classes: 'bg-teal-50 text-teal-700' },
-            5: { label: 'Completed', classes: 'bg-emerald-50 text-emerald-700' },
-            6: { label: 'Cancelled', classes: 'bg-red-50 text-red-700' },
+            1: {
+                label: 'Draft',
+                classes: 'bg-zinc-100 text-zinc-600'
+            },
+            2: {
+                label: 'Confirmed',
+                classes: 'bg-blue-50 text-blue-700'
+            },
+            3: {
+                label: 'In Transit',
+                classes: 'bg-indigo-50 text-indigo-700'
+            },
+            4: {
+                label: 'Delivered',
+                classes: 'bg-teal-50 text-teal-700'
+            },
+            5: {
+                label: 'Completed',
+                classes: 'bg-emerald-50 text-emerald-700'
+            },
+            6: {
+                label: 'Cancelled',
+                classes: 'bg-red-50 text-red-700'
+            },
         };
 
-        const INVOICE_STATUS_LABELS = { 1: 'Draft', 2: 'Sent', 3: 'Paid', 4: 'Void' };
+        const INVOICE_STATUS_LABELS = {
+            1: 'Draft',
+            2: 'Sent',
+            3: 'Paid',
+            4: 'Void'
+        };
 
         let currentBookingUuid = null;
         let table = null;
 
         function statusBadge(status) {
-            const meta = STATUS_MAPPING[status] ?? { label: 'Unknown', classes: 'bg-zinc-100 text-zinc-500' };
+            const meta = STATUS_MAPPING[status] ?? {
+                label: 'Unknown',
+                classes: 'bg-zinc-100 text-zinc-500'
+            };
             return `<span class="inline-flex items-center rounded-full ${meta.classes} px-2 py-0.5 text-xs font-medium">${meta.label}</span>`;
         }
 
         function money(v) {
-            return Number(v ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return Number(v ?? 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
         }
 
         // -----------------------------------------------------------------
         // List
         // -----------------------------------------------------------------
         async function loadBookings() {
-            const response = await apiCall({ mode: 'GET', url: '/api/bookings' });
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/bookings'
+            });
             if (!response.success) return;
             updateCounts(response.status_counts);
             table.load(1);
@@ -185,14 +234,41 @@
         }
 
         function renderTable() {
-            const thead = [
-                { title: 'Code', key: 'code', render: (r) => r.code ?? '-' },
-                { title: 'Client', key: 'client.company_name', render: (r) => r.client?.company_name ?? '-' },
-                { title: 'Lane', key: 'lane', render: (r) => `${r.lane?.origin_port?.code ?? '-'} &rarr; ${r.lane?.destination_port?.code ?? '-'}` },
-                { title: 'Delivery Type', key: 'delivery_type.name', render: (r) => r.delivery_type?.name ?? '-' },
-                { title: 'Booking Date', key: 'booking_date' },
-                { title: 'Status', key: 'status', render: (r) => statusBadge(r.status) },
-                { title: 'Grand Total', key: 'grand_total_snapshot', render: (r) => money(r.grand_total_snapshot) },
+            const thead = [{
+                    title: 'Code',
+                    key: 'code',
+                    render: (r) => r.code ?? '-'
+                },
+                {
+                    title: 'Client',
+                    key: 'client.company_name',
+                    render: (r) => r.client?.company_name ?? '-'
+                },
+                {
+                    title: 'Lane',
+                    key: 'lane',
+                    render: (r) =>
+                        `${r.lane?.origin_port?.code ?? '-'} &rarr; ${r.lane?.destination_port?.code ?? '-'}`
+                },
+                {
+                    title: 'Delivery Type',
+                    key: 'delivery_type.name',
+                    render: (r) => r.delivery_type?.name ?? '-'
+                },
+                {
+                    title: 'Booking Date',
+                    key: 'booking_date'
+                },
+                {
+                    title: 'Status',
+                    key: 'status',
+                    render: (r) => statusBadge(r.status)
+                },
+                {
+                    title: 'Grand Total',
+                    key: 'grand_total_snapshot',
+                    render: (r) => money(r.grand_total_snapshot)
+                },
             ];
 
             return renderRemoteTable({
@@ -208,7 +284,10 @@
                 const data = JSON.parse(row.dataset.row);
                 if (Number(data.status) === 1) {
                     window.bookingFormUuid = data.uuid;
-                    loadPage({ title: 'Edit Booking', link: '/page_bookingForm' });
+                    loadPage({
+                        title: 'Edit Booking',
+                        link: '/page_bookingForm'
+                    });
                     return;
                 }
                 openViewBooking(data.uuid);
@@ -217,7 +296,8 @@
 
         document.querySelectorAll('.bookingStatusBtn').forEach((btn) => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.bookingStatusBtn').forEach((b) => b.classList.remove('ring-2', 'ring-blue-500'));
+                document.querySelectorAll('.bookingStatusBtn').forEach((b) => b.classList.remove(
+                    'ring-2', 'ring-blue-500'));
                 this.classList.add('ring-2', 'ring-blue-500');
                 table.setFilter('status', this.dataset.status);
             });
@@ -225,17 +305,27 @@
 
         document.getElementById('btnNewBooking').addEventListener('click', function() {
             window.bookingFormUuid = null;
-            loadPage({ title: 'New Booking', link: '/page_bookingForm' });
+            loadPage({
+                title: 'New Booking',
+                link: '/page_bookingForm'
+            });
         });
 
         // -----------------------------------------------------------------
         // View modal
         // -----------------------------------------------------------------
         async function openViewBooking(uuid) {
-            const response = await apiCall({ mode: 'GET', url: `/api/bookings/${uuid}` });
+            const response = await apiCall({
+                mode: 'GET',
+                url: `/api/bookings/${uuid}`
+            });
 
             if (!response.success) {
-                showMessage({ status: 'error', title: 'Error', message: 'Unable to load this booking.' });
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to load this booking.'
+                });
                 return;
             }
 
@@ -244,7 +334,8 @@
 
             document.getElementById('vbCode').textContent = booking.code;
             document.getElementById('vbStatusBadge').innerHTML = statusBadge(booking.status);
-            document.getElementById('vbClientName').textContent = `${booking.client?.company_name ?? '-'} (${booking.client?.customer_code ?? '-'})`;
+            document.getElementById('vbClientName').textContent =
+                `${booking.client?.company_name ?? '-'} (${booking.client?.customer_code ?? '-'})`;
 
             document.getElementById('vbInfoContainer').innerHTML = `
                 <div><span class="text-zinc-400">Lane:</span> <div class="font-medium">${booking.lane?.origin_port?.name ?? '-'} &rarr; ${booking.lane?.destination_port?.name ?? '-'}</div></div>
@@ -254,11 +345,15 @@
             `;
 
             const lineRows = (booking.lines ?? []).map((line) => {
-                const variantLabel = `${line.container?.name ?? '-'} / ${line.container_class?.class ?? '-'} / ${line.container_size?.size ?? '-'}`;
-                const units = (line.container_units ?? []).map((u) => u.container_asset?.container_no ?? 'Not yet assigned').join(', ');
-                const discount = line.discount_type_snapshot
-                    ? (line.discount_type_snapshot === 'percentage' ? `${Number(line.discount_value_snapshot).toFixed(2)}%` : money(line.discount_value_snapshot))
-                    : '-';
+                const variantLabel =
+                    `${line.container?.name ?? '-'} / ${line.container_class?.class ?? '-'} / ${line.container_size?.size ?? '-'}`;
+                const units = (line.container_units ?? []).map((u) => u.container_asset?.container_no ??
+                    'Not yet assigned').join(', ');
+                const discount = line.discount_type_snapshot ?
+                    (line.discount_type_snapshot === 'percentage' ?
+                        `${Number(line.discount_value_snapshot).toFixed(2)}%` : money(line
+                            .discount_value_snapshot)) :
+                    '-';
 
                 return `
                     <tr>
@@ -275,7 +370,8 @@
             document.getElementById('vbLinesBody').innerHTML = lineRows ||
                 '<tr><td colspan="6" class="px-3 py-4 text-center text-zinc-400">No cargo lines.</td></tr>';
 
-            const portChargesTotal = (booking.port_charges ?? []).reduce((sum, c) => sum + Number(c.amount_snapshot ?? 0), 0);
+            const portChargesTotal = (booking.port_charges ?? []).reduce((sum, c) => sum + Number(c
+                .amount_snapshot ?? 0), 0);
 
             document.getElementById('vbChargesContainer').innerHTML = `
                 <div><span class="text-zinc-400">Port Charges:</span> <div class="font-medium">${money(portChargesTotal)}</div></div>
@@ -288,7 +384,9 @@
             renderInvoice(booking);
             renderTimeline(booking.status_history ?? []);
 
-            initModal({ modalId: 'viewBookingModal' });
+            initModal({
+                modalId: 'viewBookingModal'
+            });
         }
 
         function renderActions(booking) {
@@ -353,14 +451,26 @@
         }
 
         async function performAction(url, payload, successTitle) {
-            const response = await apiCall({ mode: 'POST', isJson: true, payload: payload ?? {}, url });
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: payload ?? {},
+                url
+            });
 
             if (!response.success) {
-                showMessage({ status: 'error', title: 'Unable to complete action', message: response.message ?? '' });
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to complete action',
+                    message: response.message ?? ''
+                });
                 return;
             }
 
-            showMessage({ status: 'success', title: successTitle });
+            showMessage({
+                status: 'success',
+                title: successTitle
+            });
             await openViewBooking(currentBookingUuid);
             await loadBookings();
         }
@@ -395,7 +505,9 @@
                 return;
             }
 
-            performAction(`/api/bookings/${currentBookingUuid}/cancel`, { reason }, 'Booking cancelled');
+            performAction(`/api/bookings/${currentBookingUuid}/cancel`, {
+                reason
+            }, 'Booking cancelled');
         });
 
         // -----------------------------------------------------------------

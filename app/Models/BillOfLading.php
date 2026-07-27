@@ -16,7 +16,9 @@ class BillOfLading extends Model
     ];
 
     protected $casts = [
-        'issued_at' => 'datetime',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'issued_at' => 'datetime:M d, Y, h:i A',
     ];
 
     /**

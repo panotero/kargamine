@@ -36,10 +36,12 @@ class ClientContract extends Model
     ];
 
     protected $casts = [
-        'signed_date' => 'date',
-        'valid_from' => 'date',
-        'valid_to' => 'date',
-        'terminated_at' => 'datetime',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'signed_date' => 'date:M d, Y',
+        'valid_from' => 'date:M d, Y',
+        'valid_to' => 'date:M d, Y',
+        'terminated_at' => 'datetime:M d, Y, h:i A',
     ];
 
     public function client()
@@ -65,5 +67,20 @@ class ClientContract extends Model
     public function terminator()
     {
         return $this->belongsTo(User::class, 'terminated_by');
+    }
+
+    /**
+     * Team-scoped visibility, same rule as CRM leads/Proposals/Clients. A
+     * contract always has a client (creation is guarded on it), so this just
+     * delegates to ClientMaster::scopeVisibleTo() via that relation rather
+     * than re-deriving the lead fallback chain through the proposal.
+     */
+    public function scopeVisibleTo($query, ?array $userIds)
+    {
+        if ($userIds === null) {
+            return $query;
+        }
+
+        return $query->whereHas('client', fn ($q) => $q->visibleTo($userIds));
     }
 }

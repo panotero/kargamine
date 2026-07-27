@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class NavMenu extends Model
 {
+    protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+    ];
+
     protected $table = 'nav_menus';
     // App\Models\NavMenu.php
 

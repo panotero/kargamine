@@ -12,6 +12,8 @@ class BookingPortCharge extends Model
     protected $fillable = ['booking_id', 'port_id', 'charge_type_id', 'role', 'amount_snapshot'];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'amount_snapshot' => 'decimal:2',
     ];
 

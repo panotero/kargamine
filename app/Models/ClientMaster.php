@@ -28,7 +28,9 @@ class ClientMaster extends Model
     ];
 
     protected $casts = [
-        'business_start_date' => 'date',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'business_start_date' => 'date:M d, Y',
         'estimated_annual_revenue' => 'decimal:2',
         'is_complete' => 'boolean',
     ];
@@ -41,6 +43,48 @@ class ClientMaster extends Model
     public function addresses()
     {
         return $this->hasMany(ClientAddress::class, 'client_id');
+    }
+
+    public function contracts()
+    {
+        return $this->hasMany(ClientContract::class, 'client_id');
+    }
+
+    public function proposals()
+    {
+        return $this->hasMany(ClientProposal::class, 'client_id');
+    }
+
+    /**
+     * The user this client "belongs to" for team-scoping - its own
+     * sales_rep_id, falling back to the originating lead's assigned rep for
+     * clients created before a sales rep was assigned (sales_rep_id is a
+     * stage-3 field, not set at creation).
+     */
+    public function ownerUserId(): ?int
+    {
+        return $this->sales_rep_id ?? $this->lead?->assigned_to;
+    }
+
+    /**
+     * Team-scoped visibility, same rule as CRM leads/Proposals: pass
+     * TeamService::accessibleUserIds($viewer)->all(), or null to skip the
+     * filter entirely (superadmin). Mirrors ownerUserId()'s fallback so a
+     * client without a sales rep yet is still matched via its lead.
+     */
+    public function scopeVisibleTo($query, ?array $userIds)
+    {
+        if ($userIds === null) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($userIds) {
+            $q->whereIn('sales_rep_id', $userIds)
+                ->orWhere(function ($q) use ($userIds) {
+                    $q->whereNull('sales_rep_id')
+                        ->whereHas('lead', fn ($q) => $q->whereIn('assigned_to', $userIds));
+                });
+        });
     }
 
     public function uniqueIds(): array

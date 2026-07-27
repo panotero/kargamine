@@ -13,6 +13,8 @@ class Lane extends Model
     protected $fillable = ['origin_port_id', 'destination_port_id', 'is_active'];
 
     protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
         'is_active' => 'boolean',
     ];
 

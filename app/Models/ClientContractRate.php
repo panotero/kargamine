@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientContractRate extends Model
 {
+    protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+    ];
+
     protected $fillable = [
         'contract_id',
         'origin_port_id',

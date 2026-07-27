@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class CrmCompanyInfo extends Model
 {
+    protected $casts = [
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+    ];
+
     protected $table = 'crm_company_info';
 
     protected $fillable = [

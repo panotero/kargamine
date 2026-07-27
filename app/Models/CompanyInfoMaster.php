@@ -27,7 +27,9 @@ class CompanyInfoMaster extends Model
     ];
 
     protected $casts = [
-        'business_start_date' => 'date',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
+        'business_start_date' => 'date:M d, Y',
         'synkar' => 'boolean',
         'estimated_annual_revenue' => 'decimal:2',
         'estimated_annual_net_income' => 'decimal:2',

@@ -6,6 +6,8 @@ use App\Models\ClientMaster;
 use App\Models\ClientProposal;
 use App\Models\CrmLead;
 use App\Models\CrmStatus;
+use App\Services\TeamService;
+use App\Support\RoleHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +17,13 @@ class ClientMasterController extends Controller
 {
     public function index(Request $request)
     {
+        // Team-scoped visibility, same rule as CRM leads/Proposals: a member
+        // only sees their own clients, a team leader sees their subtree,
+        // superadmin sees everything.
+        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+            ? null
+            : TeamService::accessibleUserIds($request->user())->all();
+
         $clients = ClientMaster::query()
             ->select(
                 'id',
@@ -24,9 +33,12 @@ class ClientMasterController extends Controller
                 'industry',
                 'current_stage',
                 'is_complete',
+                'sales_rep_id',
+                'lead_id',
                 'created_at'
             )
             ->with('salesRep:id,name')
+            ->visibleTo($visibleUserIds)
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where(function ($q) use ($s) {
@@ -45,9 +57,9 @@ class ClientMasterController extends Controller
             'success' => true,
             'data' => $clients,
             'counts' => [
-                'all' => ClientMaster::count(),
-                'complete' => ClientMaster::where('is_complete', true)->count(),
-                'incomplete' => ClientMaster::where('is_complete', false)->count(),
+                'all' => ClientMaster::visibleTo($visibleUserIds)->count(),
+                'complete' => ClientMaster::visibleTo($visibleUserIds)->where('is_complete', true)->count(),
+                'incomplete' => ClientMaster::visibleTo($visibleUserIds)->where('is_complete', false)->count(),
             ],
         ]);
     }

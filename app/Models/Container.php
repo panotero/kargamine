@@ -11,8 +11,8 @@ class Container extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'created_at' => 'datetime:Y-m-d h:i:s A',
-        'updated_at' => 'datetime:Y-m-d h:i:s A',
+        'created_at' => 'datetime:M d, Y, h:i A',
+        'updated_at' => 'datetime:M d, Y, h:i A',
     ];
 
     public function type()

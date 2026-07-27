@@ -193,7 +193,14 @@
             </div>
 
             <div>
-                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest block mb-2">Permissions</label>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Permissions</label>
+                    <label class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer">
+                        <input type="checkbox" id="roleFormCheckAll"
+                            class="rounded border-zinc-300 text-orange-500 focus:ring-orange-400">
+                        Check All
+                    </label>
+                </div>
                 <div id="roleFormPermissions" class="space-y-4"></div>
             </div>
         </div>
@@ -257,6 +264,28 @@
                         </div>
                     </div>
                 `).join('');
+
+                wirePermissionCheckAll();
+            }
+
+            function wirePermissionCheckAll() {
+                const checkAllBox = document.getElementById('roleFormCheckAll');
+                const boxes = () => Array.from(document.querySelectorAll('.rolePermissionCheckbox'));
+
+                const syncCheckAllState = () => {
+                    const all = boxes();
+                    const checkedCount = all.filter(cb => cb.checked).length;
+                    checkAllBox.checked = all.length > 0 && checkedCount === all.length;
+                    checkAllBox.indeterminate = checkedCount > 0 && checkedCount < all.length;
+                };
+
+                checkAllBox.onchange = () => {
+                    boxes().forEach(cb => (cb.checked = checkAllBox.checked));
+                    checkAllBox.indeterminate = false;
+                };
+
+                boxes().forEach(cb => (cb.onchange = syncCheckAllState));
+                syncCheckAllState();
             }
 
             function openRoleForm(role = null) {
