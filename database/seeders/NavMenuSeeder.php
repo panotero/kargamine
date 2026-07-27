@@ -114,12 +114,28 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '3',
             ],
             [
+                'title' => 'Notification Test',
+                'icon' => '',
+                'link' => '/page_notification_test',
+                'allowed_roles' => ['1'],
+                'parent_title' => 'Developer Option',
+                'menu_order' => '4',
+            ],
+            [
                 'title' => 'App Settings',
                 'icon' => '',
                 'link' => '/page_maintenance',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => 'Settings',
                 'menu_order' => '1',
+            ],
+            [
+                'title' => 'Team Management',
+                'icon' => '',
+                'link' => '/page_team_management',
+                'allowed_roles' => ['1'],
+                'parent_title' => 'Settings',
+                'menu_order' => '2',
             ],
         ];
 
