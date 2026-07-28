@@ -30,6 +30,12 @@
                     <div id="clientSearchResults"
                         class="hidden absolute z-20 mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg max-h-56 overflow-y-auto"></div>
                 </div>
+
+                {{-- Contracted lanes/containers for the selected client - quick-add shortcuts --}}
+                <div id="contractSuggestions" class="hidden mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                    <p class="text-[11px] font-medium text-zinc-400 uppercase mb-1.5">Contracted Lanes — click to prefill</p>
+                    <div id="contractSuggestionsChips" class="flex flex-wrap gap-1.5"></div>
+                </div>
             </div>
 
             {{-- Route & delivery --}}
@@ -188,7 +194,7 @@
                     resultsEl.innerHTML = '<div class="px-3 py-2 text-xs text-zinc-400">No clients found.</div>';
                 } else {
                     resultsEl.innerHTML = clients.map(c => `
-                        <div class="client-result px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer" data-id="${c.id}" data-name="${c.company_name}">
+                        <div class="client-result px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer" data-id="${c.id}" data-uuid="${c.uuid}" data-name="${c.company_name}">
                             <div class="font-medium">${c.company_name}</div>
                             <div class="text-xs text-zinc-400">${c.customer_code ?? '-'}</div>
                         </div>
@@ -202,7 +208,7 @@
         document.getElementById('clientSearchResults').addEventListener('click', function(e) {
             const item = e.target.closest('.client-result');
             if (!item) return;
-            selectClient(item.dataset.id, item.dataset.name);
+            selectClient(item.dataset.id, item.dataset.name, item.dataset.uuid);
         });
 
         document.addEventListener('click', function(e) {
@@ -211,7 +217,7 @@
             }
         });
 
-        function selectClient(id, name) {
+        function selectClient(id, name, uuid) {
             document.getElementById('clientId').value = id;
             document.getElementById('clientSelectedName').textContent = name;
             document.getElementById('clientSelectedDisplay').classList.remove('hidden');
@@ -219,12 +225,71 @@
             document.getElementById('clientSearchResults').classList.add('hidden');
             document.getElementById('clientSearchInput').value = '';
             scheduleQuote();
+            loadContractSuggestions(uuid);
         }
 
         document.getElementById('clientChangeBtn').addEventListener('click', function() {
             document.getElementById('clientId').value = '';
             document.getElementById('clientSelectedDisplay').classList.add('hidden');
             document.getElementById('clientSearchWrap').classList.remove('hidden');
+            hideContractSuggestions();
+        });
+
+        // -----------------------------------------------------------------
+        // Contract-aware quick-add suggestions
+        // -----------------------------------------------------------------
+        function hideContractSuggestions() {
+            document.getElementById('contractSuggestions').classList.add('hidden');
+            document.getElementById('contractSuggestionsChips').innerHTML = '';
+        }
+
+        async function loadContractSuggestions(clientUuid) {
+            hideContractSuggestions();
+            if (!clientUuid) return;
+
+            const response = await apiCall({ mode: 'GET', url: `/api/clientMasters/${clientUuid}/contracts` });
+            const contracts = response?.success ? (response.data ?? []) : [];
+
+            // status 2 = ClientContract::STATUS_ACTIVE
+            const activeRates = contracts
+                .filter(c => Number(c.status) === 2)
+                .flatMap(c => c.rates ?? []);
+
+            if (!activeRates.length) return;
+
+            const chipsEl = document.getElementById('contractSuggestionsChips');
+            chipsEl.innerHTML = activeRates.map((rate, i) => `
+                <button type="button" class="contract-chip text-xs px-2.5 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                    data-index="${i}"
+                    data-origin-port-id="${rate.origin_port_id}"
+                    data-destination-port-id="${rate.destination_port_id}"
+                    data-container-variant-id="${rate.container_variant_id}">
+                    ${rate.origin_port?.code ?? '?'} &rarr; ${rate.destination_port?.code ?? '?'}
+                    &middot; ${rate.container?.name ?? '-'}/${rate.container_class?.class ?? '-'}/${rate.container_size?.size ?? '-'}
+                    &middot; &#8369;${money(rate.final_rate)}
+                </button>
+            `).join('');
+
+            document.getElementById('contractSuggestions').classList.remove('hidden');
+        }
+
+        document.getElementById('contractSuggestionsChips').addEventListener('click', function(e) {
+            const chip = e.target.closest('.contract-chip');
+            if (!chip) return;
+
+            const originPortSelect = document.getElementById('originPort');
+            const destinationPortSelect = document.getElementById('destinationPort');
+
+            originPortSelect.value = chip.dataset.originPortId;
+            originPortSelect.dispatchEvent(new Event('change'));
+
+            destinationPortSelect.value = chip.dataset.destinationPortId;
+            destinationPortSelect.dispatchEvent(new Event('change'));
+
+            const card = addLine();
+            const variantSelect = card.querySelector('[data-field="container_variant_id"]');
+            variantSelect.value = chip.dataset.containerVariantId;
+            variantSelect.dispatchEvent(new Event('change'));
         });
 
         // -----------------------------------------------------------------
@@ -510,7 +575,7 @@
 
             const b = response.data;
             document.getElementById('formPageTitle').textContent = `Edit Booking — ${b.code}`;
-            selectClient(b.client_id, b.client?.company_name ?? 'Client');
+            selectClient(b.client_id, b.client?.company_name ?? 'Client', b.client?.uuid);
 
             document.getElementById('originPort').value = b.lane?.origin_port_id ?? '';
             document.getElementById('destinationPort').value = b.lane?.destination_port_id ?? '';
