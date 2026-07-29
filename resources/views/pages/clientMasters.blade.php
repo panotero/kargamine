@@ -355,6 +355,7 @@
                     <tr>
                         <th class="text-left py-1 px-2">Route</th>
                         <th class="text-left py-1 px-2">Container</th>
+                        <th class="text-right py-1 px-2">Min Qty</th>
                         <th class="text-right py-1 px-2">Base Rate</th>
                         <th class="text-right py-1 px-2">Discount</th>
                         <th class="text-right py-1 px-2">Final Rate</th>
@@ -1393,6 +1394,7 @@
                     <tr>
                         <th class="text-left py-1">Route</th>
                         <th class="text-left py-1">Container</th>
+                        <th class="text-right py-1">Min Qty</th>
                         <th class="text-right py-1">Base Rate</th>
                         <th class="text-right py-1">Discount</th>
                         <th class="text-right py-1">Final Rate</th>
@@ -1404,6 +1406,7 @@
                         <tr class="border-t" data-rate-id="${r.id}">
                             <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
                             <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
+                            <td class="py-1.5 text-right">${r.min_van_qty ?? '-'}</td>
                             <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
                             <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
                             <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
@@ -1660,6 +1663,7 @@
 
         function ccOriginalValues(rate) {
             return {
+                min_van_qty: rate.min_van_qty ?? null,
                 base_rate: Number(rate.base_rate),
                 discount_type: rate.discount_type ?? null,
                 discount_value: Number(rate.discount_value ?? 0),
@@ -1691,6 +1695,7 @@
                     <tr data-rate-id="${rate.id}">
                         <td class="py-1.5 px-2">${lane}</td>
                         <td class="py-1.5 px-2">${variant}</td>
+                        <td class="py-1.5 px-2 text-right">${values.min_van_qty ?? '-'}</td>
                         <td class="py-1.5 px-2 text-right">${Number(values.base_rate).toLocaleString()}</td>
                         <td class="py-1.5 px-2 text-right">${ccDiscountDisplay(values)}</td>
                         <td class="py-1.5 px-2 text-right font-semibold">
@@ -1707,6 +1712,9 @@
                 <tr data-rate-id="${rate.id}">
                     <td class="py-1.5 px-2">${lane}</td>
                     <td class="py-1.5 px-2">${variant}</td>
+                    <td class="py-1.5 px-2">
+                        <input type="number" min="1" step="1" placeholder="None" class="cc-input-minqty w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ''}">
+                    </td>
                     <td class="py-1.5 px-2">
                         <input type="number" step="0.01" min="0" class="cc-input-base w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.base_rate}">
                     </td>
@@ -1789,14 +1797,17 @@
             }
 
             if (e.target.closest('.cc-apply-btn')) {
+                const minQtyRaw = row.querySelector('.cc-input-minqty').value;
                 const newValues = {
+                    min_van_qty: minQtyRaw === '' ? null : Number(minQtyRaw),
                     base_rate: Number(row.querySelector('.cc-input-base').value),
                     discount_type: row.querySelector('.cc-input-disctype').value || null,
                     discount_value: Number(row.querySelector('.cc-input-discval').value || 0),
                     final_rate: Number(row.querySelector('.cc-input-final').value),
                 };
                 const original = ccOriginalValues(rate);
-                const changed = newValues.base_rate !== original.base_rate ||
+                const changed = newValues.min_van_qty !== original.min_van_qty ||
+                    newValues.base_rate !== original.base_rate ||
                     newValues.discount_type !== original.discount_type ||
                     newValues.discount_value !== original.discount_value ||
                     newValues.final_rate !== original.final_rate;
@@ -1945,6 +1956,10 @@
                         <select data-field="container_size_id" class="size-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                             <option value="">Select class first</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Min Qty (for discount)</label>
+                        <input type="number" min="1" step="1" data-field="min_van_qty" placeholder="No minimum" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
@@ -2116,6 +2131,7 @@
                 container_class_id: row.querySelector('[data-field="container_class_id"]').value,
                 container_size_id: row.querySelector('[data-field="container_size_id"]').value,
                 container_variant_id: row.querySelector('[data-field="container_variant_id"]').value,
+                min_van_qty: row.querySelector('[data-field="min_van_qty"]').value || null,
                 base_rate: parseFloat(row.querySelector('.base-rate').value) || 0,
                 discount_type: row.querySelector('.discount-type').value || null,
                 discount_value: parseFloat(row.querySelector('.discount-value').value) || 0,

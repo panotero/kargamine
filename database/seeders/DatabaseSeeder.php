@@ -30,10 +30,28 @@ class DatabaseSeeder extends Seeder
             CrmStatusSeeder::class,
             lovSeeder::class,
             PortSeeder::class,
+            ServiceableAreaSeeder::class,
+            DeliveryTypeSeeder::class,
             departmentSeeder::class,
             userstatusSeeder::class,
             AddressTypeSeeder::class,
             LeadSourceSeeder::class,
+            BusinessTypeSeeder::class,
+
+            // maintenance page sample data - rate/master data tables
+            ContainerCatalogSeeder::class,
+            ChargeTypeSeeder::class,
+            LaneSeeder::class,
+            LaneTariffRateSeeder::class,
+            PortChargeSeeder::class,
+            GeneralChargeSeeder::class,
+            HandlingFeeSeeder::class,
+            TruckingTariffSeeder::class,
+            VatRateSeeder::class,
+
+            // container inventory - physical fleet (depends on
+            // ContainerCatalogSeeder for variants, LaneSeeder for ports)
+            ContainerAssetSeeder::class,
         ]);
     }
 }

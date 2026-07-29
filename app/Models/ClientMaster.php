@@ -25,6 +25,7 @@ class ClientMaster extends Model
         'current_stage',
         'is_complete',
         'created_by',
+        'always_route_atw',
     ];
 
     protected $casts = [
@@ -33,6 +34,7 @@ class ClientMaster extends Model
         'business_start_date' => 'date:M d, Y',
         'estimated_annual_revenue' => 'decimal:2',
         'is_complete' => 'boolean',
+        'always_route_atw' => 'boolean',
     ];
 
     public function lead()

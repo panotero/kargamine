@@ -27,6 +27,18 @@
                 <nav id="sidebar-menu" class="p-4 space-y-2 font-semibold">
                 </nav>
 
+                {{-- Always visible regardless of role - not a NavMenu row,
+                     so it isn't gated by allowed_roles like the items above. --}}
+                <div class="p-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <button type="button" id="helpNavBtn"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:text-orange-600 transition">
+                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.5M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Help &amp; Documentation</span>
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -73,6 +85,13 @@
         </div>
     </div>
 
-
+    <script>
+        document.getElementById('helpNavBtn').addEventListener('click', function() {
+            loadPage({
+                title: 'Help & Documentation',
+                link: '/page_help'
+            });
+        });
+    </script>
 
 </x-app-layout>

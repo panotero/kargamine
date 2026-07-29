@@ -17,19 +17,18 @@ use RuntimeException;
 class ContainerReservationService
 {
     /**
-     * Same current port as $originPortId first, then longest-idle -
-     * this ranking is what both auto-assign and the manual dropdown
-     * agree on as "best available".
+     * Restricted to containers currently at $originPortId (a container
+     * can't be loaded from a port it isn't at), longest-idle first -
+     * this is what both auto-assign and the manual dropdown agree on as
+     * "available". No origin filter only when the caller genuinely
+     * doesn't know the port yet.
      */
     public function rankedAvailableQuery(int $containerVariantId, ?int $originPortId = null): Builder
     {
         return ContainerAsset::query()
             ->where('container_variant_id', $containerVariantId)
             ->where('status', ContainerAsset::STATUS_AVAILABLE)
-            ->when(
-                $originPortId,
-                fn ($q, $portId) => $q->orderByRaw('CASE WHEN current_port_id = ? THEN 0 ELSE 1 END', [$portId])
-            )
+            ->when($originPortId, fn ($q, $portId) => $q->where('current_port_id', $portId))
             ->orderBy('last_movement_at');
     }
 

@@ -117,16 +117,22 @@ class BookingTest extends TestCase
         return tap($user, fn ($u) => $this->actingAs($u));
     }
 
+    /**
+     * Route and delivery mode now live per cargo line, not on the booking
+     * header. origin_mode/destination_mode = 'pier' matches the flags on
+     * $this->deliveryType (both false) set up above.
+     */
     private function basePayload(ContainerVariant $variant, int $quantity = 1, bool $autoAssign = true, array $assetIds = []): array
     {
         return [
             'client_id' => $this->client->id,
-            'origin_port_id' => $this->origin->port_id,
-            'destination_port_id' => $this->destination->port_id,
-            'origin_area_id' => $this->originArea->area_id,
-            'destination_area_id' => $this->destinationArea->area_id,
-            'delivery_type_id' => $this->deliveryType->delivery_type_id,
             'lines' => [[
+                'origin_port_id' => $this->origin->port_id,
+                'destination_port_id' => $this->destination->port_id,
+                'origin_area_id' => $this->originArea->area_id,
+                'destination_area_id' => $this->destinationArea->area_id,
+                'origin_mode' => 'pier',
+                'destination_mode' => 'pier',
                 'container_variant_id' => $variant->id,
                 'quantity' => $quantity,
                 'auto_assign' => $autoAssign,
@@ -155,6 +161,61 @@ class BookingTest extends TestCase
     }
 
     /** @test */
+    public function a_single_booking_can_have_lines_going_to_different_destinations()
+    {
+        $this->actingSuperadmin();
+        $variant = $this->makeVariant();
+        $this->makeAsset($variant, 'HHHU1111111');
+        $this->makeAsset($variant, 'HHHU2222222');
+
+        $altDestination = Port::create(['code' => 'DVO', 'name' => 'Davao', 'is_active' => true]);
+        $altLane = Lane::create([
+            'origin_port_id' => $this->origin->port_id,
+            'destination_port_id' => $altDestination->port_id,
+            'is_active' => true,
+        ]);
+        $altTariffRate = LaneTariffRate::create([
+            'lane_id' => $altLane->lane_id,
+            'effective_date' => now()->subDay()->toDateString(),
+            'is_active' => true,
+        ]);
+        LaneTariffRatePrice::create([
+            'lane_tariff_rate_id' => $altTariffRate->rate_id,
+            'container_variant_id' => $variant->id,
+            'frt' => 15000,
+        ]);
+        $altDestinationArea = ServiceableArea::create(['port_id' => $altDestination->port_id, 'area_name' => 'Alt Dest Area']);
+
+        $payload = $this->basePayload($variant);
+        $payload['lines'][] = [
+            'origin_port_id' => $this->origin->port_id,
+            'destination_port_id' => $altDestination->port_id,
+            'origin_area_id' => $this->originArea->area_id,
+            'destination_area_id' => $altDestinationArea->area_id,
+            'origin_mode' => 'pier',
+            'destination_mode' => 'pier',
+            'container_variant_id' => $variant->id,
+            'quantity' => 1,
+            'auto_assign' => true,
+        ];
+
+        $response = $this->postJson('/api/bookings', $payload);
+
+        $response->assertStatus(201);
+        $data = $response->json('data');
+
+        $this->assertCount(2, $data['lines']);
+        $this->assertEquals($this->destination->port_id, $data['lines'][0]['destination_port_id']);
+        $this->assertEquals($altDestination->port_id, $data['lines'][1]['destination_port_id']);
+        $this->assertEquals(10000, (float) $data['lines'][0]['frt_snapshot']);
+        $this->assertEquals(15000, (float) $data['lines'][1]['frt_snapshot']);
+
+        // grand_total_snapshot = both lines' FRT, VAT'd once at the booking level.
+        $expectedVatable = 10000 + 15000;
+        $this->assertEqualsWithDelta($expectedVatable * 1.12, (float) $data['grand_total_snapshot'], 0.01);
+    }
+
+    /** @test */
     public function contract_rate_applies_when_a_matching_client_contract_rate_exists()
     {
         $this->actingSuperadmin();
@@ -162,6 +223,7 @@ class BookingTest extends TestCase
         $this->makeAsset($variant, 'BBBU1111111');
 
         $contract = ClientContract::create([
+            'uuid' => (string) \Illuminate\Support\Str::uuid(),
             'code' => 'CC-2026-0001',
             'client_id' => $this->client->id,
             'valid_from' => now()->subMonth(),
@@ -190,6 +252,58 @@ class BookingTest extends TestCase
 
         $this->assertEquals('percentage', $line['discount_type_snapshot']);
         $this->assertEquals(9000, (float) $line['frt_after_discount_snapshot']);
+    }
+
+    /** @test */
+    public function contract_rate_falls_back_to_standard_tariff_below_its_minimum_quantity()
+    {
+        $this->actingSuperadmin();
+        $variant = $this->makeVariant();
+        // 2 for the below-minimum booking + 3 for the at-minimum booking - both
+        // stay reserved (no cancel/release in between), so 5 total are needed.
+        $this->makeAsset($variant, 'IIIU1111111');
+        $this->makeAsset($variant, 'IIIU2222222');
+        $this->makeAsset($variant, 'IIIU3333333');
+        $this->makeAsset($variant, 'IIIU4444444');
+        $this->makeAsset($variant, 'IIIU5555555');
+
+        $contract = ClientContract::create([
+            'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'code' => 'CC-2026-0002',
+            'client_id' => $this->client->id,
+            'valid_from' => now()->subMonth(),
+            'valid_to' => now()->addMonth(),
+            'status' => ClientContract::STATUS_ACTIVE,
+        ]);
+
+        ClientContractRate::create([
+            'contract_id' => $contract->id,
+            'origin_port_id' => $this->origin->port_id,
+            'destination_port_id' => $this->destination->port_id,
+            'container_id' => $variant->container_id,
+            'container_class_id' => $variant->container_class_id,
+            'container_size_id' => $variant->container_size_id,
+            'container_variant_id' => $variant->id,
+            'min_van_qty' => 3,
+            'base_rate' => 10000,
+            'discount_type' => 'percentage',
+            'discount_value' => 10,
+            'final_rate' => 9000,
+        ]);
+
+        // Below the minimum (2 < 3) - discount must NOT apply.
+        $belowMin = $this->postJson('/api/bookings', $this->basePayload($variant, quantity: 2));
+        $belowMin->assertStatus(201);
+        $belowMinLine = $belowMin->json('data.lines.0');
+        $this->assertNull($belowMinLine['discount_type_snapshot']);
+        $this->assertEquals(10000, (float) $belowMinLine['frt_after_discount_snapshot']);
+
+        // Meets the minimum (3 >= 3) - discount applies.
+        $atMin = $this->postJson('/api/bookings', $this->basePayload($variant, quantity: 3));
+        $atMin->assertStatus(201);
+        $atMinLine = $atMin->json('data.lines.0');
+        $this->assertEquals('percentage', $atMinLine['discount_type_snapshot']);
+        $this->assertEquals(9000, (float) $atMinLine['frt_after_discount_snapshot']);
     }
 
     /** @test */

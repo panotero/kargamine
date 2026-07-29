@@ -42,7 +42,7 @@ class ProposalController extends Controller
                 'updated_at'
             )
             ->with(
-                'lead:id,contact_name',
+                'lead:id,first_name,last_name',
                 'lead.company:id,lead_id,company_name',
                 'rates',
                 'creator:id,name',
@@ -54,7 +54,8 @@ class ProposalController extends Controller
                 $q->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
                         ->orWhereHas('lead', function ($q) use ($search) {
-                            $q->where('contact_name', 'like', "%{$search}%")
+                            $q->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
                                 ->orWhereHas('company', function ($q) use ($search) {
                                     $q->where('company_name', 'like', "%{$search}%");
                                 });

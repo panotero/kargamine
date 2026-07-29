@@ -197,7 +197,7 @@
             if (!response.success) {
                 showMessage({
                     status: "error",
-                    message: response,
+                    message: response.message ?? "Please check the required fields.",
                     title: "Error Saving Proposal",
                 });
                 return;

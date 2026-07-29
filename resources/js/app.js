@@ -32,3 +32,4 @@ import "./formatter";
 import "./logic_crm";
 import "./remoteTable";
 import "./containerAssetMap";
+import "./pierCheckin";

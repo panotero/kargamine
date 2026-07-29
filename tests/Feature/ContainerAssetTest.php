@@ -39,7 +39,10 @@ class ContainerAssetTest extends TestCase
 
     private function actingUser(): User
     {
-        return $this->actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        return $user;
     }
 
     /** @test */
@@ -96,7 +99,7 @@ class ContainerAssetTest extends TestCase
     }
 
     /** @test */
-    public function available_endpoint_ranks_same_port_assets_first()
+    public function available_endpoint_only_returns_containers_at_the_origin_port()
     {
         $variant = $this->makeVariant();
         $origin = $this->makePort('MNL');
@@ -111,9 +114,17 @@ class ContainerAssetTest extends TestCase
             'last_movement_at' => now()->subDays(5),
         ]);
 
-        $near = ContainerAsset::create([
+        $idle = ContainerAsset::create([
             'container_variant_id' => $variant->id,
-            'container_no' => 'NEAU2222222',
+            'container_no' => 'IDLE1111111',
+            'status' => ContainerAsset::STATUS_AVAILABLE,
+            'current_port_id' => $origin->port_id,
+            'last_movement_at' => now()->subDays(3),
+        ]);
+
+        $recent = ContainerAsset::create([
+            'container_variant_id' => $variant->id,
+            'container_no' => 'RECE2222222',
             'status' => ContainerAsset::STATUS_AVAILABLE,
             'current_port_id' => $origin->port_id,
             'last_movement_at' => now()->subDay(),
@@ -127,7 +138,9 @@ class ContainerAssetTest extends TestCase
         $response->assertOk();
         $ids = collect($response->json('data'))->pluck('id')->all();
 
-        $this->assertEquals([$near->id, $far->id], $ids);
+        // Only origin-port assets come back, longest-idle first - the
+        // other port's container ($far) must never appear.
+        $this->assertEquals([$idle->id, $recent->id], $ids);
     }
 
     /** @test */

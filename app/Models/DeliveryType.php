@@ -28,8 +28,8 @@ class DeliveryType extends Model
         return $this->hasMany(TruckingTariff::class, 'delivery_type_id', 'delivery_type_id');
     }
 
-    public function bookings(): HasMany
+    public function bookingLines(): HasMany
     {
-        return $this->hasMany(Booking::class, 'delivery_type_id', 'delivery_type_id');
+        return $this->hasMany(BookingLine::class, 'delivery_type_id', 'delivery_type_id');
     }
 }

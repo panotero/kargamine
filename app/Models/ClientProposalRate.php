@@ -20,6 +20,7 @@ class ClientProposalRate extends Model
         'container_class_id',
         'container_size_id',
         'container_variant_id',
+        'min_van_qty',
         'base_rate',
         'discount_type',
         'discount_value',

@@ -389,10 +389,10 @@
             </div>
         </div>
 
-        {{-- ============== CONTAINER REQUIREMENTS ============== --}}
+        {{-- ============== BOOKING REQUIREMENTS ============== --}}
         <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
             <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Container
+                <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Booking
                     Requirements</p>
                 <button id="leadAddContainerBtn"
                     class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
@@ -592,7 +592,7 @@
 <x-side-modal id="LeadAddContainerModal">
     <div
         class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
-        <p class="text-lg font-semibold dark:text-white">Add Container Requirement</p>
+        <p class="text-lg font-semibold dark:text-white">Add Booking Requirement</p>
         <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
     </div>
 
@@ -773,6 +773,10 @@
                         </select>
                     </div>
                     <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Min Qty (for discount)</label>
+                        <input type="number" min="1" step="1" data-field="min_van_qty" placeholder="No minimum" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    </div>
+                    <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
                         <input type="text" data-field="base_rate" readonly class="base-rate w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
                     </div>
@@ -929,6 +933,7 @@
                     .value,
                 container_variant_id: row.querySelector(
                     '[data-field="container_variant_id"]').value,
+                min_van_qty: row.querySelector('[data-field="min_van_qty"]').value || null,
                 base_rate: parseFloat(row.querySelector('.base-rate').value) || 0,
                 discount_type: row.querySelector('.discount-type').value || null,
                 discount_value: parseFloat(row.querySelector('.discount-value').value) || 0,
@@ -1139,8 +1144,8 @@
                 </select>
             </div>
             <div class="field-temperature hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Required Temperature (&deg;C)</label>
-                <input type="number" step="0.1" data-field="required_temperature" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (&deg;C)</label>
+                <input type="number" step="0.1" data-field="minimum_temperature" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
 
             <div>
@@ -1342,7 +1347,7 @@
 
             showMessage({
                 status: 'success',
-                title: 'Container requirement added!'
+                title: 'Booking requirement added!'
             });
             closeSideModal('LeadAddContainerModal');
             window.reloadCrmData();

@@ -60,12 +60,39 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '6',
             ],
             [
+                // Never had a nav entry at all before now - the booking
+                // module (routes/api_maintenance.php's "bookings" group,
+                // pages/booking.blade.php) was reachable only by URL.
+                'title' => 'Bookings',
+                'icon' => 'list-bullet',
+                'link' => '/page_booking',
+                'allowed_roles' => ['1', '2', '3', '4'],
+                'parent_title' => null,
+                'menu_order' => '13',
+            ],
+            [
                 'title' => 'Container Inventory',
                 'icon' => 'cube',
                 'link' => '/page_container_inventory',
                 'allowed_roles' => ['1', '2', '3', '4'],
                 'parent_title' => null,
                 'menu_order' => '5',
+            ],
+            [
+                'title' => 'Cargo Build-Up',
+                'icon' => 'archive-box',
+                'link' => '/page_cargo_build_up',
+                'allowed_roles' => ['1', '2', '3', '4'],
+                'parent_title' => null,
+                'menu_order' => '11',
+            ],
+            [
+                'title' => 'Pier Check-In',
+                'icon' => 'check-circle',
+                'link' => '/page_pier_checkin',
+                'allowed_roles' => ['1', '2', '3', '4'],
+                'parent_title' => null,
+                'menu_order' => '12',
             ],
             [
                 'title' => 'Users',

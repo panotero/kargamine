@@ -18,7 +18,7 @@
         </button>
         <button type="button" class="stage-btn flex-1 px-3 py-2 rounded-lg text-sm font-semibold border-2"
             data-stage="2">
-            2. Container Requirements
+            2. Booking Requirements
         </button>
     </div>
 
@@ -64,8 +64,42 @@
                     <p class="font-semibold text-zinc-700 mb-3">Contact Information</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Name *</label>
-                            <input type="text" name="contact_name" required
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Title</label>
+                            <select name="title" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Title</option>
+                                <option value="Mr.">Mr.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Miss">Miss</option>
+                                <option value="Dr.">Dr.</option>
+                                <option value="Engr.">Engr.</option>
+                                <option value="Atty.">Atty.</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
+                            <select name="gender" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Gender</option>
+                                @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
+                                    <option value="{{ $genderOption }}">{{ $genderOption }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">First Name *</label>
+                            <input type="text" name="first_name" required
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Last Name *</label>
+                            <input type="text" name="last_name" required
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Middle Name</label>
+                            <input type="text" name="middle_name"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
@@ -136,6 +170,94 @@
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                         </div>
                     </div>
+
+                    {{-- Authorized Signatory --}}
+                    <div class="border-t mt-4 pt-4">
+                        <p class="font-semibold text-zinc-700 mb-3">Authorized Signatory</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Title</label>
+                                <select name="authorized_signatory_title" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    <option value="">Select Title</option>
+                                    <option value="Mr.">Mr.</option>
+                                    <option value="Mrs.">Mrs.</option>
+                                    <option value="Ms.">Ms.</option>
+                                    <option value="Miss">Miss</option>
+                                    <option value="Dr.">Dr.</option>
+                                    <option value="Engr.">Engr.</option>
+                                    <option value="Atty.">Atty.</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
+                                <select name="authorized_signatory_gender" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    <option value="">Select Gender</option>
+                                    @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
+                                        <option value="{{ $genderOption }}">{{ $genderOption }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">First Name</label>
+                                <input type="text" name="authorized_signatory_first_name"
+                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Last Name</label>
+                                <input type="text" name="authorized_signatory_last_name"
+                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Middle Name</label>
+                                <input type="text" name="authorized_signatory_middle_name"
+                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Position</label>
+                                <input type="text" name="authorized_signatory_position"
+                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number</label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="text" name="authorized_signatory_mobile"
+                                        class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                    <select name="authorized_signatory_mobile_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                        <option value="">Type</option>
+                                        <option value="personal">Personal</option>
+                                        <option value="business">Business</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Landline Number</label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="text" name="authorized_signatory_landline"
+                                        class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                    <select name="authorized_signatory_landline_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                        <option value="">Type</option>
+                                        <option value="personal">Personal</option>
+                                        <option value="business">Business</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Email</label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="email" name="authorized_signatory_email" class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                    <select name="authorized_signatory_email_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                        <option value="">Type</option>
+                                        <option value="personal">Personal</option>
+                                        <option value="business">Business</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Addresses - repeatable, one per address type --}}
@@ -159,10 +281,10 @@
 
         {{-- ===================== STAGE 2 ===================== --}}
         <div class="stage-panel hidden" data-panel="2">
-            <div class="flex justify-between items-center mb-3">x
-                <p class="font-semibold text-zinc-700">Container Requirements</p>
+            <div class="flex justify-between items-center mb-3">
+                <p class="font-semibold text-zinc-700">Booking Requirements</p>
                 <button type="button" id="addContainerBtn"
-                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add Container</button>
+                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add Booking Requirement</button>
             </div>
             <div id="containersContainer" class="space-y-4"></div>
 
@@ -470,8 +592,8 @@
                 </select>
             </div>
             <div class="field-temperature hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Required Temperature (°C)</label>
-                <input type="number" step="0.1" data-field="required_temperature" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (°C)</label>
+                <input type="number" step="0.1" data-field="minimum_temperature" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
             <div>
@@ -660,13 +782,6 @@
             }
 
             const containers = collectContainers();
-            if (!containers.length) {
-                showMessage({
-                    status: 'error',
-                    title: 'Add at least one container.'
-                });
-                return;
-            }
 
             const response = await apiCall({
                 mode: 'POST',
@@ -687,10 +802,27 @@
                 return;
             }
 
-            showMessage({
-                status: 'success',
-                title: 'Lead moved to Opportunity!'
-            });
+            // The backend only actually promotes to Opportunity when every
+            // requirement is met - report what really happened instead of
+            // always claiming it moved.
+            if (response.moved_to_opportunity) {
+                showMessage({
+                    status: 'success',
+                    title: 'Lead moved to Opportunity!'
+                });
+            } else if (response.data.is_complete) {
+                showMessage({
+                    status: 'success',
+                    title: 'Saved'
+                });
+            } else {
+                showMessage({
+                    status: 'warning',
+                    title: 'Saved, but not yet moved to Opportunity',
+                    message: `Still missing: ${(response.missing_requirements ?? []).join(', ')}`
+                });
+            }
+
             loadPage({
                 title: 'CRM Leads',
                 link: '/page_crm'
@@ -720,7 +852,8 @@
 
             const stage1Form = document.getElementById('stage1Form');
             [
-                'contact_name', 'position', 'mobile', 'mobile_type',
+                'title', 'first_name', 'middle_name', 'last_name', 'gender',
+                'position', 'mobile', 'mobile_type',
                 'landline_number', 'landline_type', 'email', 'email_type',
             ].forEach(key => {
                 const el = stage1Form.querySelector(`[name="${key}"]`);
@@ -734,6 +867,18 @@
             applyClientTypeVisibility();
 
             ['company_name', 'type_of_business', 'industry_description'].forEach(key => {
+                const el = stage1Form.querySelector(`[name="${key}"]`);
+                if (el) el.value = company[key] ?? '';
+            });
+
+            [
+                'authorized_signatory_title', 'authorized_signatory_first_name',
+                'authorized_signatory_middle_name', 'authorized_signatory_last_name',
+                'authorized_signatory_gender', 'authorized_signatory_position',
+                'authorized_signatory_mobile', 'authorized_signatory_mobile_type',
+                'authorized_signatory_landline', 'authorized_signatory_landline_type',
+                'authorized_signatory_email', 'authorized_signatory_email_type',
+            ].forEach(key => {
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = company[key] ?? '';
             });

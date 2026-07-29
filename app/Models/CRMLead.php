@@ -11,10 +11,16 @@ class CrmLead extends Model
 
     public const CONTAINER_TYPES = ['CV', 'FR', 'RF', 'LC', 'RC'];
 
+    public const GENDERS = ['Male', 'Female', 'Rather not say'];
+
     protected $table = 'crm_leads';
 
     protected $fillable = [
-        'contact_name',
+        'title',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'gender',
         'email',
         'email_type',
         'position',
@@ -31,6 +37,8 @@ class CrmLead extends Model
         'expected_close_date',
         'status_updated_at',
     ];
+
+    protected $appends = ['contact_name'];
 
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
@@ -52,6 +60,43 @@ class CrmLead extends Model
         return $this->hasOne(ClientMaster::class, 'lead_id');
     }
 
+    /**
+     * Computed, read-only - title/first/middle/last were split out of what
+     * used to be one contact_name column. Kept as an appended attribute
+     * (not a real column) so every existing display/search/notification
+     * that reads $lead->contact_name or lead.contact_name in JSON keeps
+     * working unchanged.
+     */
+    public function getContactNameAttribute(): string
+    {
+        return trim(collect([$this->title, $this->first_name, $this->middle_name, $this->last_name])
+            ->filter()
+            ->implode(' ')) ?: '-';
+    }
+
+    /**
+     * Best-effort split of a single free-text name into first/middle/last -
+     * only used by the couple of legacy endpoints (store()/update()) that
+     * still accept one contact_name field from an external caller instead
+     * of the structured fields the current CRM form submits.
+     *
+     * @return array{first_name: ?string, middle_name: ?string, last_name: ?string}
+     */
+    public static function splitFullName(?string $name): array
+    {
+        $parts = preg_split('/\s+/', trim((string) $name), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($parts)) {
+            return ['first_name' => null, 'middle_name' => null, 'last_name' => null];
+        }
+
+        $first = array_shift($parts);
+        $last = count($parts) ? array_pop($parts) : null;
+        $middle = $parts ? implode(' ', $parts) : null;
+
+        return ['first_name' => $first, 'middle_name' => $middle, 'last_name' => $last];
+    }
+
     public function stageCompletionFlags(): array
     {
         $company = $this->company;
@@ -68,9 +113,15 @@ class CrmLead extends Model
             ->whereNotNull('address_postal_code')
             ->exists();
 
+        $hasAuthorizedSignatory = $company
+            && $company->authorized_signatory_first_name
+            && $company->authorized_signatory_last_name
+            && $company->authorized_signatory_position;
+
         $stage1 = (bool) (
-            $this->contact_name && $this->mobile && $this->source && $this->client_type &&
+            $this->first_name && $this->last_name && $this->mobile && $this->source && $this->client_type &&
             (! $isCorporate || ($company && $company->company_name && $company->type_of_business)) &&
+            (! $isCorporate || $hasAuthorizedSignatory) &&
             $hasCompleteAddress
         );
 
@@ -80,10 +131,85 @@ class CrmLead extends Model
         ];
     }
 
-    public function recomputeCompletion(): void
+    /**
+     * Human-readable list of what's still missing before this lead can be
+     * promoted to OPPORTUNITY - so a caller can tell the user exactly why
+     * it wasn't moved, instead of a blanket "saved" with no explanation.
+     */
+    public function missingRequirements(): array
+    {
+        $company = $this->company;
+        $isCorporate = $this->client_type === 'corporate';
+        $missing = [];
+
+        if (! $this->first_name || ! $this->last_name) {
+            $missing[] = 'Contact Name (First & Last)';
+        }
+        if (! $this->mobile) {
+            $missing[] = 'Mobile Number';
+        }
+        if (! $this->source) {
+            $missing[] = 'Lead Source';
+        }
+
+        if ($isCorporate) {
+            if (! $company || ! $company->company_name) {
+                $missing[] = 'Company Name';
+            }
+            if (! $company || ! $company->type_of_business) {
+                $missing[] = 'Type of Business';
+            }
+            if (
+                ! $company
+                || ! $company->authorized_signatory_first_name
+                || ! $company->authorized_signatory_last_name
+                || ! $company->authorized_signatory_position
+            ) {
+                $missing[] = 'Authorized Signatory (First Name, Last Name & Position)';
+            }
+        }
+
+        $addressFieldLabels = [
+            'address_no' => 'Address No.',
+            'address_building' => 'Address Building',
+            'address_street' => 'Address Street',
+            'address_barangay' => 'Address Barangay',
+            'address_town_city' => 'Address Town/City',
+            'address_province' => 'Address Province',
+            'address_country' => 'Address Country',
+            'address_postal_code' => 'Address Postal Code',
+        ];
+
+        $address = $this->addresses->firstWhere('is_primary', true) ?? $this->addresses->first();
+
+        if (! $address) {
+            $missing[] = 'At least one Address';
+        } else {
+            foreach ($addressFieldLabels as $field => $label) {
+                if (empty($address->$field)) {
+                    $missing[] = $label;
+                }
+            }
+        }
+
+        if (! $this->containers()->exists()) {
+            $missing[] = 'At least one Booking Requirement';
+        }
+
+        return $missing;
+    }
+
+    /**
+     * @return bool whether this call actually promoted the lead to
+     *              OPPORTUNITY (false if it was already complete/beyond,
+     *              or still incomplete) - lets a caller report the real
+     *              outcome instead of assuming it always happens.
+     */
+    public function recomputeCompletion(): bool
     {
         $flags = $this->stageCompletionFlags();
         $this->is_complete = ! in_array(false, $flags, true);
+        $promoted = false;
 
         // Once both stages are done, promote the lead to OPPORTUNITY -
         // but never move it backward if it's already further along
@@ -96,10 +222,13 @@ class CrmLead extends Model
             if ($opportunity && in_array($this->status, [$lead?->id, $qualified?->id, null], true)) {
                 $this->status = $opportunity->id;
                 $this->status_updated_at = now();
+                $promoted = true;
             }
         }
 
         $this->save();
+
+        return $promoted;
     }
 
     public function uniqueIds(): array

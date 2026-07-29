@@ -55,6 +55,9 @@
                 data-tab="vatRates">VAT Rates</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                data-tab="vesselVoyages">Vessel Voyages</button>
+            <button type="button"
+                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="generalLookups">General Lookups</button>
         </nav>
     </div>
@@ -76,6 +79,7 @@
         'handlingFees' => 'Handling Fees',
         'truckingTariffs' => 'Trucking Tariffs',
         'vatRates' => 'VAT Rates',
+        'vesselVoyages' => 'Vessel Voyages',
     ] as $key => $label)
             <div class="tab-panel hidden" data-tab-panel="{{ $key }}">
                 <div class="flex items-center justify-between mb-4">
@@ -1105,6 +1109,96 @@
                     },
                 ],
             },
+
+            // SOP Step 10 (Voyage Plan) - one row per vessel leg, matching
+            // the SOP's own example data ("Lady Callista 84-A/B/C/D").
+            vesselVoyages: {
+                label: 'Vessel Voyage',
+                pk: 'id',
+                listUrl: '/api/vesselVoyages',
+                createUrl: '/api/vesselVoyages',
+                updateUrl: (id) => `/api/vesselVoyages/${id}`,
+                deleteUrl: (id) => `/api/vesselVoyages/${id}`,
+                columns: [{
+                        key: 'voyage_mnemonic',
+                        label: 'Voyage Mnemonic'
+                    },
+                    {
+                        key: 'vessel_name',
+                        label: 'Vessel'
+                    },
+                    {
+                        key: 'voyage_leg',
+                        label: 'Leg'
+                    },
+                    {
+                        key: 'origin',
+                        label: 'Origin',
+                        render: (row) => row.origin_port?.code ?? '-'
+                    },
+                    {
+                        key: 'destination',
+                        label: 'Destination',
+                        render: (row) => row.destination_port?.code ?? '-'
+                    },
+                    {
+                        key: 'estimated_departure_at',
+                        label: 'Est. Departure',
+                        render: (row) => formatDate(row.estimated_departure_at)
+                    },
+                    {
+                        key: 'estimated_arrival_at',
+                        label: 'Est. Arrival',
+                        render: (row) => formatDate(row.estimated_arrival_at)
+                    },
+                ],
+                fields: [{
+                        name: 'vessel_name',
+                        label: 'Vessel Name',
+                        type: 'text',
+                        required: true,
+                        placeholder: 'e.g. Callista 84'
+                    },
+                    {
+                        name: 'voyage_mnemonic',
+                        label: 'Voyage Mnemonic',
+                        type: 'text',
+                        required: true,
+                        placeholder: 'e.g. Lady Callista 84-A'
+                    },
+                    {
+                        name: 'voyage_leg',
+                        label: 'Voyage Leg',
+                        type: 'text',
+                        required: true,
+                        placeholder: 'e.g. A'
+                    },
+                    {
+                        name: 'origin_port_id',
+                        label: 'Port of Origin',
+                        type: 'select',
+                        required: true,
+                        optionsSource: 'ports'
+                    },
+                    {
+                        name: 'destination_port_id',
+                        label: 'Port of Destination',
+                        type: 'select',
+                        required: true,
+                        optionsSource: 'ports'
+                    },
+                    {
+                        name: 'estimated_departure_at',
+                        label: 'Estimated Date of Departure',
+                        type: 'date'
+                    },
+                    {
+                        name: 'estimated_arrival_at',
+                        label: 'Estimated Date of Arrival',
+                        type: 'date'
+                    },
+                ],
+            },
         };
 
         // Where each optionsSource pulls its dropdown list from, and how to
@@ -1224,10 +1318,18 @@
 
             const id = row[config.pk];
 
+            // SOP Step 11: "Admin generates load list" - only the Vessel
+            // Voyages tab has a document to generate per row, so this stays
+            // a one-off rather than a generic config option used nowhere else.
+            const loadlistLink = key === 'vesselVoyages'
+                ? `<a href="/api/vesselVoyages/${id}/loadlist" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium mr-3">Loadlist</a>`
+                : '';
+
             return `
             <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 ${cells}
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                    ${loadlistLink}
                     <button type="button" class="text-orange-600 hover:text-orange-700 text-sm font-medium mr-3" data-edit-id="${id}">Edit</button>
                     <button type="button" class="text-zinc-400 hover:text-red-600 text-sm font-medium" data-delete-id="${id}">Delete</button>
                 </td>

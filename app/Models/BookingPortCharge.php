@@ -9,7 +9,7 @@ class BookingPortCharge extends Model
 {
     protected $primaryKey = 'booking_port_charge_id';
 
-    protected $fillable = ['booking_id', 'port_id', 'charge_type_id', 'role', 'amount_snapshot'];
+    protected $fillable = ['booking_id', 'booking_line_id', 'port_id', 'charge_type_id', 'role', 'amount_snapshot'];
 
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
@@ -20,6 +20,11 @@ class BookingPortCharge extends Model
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class, 'booking_id', 'booking_id');
+    }
+
+    public function bookingLine(): BelongsTo
+    {
+        return $this->belongsTo(BookingLine::class, 'booking_line_id');
     }
 
     public function port(): BelongsTo

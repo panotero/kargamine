@@ -26,7 +26,8 @@ class ContractController extends Controller
                             $q->where('code', 'like', "%{$search}%");
                         })
                         ->orWhereHas('lead', function ($q) use ($search) {
-                            $q->where('contact_name', 'like', "%{$search}%")
+                            $q->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
                                 ->orWhereHas('company', function ($q) use ($search) {
                                     $q->where('company_name', 'like', "%{$search}%");
                                 });

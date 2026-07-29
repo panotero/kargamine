@@ -39,7 +39,10 @@ class CrmLeadController extends Controller
             ->select(
                 'id',
                 'uuid',
-                'contact_name',
+                'title',
+                'first_name',
+                'middle_name',
+                'last_name',
                 'email',
                 'mobile',
                 'status',
@@ -61,7 +64,8 @@ class CrmLeadController extends Controller
                 $search = $request->search;
 
                 $q->where(function ($q) use ($search) {
-                    $q->where('contact_name', 'like', "%{$search}%")
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('mobile', 'like', "%{$search}%")
                         ->orWhereHas('company', function ($q) use ($search) {
@@ -117,7 +121,11 @@ class CrmLeadController extends Controller
         $validator = Validator::make($request->all(), [
             'uuid' => ['nullable', 'string'],
             'client_type' => ['required', 'in:individual,corporate'],
-            'contact_name' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:50'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'gender' => ['nullable', 'in:'.implode(',', CrmLead::GENDERS)],
             'position' => ['nullable', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'max:50'],
             'mobile_type' => ['nullable', 'in:personal,business'],
@@ -130,6 +138,19 @@ class CrmLeadController extends Controller
             'company_name' => ['required_if:client_type,corporate', 'nullable', 'string', 'max:255'],
             'type_of_business' => ['nullable', 'string', 'max:255'],
             'industry_description' => ['nullable', 'string'],
+
+            'authorized_signatory_title' => ['nullable', 'string', 'max:50'],
+            'authorized_signatory_first_name' => ['nullable', 'string', 'max:255'],
+            'authorized_signatory_middle_name' => ['nullable', 'string', 'max:255'],
+            'authorized_signatory_last_name' => ['nullable', 'string', 'max:255'],
+            'authorized_signatory_gender' => ['nullable', 'in:'.implode(',', CrmLead::GENDERS)],
+            'authorized_signatory_position' => ['nullable', 'string', 'max:255'],
+            'authorized_signatory_mobile' => ['nullable', 'string', 'max:50'],
+            'authorized_signatory_mobile_type' => ['nullable', 'in:personal,business'],
+            'authorized_signatory_landline' => ['nullable', 'string', 'max:50'],
+            'authorized_signatory_landline_type' => ['nullable', 'in:personal,business'],
+            'authorized_signatory_email' => ['nullable', 'email', 'max:255'],
+            'authorized_signatory_email_type' => ['nullable', 'in:personal,business'],
 
             'addresses' => ['required', 'array', 'min:1'],
             'addresses.*.address_type' => ['nullable', 'string', 'max:255'],
@@ -164,7 +185,11 @@ class CrmLeadController extends Controller
 
             $lead->fill([
                 'client_type' => $data['client_type'],
-                'contact_name' => $data['contact_name'],
+                'title' => $data['title'] ?? null,
+                'first_name' => $data['first_name'],
+                'middle_name' => $data['middle_name'] ?? null,
+                'last_name' => $data['last_name'],
+                'gender' => $data['gender'] ?? null,
                 'position' => $data['position'] ?? null,
                 'mobile' => $data['mobile'],
                 'mobile_type' => $data['mobile_type'] ?? null,
@@ -190,6 +215,18 @@ class CrmLeadController extends Controller
                     'company_name' => $data['client_type'] === 'corporate' ? ($data['company_name'] ?? null) : null,
                     'type_of_business' => $data['type_of_business'] ?? null,
                     'industry_description' => $data['industry_description'] ?? null,
+                    'authorized_signatory_title' => $data['authorized_signatory_title'] ?? null,
+                    'authorized_signatory_first_name' => $data['authorized_signatory_first_name'] ?? null,
+                    'authorized_signatory_middle_name' => $data['authorized_signatory_middle_name'] ?? null,
+                    'authorized_signatory_last_name' => $data['authorized_signatory_last_name'] ?? null,
+                    'authorized_signatory_gender' => $data['authorized_signatory_gender'] ?? null,
+                    'authorized_signatory_position' => $data['authorized_signatory_position'] ?? null,
+                    'authorized_signatory_mobile' => $data['authorized_signatory_mobile'] ?? null,
+                    'authorized_signatory_mobile_type' => $data['authorized_signatory_mobile_type'] ?? null,
+                    'authorized_signatory_landline' => $data['authorized_signatory_landline'] ?? null,
+                    'authorized_signatory_landline_type' => $data['authorized_signatory_landline_type'] ?? null,
+                    'authorized_signatory_email' => $data['authorized_signatory_email'] ?? null,
+                    'authorized_signatory_email_type' => $data['authorized_signatory_email_type'] ?? null,
                 ]
             );
 
@@ -230,14 +267,14 @@ class CrmLeadController extends Controller
         $lead = CrmLead::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
-            'containers' => ['nullable', 'array', 'min:1'],
+            'containers' => ['nullable', 'array'],
             'containers.*.container_type' => ['nullable', 'in:CV,FR,RF,LC,RC'],
             'containers.*.origin_port_id' => ['nullable', 'integer', 'exists:ports,port_id'],
             'containers.*.destination_port_id' => ['nullable', 'integer', 'exists:ports,port_id'],
             'containers.*.booking_unit_type' => ['nullable', 'string', 'max:255'],
             'containers.*.container_class_id' => ['nullable', 'integer', 'exists:container_class,id'],
             'containers.*.container_size_id' => ['nullable', 'integer', 'exists:container_size,id'],
-            'containers.*.required_temperature' => ['nullable', 'numeric'],
+            'containers.*.minimum_temperature' => ['nullable', 'numeric'],
             'containers.*.quantity' => ['nullable', 'integer', 'min:0'],
             'containers.*.estimated_cbm' => ['nullable', 'numeric', 'min:0'],
             'containers.*.estimated_ton' => ['nullable', 'numeric', 'min:0'],
@@ -253,20 +290,42 @@ class CrmLeadController extends Controller
             'containers.*.special_notes' => ['nullable', 'string'],
         ]);
 
-        DB::transaction(function () use ($lead, $validated) {
+        $rowErrors = [];
+        foreach ($validated['containers'] ?? [] as $i => $c) {
+            $rowErrors = array_merge($rowErrors, $this->containerRowErrors($c, $i + 1));
+        }
+
+        if ($rowErrors) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', $rowErrors),
+                'errors' => $rowErrors,
+            ], 422);
+        }
+
+        $promoted = false;
+
+        DB::transaction(function () use ($lead, $validated, &$promoted) {
             // Simple replace strategy - same as your ClientMaster stage2.
             $lead->containers()->delete();
 
-            foreach ($validated['containers'] as $c) {
+            foreach ($validated['containers'] ?? [] as $c) {
                 $lead->containers()->create($c);
             }
 
             $lead->current_stage = max($lead->current_stage, 2);
             $lead->save();
-            $lead->recomputeCompletion();
+            $promoted = $lead->recomputeCompletion();
         });
 
-        return response()->json(['success' => true, 'data' => $lead->fresh()->load('containers')]);
+        $lead = $lead->fresh()->load('containers', 'company', 'addresses');
+
+        return response()->json([
+            'success' => true,
+            'data' => $lead,
+            'moved_to_opportunity' => $promoted,
+            'missing_requirements' => $lead->is_complete ? [] : $lead->missingRequirements(),
+        ]);
     }
 
     /**
@@ -285,7 +344,7 @@ class CrmLeadController extends Controller
             'booking_unit_type' => ['nullable', 'string', 'max:255'],
             'container_class_id' => ['nullable', 'integer', 'exists:container_class,id'],
             'container_size_id' => ['nullable', 'integer', 'exists:container_size,id'],
-            'required_temperature' => ['nullable', 'numeric'],
+            'minimum_temperature' => ['nullable', 'numeric'],
             'quantity' => ['nullable', 'integer', 'min:0'],
             'estimated_cbm' => ['nullable', 'numeric', 'min:0'],
             'estimated_ton' => ['nullable', 'numeric', 'min:0'],
@@ -300,6 +359,16 @@ class CrmLeadController extends Controller
             'special_requirements' => ['nullable', 'string'],
             'special_notes' => ['nullable', 'string'],
         ]);
+
+        $rowErrors = $this->containerRowErrors($validated, 1);
+
+        if ($rowErrors) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', $rowErrors),
+                'errors' => $rowErrors,
+            ], 422);
+        }
 
         $container = DB::transaction(function () use ($lead, $validated) {
             $container = $lead->containers()->create($validated);
@@ -320,6 +389,66 @@ class CrmLeadController extends Controller
                 'containerSize:id,size',
             ]),
         ]);
+    }
+
+    /**
+     * A booking requirement row is only meaningful once its core fields
+     * are filled in - an all-blank row (added then left untouched) must
+     * never be allowed to save silently. Which extra fields count as
+     * "required" depends on the container type, mirroring
+     * TYPE_FIELD_VISIBILITY in crmLeadForm.blade.php.
+     */
+    private function containerRowErrors(array $c, int $index): array
+    {
+        $typeFlags = [
+            'CV' => ['class' => true, 'size' => true, 'temp' => false, 'split' => true],
+            'FR' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
+            'RF' => ['class' => true, 'size' => false, 'temp' => true, 'split' => true],
+            'LC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => false],
+            'RC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => false],
+        ];
+
+        $errors = [];
+        $type = $c['container_type'] ?? null;
+
+        if (empty($type) || ! isset($typeFlags[$type])) {
+            $errors[] = "Booking requirement #{$index}: container type is required.";
+
+            return $errors;
+        }
+
+        $flags = $typeFlags[$type];
+
+        if (empty($c['origin_port_id'])) {
+            $errors[] = "Booking requirement #{$index}: origin port is required.";
+        }
+        if (empty($c['destination_port_id'])) {
+            $errors[] = "Booking requirement #{$index}: destination port is required.";
+        }
+        if (empty($c['quantity']) || (int) $c['quantity'] < 1) {
+            $errors[] = "Booking requirement #{$index}: quantity is required.";
+        }
+        if ($flags['class'] && empty($c['container_class_id'])) {
+            $errors[] = "Booking requirement #{$index}: ConVan class is required.";
+        }
+        if ($flags['size'] && empty($c['container_size_id'])) {
+            $errors[] = "Booking requirement #{$index}: ConVan size is required.";
+        }
+        if ($flags['temp'] && ($c['minimum_temperature'] ?? null) === null) {
+            $errors[] = "Booking requirement #{$index}: minimum temperature is required.";
+        }
+        if ($flags['split']) {
+            if (empty($c['service_mode_origin'])) {
+                $errors[] = "Booking requirement #{$index}: service mode (origin) is required.";
+            }
+            if (empty($c['service_mode_destination'])) {
+                $errors[] = "Booking requirement #{$index}: service mode (destination) is required.";
+            }
+        } elseif (empty($c['service_mode'])) {
+            $errors[] = "Booking requirement #{$index}: service mode is required.";
+        }
+
+        return $errors;
     }
 
     /**
@@ -352,7 +481,7 @@ class CrmLeadController extends Controller
         try {
             $lead = CrmLead::create([
 
-                'contact_name' => $request->contact_name,
+                ...CrmLead::splitFullName($request->contact_name),
                 'email' => $request->email,
                 'mobile' => $request->mobile,
                 'position' => $request->position ?? null,
@@ -446,7 +575,7 @@ class CrmLeadController extends Controller
     public function update(Request $request, $uuid)
     {
         $updatePayload = [
-            'contact_name' => $request->contact_name,
+            ...CrmLead::splitFullName($request->contact_name),
             'email' => $request->contact_email,
             'mobile' => $request->contact_mobile,
         ];

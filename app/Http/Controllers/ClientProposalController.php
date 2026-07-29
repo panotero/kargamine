@@ -347,6 +347,7 @@ class ClientProposalController extends Controller
             'rates.*.container_class_id' => ['required', 'integer', 'exists:container_class,id'],
             'rates.*.container_size_id' => ['required', 'integer', 'exists:container_size,id'],
             'rates.*.container_variant_id' => ['required', 'integer', 'exists:container_variants,id'],
+            'rates.*.min_van_qty' => ['nullable', 'integer', 'min:1'],
             'rates.*.base_rate' => ['required', 'numeric', 'min:0'],
             'rates.*.discount_type' => ['nullable', 'in:percentage,fixed'],
             'rates.*.discount_value' => ['nullable', 'numeric', 'min:0'],

@@ -18,7 +18,7 @@ class CrmLeadContainer extends Model
         'general_cargo_description',
         'container_class_id',
         'container_size_id',
-        'required_temperature',
+        'minimum_temperature',
         'estimated_cbm',
         'estimated_ton',
         'service_mode_origin',
@@ -35,7 +35,7 @@ class CrmLeadContainer extends Model
         'updated_at' => 'datetime:M d, Y, h:i A',
         'dangerous_cargo' => 'boolean',
         'declared_value_per_unit' => 'decimal:2',
-        'required_temperature' => 'decimal:2',
+        'minimum_temperature' => 'decimal:2',
         'estimated_cbm' => 'decimal:2',
         'estimated_ton' => 'decimal:2',
     ];

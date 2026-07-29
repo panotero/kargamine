@@ -21,6 +21,12 @@ class PermissionSeeder extends Seeder
             ['key' => 'booking.confirm', 'label' => 'Confirm a booking', 'module' => 'Booking'],
             ['key' => 'booking.cancel', 'label' => 'Cancel a booking', 'module' => 'Booking'],
             ['key' => 'booking.advance-status', 'label' => 'Advance a booking\'s status', 'module' => 'Booking'],
+            ['key' => 'booking.generate-dispatch-document', 'label' => 'Generate a booking line\'s ATW/CAN', 'module' => 'Booking'],
+            ['key' => 'booking.assign-cv', 'label' => 'Assign ConVan/Proforma BL/Waybill/Seal to a container unit', 'module' => 'Booking'],
+            ['key' => 'booking.gate-scan', 'label' => 'Scan a container in/out at the gate (Pier Check-In)', 'module' => 'Booking'],
+            ['key' => 'booking.issue-eir', 'label' => 'Issue a container\'s EIR Out/In', 'module' => 'Booking'],
+            ['key' => 'booking.assign-voyage', 'label' => 'Assign or shut out a container\'s vessel voyage', 'module' => 'Booking'],
+            ['key' => 'booking.generate-loadlist', 'label' => 'Generate a vessel voyage\'s loadlist', 'module' => 'Booking'],
             ['key' => 'contract.create', 'label' => 'Create a contract from an accepted proposal', 'module' => 'Contract'],
             ['key' => 'contract.terminate', 'label' => 'Terminate a contract', 'module' => 'Contract'],
         ];

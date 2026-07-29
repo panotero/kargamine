@@ -27,3 +27,6 @@ Route::get('/page_team_management', [PageController::class, 'page_TeamManagement
 Route::get('/page_container_inventory', [PageController::class, 'page_ContainerInventory']);
 Route::get('/page_booking', [PageController::class, 'page_Booking']);
 Route::get('/page_bookingForm', [PageController::class, 'page_BookingForm']);
+Route::get('/page_cargo_build_up', [PageController::class, 'page_CargoBuildUp']);
+Route::get('/page_pier_checkin', [PageController::class, 'page_PierCheckin']);
+Route::get('/page_help', [PageController::class, 'page_Help']);

@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingDispatchController;
+use App\Http\Controllers\BookingEirController;
+use App\Http\Controllers\BookingGateScanController;
+use App\Http\Controllers\BookingVoyageController;
+use App\Http\Controllers\CargoBuildUpController;
 use App\Http\Controllers\ChargeTypeController;
 use App\Http\Controllers\ContainerAssetController;
 use App\Http\Controllers\ContainerClassController;
@@ -17,6 +22,7 @@ use App\Http\Controllers\PortController;
 use App\Http\Controllers\ServiceableAreaController;
 use App\Http\Controllers\TruckingTariffController;
 use App\Http\Controllers\VatRateController;
+use App\Http\Controllers\VesselVoyageController;
 use Illuminate\Support\Facades\Route;
 
 // =========================================================
@@ -29,6 +35,17 @@ Route::prefix('ports')->group(function () {
     Route::post('/', [PortController::class, 'store']);
     Route::put('/{port}', [PortController::class, 'update']);
     Route::delete('/{port}', [PortController::class, 'destroy']);
+});
+
+// SOP Step 10 (Voyage Plan) - master data
+Route::prefix('vesselVoyages')->group(function () {
+    Route::get('/', [VesselVoyageController::class, 'index']);
+    Route::get('/{vesselVoyage}/loadlist', [VesselVoyageController::class, 'loadlist']) // must stay above /{vesselVoyage}
+        ->middleware('permission:booking.generate-loadlist');
+    Route::get('/{vesselVoyage}', [VesselVoyageController::class, 'show']);
+    Route::post('/', [VesselVoyageController::class, 'store']);
+    Route::put('/{vesselVoyage}', [VesselVoyageController::class, 'update']);
+    Route::delete('/{vesselVoyage}', [VesselVoyageController::class, 'destroy']);
 });
 
 Route::prefix('chargeTypes')->group(function () {
@@ -136,6 +153,38 @@ Route::prefix('bookings')->group(function () {
     // Downloading an already-issued document is a read action, not gated
     // behind the same permission that created it.
     Route::get('/{booking}/bol', [BookingController::class, 'downloadBol']);
+});
+
+// Phase 2: Cargo Build-Up status board (SOP Step 2) - read-only, no
+// permission gate beyond being authenticated, same as the bookings list above.
+Route::prefix('cargo-build-up')->group(function () {
+    Route::get('/', [CargoBuildUpController::class, 'index']);
+    Route::get('/bookings', [CargoBuildUpController::class, 'bookings']); // ?bucket= - must stay above nothing else needs it
+});
+
+// Phase 3: ATW/CAN issuance + CV assignment (SOP Steps 3-4)
+Route::post('/booking-lines/{bookingLine}/dispatch-document', [BookingDispatchController::class, 'generate'])
+    ->middleware('permission:booking.generate-dispatch-document');
+Route::put('/booking-container-units/{bookingContainerUnit}/cv-assignment', [BookingDispatchController::class, 'updateCvAssignment'])
+    ->middleware('permission:booking.assign-cv');
+
+// Phase 4: Gate Pass scan-confirmation (SOP Steps 6-7) - Pier Check-In page
+Route::prefix('gate-scan')->middleware('permission:booking.gate-scan')->group(function () {
+    Route::get('/pending', [BookingGateScanController::class, 'pending']); // must stay above nothing else needs it
+    Route::post('/', [BookingGateScanController::class, 'scan']);
+});
+
+// Phase 5: EIR Out/In (SOP Steps 5 & 9)
+Route::middleware('permission:booking.issue-eir')->group(function () {
+    Route::post('/booking-container-units/eir-upload', [BookingEirController::class, 'uploadFile']); // must stay above nothing else needs it
+    Route::post('/booking-container-units/{bookingContainerUnit}/eir-out', [BookingEirController::class, 'issueOut']);
+    Route::post('/booking-container-units/{bookingContainerUnit}/eir-in', [BookingEirController::class, 'issueIn']);
+});
+
+// Phase 6: Vessel Voyage assignment + Shut Out (SOP Steps 10-11)
+Route::middleware('permission:booking.assign-voyage')->group(function () {
+    Route::post('/booking-container-units/{bookingContainerUnit}/assign-voyage', [BookingVoyageController::class, 'assign']);
+    Route::post('/booking-container-units/{bookingContainerUnit}/shut-out', [BookingVoyageController::class, 'shutOut']);
 });
 
 // =========================================================

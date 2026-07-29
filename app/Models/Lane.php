@@ -33,9 +33,9 @@ class Lane extends Model
         return $this->hasMany(LaneTariffRate::class, 'lane_id', 'lane_id');
     }
 
-    public function bookings(): HasMany
+    public function bookingLines(): HasMany
     {
-        return $this->hasMany(Booking::class, 'lane_id', 'lane_id');
+        return $this->hasMany(BookingLine::class, 'lane_id', 'lane_id');
     }
 
     /** Convenience: currently active tariff rate (today). */

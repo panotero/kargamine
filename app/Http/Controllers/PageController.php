@@ -165,4 +165,19 @@ class PageController extends Controller
     {
         return view('pages.bookingForm');
     }
+
+    public function page_CargoBuildUp()
+    {
+        return view('pages.cargoBuildUp');
+    }
+
+    public function page_PierCheckin()
+    {
+        return view('pages.pierCheckin');
+    }
+
+    public function page_Help()
+    {
+        return view('pages.help');
+    }
 }

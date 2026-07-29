@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold" id="formPageTitle">New Booking</h1>
-            <p class="text-zinc-500 text-sm">A booking is saved as Draft until you confirm it.</p>
+            <p class="text-zinc-500 text-sm">A booking is saved as Draft until you confirm it. Each cargo line has its own route and delivery mode - a single booking can ship to more than one destination.</p>
         </div>
         <button id="btnBackToList" type="button"
             class="border border-zinc-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-100">
@@ -33,50 +33,15 @@
 
                 {{-- Contracted lanes/containers for the selected client - quick-add shortcuts --}}
                 <div id="contractSuggestions" class="hidden mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase mb-1.5">Contracted Lanes — click to prefill</p>
+                    <p class="text-[11px] font-medium text-zinc-400 uppercase mb-1.5">Contracted Lanes — click to add a line</p>
                     <div id="contractSuggestionsChips" class="flex flex-wrap gap-1.5"></div>
                 </div>
             </div>
 
-            {{-- Route & delivery --}}
+            {{-- Booking date --}}
             <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm p-6">
-                <p class="font-semibold text-zinc-700 dark:text-zinc-200 mb-3">Route &amp; Delivery</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Origin Port</label>
-                        <select id="originPort" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            <option value="">Select port</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Destination Port</label>
-                        <select id="destinationPort" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            <option value="">Select port</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Origin Area</label>
-                        <select id="originArea" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            <option value="">Select origin port first</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Destination Area</label>
-                        <select id="destinationArea" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            <option value="">Select destination port first</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Delivery Type</label>
-                        <select id="deliveryType" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            <option value="">Select delivery type</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Booking Date</label>
-                        <input type="date" id="bookingDate" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                    </div>
-                </div>
+                <label class="text-xs font-medium text-zinc-400 uppercase">Booking Date</label>
+                <input type="date" id="bookingDate" class="w-full md:w-64 border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
             </div>
 
             {{-- Cargo lines --}}
@@ -94,12 +59,19 @@
             <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm p-5 sticky top-4">
                 <p class="font-semibold text-zinc-700 dark:text-zinc-200 mb-3">Price Preview</p>
                 <div id="quoteBody" class="text-sm text-zinc-500">
-                    Fill in the route and at least one cargo line to see pricing.
+                    Fill in a client and at least one cargo line to see pricing.
                 </div>
                 <button type="button" id="saveDraftBtn"
                     class="mt-5 w-full px-4 py-2.5 text-sm font-medium rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
                     Save as Draft
                 </button>
+                <button type="button" id="confirmBookingBtn"
+                    class="hidden mt-2 w-full px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                    Confirm Booking
+                </button>
+                <p id="confirmBookingHint" class="hidden text-xs text-zinc-400 mt-2">
+                    Locks in pricing and generates the Invoice + Bill of Lading. Save any changes first.
+                </p>
             </div>
         </div>
     </div>
@@ -133,43 +105,24 @@
             ports = portsRes?.success ? (portsRes.data?.data ?? []) : [];
             deliveryTypes = deliveryRes?.success ? (deliveryRes.data?.data ?? []) : [];
             containerVariants = variantsRes?.success ? (variantsRes.data ?? []) : [];
-
-            const portOptions = optionsHtml(ports, 'port_id', (p) => `${p.name} (${p.code})`, 'Select port');
-            document.getElementById('originPort').innerHTML = portOptions;
-            document.getElementById('destinationPort').innerHTML = portOptions;
-
-            document.getElementById('deliveryType').innerHTML = optionsHtml(
-                deliveryTypes, 'delivery_type_id', (d) => d.name, 'Select delivery type'
-            );
         }
 
-        async function loadAreasFor(selectId, portId) {
-            const select = document.getElementById(selectId);
+        function portOptionsHtml() {
+            return optionsHtml(ports, 'port_id', (p) => `${p.name} (${p.code})`, 'Select port');
+        }
 
+        async function loadAreasForElement(selectEl, portId) {
             if (!portId) {
-                select.innerHTML = '<option value="">Select port first</option>';
+                selectEl.innerHTML = '<option value="">Select port first</option>';
                 return;
             }
 
             const response = await apiCall({ mode: 'GET', url: `/api/serviceableAreas?port_id=${portId}&per_page=200` });
             const areas = response?.success ? (response.data?.data ?? []) : [];
-            select.innerHTML = optionsHtml(areas, 'area_id', (a) => a.area_name, 'Select area');
+            selectEl.innerHTML = optionsHtml(areas, 'area_id', (a) => a.area_name, 'Select area');
         }
 
-        document.getElementById('originPort').addEventListener('change', function() {
-            loadAreasFor('originArea', this.value);
-            refreshManualContainersForAllLines();
-            scheduleQuote();
-        });
-
-        document.getElementById('destinationPort').addEventListener('change', function() {
-            loadAreasFor('destinationArea', this.value);
-            scheduleQuote();
-        });
-
-        ['originArea', 'destinationArea', 'deliveryType', 'bookingDate'].forEach((id) => {
-            document.getElementById(id).addEventListener('change', scheduleQuote);
-        });
+        document.getElementById('bookingDate').addEventListener('change', scheduleQuote);
 
         // -----------------------------------------------------------------
         // Client picker
@@ -263,10 +216,12 @@
                     data-index="${i}"
                     data-origin-port-id="${rate.origin_port_id}"
                     data-destination-port-id="${rate.destination_port_id}"
-                    data-container-variant-id="${rate.container_variant_id}">
+                    data-container-variant-id="${rate.container_variant_id}"
+                    data-min-van-qty="${rate.min_van_qty ?? ''}">
                     ${rate.origin_port?.code ?? '?'} &rarr; ${rate.destination_port?.code ?? '?'}
                     &middot; ${rate.container?.name ?? '-'}/${rate.container_class?.class ?? '-'}/${rate.container_size?.size ?? '-'}
                     &middot; &#8369;${money(rate.final_rate)}
+                    ${rate.min_van_qty ? `&middot; min ${rate.min_van_qty} for discount` : ''}
                 </button>
             `).join('');
 
@@ -277,19 +232,33 @@
             const chip = e.target.closest('.contract-chip');
             if (!chip) return;
 
-            const originPortSelect = document.getElementById('originPort');
-            const destinationPortSelect = document.getElementById('destinationPort');
-
-            originPortSelect.value = chip.dataset.originPortId;
-            originPortSelect.dispatchEvent(new Event('change'));
-
-            destinationPortSelect.value = chip.dataset.destinationPortId;
-            destinationPortSelect.dispatchEvent(new Event('change'));
-
+            // Adds a whole new line pre-set to this contracted lane +
+            // container - route/mode live per line now, not on a shared
+            // header, so a chip can't just "set the form's route" anymore.
             const card = addLine();
+
+            const originSelect = card.querySelector('.line-origin-port');
+            originSelect.value = chip.dataset.originPortId;
+            originSelect.dispatchEvent(new Event('change'));
+
+            const destinationSelect = card.querySelector('.line-destination-port');
+            destinationSelect.value = chip.dataset.destinationPortId;
+            destinationSelect.dispatchEvent(new Event('change'));
+
             const variantSelect = card.querySelector('[data-field="container_variant_id"]');
             variantSelect.value = chip.dataset.containerVariantId;
             variantSelect.dispatchEvent(new Event('change'));
+
+            // Preset quantity to the contract's minimum so the discount
+            // actually applies instead of silently falling back to the
+            // standard tariff - the user can still lower it, they'll just
+            // see the price change accordingly.
+            const minVanQty = Number(chip.dataset.minVanQty || 0);
+            if (minVanQty > 1) {
+                const quantityInput = card.querySelector('[data-field="quantity"]');
+                quantityInput.value = minVanQty;
+                quantityInput.dispatchEvent(new Event('change'));
+            }
         });
 
         // -----------------------------------------------------------------
@@ -301,12 +270,57 @@
 
         function lineCardHtml(index) {
             const variantOptions = optionsHtml(containerVariants, 'id', variantLabel, 'Select container');
+            const portOptions = portOptionsHtml();
 
             return `
             <div class="cargo-line-card border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 space-y-3" data-line-index="${index}">
                 <div class="flex justify-between items-center">
                     <p class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Cargo Line</p>
                     <button type="button" class="remove-line text-red-500 text-xs font-medium">✕ Remove</button>
+                </div>
+
+                <div class="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                    <label class="text-[11px] text-zinc-400 uppercase block mb-1.5">Route &amp; Delivery for this cargo</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Origin Port</label>
+                            <select data-field="origin_port_id" class="line-origin-port w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                ${portOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Destination Port</label>
+                            <select data-field="destination_port_id" class="line-destination-port w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                ${portOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Origin Area</label>
+                            <select data-field="origin_area_id" class="line-origin-area w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                <option value="">Select origin port first</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Destination Area</label>
+                            <select data-field="destination_area_id" class="line-destination-area w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                <option value="">Select destination port first</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Origin Mode</label>
+                            <select data-field="origin_mode" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                <option value="door">Door</option>
+                                <option value="pier">Pier</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Destination Mode</label>
+                            <select data-field="destination_mode" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                <option value="door">Door</option>
+                                <option value="pier">Pier</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -339,6 +353,59 @@
                         <label class="flex items-center gap-2 text-sm">
                             <input type="checkbox" data-field="is_fragile"> Fragile
                         </label>
+                    </div>
+                </div>
+
+                <div class="border-t border-zinc-100 dark:border-zinc-800 pt-3">
+                    <label class="text-[11px] text-zinc-400 uppercase block mb-1.5">
+                        Transaction Details
+                        <span class="normal-case text-zinc-300">— fill in to move this line from Tentative to Live on the Cargo Build-Up board</span>
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Consignee Name</label>
+                            <input type="text" data-field="consignee_name" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Consignee Contact Person</label>
+                            <input type="text" data-field="consignee_contact_person" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-[11px] text-zinc-400 uppercase">Consignee Address</label>
+                            <input type="text" data-field="consignee_address" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Consignee Contact Number</label>
+                            <input type="text" data-field="consignee_contact_number" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Cargo Type / Content</label>
+                            <input type="text" data-field="cargo_type" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-[11px] text-zinc-400 uppercase">Other Cargo Details</label>
+                            <textarea data-field="other_cargo_details" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Booking Declared Value</label>
+                            <input type="number" step="0.01" min="0" data-field="declared_value" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Delivery Date</label>
+                            <input type="date" data-field="delivery_date" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-[11px] text-zinc-400 uppercase">Notes for Delivery Date</label>
+                            <input type="text" data-field="delivery_date_notes" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">First Delivery Date</label>
+                            <input type="date" data-field="first_delivery_date" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Last Delivery Date</label>
+                            <input type="date" data-field="last_delivery_date" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        </div>
                     </div>
                 </div>
 
@@ -378,6 +445,15 @@
             card.querySelector('.line-variant').addEventListener('change', () => refreshManualContainers(card));
             card.querySelector('.line-quantity').addEventListener('change', () => refreshManualContainers(card));
 
+            card.querySelector('.line-origin-port').addEventListener('change', function() {
+                loadAreasForElement(card.querySelector('.line-origin-area'), this.value);
+                refreshManualContainers(card);
+            });
+
+            card.querySelector('.line-destination-port').addEventListener('change', function() {
+                loadAreasForElement(card.querySelector('.line-destination-area'), this.value);
+            });
+
             card.querySelectorAll('.assign-mode').forEach((radio) => {
                 radio.addEventListener('change', () => {
                     const manualBox = card.querySelector('.manual-containers');
@@ -389,21 +465,17 @@
             });
         }
 
-        function refreshManualContainersForAllLines() {
-            document.querySelectorAll('.cargo-line-card').forEach(refreshManualContainers);
-        }
-
         async function refreshManualContainers(card) {
             const isManual = card.querySelector('.assign-mode:checked')?.value === 'manual';
             if (!isManual) return;
 
             const variantId = card.querySelector('.line-variant').value;
             const quantity = Number(card.querySelector('.line-quantity').value || 1);
-            const originPortId = document.getElementById('originPort').value;
+            const originPortId = card.querySelector('.line-origin-port').value;
             const box = card.querySelector('.manual-containers');
 
             if (!variantId || !originPortId) {
-                box.innerHTML = '<p class="text-zinc-400">Select the container type and origin port first.</p>';
+                box.innerHTML = '<p class="text-zinc-400">Select the container type and this line\'s origin port first.</p>';
                 return;
             }
 
@@ -445,6 +517,12 @@
                 const isManual = card.querySelector('.assign-mode:checked')?.value === 'manual';
 
                 const line = {
+                    origin_port_id: Number(get('origin_port_id').value) || null,
+                    destination_port_id: Number(get('destination_port_id').value) || null,
+                    origin_area_id: Number(get('origin_area_id').value) || null,
+                    destination_area_id: Number(get('destination_area_id').value) || null,
+                    origin_mode: get('origin_mode').value,
+                    destination_mode: get('destination_mode').value,
                     container_variant_id: Number(get('container_variant_id').value) || null,
                     quantity: Number(get('quantity').value) || 1,
                     description: get('description').value || null,
@@ -452,6 +530,17 @@
                     volume_cbm: get('volume_cbm').value || null,
                     is_hazardous: get('is_hazardous').checked,
                     is_fragile: get('is_fragile').checked,
+                    consignee_name: get('consignee_name').value || null,
+                    consignee_address: get('consignee_address').value || null,
+                    consignee_contact_person: get('consignee_contact_person').value || null,
+                    consignee_contact_number: get('consignee_contact_number').value || null,
+                    cargo_type: get('cargo_type').value || null,
+                    other_cargo_details: get('other_cargo_details').value || null,
+                    declared_value: get('declared_value').value || null,
+                    delivery_date: get('delivery_date').value || null,
+                    delivery_date_notes: get('delivery_date_notes').value || null,
+                    first_delivery_date: get('first_delivery_date').value || null,
+                    last_delivery_date: get('last_delivery_date').value || null,
                     auto_assign: !isManual,
                 };
 
@@ -460,26 +549,21 @@
                 }
 
                 return line;
-            }).filter(l => l.container_variant_id);
+            }).filter(l => l.container_variant_id && l.origin_port_id && l.destination_port_id);
         }
 
         function collectPayload() {
             return {
                 client_id: document.getElementById('clientId').value || null,
-                origin_port_id: document.getElementById('originPort').value || null,
-                destination_port_id: document.getElementById('destinationPort').value || null,
-                origin_area_id: document.getElementById('originArea').value || null,
-                destination_area_id: document.getElementById('destinationArea').value || null,
-                delivery_type_id: document.getElementById('deliveryType').value || null,
                 booking_date: document.getElementById('bookingDate').value || null,
                 lines: collectLines(),
             };
         }
 
         function payloadIsQuotable(payload) {
-            return payload.client_id && payload.origin_port_id && payload.destination_port_id &&
-                payload.origin_area_id && payload.destination_area_id && payload.delivery_type_id &&
-                payload.lines.length > 0;
+            return payload.client_id && payload.lines.length > 0 && payload.lines.every(
+                l => l.origin_area_id && l.destination_area_id
+            );
         }
 
         function scheduleQuote() {
@@ -496,7 +580,7 @@
             const quoteBody = document.getElementById('quoteBody');
 
             if (!payloadIsQuotable(payload)) {
-                quoteBody.innerHTML = '<p class="text-zinc-500">Fill in the route and at least one cargo line to see pricing.</p>';
+                quoteBody.innerHTML = '<p class="text-zinc-500">Fill in a client and at least one complete cargo line to see pricing.</p>';
                 return;
             }
 
@@ -508,12 +592,18 @@
             }
 
             const b = response.data;
-            const lineRows = (b.lines ?? []).map(l => `
+            const portById = Object.fromEntries(ports.map(p => [String(p.port_id), p]));
+            const lineRows = (b.lines ?? []).map(l => {
+                const origin = portById[String(l.origin_port_id)]?.code ?? '?';
+                const destination = portById[String(l.destination_port_id)]?.code ?? '?';
+
+                return `
                 <div class="flex justify-between text-xs py-1 border-b border-zinc-50 dark:border-zinc-800">
-                    <span class="text-zinc-500">${l.quantity} &times; ${money(l.frt_after_discount)}</span>
+                    <span class="text-zinc-500">${origin} &rarr; ${destination} &middot; ${l.quantity} &times; ${money(l.frt_after_discount)}</span>
                     <span class="font-medium">${money(l.line_total)}</span>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             quoteBody.innerHTML = `
                 <div class="space-y-1 mb-3">${lineRows}</div>
@@ -560,6 +650,26 @@
             goBackToList();
         });
 
+        document.getElementById('confirmBookingBtn').addEventListener('click', async function() {
+            const response = await apiCall({
+                mode: 'POST',
+                url: `/api/bookings/${bookingUuid}/confirm`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to confirm booking',
+                    message: response.message ?? '',
+                });
+                return;
+            }
+
+            showMessage({ status: 'success', title: 'Booking confirmed' });
+            goBackToList();
+        });
+
         function goBackToList() {
             loadPage({ title: 'Bookings', link: '/page_booking' });
         }
@@ -576,19 +686,26 @@
             const b = response.data;
             document.getElementById('formPageTitle').textContent = `Edit Booking — ${b.code}`;
             selectClient(b.client_id, b.client?.company_name ?? 'Client', b.client?.uuid);
-
-            document.getElementById('originPort').value = b.lane?.origin_port_id ?? '';
-            document.getElementById('destinationPort').value = b.lane?.destination_port_id ?? '';
-            document.getElementById('deliveryType').value = b.delivery_type_id ?? '';
             document.getElementById('bookingDate').value = b.booking_date ?? '';
 
-            await loadAreasFor('originArea', b.lane?.origin_port_id);
-            await loadAreasFor('destinationArea', b.lane?.destination_port_id);
-            document.getElementById('originArea').value = b.origin_area_id ?? '';
-            document.getElementById('destinationArea').value = b.destination_area_id ?? '';
-
-            (b.lines ?? []).forEach((line) => {
+            for (const line of (b.lines ?? [])) {
                 const card = addLine();
+
+                const originSelect = card.querySelector('.line-origin-port');
+                originSelect.value = line.origin_port_id ?? '';
+                await loadAreasForElement(card.querySelector('.line-origin-area'), line.origin_port_id);
+                card.querySelector('[data-field="origin_area_id"]').value = line.origin_area_id ?? '';
+
+                const destinationSelect = card.querySelector('.line-destination-port');
+                destinationSelect.value = line.destination_port_id ?? '';
+                await loadAreasForElement(card.querySelector('.line-destination-area'), line.destination_port_id);
+                card.querySelector('[data-field="destination_area_id"]').value = line.destination_area_id ?? '';
+
+                if (line.delivery_type) {
+                    card.querySelector('[data-field="origin_mode"]').value = line.delivery_type.includes_origin_trucking ? 'door' : 'pier';
+                    card.querySelector('[data-field="destination_mode"]').value = line.delivery_type.includes_destination_trucking ? 'door' : 'pier';
+                }
+
                 card.querySelector('[data-field="container_variant_id"]').value = line.container_variant_id;
                 card.querySelector('[data-field="quantity"]').value = line.quantity;
                 card.querySelector('[data-field="description"]').value = line.description ?? '';
@@ -596,10 +713,21 @@
                 card.querySelector('[data-field="volume_cbm"]').value = line.volume_cbm ?? '';
                 card.querySelector('[data-field="is_hazardous"]').checked = !!line.is_hazardous;
                 card.querySelector('[data-field="is_fragile"]').checked = !!line.is_fragile;
+                card.querySelector('[data-field="consignee_name"]').value = line.consignee_name ?? '';
+                card.querySelector('[data-field="consignee_address"]').value = line.consignee_address ?? '';
+                card.querySelector('[data-field="consignee_contact_person"]').value = line.consignee_contact_person ?? '';
+                card.querySelector('[data-field="consignee_contact_number"]').value = line.consignee_contact_number ?? '';
+                card.querySelector('[data-field="cargo_type"]').value = line.cargo_type ?? '';
+                card.querySelector('[data-field="other_cargo_details"]').value = line.other_cargo_details ?? '';
+                card.querySelector('[data-field="declared_value"]').value = line.declared_value ?? '';
+                card.querySelector('[data-field="delivery_date"]').value = line.delivery_date ?? '';
+                card.querySelector('[data-field="delivery_date_notes"]').value = line.delivery_date_notes ?? '';
+                card.querySelector('[data-field="first_delivery_date"]').value = line.first_delivery_date ?? '';
+                card.querySelector('[data-field="last_delivery_date"]').value = line.last_delivery_date ?? '';
                 // Container assignment defaults back to Auto-assign on edit -
                 // update() re-reserves from scratch regardless, so this keeps
                 // the form simple rather than reconstructing prior manual picks.
-            });
+            }
 
             scheduleQuote();
         }
@@ -612,10 +740,14 @@
             isEdit = Boolean(bookingUuid);
             window.bookingFormUuid = null;
 
+            document.getElementById('bookingDate').value = new Date().toISOString().slice(0, 10);
+
             await loadReferenceData();
 
             if (isEdit) {
                 await loadForEdit();
+                document.getElementById('confirmBookingBtn').classList.remove('hidden');
+                document.getElementById('confirmBookingHint').classList.remove('hidden');
             } else {
                 addLine();
             }

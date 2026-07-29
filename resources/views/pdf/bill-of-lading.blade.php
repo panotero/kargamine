@@ -127,14 +127,30 @@
                 <td><strong>Shipper / Client</strong></td>
                 <td>{{ $booking->client->company_name }} ({{ $booking->client->customer_code }})</td>
             </tr>
+            @php
+                // Route/lane moved to per-line (each cargo line can ship to a
+                // different destination) - the booking header no longer has
+                // a single lane. Show the first line's route; flag it if the
+                // other lines don't all agree, rather than silently picking one.
+                $firstLine = $booking->lines->first();
+                $sameRoute = $booking->lines->every(fn ($l) => $l->origin_port_id === $firstLine?->origin_port_id
+                    && $l->destination_port_id === $firstLine?->destination_port_id);
+            @endphp
             <tr>
                 <td><strong>Port of Loading</strong></td>
-                <td>{{ $booking->lane->originPort->name ?? '-' }} ({{ $booking->lane->originPort->code ?? '-' }})</td>
+                <td>{{ $firstLine?->originPort?->name ?? '-' }} ({{ $firstLine?->originPort?->code ?? '-' }}){{ $sameRoute ? '' : ' *' }}</td>
             </tr>
             <tr>
                 <td><strong>Port of Discharge</strong></td>
-                <td>{{ $booking->lane->destinationPort->name ?? '-' }} ({{ $booking->lane->destinationPort->code ?? '-' }})</td>
+                <td>{{ $firstLine?->destinationPort?->name ?? '-' }} ({{ $firstLine?->destinationPort?->code ?? '-' }}){{ $sameRoute ? '' : ' *' }}</td>
             </tr>
+            @unless ($sameRoute)
+                <tr>
+                    <td colspan="2" style="font-size:10px;color:#b5790e;">* This booking's cargo lines ship to
+                        different destinations - see the Cargo &amp; Container Detail table below for each line's
+                        actual route.</td>
+                </tr>
+            @endunless
             <tr>
                 <td><strong>Booking Date</strong></td>
                 <td>{{ $booking->booking_date?->format('F d, Y') ?? '-' }}</td>
@@ -152,13 +168,14 @@
             <thead>
                 <tr>
                     <th width="5%">#</th>
-                    <th width="20%">Container</th>
-                    <th width="15%">Container No.</th>
-                    <th width="12%">Seal No.</th>
-                    <th width="18%">Description</th>
-                    <th width="12%">Weight (kg)</th>
-                    <th width="12%">Volume (m&sup3;)</th>
-                    <th width="6%">Flags</th>
+                    <th width="14%">Route</th>
+                    <th width="16%">Container</th>
+                    <th width="13%">Container No.</th>
+                    <th width="10%">Seal No.</th>
+                    <th width="14%">Description</th>
+                    <th width="10%">Weight (kg)</th>
+                    <th width="10%">Volume (m&sup3;)</th>
+                    <th width="8%">Flags</th>
                 </tr>
             </thead>
             <tbody>
@@ -166,6 +183,7 @@
                     @forelse ($line->containerUnits as $unit)
                         <tr>
                             <td>{{ $unit->unit_index }}</td>
+                            <td>{{ $line->originPort?->code ?? '-' }} &rarr; {{ $line->destinationPort?->code ?? '-' }}</td>
                             <td>{{ $line->container->name ?? '-' }} / {{ $line->containerClass->class ?? '-' }} /
                                 {{ $line->containerSize->size ?? '-' }}</td>
                             <td>{{ $unit->containerAsset->container_no ?? 'Not yet assigned' }}</td>

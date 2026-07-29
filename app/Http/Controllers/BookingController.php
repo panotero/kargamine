@@ -12,7 +12,6 @@ use App\Models\BookingStatusHistory;
 use App\Models\ClientContract;
 use App\Models\ClientMaster;
 use App\Models\ContainerVariant;
-use App\Models\Lane;
 use App\Services\ContainerReservationService;
 use App\Services\RateResolutionService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -32,14 +31,22 @@ class BookingController extends Controller
         return $query->with([
             'client',
             'clientContract',
-            'lane.originPort',
-            'lane.destinationPort',
-            'deliveryType',
+            'lines.originPort',
+            'lines.destinationPort',
+            'lines.deliveryType',
             'lines.container',
             'lines.containerClass',
             'lines.containerSize',
             'lines.containerVariant',
             'lines.containerUnits.containerAsset',
+            'lines.containerUnits.eirOut',
+            'lines.containerUnits.eirIn',
+            'lines.dispatchDocument',
+            'lines.portCharges.port',
+            'lines.portCharges.chargeType',
+            // Booking::portCharges() is the same rows via booking_id - kept
+            // eager loaded flat too since the view modal sums the whole
+            // booking's charges in one pass rather than per line.
             'portCharges.port',
             'portCharges.chargeType',
             'statusHistory.changedBy',
@@ -51,7 +58,7 @@ class BookingController extends Controller
     public function index(Request $request)
     {
         $bookings = Booking::query()
-            ->with(['client', 'lane.originPort', 'lane.destinationPort', 'deliveryType'])
+            ->with(['client', 'lines.originPort', 'lines.destinationPort', 'lines.deliveryType'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->client_id))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('booking_date', '>=', $request->date_from))
@@ -119,18 +126,11 @@ class BookingController extends Controller
             $breakdown = $this->rateResolver->resolve($header, $lines);
 
             $booking = DB::transaction(function () use ($validated, $breakdown, $activeContract, $request) {
-                $lane = Lane::findOrFail($breakdown['lane_id']);
-
                 $booking = Booking::create([
                     'code' => Booking::generateNextCode(),
                     'client_id' => $validated['client_id'],
                     'client_contract_id' => $activeContract?->id,
                     'status' => Booking::STATUS_DRAFT,
-                    'lane_id' => $breakdown['lane_id'],
-                    'origin_area_id' => $validated['origin_area_id'],
-                    'destination_area_id' => $validated['destination_area_id'],
-                    'delivery_type_id' => $validated['delivery_type_id'],
-                    'tariff_rate_id' => $breakdown['tariff_rate_id'],
                     'vat_rate_id' => $breakdown['vat_rate_id'],
                     'trucking_snapshot' => $breakdown['trucking']['total'],
                     'vat_amount_snapshot' => $breakdown['vat_amount'],
@@ -139,7 +139,7 @@ class BookingController extends Controller
                     'created_by' => $request->user()?->id,
                 ]);
 
-                $this->rebuildLinesUnitsAndCharges($booking, $lane, $breakdown, $validated, $request);
+                $this->rebuildLinesUnitsAndCharges($booking, $breakdown, $validated, $request);
 
                 BookingStatusHistory::create([
                     'booking_id' => $booking->booking_id,
@@ -177,8 +177,6 @@ class BookingController extends Controller
             $breakdown = $this->rateResolver->resolve($header, $lines);
 
             DB::transaction(function () use ($booking, $validated, $breakdown, $activeContract, $request) {
-                $lane = Lane::findOrFail($breakdown['lane_id']);
-
                 // Release whatever this booking currently has reserved before
                 // rebuilding - lines/quantities/variants may have changed.
                 $existingAssetIds = BookingContainerUnit::where('booking_id', $booking->booking_id)
@@ -191,17 +189,12 @@ class BookingController extends Controller
                 }
 
                 BookingContainerUnit::where('booking_id', $booking->booking_id)->delete();
-                BookingLine::where('booking_id', $booking->booking_id)->delete();
                 BookingPortCharge::where('booking_id', $booking->booking_id)->delete();
+                BookingLine::where('booking_id', $booking->booking_id)->delete();
 
                 $booking->update([
                     'client_id' => $validated['client_id'],
                     'client_contract_id' => $activeContract?->id,
-                    'lane_id' => $breakdown['lane_id'],
-                    'origin_area_id' => $validated['origin_area_id'],
-                    'destination_area_id' => $validated['destination_area_id'],
-                    'delivery_type_id' => $validated['delivery_type_id'],
-                    'tariff_rate_id' => $breakdown['tariff_rate_id'],
                     'vat_rate_id' => $breakdown['vat_rate_id'],
                     'trucking_snapshot' => $breakdown['trucking']['total'],
                     'vat_amount_snapshot' => $breakdown['vat_amount'],
@@ -209,7 +202,7 @@ class BookingController extends Controller
                     'booking_date' => $validated['booking_date'] ?? $booking->booking_date,
                 ]);
 
-                $this->rebuildLinesUnitsAndCharges($booking, $lane, $breakdown, $validated, $request);
+                $this->rebuildLinesUnitsAndCharges($booking, $breakdown, $validated, $request);
             });
         } catch (RuntimeException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
@@ -243,10 +236,9 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $lines = BookingLine::where('booking_id', $booking->booking_id)->get();
-        $lane = Lane::findOrFail($booking->lane_id);
+        $lines = BookingLine::with('deliveryType')->where('booking_id', $booking->booking_id)->get();
 
-        [$header, $resolverLines] = $this->buildResolverInputFromBooking($booking, $lines, $lane);
+        [$header, $resolverLines] = $this->buildResolverInputFromBooking($booking, $lines);
 
         try {
             $breakdown = $this->rateResolver->resolve($header, $resolverLines);
@@ -259,16 +251,19 @@ class BookingController extends Controller
                 $lineBreakdown = $breakdown['lines'][$index];
 
                 $line->update([
+                    'lane_id' => $lineBreakdown['lane_id'],
+                    'tariff_rate_id' => $lineBreakdown['tariff_rate_id'],
+                    'delivery_type_id' => $lineBreakdown['delivery_type_id'],
                     'frt_snapshot' => $lineBreakdown['frt'],
                     'discount_type_snapshot' => $lineBreakdown['discount_type'],
                     'discount_value_snapshot' => $lineBreakdown['discount_value'],
                     'frt_after_discount_snapshot' => $lineBreakdown['frt_after_discount'],
                     'line_total' => $lineBreakdown['line_total'],
+                    'trucking_snapshot' => $lineBreakdown['trucking']['total'],
                 ]);
             }
 
             $booking->update([
-                'tariff_rate_id' => $breakdown['tariff_rate_id'],
                 'vat_rate_id' => $breakdown['vat_rate_id'],
                 'trucking_snapshot' => $breakdown['trucking']['total'],
                 'vat_amount_snapshot' => $breakdown['vat_amount'],
@@ -313,8 +308,8 @@ class BookingController extends Controller
     {
         $booking->load([
             'client',
-            'lane.originPort',
-            'lane.destinationPort',
+            'lines.originPort',
+            'lines.destinationPort',
             'lines.container',
             'lines.containerClass',
             'lines.containerSize',
@@ -435,15 +430,16 @@ class BookingController extends Controller
 
     protected function validatePayload(Request $request, bool $forQuote = false): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'client_id' => ['required', 'integer', 'exists:client_masters,id'],
-            'origin_port_id' => ['required', 'integer', 'exists:ports,port_id'],
-            'destination_port_id' => ['required', 'integer', 'exists:ports,port_id', 'different:origin_port_id'],
-            'origin_area_id' => ['required', 'integer', 'exists:serviceable_areas,area_id'],
-            'destination_area_id' => ['required', 'integer', 'exists:serviceable_areas,area_id'],
-            'delivery_type_id' => ['required', 'integer', 'exists:delivery_types,delivery_type_id'],
             'booking_date' => ['nullable', 'date'],
             'lines' => ['required', 'array', 'min:1'],
+            'lines.*.origin_port_id' => ['required', 'integer', 'exists:ports,port_id'],
+            'lines.*.destination_port_id' => ['required', 'integer', 'exists:ports,port_id'],
+            'lines.*.origin_area_id' => ['required', 'integer', 'exists:serviceable_areas,area_id'],
+            'lines.*.destination_area_id' => ['required', 'integer', 'exists:serviceable_areas,area_id'],
+            'lines.*.origin_mode' => ['required', 'in:door,pier'],
+            'lines.*.destination_mode' => ['required', 'in:door,pier'],
             'lines.*.container_variant_id' => ['required', 'integer', 'exists:container_variants,id'],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
             'lines.*.description' => ['nullable', 'string', 'max:255'],
@@ -451,11 +447,40 @@ class BookingController extends Controller
             'lines.*.volume_cbm' => ['nullable', 'numeric', 'min:0'],
             'lines.*.is_hazardous' => ['boolean'],
             'lines.*.is_fragile' => ['boolean'],
+
+            // SOP Step 2 "transaction details" - optional at booking time
+            // (a booking can be lodged as Tentative with just quantities),
+            // but every one of these must be filled in before the Cargo
+            // Build-Up dashboard counts this line's booking as Live.
+            'lines.*.consignee_name' => ['nullable', 'string', 'max:255'],
+            'lines.*.consignee_address' => ['nullable', 'string', 'max:255'],
+            'lines.*.consignee_contact_person' => ['nullable', 'string', 'max:255'],
+            'lines.*.consignee_contact_number' => ['nullable', 'string', 'max:50'],
+            'lines.*.cargo_type' => ['nullable', 'string', 'max:255'],
+            'lines.*.other_cargo_details' => ['nullable', 'string'],
+            'lines.*.declared_value' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.delivery_date' => ['nullable', 'date'],
+            'lines.*.delivery_date_notes' => ['nullable', 'string', 'max:255'],
+            'lines.*.first_delivery_date' => ['nullable', 'date'],
+            'lines.*.last_delivery_date' => ['nullable', 'date', 'after_or_equal:lines.*.first_delivery_date'],
             // Container assignment isn't relevant for a pure price quote.
             'lines.*.auto_assign' => [$forQuote ? 'sometimes' : 'required_without:lines.*.container_asset_ids', 'boolean'],
             'lines.*.container_asset_ids' => ['array'],
             'lines.*.container_asset_ids.*' => ['integer', 'exists:container_assets,id'],
         ]);
+
+        foreach ($validated['lines'] as $index => $line) {
+            if ($line['origin_port_id'] === $line['destination_port_id']) {
+                $lineNumber = $index + 1;
+
+                abort(response()->json([
+                    'success' => false,
+                    'message' => "Line {$lineNumber}: origin and destination port must be different.",
+                ], 422));
+            }
+        }
+
+        return $validated;
     }
 
     /**
@@ -464,11 +489,6 @@ class BookingController extends Controller
     protected function buildResolverInput(array $validated, ?ClientContract $activeContract): array
     {
         $header = [
-            'origin_port_id' => $validated['origin_port_id'],
-            'destination_port_id' => $validated['destination_port_id'],
-            'origin_area_id' => $validated['origin_area_id'],
-            'destination_area_id' => $validated['destination_area_id'],
-            'delivery_type_id' => $validated['delivery_type_id'],
             'booking_date' => $validated['booking_date'] ?? null,
             'client_contract_id' => $activeContract?->id,
         ];
@@ -482,6 +502,12 @@ class BookingController extends Controller
                 'container_size_id' => $variant->container_size_id,
                 'container_variant_id' => $variant->id,
                 'quantity' => $line['quantity'],
+                'origin_port_id' => $line['origin_port_id'],
+                'destination_port_id' => $line['destination_port_id'],
+                'origin_area_id' => $line['origin_area_id'],
+                'destination_area_id' => $line['destination_area_id'],
+                'origin_mode' => $line['origin_mode'],
+                'destination_mode' => $line['destination_mode'],
             ];
         }, $validated['lines']);
 
@@ -490,17 +516,13 @@ class BookingController extends Controller
 
     /**
      * Same shape as buildResolverInput(), but reconstructed from what's
-     * already stored on the booking - used by confirm(), which doesn't
-     * receive a fresh request payload.
+     * already stored on the booking's lines - used by confirm(), which
+     * doesn't receive a fresh request payload. $lines must have
+     * deliveryType eager loaded.
      */
-    protected function buildResolverInputFromBooking(Booking $booking, $lines, Lane $lane): array
+    protected function buildResolverInputFromBooking(Booking $booking, $lines): array
     {
         $header = [
-            'origin_port_id' => $lane->origin_port_id,
-            'destination_port_id' => $lane->destination_port_id,
-            'origin_area_id' => $booking->origin_area_id,
-            'destination_area_id' => $booking->destination_area_id,
-            'delivery_type_id' => $booking->delivery_type_id,
             'booking_date' => $booking->booking_date?->toDateString(),
             'client_contract_id' => $booking->client_contract_id,
         ];
@@ -511,18 +533,25 @@ class BookingController extends Controller
             'container_size_id' => $line->container_size_id,
             'container_variant_id' => $line->container_variant_id,
             'quantity' => $line->quantity,
+            'origin_port_id' => $line->origin_port_id,
+            'destination_port_id' => $line->destination_port_id,
+            'origin_area_id' => $line->origin_area_id,
+            'destination_area_id' => $line->destination_area_id,
+            'origin_mode' => $line->deliveryType->includes_origin_trucking ? 'door' : 'pier',
+            'destination_mode' => $line->deliveryType->includes_destination_trucking ? 'door' : 'pier',
         ])->all();
 
         return [$header, $resolverLines];
     }
 
     /**
-     * Creates booking_lines + booking_container_units (reserving containers
-     * per line, auto or manual) + booking_port_charges for a booking whose
-     * header row already exists. Used by both store() and update() (update()
-     * wipes the old rows first, then calls this fresh).
+     * Creates booking_lines (with their own route/delivery/lane/tariff) +
+     * booking_container_units (reserving containers per line, auto or
+     * manual) + booking_port_charges (scoped to that line) for a booking
+     * whose header row already exists. Used by both store() and update()
+     * (update() wipes the old rows first, then calls this fresh).
      */
-    protected function rebuildLinesUnitsAndCharges(Booking $booking, Lane $lane, array $breakdown, array $validated, Request $request): void
+    protected function rebuildLinesUnitsAndCharges(Booking $booking, array $breakdown, array $validated, Request $request): void
     {
         $globalUnitSeq = 0;
 
@@ -531,6 +560,13 @@ class BookingController extends Controller
 
             $bookingLine = BookingLine::create([
                 'booking_id' => $booking->booking_id,
+                'origin_port_id' => $lineBreakdown['origin_port_id'],
+                'destination_port_id' => $lineBreakdown['destination_port_id'],
+                'origin_area_id' => $lineBreakdown['origin_area_id'],
+                'destination_area_id' => $lineBreakdown['destination_area_id'],
+                'delivery_type_id' => $lineBreakdown['delivery_type_id'],
+                'lane_id' => $lineBreakdown['lane_id'],
+                'tariff_rate_id' => $lineBreakdown['tariff_rate_id'],
                 'container_id' => $lineBreakdown['container_id'],
                 'container_class_id' => $lineBreakdown['container_class_id'],
                 'container_size_id' => $lineBreakdown['container_size_id'],
@@ -541,14 +577,26 @@ class BookingController extends Controller
                 'volume_cbm' => $inputLine['volume_cbm'] ?? null,
                 'is_hazardous' => $inputLine['is_hazardous'] ?? false,
                 'is_fragile' => $inputLine['is_fragile'] ?? false,
+                'consignee_name' => $inputLine['consignee_name'] ?? null,
+                'consignee_address' => $inputLine['consignee_address'] ?? null,
+                'consignee_contact_person' => $inputLine['consignee_contact_person'] ?? null,
+                'consignee_contact_number' => $inputLine['consignee_contact_number'] ?? null,
+                'cargo_type' => $inputLine['cargo_type'] ?? null,
+                'other_cargo_details' => $inputLine['other_cargo_details'] ?? null,
+                'declared_value' => $inputLine['declared_value'] ?? null,
+                'delivery_date' => $inputLine['delivery_date'] ?? null,
+                'delivery_date_notes' => $inputLine['delivery_date_notes'] ?? null,
+                'first_delivery_date' => $inputLine['first_delivery_date'] ?? null,
+                'last_delivery_date' => $inputLine['last_delivery_date'] ?? null,
                 'frt_snapshot' => $lineBreakdown['frt'],
                 'discount_type_snapshot' => $lineBreakdown['discount_type'],
                 'discount_value_snapshot' => $lineBreakdown['discount_value'],
                 'frt_after_discount_snapshot' => $lineBreakdown['frt_after_discount'],
                 'line_total' => $lineBreakdown['line_total'],
+                'trucking_snapshot' => $lineBreakdown['trucking']['total'],
             ]);
 
-            $reservedAssets = $this->reserveContainersForLine($bookingLine, $inputLine, $lane, $request);
+            $reservedAssets = $this->reserveContainersForLine($bookingLine, $inputLine, $lineBreakdown, $request);
 
             foreach ($reservedAssets->values() as $unitOffset => $asset) {
                 $globalUnitSeq++;
@@ -560,30 +608,32 @@ class BookingController extends Controller
                     'gate_pass_code' => sprintf('GP-%s-%02d', $booking->code, $globalUnitSeq),
                     'container_asset_id' => $asset->id,
                     'status' => BookingContainerUnit::STATUS_PENDING,
-                    'origin_port_id' => $lane->origin_port_id,
-                    'destination_port_id' => $lane->destination_port_id,
+                    'origin_port_id' => $lineBreakdown['origin_port_id'],
+                    'destination_port_id' => $lineBreakdown['destination_port_id'],
                 ]);
             }
-        }
 
-        foreach ($breakdown['port_charges']['origin'] as $charge) {
-            BookingPortCharge::create([
-                'booking_id' => $booking->booking_id,
-                'port_id' => $lane->origin_port_id,
-                'charge_type_id' => $charge['charge_type_id'],
-                'role' => 'ORIGIN',
-                'amount_snapshot' => $charge['amount'],
-            ]);
-        }
+            foreach ($lineBreakdown['port_charges']['origin'] as $charge) {
+                BookingPortCharge::create([
+                    'booking_id' => $booking->booking_id,
+                    'booking_line_id' => $bookingLine->id,
+                    'port_id' => $lineBreakdown['origin_port_id'],
+                    'charge_type_id' => $charge['charge_type_id'],
+                    'role' => 'ORIGIN',
+                    'amount_snapshot' => $charge['amount'],
+                ]);
+            }
 
-        foreach ($breakdown['port_charges']['destination'] as $charge) {
-            BookingPortCharge::create([
-                'booking_id' => $booking->booking_id,
-                'port_id' => $lane->destination_port_id,
-                'charge_type_id' => $charge['charge_type_id'],
-                'role' => 'DESTINATION',
-                'amount_snapshot' => $charge['amount'],
-            ]);
+            foreach ($lineBreakdown['port_charges']['destination'] as $charge) {
+                BookingPortCharge::create([
+                    'booking_id' => $booking->booking_id,
+                    'booking_line_id' => $bookingLine->id,
+                    'port_id' => $lineBreakdown['destination_port_id'],
+                    'charge_type_id' => $charge['charge_type_id'],
+                    'role' => 'DESTINATION',
+                    'amount_snapshot' => $charge['amount'],
+                ]);
+            }
         }
     }
 
@@ -592,14 +642,14 @@ class BookingController extends Controller
      *                           reservation race (bubbles up to roll back
      *                           the whole booking transaction)
      */
-    protected function reserveContainersForLine(BookingLine $line, array $inputLine, Lane $lane, Request $request)
+    protected function reserveContainersForLine(BookingLine $line, array $inputLine, array $lineBreakdown, Request $request)
     {
         $quantity = $line->quantity;
 
         if ($inputLine['auto_assign'] ?? false) {
             return $this->reservationService->reserveAuto(
                 $line->container_variant_id,
-                $lane->origin_port_id,
+                $lineBreakdown['origin_port_id'],
                 $quantity,
                 $request->user()?->id
             );

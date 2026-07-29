@@ -38,6 +38,15 @@ window.apiRequest = async function apiRequest(url, method = null, data = null) {
 };
 
 // fetch function with max retries implemented
+//
+// Only genuine network failures (fetch() itself throwing) and 5xx server
+// errors are retried - those are the only cases a second attempt could
+// plausibly fix. A 4xx (validation, auth, permission, not-found) means the
+// request itself was rejected; retrying just re-sends the same bad request
+// 3 times before giving up. Every branch below returns the parsed JSON body
+// directly (never wrapped in an extra {response: ...} envelope) so a caller
+// can read response.message / response.errors / response.data the same way
+// on success or failure.
 window.fetchWithRetry = async function fetchWithRetry(
   url,
   options = {},
@@ -45,54 +54,61 @@ window.fetchWithRetry = async function fetchWithRetry(
   retries = 3,
   delay = 500,
 ) {
-  let response = null;
-
   for (let i = 0; i < retries; i++) {
+    let res;
+
     try {
-      //   if (signal !== null) {
-      //     console.log("signal available");
-      //   } else {
-      //     console.log("signal not available");
-      //   }
-      // Clone options and attach signal if provided
       const fetchOptions = { ...options };
       if (signal) fetchOptions.signal = signal;
-
-      const res = await fetch(url, fetchOptions);
-      const text = await res.text();
-      response = text ? JSON.parse(text) : null;
-
-      if (res.status === 401) {
-        window.location.reload();
-        return;
-      }
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-
-      // Handle responses with no JSON (ex: DELETE / 204)
-      const contentType = res.headers.get("Content-Type") || "";
-      if (!contentType.includes("application/json")) {
-        return null; // or true if DELETE success
-      }
-
-      return text ? JSON.parse(text) : null;
+      res = await fetch(url, fetchOptions);
     } catch (err) {
-      // Handle abort specifically
       if (err.name === "AbortError") {
         console.warn(`Fetch aborted for ${url}`);
-        return { response: response, success: false, aborted: true };
+        return { success: false, aborted: true };
       }
 
       console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err);
 
       if (i < retries - 1) {
         await new Promise((r) => setTimeout(r, delay));
-      } else {
-        console.error(`All fetch attempts failed for ${url}`);
-        return { response: response, success: false };
+        continue;
       }
+
+      console.error(`All fetch attempts failed for ${url}`);
+      return {
+        success: false,
+        message: "Unable to reach the server. Please check your connection.",
+      };
     }
+
+    if (res.status === 401) {
+      window.location.reload();
+      return;
+    }
+
+    const contentType = res.headers.get("Content-Type") || "";
+    const text = await res.text();
+    const body = contentType.includes("application/json") && text
+      ? JSON.parse(text)
+      : null;
+
+    if (res.ok) {
+      return body; // includes "no content" (e.g. DELETE / 204) as null
+    }
+
+    // 4xx - not retryable, surface the actual error body immediately.
+    if (res.status < 500) {
+      return body ?? { success: false, message: `Request failed (${res.status}).` };
+    }
+
+    // 5xx - may be transient, worth another attempt.
+    if (i < retries - 1) {
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    console.error(`All fetch attempts failed for ${url}`);
+    return body ?? { success: false, message: `Server error (${res.status}).` };
   }
 };
 
@@ -228,6 +244,132 @@ sample usage
                 button: deleteButton    t
             });
 */
+// -----------------------------------------------------------------
+// Field-level validation error highlighting
+// -----------------------------------------------------------------
+// Laravel's own $request->validate() failures come back as
+// {message, errors: {field: [msgs]}} with no "success" key; a few
+// controllers manually validate and return {success:false, invalid_fields:
+// {...}} instead. This normalizes both into one errors object.
+function extractFieldErrors(response) {
+  if (!response || typeof response !== "object") return null;
+  if (response.errors && typeof response.errors === "object") {
+    return response.errors;
+  }
+  if (response.invalid_fields && typeof response.invalid_fields === "object") {
+    return response.invalid_fields;
+  }
+  return null;
+}
+
+// Resolves which element(s) an error key refers to. Handles the naming
+// conventions actually used across this app's forms:
+//   - "client_type"                 -> [name="client_type"] or #client_type
+//   - "finance.credit_terms"        -> nested field also tried as the
+//                                      bracket-style name="finance[credit_terms]"
+//   - "containers.2.container_type" -> the 3rd [data-field="container_type"]
+//                                      inside a repeated row (crm lead
+//                                      containers/addresses, booking cargo
+//                                      lines, contract rate rows, ...)
+//   - "source"                      -> falls back to a name-prefix match
+//                                      (e.g. source_select/source_other)
+//                                      when nothing is named exactly "source"
+function findFieldElements(container, key) {
+  const arrayMatch = key.match(/^[a-zA-Z0-9_]+\.(\d+)\.(.+)$/);
+  if (arrayMatch) {
+    const index = Number(arrayMatch[1]);
+    const leaf = arrayMatch[2];
+    const candidates = container.querySelectorAll(
+      `[data-field="${leaf}"], [name="${leaf}"]`,
+    );
+    return candidates[index] ? [candidates[index]] : [];
+  }
+
+  const byName = container.querySelector(`[name="${key}"]`);
+  if (byName) return [byName];
+
+  const byDataField = container.querySelector(`[data-field="${key}"]`);
+  if (byDataField) return [byDataField];
+
+  const byId = document.getElementById(key);
+  if (byId && container.contains(byId)) return [byId];
+
+  if (key.includes(".")) {
+    const parts = key.split(".");
+    const bracketName = parts[0] + parts.slice(1).map((p) => `[${p}]`).join("");
+    const byBracket = container.querySelector(`[name="${bracketName}"]`);
+    if (byBracket) return [byBracket];
+  }
+
+  const byPrefix = container.querySelectorAll(`[name^="${key}_"], [id^="${key}_"]`);
+  return byPrefix.length ? Array.from(byPrefix) : [];
+}
+
+const FIELD_ERROR_CLASSES = ["border-red-500", "ring-1", "ring-red-500"];
+
+window.clearFieldErrors = function clearFieldErrors(container) {
+  if (!container) return;
+  container.querySelectorAll(".field-error-flagged").forEach((el) => {
+    el.classList.remove("field-error-flagged", ...FIELD_ERROR_CLASSES);
+  });
+  container.querySelectorAll(".field-error-message").forEach((el) => el.remove());
+};
+
+// Paints a red border + inline message on every field named in `errors`
+// (a {field: message|message[]} map) found inside `container`, and clears
+// each one automatically the moment the user edits it.
+window.applyFieldErrors = function applyFieldErrors(container, errors) {
+  if (!container || !errors) return;
+  clearFieldErrors(container);
+
+  let firstEl = null;
+
+  Object.entries(errors).forEach(([key, messages]) => {
+    const message = Array.isArray(messages) ? messages[0] : messages;
+    const elements = findFieldElements(container, key);
+
+    elements.forEach((el) => {
+      el.classList.add("field-error-flagged", ...FIELD_ERROR_CLASSES);
+
+      const hint = document.createElement("p");
+      hint.className = "field-error-message text-xs text-red-500 mt-1";
+      hint.textContent = message;
+      el.insertAdjacentElement("afterend", hint);
+
+      const clearOnEdit = () => {
+        el.classList.remove("field-error-flagged", ...FIELD_ERROR_CLASSES);
+        hint.remove();
+        el.removeEventListener("input", clearOnEdit);
+        el.removeEventListener("change", clearOnEdit);
+      };
+      el.addEventListener("input", clearOnEdit);
+      el.addEventListener("change", clearOnEdit);
+
+      if (!firstEl) firstEl = el;
+    });
+  });
+
+  if (firstEl) {
+    firstEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    firstEl.focus?.();
+  }
+};
+
+// Best-effort container to scope field lookups to: the enclosing <form> if
+// there is one (not every page wraps its fields in <form>, e.g. the booking
+// form is plain divs), else the nearest modal, else the whole SPA content
+// area - always narrower than `document` so unrelated fields elsewhere on
+// the page never get flagged by a same-named field.
+function resolveFieldErrorContainer(button) {
+  if (!button) return null;
+  return (
+    button.closest("form") ||
+    button.closest('[id$="Modal"], .modal, .side-modal-panel') ||
+    document.getElementById("content") ||
+    document.body
+  );
+}
+
 window.apiCall = async function apiCall({
   mode = "GET",
   isJson = true,
@@ -286,10 +428,19 @@ window.apiCall = async function apiCall({
 
     const response = await fetchWithRetry(url, options);
 
-    //   if (res.status === 401) {
-    //     window.location.reload();
-    //     return;
-    //   }
+    // Paint/clear field-level red borders wherever this call was tied to a
+    // submit button - covers every form using apiCall({..., button}) with
+    // no per-page changes needed.
+    const errorContainer = resolveFieldErrorContainer(button);
+    if (errorContainer) {
+      const fieldErrors = extractFieldErrors(response);
+      if (fieldErrors) {
+        applyFieldErrors(errorContainer, fieldErrors);
+      } else {
+        clearFieldErrors(errorContainer);
+      }
+    }
+
     return response;
   } catch (err) {
     console.error(err);
