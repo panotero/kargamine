@@ -59,10 +59,10 @@ class BookingController extends Controller
     {
         $bookings = Booking::query()
             ->with(['client', 'lines.originPort', 'lines.destinationPort', 'lines.deliveryType'])
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
-            ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->client_id))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('booking_date', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('booking_date', '<=', $request->date_to))
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('client_id'), fn($q) => $q->where('client_id', $request->client_id))
+            ->when($request->filled('date_from'), fn($q) => $q->whereDate('booking_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn($q) => $q->whereDate('booking_date', '<=', $request->date_to))
             ->latest('booking_id')
             ->paginate($request->get('per_page', 15));
 
@@ -243,7 +243,7 @@ class BookingController extends Controller
         try {
             $breakdown = $this->rateResolver->resolve($header, $resolverLines);
         } catch (RuntimeException $e) {
-            return response()->json(['success' => false, 'message' => 'Unable to lock final pricing: '.$e->getMessage()], 422);
+            return response()->json(['success' => false, 'message' => 'Unable to lock final pricing: ' . $e->getMessage()], 422);
         }
 
         DB::transaction(function () use ($booking, $breakdown, $lines, $request) {
@@ -321,12 +321,12 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'This booking has no Bill of Lading yet - it must be Confirmed first.'], 422);
         }
 
-        $pdf = Pdf::loadView('pdf.bill-of-lading', [
+        $pdf = Pdf::loadView('pdf.billOfLading', [
             'booking' => $booking,
             'bol' => $booking->billOfLading,
         ]);
 
-        return $pdf->download($booking->billOfLading->bol_number.'.pdf');
+        return $pdf->download($booking->billOfLading->bol_number . '.pdf');
     }
 
     public function cancel(Request $request, Booking $booking)
@@ -394,7 +394,7 @@ class BookingController extends Controller
         if ($booking->status !== $expectedFrom) {
             return response()->json([
                 'success' => false,
-                'message' => 'Booking must be '.Booking::STATUS_LABELS[$expectedFrom].' to do this; it is currently '.Booking::STATUS_LABELS[$booking->status].'.',
+                'message' => 'Booking must be ' . Booking::STATUS_LABELS[$expectedFrom] . ' to do this; it is currently ' . Booking::STATUS_LABELS[$booking->status] . '.',
             ], 422);
         }
 
@@ -527,7 +527,7 @@ class BookingController extends Controller
             'client_contract_id' => $booking->client_contract_id,
         ];
 
-        $resolverLines = $lines->map(fn ($line) => [
+        $resolverLines = $lines->map(fn($line) => [
             'container_id' => $line->container_id,
             'container_class_id' => $line->container_class_id,
             'container_size_id' => $line->container_size_id,
@@ -659,7 +659,7 @@ class BookingController extends Controller
 
         if (count($assetIds) !== $quantity) {
             throw new RuntimeException(
-                "The line for container variant #{$line->container_variant_id} needs exactly {$quantity} container(s) selected, got ".count($assetIds).'.'
+                "The line for container variant #{$line->container_variant_id} needs exactly {$quantity} container(s) selected, got " . count($assetIds) . '.'
             );
         }
 

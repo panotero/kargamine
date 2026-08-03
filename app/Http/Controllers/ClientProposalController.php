@@ -80,16 +80,16 @@ class ClientProposalController extends Controller
         ])
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
                 $q->where(function ($q) use ($visibleUserIds) {
-                    $q->whereHas('lead', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds))
-                        ->orWhereHas('client.lead', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds));
+                    $q->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
+                        ->orWhereHas('client.lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
                 });
             })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
-                    ->orWhereHas('client', fn ($q) => $q->where('company_name', 'like', "%{$s}%"));
+                    ->orWhereHas('client', fn($q) => $q->where('company_name', 'like', "%{$s}%"));
             })
-            ->when($request->filled('status') && $request->status !== 'all', fn ($q) => $q->where('status', $request->status))
+            ->when($request->filled('status') && $request->status !== 'all', fn($q) => $q->where('status', $request->status))
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15))
             ->appends($request->query());
@@ -332,9 +332,9 @@ class ClientProposalController extends Controller
             'rates.containerSize',
         ]);
 
-        $pdf = Pdf::loadView('pdf.client-proposal', ['proposal' => $proposal]);
+        $pdf = Pdf::loadView('pdf.clientProposal', ['proposal' => $proposal]);
 
-        return $pdf->download($proposal->code.'.pdf');
+        return $pdf->download($proposal->code . '.pdf');
     }
 
     protected function rateRules(): array

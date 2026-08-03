@@ -74,8 +74,8 @@ class ClientContractController extends Controller
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
-                    ->orWhereHas('client', fn ($q) => $q->where('company_name', 'like', "%{$s}%"))
-                    ->orWhereHas('proposal', fn ($q) => $q->where('code', 'like', "%{$s}%"));
+                    ->orWhereHas('client', fn($q) => $q->where('company_name', 'like', "%{$s}%"))
+                    ->orWhereHas('proposal', fn($q) => $q->where('code', 'like', "%{$s}%"));
             })
             ->when($request->filled('status'), function ($q) use ($request) {
                 switch (strtolower($request->status)) {
@@ -107,7 +107,7 @@ class ClientContractController extends Controller
 
         $allContracts = ClientContract::visibleTo($visibleUserIds)->get();
 
-        $statusCounts = $allContracts->groupBy('status')->map(fn ($group) => $group->count());
+        $statusCounts = $allContracts->groupBy('status')->map(fn($group) => $group->count());
 
         $expiring = ClientContract::visibleTo($visibleUserIds)
             ->where('status', ClientContract::STATUS_ACTIVE)
@@ -150,9 +150,9 @@ class ClientContractController extends Controller
             'rates.containerSize',
         ]);
 
-        $pdf = Pdf::loadView('pdf.client-contract', ['contract' => $contract]);
+        $pdf = Pdf::loadView('pdf.clientContract', ['contract' => $contract]);
 
-        return $pdf->download($contract->code.'.pdf');
+        return $pdf->download($contract->code . '.pdf');
     }
 
     public function store(Request $request, $clientUuid)

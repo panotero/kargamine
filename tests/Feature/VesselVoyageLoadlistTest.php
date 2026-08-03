@@ -99,11 +99,20 @@ class VesselVoyageLoadlistTest extends TestCase
 
         $role = SettingRole::create(['role_name' => 'superadmin', 'is_system' => true]);
 
-        foreach ([
-            'booking.create', 'booking.confirm', 'booking.cancel', 'booking.advance-status',
-            'booking.generate-dispatch-document', 'booking.assign-cv', 'booking.gate-scan',
-            'booking.issue-eir', 'booking.assign-voyage', 'booking.generate-loadlist',
-        ] as $key) {
+        foreach (
+            [
+                'booking.create',
+                'booking.confirm',
+                'booking.cancel',
+                'booking.advance-status',
+                'booking.generate-dispatch-document',
+                'booking.assign-cv',
+                'booking.gate-scan',
+                'booking.issue-eir',
+                'booking.assign-voyage',
+                'booking.generate-loadlist',
+            ] as $key
+        ) {
             $permission = Permission::firstOrCreate(['key' => $key], ['label' => $key, 'module' => 'Booking']);
             $role->permissions()->syncWithoutDetaching([$permission->id]);
         }
@@ -143,7 +152,7 @@ class VesselVoyageLoadlistTest extends TestCase
     /** @test */
     public function the_bill_of_lading_downloads_without_error_after_the_earlier_lane_removal()
     {
-        // Regression check: pdf.bill-of-lading used to reference the
+        // Regression check: pdf.billOfLading used to reference the
         // removed Booking::lane() relation (route moved to per-line) and
         // would fatal on render. This just needs to not throw and to
         // come back as a PDF.
