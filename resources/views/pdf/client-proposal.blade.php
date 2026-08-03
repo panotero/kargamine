@@ -124,7 +124,7 @@
             </tr>
             <tr>
                 <td><strong>Contact Number</strong></td>
-                <td>{{ $proposal->client->contact_number_1 ?? $proposal->lead?->mobile ?? '-' }}</td>
+                <td>{{ $proposal->client?->contacts->first()?->mobile ?? $proposal->lead?->mobile ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Prepared By</strong></td>

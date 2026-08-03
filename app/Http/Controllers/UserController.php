@@ -206,6 +206,22 @@ class UserController extends Controller
         ];
     }
 
+    /**
+     * Active users filtered by role name (case-insensitive) - e.g. populating
+     * the Credit Officer dropdown on the Client Master finance stage.
+     */
+    public function byRole(Request $request)
+    {
+        $role = $request->query('role');
+
+        $users = User::query()->select('id', 'name')
+            ->where('status', User::STATUS_ACTIVE)
+            ->whereHas('role', fn ($q) => $q->whereRaw('LOWER(role_name) = ?', [strtolower($role)]))
+            ->orderBy('name')->get();
+
+        return response()->json(['success' => true, 'data' => $users]);
+    }
+
     public function counts()
     {
         return response()->json([

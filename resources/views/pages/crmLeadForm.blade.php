@@ -147,29 +147,37 @@
                     </div>
                 </div>
 
-                {{-- Company Information - hidden entirely for Individual leads --}}
+                {{-- Company / Account Information - the name field always applies
+                     (labeled "Company Name" for corporate, "Account Name" for
+                     individual); type of business, industry, and authorized
+                     signatory are corporate-only concepts and stay hidden for
+                     Individual leads. --}}
                 <div class="border-t pt-4" id="companyInfoSection">
-                    <p class="font-semibold text-zinc-700 mb-3">Company Information</p>
+                    <p class="font-semibold text-zinc-700 mb-3" id="companyInfoTitle">Company Information</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Company Name *</label>
-                            <input type="text" name="company_name"
+                            <label class="text-xs font-medium text-zinc-400 uppercase" id="companyNameLabel">Company Name *</label>
+                            <input type="text" name="company_name" required
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business</label>
-                            <select name="type_of_business"
-                                class="typeOfBusinessDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                <option value="">Select Type of Business</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Industry Description /
-                                Details</label>
-                            <textarea name="industry_description" rows="2"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
-                        </div>
                     </div>
+
+                    <div id="corporateOnlyFields">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business</label>
+                                <select name="type_of_business"
+                                    class="typeOfBusinessDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    <option value="">Select Type of Business</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Industry Description /
+                                    Details</label>
+                                <textarea name="industry_description" rows="2"
+                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
+                            </div>
+                        </div>
 
                     {{-- Authorized Signatory --}}
                     <div class="border-t mt-4 pt-4">
@@ -257,6 +265,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
 
@@ -447,10 +456,16 @@
             const clientType = document.querySelector('input[name="client_type"]:checked')?.value ?? 'corporate';
             const isIndividual = clientType === 'individual';
 
-            document.getElementById('companyInfoSection').classList.toggle('hidden', isIndividual);
+            // The name field itself always applies (it's just labeled
+            // differently) - only type of business / industry / authorized
+            // signatory are corporate-only concepts.
+            document.getElementById('corporateOnlyFields').classList.toggle('hidden', isIndividual);
 
-            const companyNameInput = document.querySelector('#stage1Form [name="company_name"]');
-            if (companyNameInput) companyNameInput.required = !isIndividual;
+            const title = document.getElementById('companyInfoTitle');
+            if (title) title.textContent = isIndividual ? 'Account Information' : 'Company Information';
+
+            const nameLabel = document.getElementById('companyNameLabel');
+            if (nameLabel) nameLabel.textContent = isIndividual ? 'Account Name *' : 'Company Name *';
         }
 
         document.querySelectorAll('.client-type-radio').forEach(radio => {

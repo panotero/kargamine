@@ -120,7 +120,8 @@ class CrmLead extends Model
 
         $stage1 = (bool) (
             $this->first_name && $this->last_name && $this->mobile && $this->source && $this->client_type &&
-            (! $isCorporate || ($company && $company->company_name && $company->type_of_business)) &&
+            $company && $company->company_name &&
+            (! $isCorporate || $company->type_of_business) &&
             (! $isCorporate || $hasAuthorizedSignatory) &&
             $hasCompleteAddress
         );
@@ -152,10 +153,11 @@ class CrmLead extends Model
             $missing[] = 'Lead Source';
         }
 
+        if (! $company || ! $company->company_name) {
+            $missing[] = $isCorporate ? 'Company Name' : 'Account Name';
+        }
+
         if ($isCorporate) {
-            if (! $company || ! $company->company_name) {
-                $missing[] = 'Company Name';
-            }
             if (! $company || ! $company->type_of_business) {
                 $missing[] = 'Type of Business';
             }

@@ -13,15 +13,12 @@ class ClientMaster extends Model
     protected $fillable = [
         'customer_code',
         'company_name',
-        'contact_number_1',
-        'contact_number_2',
+        'client_mnemonic',
+        'client_category',
+        'client_classification',
         'industry',
-        'organization_type',
-        'tin',
-        'business_start_date',
-        'estimated_annual_revenue',
-        'company_url',
         'sales_rep_id',
+        'account_manager_id',
         'current_stage',
         'is_complete',
         'created_by',
@@ -31,8 +28,6 @@ class ClientMaster extends Model
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
-        'business_start_date' => 'date:M d, Y',
-        'estimated_annual_revenue' => 'decimal:2',
         'is_complete' => 'boolean',
         'always_route_atw' => 'boolean',
     ];
@@ -143,14 +138,19 @@ class ClientMaster extends Model
         return $this->hasOne(ClientFinance::class, 'client_id');
     }
 
-    public function billing()
+    public function ancillaryServices()
     {
-        return $this->hasOne(ClientBilling::class, 'client_id');
+        return $this->hasMany(ClientAncillaryService::class, 'client_id');
     }
 
     public function salesRep()
     {
         return $this->belongsTo(User::class, 'sales_rep_id');
+    }
+
+    public function accountManager()
+    {
+        return $this->belongsTo(User::class, 'account_manager_id');
     }
 
     public function creator()
@@ -164,9 +164,10 @@ class ClientMaster extends Model
     public function stageCompletionFlags(): array
     {
         return [
-            1 => (bool) ($this->company_name && $this->contact_number_1 && $this->addresses()->exists()),
+            1 => (bool) ($this->company_name && $this->client_mnemonic && $this->addresses()->exists()),
             2 => $this->contacts()->exists(),
-            3 => (bool) ($this->finance && $this->billing && $this->sales_rep_id),
+            3 => (bool) ($this->finance && $this->sales_rep_id),
+            4 => true, // Ancillary is optional
         ];
     }
 

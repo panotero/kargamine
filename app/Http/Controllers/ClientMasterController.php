@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ClientMasterController extends Controller
 {
@@ -66,7 +67,15 @@ class ClientMasterController extends Controller
 
     public function show($uuid)
     {
-        $client = ClientMaster::with(['contacts', 'tradeReferences', 'finance', 'billing', 'salesRep', 'addresses'])
+        $client = ClientMaster::with([
+            'contacts.addresses',
+            'tradeReferences',
+            'finance',
+            'salesRep:id,name',
+            'accountManager:id,name',
+            'addresses',
+            'ancillaryServices',
+        ])
             ->where('uuid', $uuid)->firstOrFail();
 
         $client->setAttribute('primary_address_text', $client->formattedPrimaryAddress());
@@ -84,14 +93,15 @@ class ClientMasterController extends Controller
             'lead_id' => ['nullable', 'exists:crm_leads,id'],
             'customer_code' => ['nullable', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
-            'contact_number_1' => ['nullable', 'string', 'max:255'],
-            'contact_number_2' => ['nullable', 'string', 'max:255'],
+            'client_mnemonic' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('client_masters', 'client_mnemonic')->ignore($request->input('uuid'), 'uuid'),
+            ],
             'industry' => ['nullable', 'string', 'max:255'],
-            'organization_type' => ['nullable', 'string', 'max:255'],
-            'tin' => ['nullable', 'string', 'max:255'],
-            'business_start_date' => ['nullable', 'date'],
-            'estimated_annual_revenue' => ['nullable', 'numeric'],
-            'company_url' => ['nullable', 'string', 'max:255'],
+            'client_category' => ['nullable', 'string', 'max:255'],
+            'client_classification' => ['nullable', 'string', 'max:255'],
 
             'addresses' => ['required', 'array', 'min:1'],
             'addresses.*.address_type' => ['nullable', 'string', 'max:255'],
@@ -143,6 +153,13 @@ class ClientMasterController extends Controller
 
                 $client->sales_rep_id = auth()->id();
                 $client->created_by = auth()->id();
+
+                // One-time snapshot of the CSR's team leader at creation
+                // time - not a live-updating relation, so a later change of
+                // leader/team doesn't silently move existing clients.
+                $csr = auth()->user();
+                $leader = \App\Models\User::where('team_id', $csr->team_id)->where('is_team_leader', true)->first();
+                $client->account_manager_id = $leader?->id;
             }
 
             $client->fill(
@@ -208,13 +225,30 @@ class ClientMasterController extends Controller
 
         $validated = $request->validate([
             'contacts' => ['nullable', 'array'],
-            'contacts.*.contact_name' => ['nullable', 'string', 'max:255'],
-            'contacts.*.contact_number' => ['nullable', 'string', 'max:255'],
-            'contacts.*.contact_number_type' => ['nullable', 'in:mobile,landline'],
-            'contacts.*.contact_email' => ['nullable', 'email', 'max:255'],
-            'contacts.*.contact_email_type' => ['nullable', 'in:personal,business'],
-            'contacts.*.role' => ['nullable', 'string', 'max:255'],
+            'contacts.*.contact_department' => ['nullable', 'string', 'max:255'],
+            'contacts.*.title' => ['nullable', 'string', 'max:255'],
+            'contacts.*.first_name' => ['nullable', 'string', 'max:255'],
+            'contacts.*.last_name' => ['nullable', 'string', 'max:255'],
+            'contacts.*.gender' => ['nullable', 'string', 'max:255'],
             'contacts.*.position' => ['nullable', 'string', 'max:255'],
+            'contacts.*.landline_number' => ['nullable', 'string', 'max:255'],
+            'contacts.*.landline_type' => ['nullable', 'in:personal,business'],
+            'contacts.*.mobile' => ['nullable', 'string', 'max:255'],
+            'contacts.*.mobile_type' => ['nullable', 'in:personal,business'],
+            'contacts.*.email' => ['nullable', 'email', 'max:255'],
+            'contacts.*.email_type' => ['nullable', 'in:personal,business'],
+
+            'contacts.*.addresses' => ['nullable', 'array'],
+            'contacts.*.addresses.*.address_type' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.is_primary' => ['nullable', 'boolean'],
+            'contacts.*.addresses.*.address_no' => ['nullable', 'string', 'max:100'],
+            'contacts.*.addresses.*.address_building' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.address_street' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.address_barangay' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.address_town_city' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.address_province' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.address_country' => ['nullable', 'string', 'max:255'],
+            'contacts.*.addresses.*.address_postal_code' => ['nullable', 'string', 'max:20'],
 
             'trade_references' => ['nullable', 'array'],
             'trade_references.*.business_name' => ['nullable', 'string', 'max:255'],
@@ -226,10 +260,19 @@ class ClientMasterController extends Controller
         ]);
 
         DB::transaction(function () use ($client, $validated) {
+            // Deleting a contact cascades to its client_contact_addresses
+            // rows (FK cascadeOnDelete) - no separate address cleanup needed.
             $client->contacts()->delete();
             foreach ($validated['contacts'] ?? [] as $c) {
+                $addresses = $c['addresses'] ?? [];
+                unset($c['addresses']);
                 if (array_filter($c)) {
-                    $client->contacts()->create($c);
+                    $contact = $client->contacts()->create($c);
+                    foreach ($addresses as $a) {
+                        if (array_filter($a)) {
+                            $contact->addresses()->create($a);
+                        }
+                    }
                 }
             }
 
@@ -245,7 +288,7 @@ class ClientMasterController extends Controller
             $client->recomputeCompletion();
         });
 
-        return response()->json(['success' => true, 'data' => $client->load('contacts', 'tradeReferences')]);
+        return response()->json(['success' => true, 'data' => $client->load('contacts.addresses', 'tradeReferences')]);
     }
 
     /**
@@ -256,26 +299,20 @@ class ClientMasterController extends Controller
         $client = ClientMaster::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
+            'finance.client_business_name' => ['nullable', 'string', 'max:255'],
+            'finance.tin_number' => ['nullable', 'string', 'max:255'],
+            'finance.tin_registered_address' => ['nullable', 'string'],
+            'finance.tax_status' => ['nullable', 'string', 'max:255'],
+            'finance.withholding_tax_code' => ['nullable', 'string', 'max:255'],
+            'finance.trade_name' => ['nullable', 'string', 'max:255'],
+            'finance.tin_registration_date' => ['nullable', 'date'],
+            'finance.line_of_business' => ['nullable', 'string', 'max:255'],
+            'finance.tax_percent' => ['nullable', 'numeric'],
+            'finance.withholding_tax_percent' => ['nullable', 'numeric'],
             'finance.credit_terms' => ['nullable', 'string', 'max:255'],
-            'finance.payment_mode' => ['nullable', 'string', 'max:255'],
-            'finance.standard_billing_service' => ['nullable', 'boolean'],
-            'finance.invoice_submission' => ['nullable', 'in:electronic,courier'],
-            'finance.invoice_email_address' => ['nullable', 'email', 'max:255'],
-            'finance.invoice_courier_recipient' => ['nullable', 'string', 'max:255'],
-            'finance.invoice_courier_contact' => ['nullable', 'string', 'max:255'],
-            'finance.invoice_courier_address' => ['nullable', 'string'],
-            'finance.payment_method' => ['nullable', 'in:check_pickup,direct_remittance'],
-            'finance.check_pickup_address' => ['nullable', 'string'],
-            'finance.bank_name' => ['nullable', 'string', 'max:255'],
-            'finance.bank_account_number' => ['nullable', 'string', 'max:255'],
-            'finance.document_handling' => ['nullable', 'boolean'],
-            'finance.billing_summary_report' => ['nullable', 'boolean'],
-            'finance.other_requests' => ['nullable', 'string'],
-
-            'billing.billed_to' => ['nullable', 'string', 'max:255'],
-            'billing.company_name' => ['nullable', 'string', 'max:255'],
-            'billing.address' => ['nullable', 'string'],
-            'billing.tin' => ['nullable', 'string', 'max:255'],
+            'finance.mode_of_payment' => ['nullable', 'string', 'max:255'],
+            'finance.cro_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'finance.max_declared_value' => ['nullable', 'numeric'],
         ]);
 
         DB::transaction(function () use ($client, $validated) {
@@ -287,15 +324,7 @@ class ClientMasterController extends Controller
                 );
             }
 
-            if (! empty($validated['billing'])) {
-                $client->billing()->updateOrCreate(
-                    ['client_id' => $client->id],
-                    $validated['billing']
-                );
-            }
-
-            $client->current_stage = 3;
-            $client->is_complete = true;
+            $client->current_stage = max($client->current_stage, 3);
             $client->save();
 
             $client->recomputeCompletion();
@@ -305,17 +334,61 @@ class ClientMasterController extends Controller
         });
 
         $client->load([
-            'contacts',
+            'contacts.addresses',
             'tradeReferences',
             'finance',
-            'billing',
             'salesRep',
+            'accountManager',
+            'ancillaryServices',
         ]);
 
         return response()->json([
             'success' => true,
             'data' => $client,
         ]);
+    }
+
+    /**
+     * Stage 4 - ancillary services. Optional (zero rows is a valid save) -
+     * stageCompletionFlags() always marks this stage complete.
+     */
+    public function saveStage4(Request $request, $uuid)
+    {
+        $client = ClientMaster::where('uuid', $uuid)->firstOrFail();
+
+        $validated = $request->validate([
+            'ancillary_services' => ['nullable', 'array'],
+            'ancillary_services.*.required_service' => ['nullable', 'string', 'max:255'],
+            'ancillary_services.*.location' => ['nullable', 'string', 'max:255'],
+            'ancillary_services.*.unit' => ['nullable', 'string', 'max:255'],
+            'ancillary_services.*.unit_rate_vat_ex' => ['nullable', 'numeric'],
+            'ancillary_services.*.mode_of_payment' => ['nullable', 'string', 'max:255'],
+            'ancillary_services.*.remarks' => ['nullable', 'string'],
+        ]);
+
+        DB::transaction(function () use ($client, $validated) {
+            $snapshotBusinessName = $client->finance?->client_business_name ?: $client->company_name;
+
+            $client->ancillaryServices()->delete();
+
+            foreach ($validated['ancillary_services'] ?? [] as $row) {
+                if (array_filter($row)) {
+                    // Snapshot columns are server-set from the parent client,
+                    // ignoring any values the client may have sent for them.
+                    $client->ancillaryServices()->create(array_merge($row, [
+                        'client_code' => $client->customer_code,
+                        'client_mnemonic' => $client->client_mnemonic,
+                        'client_business_name' => $snapshotBusinessName,
+                    ]));
+                }
+            }
+
+            $client->current_stage = max($client->current_stage, 4);
+            $client->save();
+            $client->recomputeCompletion();
+        });
+
+        return response()->json(['success' => true, 'data' => $client->load('ancillaryServices')]);
     }
 
     public function destroy($uuid)

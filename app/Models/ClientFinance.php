@@ -12,32 +12,37 @@ class ClientFinance extends Model
     protected $fillable = [
         'client_id',
         'credit_terms',
-        'payment_mode',
-        'standard_billing_service',
-        'invoice_submission',
-        'invoice_email_address',
-        'invoice_courier_recipient',
-        'invoice_courier_contact',
-        'invoice_courier_address',
-        'payment_method',
-        'check_pickup_address',
-        'bank_name',
-        'bank_account_number',
-        'document_handling',
-        'billing_summary_report',
-        'other_requests',
+        'client_business_name',
+        'tin_number',
+        'tin_registered_address',
+        'tax_status',
+        'withholding_tax_code',
+        'trade_name',
+        'tin_registration_date',
+        'line_of_business',
+        'tax_percent',
+        'withholding_tax_percent',
+        'mode_of_payment',
+        'cro_user_id',
+        'max_declared_value',
     ];
 
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
-        'standard_billing_service' => 'boolean',
-        'document_handling' => 'boolean',
-        'billing_summary_report' => 'boolean',
+        'tin_registration_date' => 'date',
+        'tax_percent' => 'decimal:2',
+        'withholding_tax_percent' => 'decimal:2',
+        'max_declared_value' => 'decimal:2',
     ];
 
     public function client()
     {
         return $this->belongsTo(ClientMaster::class, 'client_id');
+    }
+
+    public function creditOfficer()
+    {
+        return $this->belongsTo(User::class, 'cro_user_id');
     }
 }

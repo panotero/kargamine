@@ -1,0 +1,1 @@
+- [Client Master rebuild (2026-08-03)](project_client_master_rebuild.md) — new mnemonic/account_manager/finance/contacts/ancillary shapes, CRO role, and pre-existing convention inconsistencies to not re-introduce/re-fix.

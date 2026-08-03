@@ -78,11 +78,6 @@
                 </div>
 
                 <div class="border-t pt-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Trade / Bank References</p>
-                    <div id="cdTradeRefsReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
-                </div>
-
-                <div class="border-t pt-3">
                     <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Finance &amp; Billing</p>
                     <div id="cdFinanceReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
                 </div>
@@ -96,45 +91,35 @@
                     <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Company Information</p>
                     <form id="cdStage1Form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Customer Code</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Code</label>
                             <input type="text" name="customer_code" readonly
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Mnemonic</label>
+                            <input type="text" name="client_mnemonic" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client/Business Name</label>
                             <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number (Primary)</label>
-                            <input type="text" name="contact_number_1" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Category</label>
+                            <select name="client_category" class="cdClientCategorySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Client Category</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number (Secondary)</label>
-                            <input type="text" name="contact_number_2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Classification</label>
+                            <select name="client_classification" class="cdClientClassificationSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Client Classification</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Industry</label>
-                            <input type="text" name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Type of Organization</label>
-                            <input type="text" name="organization_type" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
-                            <input type="text" name="tin" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Business Established Date</label>
-                            <input type="date" name="business_start_date" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Estimated Annual Revenue</label>
-                            <input type="number" step="0.01" name="estimated_annual_revenue" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Company URL</label>
-                            <input type="url" name="company_url" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Industry</label>
+                            <select name="industry" class="cdIndustrySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Industry</option>
+                            </select>
                         </div>
                     </form>
                 </div>
@@ -157,16 +142,6 @@
                             class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+ Add Contact</button>
                     </div>
                     <div id="cdContactsEditContainer" class="space-y-3"></div>
-                </div>
-
-                {{-- Trade / Bank References --}}
-                <div class="border-t pt-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <p class="font-semibold text-zinc-700 dark:text-zinc-300">Trade / Bank Reference</p>
-                        <button type="button" id="cdAddTradeRefBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+ Add Reference</button>
-                    </div>
-                    <div id="cdTradeRefsEditContainer" class="space-y-3"></div>
                 </div>
 
                 {{-- Finance & Billing --}}
@@ -457,6 +432,20 @@
     (function() {
         renderTable().load(1);
         loadCounts();
+        fillCdStage1Lovs();
+
+        async function fillCdStage1Lovs() {
+            const fill = (selector, list) => {
+                const select = document.querySelector(selector);
+                if (select && Array.isArray(list)) {
+                    select.insertAdjacentHTML('beforeend', list.map((lov) =>
+                        `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
+                }
+            };
+            fill('.cdIndustrySelect', await apiCall({ mode: 'GET', url: '/api/listofval/industry' }));
+            fill('.cdClientCategorySelect', await apiCall({ mode: 'GET', url: '/api/listofval/clientcategory' }));
+            fill('.cdClientClassificationSelect', await apiCall({ mode: 'GET', url: '/api/listofval/clientclassification' }));
+        }
 
         function statusBadge(isComplete) {
             return isComplete ?
@@ -500,14 +489,14 @@
                     render: (r) => r.industry ?? '-'
                 },
                 {
-                    title: 'Sales Rep',
+                    title: 'CSR',
                     key: 'sales_rep.name',
                     render: (r) => r.sales_rep?.name ?? '-'
                 },
                 {
                     title: 'Stage',
                     key: 'current_stage',
-                    render: (r) => `${r.current_stage} / 3`
+                    render: (r) => `${r.current_stage} / 4`
                 },
                 {
                     title: 'Status',
@@ -603,15 +592,12 @@
 
         function renderClientInfoReadView(c) {
             document.getElementById('cdInfoContainer').innerHTML = `
-                <p><span class="text-zinc-400">Contact No. 1:</span> ${c.contact_number_1 ?? '-'}</p>
-                <p><span class="text-zinc-400">Contact No. 2:</span> ${c.contact_number_2 ?? '-'}</p>
-                <p><span class="text-zinc-400">Industry:</span> ${c.industry ?? '-'}</p>
-                <p><span class="text-zinc-400">Organization Type:</span> ${c.organization_type ?? '-'}</p>
-                <p><span class="text-zinc-400">TIN:</span> ${c.tin ?? '-'}</p>
-                <p><span class="text-zinc-400">Business Established:</span> ${c.business_start_date ?? '-'}</p>
-                <p><span class="text-zinc-400">Est. Annual Revenue:</span> ${money(c.estimated_annual_revenue)}</p>
-                <p><span class="text-zinc-400">Company URL:</span> ${c.company_url ?? '-'}</p>
-                <p><span class="text-zinc-400">Sales Rep:</span> ${c.sales_rep?.name ?? '-'}</p>
+                <p><span class="text-zinc-400">Client Mnemonic:</span> ${c.client_mnemonic ?? '-'}</p>
+                <p><span class="text-zinc-400">Client Category:</span> ${c.client_category ?? '-'}</p>
+                <p><span class="text-zinc-400">Client Classification:</span> ${c.client_classification ?? '-'}</p>
+                <p><span class="text-zinc-400">Client Industry:</span> ${c.industry ?? '-'}</p>
+                <p><span class="text-zinc-400">CSR:</span> ${c.sales_rep?.name ?? '-'}</p>
+                <p><span class="text-zinc-400">Account Manager:</span> ${c.account_manager?.name ?? '-'}</p>
             `;
 
             const addresses = c.addresses ?? [];
@@ -635,18 +621,6 @@
                     </div>
                 `).join('') :
                 `<p class="text-xs text-zinc-400">No contacts on file.</p>`;
-
-            const tradeRefs = c.trade_references ?? [];
-            document.getElementById('cdTradeRefsReadContainer').innerHTML = tradeRefs.length ?
-                tradeRefs.map((t) => `
-                    <div class="border rounded-lg p-3 text-xs">
-                        <p class="font-semibold mb-1">${t.business_name ?? '-'} <span class="text-zinc-400">(${t.relationship ?? '-'})</span></p>
-                        <p class="text-zinc-500">${t.contact_person_name ?? '-'}</p>
-                        <p class="text-zinc-500">${t.contact_person_phone ?? '-'} / ${t.contact_person_mobile ?? '-'}</p>
-                        <p class="text-zinc-500">${t.contact_person_email ?? '-'}</p>
-                    </div>
-                `).join('') :
-                `<p class="text-xs text-zinc-400">No trade references on file.</p>`;
 
             const f = c.finance ?? {};
             const b = c.billing ?? {};
@@ -713,15 +687,6 @@
                     contactRowHtml());
                 const row = document.getElementById('cdContactsEditContainer').lastElementChild;
                 row.querySelectorAll('[data-field]').forEach((input) => input.value = contact[input
-                    .dataset.field] ?? '');
-            });
-
-            document.getElementById('cdTradeRefsEditContainer').innerHTML = '';
-            (c.trade_references || []).forEach((ref) => {
-                document.getElementById('cdTradeRefsEditContainer').insertAdjacentHTML('beforeend',
-                    tradeRefRowHtml());
-                const row = document.getElementById('cdTradeRefsEditContainer').lastElementChild;
-                row.querySelectorAll('[data-field]').forEach((input) => input.value = ref[input
                     .dataset.field] ?? '');
             });
 
@@ -802,33 +767,14 @@
             </div>`;
         }
 
-        function tradeRefRowHtml() {
-            return `
-            <div class="trade-ref-row grid grid-cols-1 md:grid-cols-3 gap-2 border rounded-lg p-3 relative">
-                <input type="text" data-field="business_name" placeholder="Business Name" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="relationship" placeholder="Nature of Relationship" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="contact_person_name" placeholder="Contact Person" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="contact_person_phone" placeholder="Phone" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="contact_person_mobile" placeholder="Mobile" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <div class="flex gap-2">
-                    <input type="email" data-field="contact_person_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 dark:text-zinc-900">
-                    <button type="button" class="remove-row text-red-500 px-2">✕</button>
-                </div>
-            </div>`;
-        }
-
         document.getElementById('cdAddContactBtn').addEventListener('click', () => {
             document.getElementById('cdContactsEditContainer').insertAdjacentHTML('beforeend',
                 contactRowHtml());
         });
-        document.getElementById('cdAddTradeRefBtn').addEventListener('click', () => {
-            document.getElementById('cdTradeRefsEditContainer').insertAdjacentHTML('beforeend',
-                tradeRefRowHtml());
-        });
 
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('remove-row')) {
-                e.target.closest('.contact-row, .trade-ref-row').remove();
+                e.target.closest('.contact-row')?.remove();
             }
         });
 
@@ -1151,7 +1097,6 @@
                 isJson: true,
                 payload: {
                     contacts: collectRows('cdContactsEditContainer', 'contact-row'),
-                    trade_references: collectRows('cdTradeRefsEditContainer', 'trade-ref-row'),
                 },
                 url: `/api/clientMasters/${currentClientUuid}/stage2`,
             });

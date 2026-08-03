@@ -26,5 +26,17 @@ class UserSeeder extends Seeder
                 'session_id' => null,
             ]
         );
+
+        User::firstOrCreate(
+            ['email' => 'creditofficer@email.com'],
+            [
+                'name' => 'Credit Officer',
+                'password' => Hash::make('Testing123'),
+                'role_id' => 5,
+                'email_verified_at' => null,
+                'remember_token' => null,
+                'session_id' => null,
+            ]
+        );
     }
 }

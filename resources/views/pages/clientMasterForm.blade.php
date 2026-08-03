@@ -23,7 +23,11 @@
         </button>
         <button type="button" class="stage-btn flex-1 px-3 py-2 rounded-lg text-sm font-semibold border-2"
             data-stage="3">
-            3. Finance & Billing
+            3. Finance
+        </button>
+        <button type="button" class="stage-btn flex-1 px-3 py-2 rounded-lg text-sm font-semibold border-2"
+            data-stage="4">
+            4. Ancillary Services
         </button>
     </div>
 
@@ -37,53 +41,45 @@
                     <p class="font-semibold text-zinc-700 mb-3">Company Information</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Customer Code</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Code</label>
                             <input type="text" name="customer_code" readonly placeholder="Generated on save"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Mnemonic</label>
+                            <input type="text" name="client_mnemonic" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client/Business Name</label>
                             <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number
-                                (Primary)</label>
-                            <input type="text" name="contact_number_1"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Category</label>
+                            <select name="client_category" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Client Category</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Contact Number
-                                (Secondary)</label>
-                            <input type="text" name="contact_number_2"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Classification</label>
+                            <select name="client_classification" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Client Classification</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Industry</label>
-                            <input type="text" name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Industry</label>
+                            <select name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Industry</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Type of Organization</label>
-                            <input type="text" name="organization_type"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">CSR</label>
+                            <input type="text" id="csrDisplay" readonly
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
-                            <input type="text" name="tin" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Business Established
-                                Date</label>
-                            <input type="date" name="business_start_date"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Estimated Annual Revenue</label>
-                            <input type="number" step="0.01" name="estimated_annual_revenue"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Company URL</label>
-                            <input type="url" name="company_url" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Account Manager</label>
+                            <input type="text" id="accountManagerDisplay" readonly
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
                         </div>
                     </div>
                 </div>
@@ -115,14 +111,7 @@
                 <button type="button" id="addContactBtn"
                     class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add Contact</button>
             </div>
-            <div id="contactsContainer" class="space-y-3 mb-6"></div>
-
-            <div class="flex justify-between items-center mb-3">
-                <p class="font-semibold text-zinc-700">Trade / Bank Reference</p>
-                <button type="button" id="addTradeRefBtn"
-                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add Reference</button>
-            </div>
-            <div id="tradeRefsContainer" class="space-y-3"></div>
+            <div id="contactsContainer" class="space-y-4 mb-6"></div>
 
             <div class="flex justify-between gap-2 mt-6 pt-4 border-t">
                 <button class="stage-prev border px-5 py-2 rounded-lg text-sm font-medium"
@@ -139,132 +128,79 @@
             <form id="stage3Form" class="space-y-6">
 
                 <div>
-                    <p class="font-semibold text-zinc-700 mb-3">Company Finance</p>
+                    <p class="font-semibold text-zinc-700 mb-3">Finance</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Credit Terms</label>
-                            <input type="text" name="finance[credit_terms]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Business Name</label>
+                            <input type="text" name="finance[client_business_name]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Payment Mode</label>
-                            <input type="text" name="finance[payment_mode]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <label class="flex items-center gap-2 md:col-span-2">
-                            <input type="checkbox" name="finance[standard_billing_service]" value="1">
-                            <span class="text-sm">Standard Billing Service</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <p class="font-semibold text-zinc-700 mb-3">Invoice Submission</p>
-                    <div class="flex gap-4 mb-3">
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="finance[invoice_submission]" value="electronic"
-                                class="invoiceSubmissionRadio">
-                            <span class="text-sm">Electronic</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="finance[invoice_submission]" value="courier"
-                                class="invoiceSubmissionRadio">
-                            <span class="text-sm">Via Courier</span>
-                        </label>
-                    </div>
-                    <div id="invoiceElectronicFields" class="hidden">
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Invoice Email Address</label>
-                        <input type="email" name="finance[invoice_email_address]"
-                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                    </div>
-                    <div id="invoiceCourierFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Recipient Name</label>
-                            <input type="text" name="finance[invoice_courier_recipient]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Recipient Contact</label>
-                            <input type="text" name="finance[invoice_courier_contact]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN Number</label>
+                            <input type="text" name="finance[tin_number]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Courier Address</label>
-                            <textarea name="finance[invoice_courier_address]" rows="2"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registered Address</label>
+                            <textarea name="finance[tin_registered_address]" rows="2"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                         </div>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <p class="font-semibold text-zinc-700 mb-3">Payment Method</p>
-                    <div class="flex gap-4 mb-3">
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="finance[payment_method]" value="check_pickup"
-                                class="paymentMethodRadio">
-                            <span class="text-sm">Check Pickup</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="radio" name="finance[payment_method]" value="direct_remittance"
-                                class="paymentMethodRadio">
-                            <span class="text-sm">Direct Remittance to Bank</span>
-                        </label>
-                    </div>
-                    <div id="checkPickupFields" class="hidden">
-                        <label class="text-xs font-medium text-zinc-400 uppercase">Pickup Address</label>
-                        <textarea name="finance[check_pickup_address]" rows="2"
-                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
-                    </div>
-                    <div id="directRemittanceFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Bank Name</label>
-                            <input type="text" name="finance[bank_name]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Tax Status</label>
+                            <input type="text" name="finance[tax_status]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Bank Account Number</label>
-                            <input type="text" name="finance[bank_account_number]"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <p class="font-semibold text-zinc-700 mb-3">Additional Billing Service Request</p>
-                    <div class="flex gap-6 mb-3">
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" name="finance[document_handling]" value="1">
-                            <span class="text-sm">Document Handling</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" name="finance[billing_summary_report]" value="1">
-                            <span class="text-sm">Billing Summary Report</span>
-                        </label>
-                    </div>
-                    <label class="text-xs font-medium text-zinc-400 uppercase">Others</label>
-                    <textarea name="finance[other_requests]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
-                </div>
-
-                <div class="border-t pt-4">
-                    <p class="font-semibold text-zinc-700 mb-3">Billing Details</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Billed To</label>
-                            <input type="text" name="billing[billed_to]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax Code</label>
+                            <input type="text" name="finance[withholding_tax_code]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
-                            <input type="text" name="billing[company_name]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Trade Name</label>
+                            <input type="text" name="finance[trade_name]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Address</label>
-                            <textarea name="billing[address]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registration Date</label>
+                            <input type="date" name="finance[tin_registration_date]"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
-                            <input type="text" name="billing[tin]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Line of Business</label>
+                            <input type="text" name="finance[line_of_business]"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Tax Percent</label>
+                            <input type="number" step="0.01" name="finance[tax_percent]"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax Percent</label>
+                            <input type="number" step="0.01" name="finance[withholding_tax_percent]"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Credit Terms</label>
+                            <select name="finance[credit_terms]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Credit Terms</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Mode of Payment</label>
+                            <select name="finance[mode_of_payment]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Mode of Payment</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Credit Officer (CRO)</label>
+                            <select name="finance[cro_user_id]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Credit Officer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Max Declared Value</label>
+                            <input type="number" step="0.01" name="finance[max_declared_value]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                     </div>
@@ -275,6 +211,26 @@
                 <button class="stage-prev border px-5 py-2 rounded-lg text-sm font-medium"
                     data-target="2">Previous</button>
                 <button id="saveStage3Btn"
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium">
+                    Save & Continue
+                </button>
+            </div>
+        </div>
+
+        {{-- ===================== STAGE 4 ===================== --}}
+        <div class="stage-panel hidden" data-panel="4">
+
+            <div class="flex justify-between items-center mb-3">
+                <p class="font-semibold text-zinc-700">Ancillary Services</p>
+                <button type="button" id="addAncillaryBtn"
+                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add Service</button>
+            </div>
+            <div id="ancillaryContainer" class="space-y-4"></div>
+
+            <div class="flex justify-between gap-2 mt-6 pt-4 border-t">
+                <button class="stage-prev border px-5 py-2 rounded-lg text-sm font-medium"
+                    data-target="3">Previous</button>
+                <button id="saveStage4Btn"
                     class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
                     Save & Finish
                 </button>
@@ -296,6 +252,11 @@
 
         let currentStage = 1;
 
+        const MODE_OF_PAYMENT_OPTIONS = ['Cash', 'Check', 'Bank Transfer', 'Online'];
+        // Hardcoded for now - swap for an LOV-backed dropdown later if the
+        // business ends up needing non-standard credit terms.
+        const CREDIT_TERMS_OPTIONS = ['COD', '7 Days', '15 Days', '30 Days', '45 Days', '60 Days', '90 Days'];
+
         // -------------------- STEPPER --------------------
         function showStage(stage) {
             currentStage = stage;
@@ -309,6 +270,21 @@
                 b.classList.toggle('border-zinc-200', !active);
                 b.classList.toggle('text-zinc-400', !active);
             });
+
+            if (stage === 3) {
+                // Prefill Client Business Name from Company Name the first time
+                // the Finance stage is populated for a new record.
+                const businessNameInput = document.querySelector(
+                    '#stage3Form [name="finance[client_business_name]"]');
+                if (businessNameInput && !businessNameInput.value) {
+                    businessNameInput.value = document.querySelector(
+                        '#stage1Form [name="company_name"]')?.value || '';
+                }
+            }
+
+            if (stage === 4) {
+                syncAncillarySnapshotFields();
+            }
         }
 
         document.querySelectorAll('.stage-btn').forEach(btn => {
@@ -325,8 +301,31 @@
         });
 
         // -------------------- STAGE 1 --------------------
-        function collectAddresses() {
-            return Array.from(document.querySelectorAll('.address-card')).map(card => {
+        let mnemonicTouched = false;
+
+        function deriveMnemonic(name) {
+            return (name || '')
+                .split(/\s+/)
+                .map(word => word.replace(/[^a-zA-Z]/g, ''))
+                .filter(word => word.length > 0)
+                .map(word => word[0].toUpperCase())
+                .join('');
+        }
+
+        const companyNameInput = document.querySelector('#stage1Form [name="company_name"]');
+        const mnemonicInput = document.querySelector('#stage1Form [name="client_mnemonic"]');
+
+        companyNameInput.addEventListener('input', () => {
+            if (mnemonicTouched) return;
+            mnemonicInput.value = deriveMnemonic(companyNameInput.value);
+        });
+
+        mnemonicInput.addEventListener('input', () => {
+            mnemonicTouched = true;
+        });
+
+        function collectAddressesFrom(container) {
+            return Array.from(container.querySelectorAll('.address-card')).map(card => {
                 const obj = {};
                 card.querySelectorAll('[data-field]').forEach(el => {
                     obj[el.dataset.field] = el.value;
@@ -342,7 +341,7 @@
             if (clientUuid) data.uuid = clientUuid;
             if (leadId) data.lead_id = leadId;
 
-            const addresses = collectAddresses();
+            const addresses = collectAddressesFrom(document.getElementById('addressesContainer'));
             if (!addresses.length) {
                 showMessage({
                     status: 'error',
@@ -383,12 +382,12 @@
             document.getElementById('stage1Form').reset();
             document.getElementById('stage3Form').reset();
             document.getElementById('contactsContainer').innerHTML = '';
-            document.getElementById('tradeRefsContainer').innerHTML = '';
             document.getElementById('addressesContainer').innerHTML = '';
-            document.getElementById('invoiceElectronicFields').classList.add('hidden');
-            document.getElementById('invoiceCourierFields').classList.add('hidden');
-            document.getElementById('checkPickupFields').classList.add('hidden');
-            document.getElementById('directRemittanceFields').classList.add('hidden');
+            document.getElementById('ancillaryContainer').innerHTML = '';
+            document.getElementById('csrDisplay').value = '—';
+            document.getElementById('accountManagerDisplay').value = '—';
+            contactCounter = 0;
+            mnemonicTouched = false;
 
             // Prefill from a CRM lead, if this form was opened from one.
             if (prefillData) {
@@ -407,77 +406,136 @@
             addAddressCardsFrom(addresses);
         }
 
-        async function addAddressCardsFrom(addresses) {
+        async function addAddressCardsFrom(addresses, container = document.getElementById(
+            'addressesContainer'), groupName = 'address_primary_radio') {
             for (const address of addresses) {
-                const card = await addAddressCard();
+                const card = await addAddressCard(container, groupName);
                 await hydrateAddressCard(card, address);
             }
         }
 
         // -------------------- STAGE 2: dynamic rows --------------------
-        function contactRowHtml() {
+        let contactCounter = 0;
+
+        function typeSelectHtml(field) {
+            return `<select data-field="${field}" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
+                <option value="">Type</option>
+                <option value="personal">Personal</option>
+                <option value="business">Business</option>
+            </select>`;
+        }
+
+        function contactCardHtml(idx) {
             return `
-            <div class="contact-row grid grid-cols-1 md:grid-cols-5 gap-2 border rounded-lg p-3 relative">
-                <input type="text" data-field="contact_name" placeholder="Contact Name" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <div class="flex gap-1">
-                    <input type="text" data-field="contact_number" placeholder="Contact Number" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
-                    <select data-field="contact_number_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
-                        <option value="">Type</option>
-                        <option value="mobile">Mobile</option>
-                        <option value="landline">Landline</option>
-                    </select>
+            <div class="contact-card border rounded-xl p-4 space-y-4 relative" data-contact-index="${idx}">
+                <button type="button" class="remove-contact absolute top-3 right-3 text-red-500 text-xs font-medium">✕ Remove</button>
+                <div class="contact-fields grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Department</label>
+                        <input type="text" data-field="contact_department" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Title</label>
+                        <select data-field="title" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <option value="">Select Title</option>
+                            <option value="Mr.">Mr.</option>
+                            <option value="Mrs.">Mrs.</option>
+                            <option value="Ms.">Ms.</option>
+                            <option value="Miss">Miss</option>
+                            <option value="Dr.">Dr.</option>
+                            <option value="Engr.">Engr.</option>
+                            <option value="Atty.">Atty.</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Gender</label>
+                        <select data-field="gender" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Rather not say">Rather not say</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">First Name</label>
+                        <input type="text" data-field="first_name" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Last Name</label>
+                        <input type="text" data-field="last_name" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Position</label>
+                        <input type="text" data-field="position" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Landline</label>
+                        <div class="flex gap-1">
+                            <input type="text" data-field="landline_number" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
+                            ${typeSelectHtml('landline_type')}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Mobile</label>
+                        <div class="flex gap-1">
+                            <input type="text" data-field="mobile" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
+                            ${typeSelectHtml('mobile_type')}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Email</label>
+                        <div class="flex gap-1">
+                            <input type="email" data-field="email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
+                            ${typeSelectHtml('email_type')}
+                        </div>
+                    </div>
                 </div>
-                <div class="flex gap-1">
-                    <input type="email" data-field="contact_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
-                    <select data-field="contact_email_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
-                        <option value="">Type</option>
-                        <option value="personal">Personal</option>
-                        <option value="business">Business</option>
-                    </select>
-                </div>
-                <input type="text" data-field="role" placeholder="Role" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <div class="flex gap-2">
-                    <input type="text" data-field="position" placeholder="Position" class="border rounded-lg px-2 py-1.5 text-sm flex-1 dark:text-zinc-900">
-                    <button type="button" class="remove-row text-red-500 px-2">✕</button>
+
+                <div class="border-t pt-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-500">Address(es)</p>
+                        <button type="button" class="add-contact-address-btn text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add Address</button>
+                    </div>
+                    <div class="contact-addresses-container space-y-3"></div>
                 </div>
             </div>`;
         }
 
-        function tradeRefRowHtml() {
-            return `
-            <div class="trade-ref-row grid grid-cols-1 md:grid-cols-3 gap-2 border rounded-lg p-3 relative">
-                <input type="text" data-field="business_name" placeholder="Business Name" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="relationship" placeholder="Nature of Relationship" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="contact_person_name" placeholder="Contact Person" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="contact_person_phone" placeholder="Phone" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <input type="text" data-field="contact_person_mobile" placeholder="Mobile" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                <div class="flex gap-2">
-                    <input type="email" data-field="contact_person_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 dark:text-zinc-900">
-                    <button type="button" class="remove-row text-red-500 px-2">✕</button>
-                </div>
-            </div>`;
+        function addContactCard() {
+            const container = document.getElementById('contactsContainer');
+            const idx = contactCounter++;
+            container.insertAdjacentHTML('beforeend', contactCardHtml(idx));
+            return container.lastElementChild;
         }
 
-        document.getElementById('addContactBtn').addEventListener('click', () => {
-            document.getElementById('contactsContainer').insertAdjacentHTML('beforeend', contactRowHtml());
+        document.getElementById('addContactBtn').addEventListener('click', async () => {
+            const card = addContactCard();
+            await addAddressCardsFrom([{
+                is_primary: true
+            }], card.querySelector('.contact-addresses-container'),
+                `address_primary_${card.dataset.contactIndex}`);
         });
-        document.getElementById('addTradeRefBtn').addEventListener('click', () => {
-            document.getElementById('tradeRefsContainer').insertAdjacentHTML('beforeend',
-                tradeRefRowHtml());
-        });
-
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-row')) {
-                e.target.closest('.contact-row, .trade-ref-row').remove();
+            if (e.target.classList.contains('remove-contact')) {
+                e.target.closest('.contact-card')?.remove();
+            }
+            if (e.target.classList.contains('add-contact-address-btn')) {
+                const card = e.target.closest('.contact-card');
+                addAddressCard(card.querySelector('.contact-addresses-container'),
+                    `address_primary_${card.dataset.contactIndex}`);
+            }
+            if (e.target.classList.contains('remove-ancillary')) {
+                e.target.closest('.ancillary-row')?.remove();
             }
         });
 
-        function collectRows(containerId, rowClass) {
-            return Array.from(document.querySelectorAll(`#${containerId} .${rowClass}`)).map(row => {
+        function collectContacts() {
+            return Array.from(document.querySelectorAll('#contactsContainer .contact-card')).map(card => {
                 const obj = {};
-                row.querySelectorAll('[data-field]').forEach(input => {
+                card.querySelectorAll('.contact-fields [data-field]').forEach(input => {
                     obj[input.dataset.field] = input.value;
                 });
+                obj.addresses = collectAddressesFrom(card.querySelector('.contact-addresses-container'));
                 return obj;
             });
         }
@@ -492,8 +550,7 @@
             }
 
             const payload = {
-                contacts: collectRows('contactsContainer', 'contact-row'),
-                trade_references: collectRows('tradeRefsContainer', 'trade-ref-row'),
+                contacts: collectContacts(),
             };
 
             const response = await apiCall({
@@ -520,42 +577,19 @@
         });
 
         // -------------------- STAGE 3 --------------------
-        document.querySelectorAll('.invoiceSubmissionRadio').forEach(r => {
-            r.addEventListener('change', function() {
-                document.getElementById('invoiceElectronicFields').classList.toggle('hidden', this
-                    .value !== 'electronic');
-                document.getElementById('invoiceCourierFields').classList.toggle('hidden', this
-                    .value !== 'courier');
-            });
-        });
-
-        document.querySelectorAll('.paymentMethodRadio').forEach(r => {
-            r.addEventListener('change', function() {
-                document.getElementById('checkPickupFields').classList.toggle('hidden', this
-                    .value !== 'check_pickup');
-                document.getElementById('directRemittanceFields').classList.toggle('hidden', this
-                    .value !== 'direct_remittance');
-            });
-        });
-
         function formToNestedPayload(form) {
             const fd = new FormData(form);
             const payload = {
-                finance: {},
-                billing: {}
+                finance: {}
             };
             for (const [key, value] of fd.entries()) {
-                const match = key.match(/^(finance|billing)\[(.+)\]$/);
+                const match = key.match(/^finance\[(.+)\]$/);
                 if (match) {
-                    payload[match[1]][match[2]] = value;
+                    payload.finance[match[1]] = value;
                 } else {
                     payload[key] = value;
                 }
             }
-            // checkboxes not checked won't appear in FormData - normalize booleans
-            ['standard_billing_service', 'document_handling', 'billing_summary_report'].forEach(f => {
-                payload.finance[f] = form.querySelector(`[name="finance[${f}]"]`)?.checked ?? false;
-            });
             return payload;
         }
 
@@ -576,6 +610,131 @@
                 isJson: true,
                 payload,
                 url: `/api/clientMasters/${clientUuid}/stage3`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error Saving'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Finance Saved'
+            });
+            showStage(4);
+        });
+
+        // -------------------- STAGE 4 --------------------
+        function ancillaryRowHtml() {
+            return `
+            <div class="ancillary-row border rounded-xl p-4 space-y-3 relative">
+                <button type="button" class="remove-ancillary absolute top-3 right-3 text-red-500 text-xs font-medium">✕ Remove</button>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Client Code</label>
+                        <input type="text" data-field="client_code" readonly disabled class="w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50 text-zinc-600 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Client Mnemonic</label>
+                        <input type="text" data-field="client_mnemonic" readonly disabled class="w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50 text-zinc-600 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Client Business Name</label>
+                        <input type="text" data-field="client_business_name" readonly disabled class="w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50 text-zinc-600 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Required Service</label>
+                        <input type="text" data-field="required_service" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Location</label>
+                        <input type="text" data-field="location" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Unit</label>
+                        <input type="text" data-field="unit" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Unit Rate (VAT Ex)</label>
+                        <input type="number" step="0.01" data-field="unit_rate_vat_ex" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Mode of Payment</label>
+                        <select data-field="mode_of_payment" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <option value="">Select Mode of Payment</option>
+                            ${MODE_OF_PAYMENT_OPTIONS.map(v => `<option value="${v}">${v}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-[11px] text-zinc-400 uppercase">Remarks</label>
+                        <textarea data-field="remarks" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function fillAncillarySnapshotFields(row) {
+            const clientCode = document.querySelector('#stage1Form [name="customer_code"]')?.value || '';
+            const mnemonic = document.querySelector('#stage1Form [name="client_mnemonic"]')?.value || '';
+            const businessName = document.querySelector(
+                '#stage3Form [name="finance[client_business_name]"]')?.value ||
+                document.querySelector('#stage1Form [name="company_name"]')?.value || '';
+            row.querySelector('[data-field="client_code"]').value = clientCode;
+            row.querySelector('[data-field="client_mnemonic"]').value = mnemonic;
+            row.querySelector('[data-field="client_business_name"]').value = businessName;
+        }
+
+        function syncAncillarySnapshotFields() {
+            document.querySelectorAll('#ancillaryContainer .ancillary-row').forEach(
+                fillAncillarySnapshotFields);
+        }
+
+        function addAncillaryRow() {
+            document.getElementById('ancillaryContainer').insertAdjacentHTML('beforeend',
+                ancillaryRowHtml());
+            const row = document.getElementById('ancillaryContainer').lastElementChild;
+            fillAncillarySnapshotFields(row);
+            return row;
+        }
+
+        document.getElementById('addAncillaryBtn').addEventListener('click', () => addAncillaryRow());
+
+        function collectAncillaryServices() {
+            return Array.from(document.querySelectorAll('#ancillaryContainer .ancillary-row')).map(
+                row => {
+                    const obj = {};
+                    ['required_service', 'location', 'unit', 'unit_rate_vat_ex',
+                        'mode_of_payment', 'remarks'
+                    ].forEach(field => {
+                        const el = row.querySelector(`[data-field="${field}"]`);
+                        obj[field] = el ? el.value : '';
+                    });
+                    return obj;
+                });
+        }
+
+        document.getElementById('saveStage4Btn').addEventListener('click', async function() {
+            if (!clientUuid) {
+                showMessage({
+                    status: 'error',
+                    title: 'Save previous stages first'
+                });
+                return;
+            }
+
+            const payload = {
+                ancillary_services: collectAncillaryServices()
+            };
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload,
+                url: `/api/clientMasters/${clientUuid}/stage4`,
                 button: this,
             });
 
@@ -632,6 +791,10 @@
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = val ?? '';
             });
+            mnemonicTouched = true;
+
+            document.getElementById('csrDisplay').value = c.sales_rep?.name ?? '—';
+            document.getElementById('accountManagerDisplay').value = c.account_manager?.name ?? '—';
 
             document.getElementById('addressesContainer').innerHTML = '';
             const addresses = (c.addresses && c.addresses.length) ? c.addresses : [{
@@ -640,46 +803,40 @@
             await addAddressCardsFrom(addresses);
 
             document.getElementById('contactsContainer').innerHTML = '';
-            (c.contacts || []).forEach(contact => {
-                document.getElementById('contactsContainer').insertAdjacentHTML('beforeend',
-                    contactRowHtml());
-                const row = document.getElementById('contactsContainer').lastElementChild;
-                row.querySelectorAll('[data-field]').forEach(input => input.value = contact[input
-                    .dataset.field] ?? '');
-            });
-
-            document.getElementById('tradeRefsContainer').innerHTML = '';
-            (c.trade_references || []).forEach(ref => {
-                document.getElementById('tradeRefsContainer').insertAdjacentHTML('beforeend',
-                    tradeRefRowHtml());
-                const row = document.getElementById('tradeRefsContainer').lastElementChild;
-                row.querySelectorAll('[data-field]').forEach(input => input.value = ref[input.dataset
-                    .field] ?? '');
-            });
+            contactCounter = 0;
+            for (const contact of (c.contacts || [])) {
+                const card = addContactCard();
+                card.querySelectorAll('.contact-fields [data-field]').forEach(el => {
+                    el.value = contact[el.dataset.field] ?? '';
+                });
+                await addAddressCardsFrom(contact.addresses || [], card.querySelector(
+                    '.contact-addresses-container'), `address_primary_${card.dataset.contactIndex}`);
+            }
 
             if (c.finance) {
                 const stage3Form = document.getElementById('stage3Form');
                 Object.entries(c.finance).forEach(([key, val]) => {
                     const el = stage3Form.querySelector(`[name="finance[${key}]"]`);
-                    if (!el) return;
-                    if (el.type === 'checkbox') el.checked = Boolean(val);
-                    else if (el.type === 'radio') {
-                        if (el.value === val) el.checked = true;
-                    } else el.value = val ?? '';
-                });
-                document.querySelector(`.invoiceSubmissionRadio[value="${c.finance.invoice_submission}"]`)
-                    ?.dispatchEvent(new Event('change'));
-                document.querySelector(`.paymentMethodRadio[value="${c.finance.payment_method}"]`)
-                    ?.dispatchEvent(new Event('change'));
-            }
-
-            if (c.billing) {
-                const stage3Form = document.getElementById('stage3Form');
-                Object.entries(c.billing).forEach(([key, val]) => {
-                    const el = stage3Form.querySelector(`[name="billing[${key}]"]`);
                     if (el) el.value = val ?? '';
                 });
             }
+
+            document.getElementById('ancillaryContainer').innerHTML = '';
+            (c.ancillary_services || []).forEach(svc => {
+                const row = addAncillaryRow();
+                ['required_service', 'location', 'unit', 'unit_rate_vat_ex',
+                    'mode_of_payment', 'remarks'
+                ].forEach(field => {
+                    const el = row.querySelector(`[data-field="${field}"]`);
+                    if (el) el.value = svc[field] ?? '';
+                });
+                // Snapshot fields prefer the row's own saved values, falling back to
+                // the parent client's current values (already set by addAncillaryRow()).
+                ['client_code', 'client_mnemonic', 'client_business_name'].forEach(field => {
+                    const el = row.querySelector(`[data-field="${field}"]`);
+                    if (el && svc[field]) el.value = svc[field];
+                });
+            });
 
             showStage(c.current_stage || 1);
         }
@@ -687,7 +844,15 @@
         // -------------------- INIT --------------------
         showStage(1);
 
-        fillAddressTypeOptions().then(() => {
+        Promise.all([
+            fillAddressTypeOptions(),
+            fillIndustryOptions(),
+            fillClientCategoryOptions(),
+            fillClientClassificationOptions(),
+            fillModeOfPaymentOptions(),
+            fillCreditTermsOptions(),
+            fillCroOptions(),
+        ]).then(() => {
             if (clientUuid) {
                 hydrateExisting();
             } else {
@@ -740,6 +905,63 @@
 
             select.disabled = false;
 
+        }
+
+        // -------------------- STAGE 1 LOVs --------------------
+        async function fillIndustryOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/industry'
+            });
+            if (!Array.isArray(response)) return;
+            const select = document.querySelector('#stage1Form [name="industry"]');
+            select.insertAdjacentHTML('beforeend', response.map(lov =>
+                `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
+        }
+
+        async function fillClientCategoryOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/clientcategory'
+            });
+            if (!Array.isArray(response)) return;
+            const select = document.querySelector('#stage1Form [name="client_category"]');
+            select.insertAdjacentHTML('beforeend', response.map(lov =>
+                `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
+        }
+
+        async function fillClientClassificationOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/clientclassification'
+            });
+            if (!Array.isArray(response)) return;
+            const select = document.querySelector('#stage1Form [name="client_classification"]');
+            select.insertAdjacentHTML('beforeend', response.map(lov =>
+                `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
+        }
+
+        async function fillModeOfPaymentOptions() {
+            const select = document.querySelector('#stage3Form [name="finance[mode_of_payment]"]');
+            select.insertAdjacentHTML('beforeend', MODE_OF_PAYMENT_OPTIONS.map(v =>
+                `<option value="${v}">${v}</option>`).join(''));
+        }
+
+        async function fillCreditTermsOptions() {
+            const select = document.querySelector('#stage3Form [name="finance[credit_terms]"]');
+            select.insertAdjacentHTML('beforeend', CREDIT_TERMS_OPTIONS.map(v =>
+                `<option value="${v}">${v}</option>`).join(''));
+        }
+
+        async function fillCroOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/users/byRole?role=Credit Officer'
+            });
+            if (!response.success || !Array.isArray(response.data)) return;
+            const select = document.querySelector('#stage3Form [name="finance[cro_user_id]"]');
+            select.insertAdjacentHTML('beforeend', response.data.map(u =>
+                `<option value="${u.id}">${u.name}</option>`).join(''));
         }
 
         // -------------------- ADDRESSES: repeatable cards --------------------
@@ -825,14 +1047,17 @@
     </div>`;
         }
 
-        async function addAddressCard() {
-            const wrap = document.getElementById('addressesContainer');
-            const index = wrap.children.length;
-            wrap.insertAdjacentHTML('beforeend', addressCardHtml(index));
-            const card = wrap.lastElementChild;
+        async function addAddressCard(container = document.getElementById('addressesContainer'),
+            groupName = 'address_primary_radio') {
+            const index = container.children.length;
+            container.insertAdjacentHTML('beforeend', addressCardHtml(index));
+            const card = container.lastElementChild;
+
+            const radio = card.querySelector('.primary-radio');
+            radio.name = groupName;
 
             card.querySelector('.remove-address').addEventListener('click', () => card.remove());
-            if (index === 0) card.querySelector('.primary-radio').checked = true;
+            if (index === 0) radio.checked = true;
 
             await initializePhilippineAddress(card);
             return card;

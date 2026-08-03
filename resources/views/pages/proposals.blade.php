@@ -661,7 +661,6 @@
                 customer_code: codeResponse.data.customer_code,
                 company_name: lead.company?.company_name ?? '',
                 industry: lead.company?.type_of_business ?? '',
-                contact_number_1: lead.mobile ?? '',
                 addresses: lead.addresses ?? [],
             };
 

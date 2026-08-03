@@ -68,4 +68,32 @@ class LovController extends Controller
 
         return $option ? $option->values : collect();
     }
+
+    public function industry()
+    {
+        $option = Option::where('option_name', 'Industry')->first();
+
+        return $option ? $option->values : collect();
+    }
+
+    public function organizationType()
+    {
+        $option = Option::where('option_name', 'Type of Organization')->first();
+
+        return $option ? $option->values : collect();
+    }
+
+    public function clientCategory()
+    {
+        $option = Option::where('option_name', 'Client Category')->first();
+
+        return $option ? $option->values : collect();
+    }
+
+    public function clientClassification()
+    {
+        $option = Option::where('option_name', 'Client Classification')->first();
+
+        return $option ? $option->values : collect();
+    }
 }

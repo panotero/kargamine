@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/settings', [UserController::class, 'getUserSettings']);
         Route::get('/counts', [UserController::class, 'counts']);
+        Route::get('/byRole', [UserController::class, 'byRole']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::post('/', [UserController::class, 'store']);
         Route::patch('/save/{id}', [UserController::class, 'save_info']);
@@ -157,6 +158,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/typeofbusiness', [LovController::class, 'typeOfBusiness']);
         Route::get('/addresstype', [LovController::class, 'addressType']);
         Route::get('/leadsource', [LovController::class, 'leadSource']);
+        Route::get('/industry', [LovController::class, 'industry']);
+        Route::get('/organizationtype', [LovController::class, 'organizationType']);
+        Route::get('/clientcategory', [LovController::class, 'clientCategory']);
+        Route::get('/clientclassification', [LovController::class, 'clientClassification']);
     });
 
     // Read is open to any authenticated user (populates role-select
@@ -185,6 +190,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/stage1', [ClientMasterController::class, 'saveStage1']);
         Route::post('/{uuid}/stage2', [ClientMasterController::class, 'saveStage2']);
         Route::post('/{uuid}/stage3', [ClientMasterController::class, 'saveStage3']);
+        Route::post('/{uuid}/stage4', [ClientMasterController::class, 'saveStage4']);
         Route::delete('/{uuid}', [ClientMasterController::class, 'destroy']);
 
         // Client-scoped proposal list/create (used inside the Client Master modal)

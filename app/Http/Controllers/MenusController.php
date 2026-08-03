@@ -67,9 +67,6 @@ class MenusController extends Controller
             'allowed_roles' => [
                 'nullable'
             ],
-            'allowed_offices' => [
-                'nullable'
-            ],
             'parent_menu' => [
                 'nullable',
                 'integer'
@@ -98,7 +95,6 @@ class MenusController extends Controller
                 'icon' => 'nullable|string',
                 'link' => 'nullable|string',
                 'allowed_roles' => 'nullable',
-                'allowed_offices' => 'nullable',
                 'parent_menu' => 'nullable|integer',
                 'menu_order' => 'nullable|integer',
             ]);
@@ -165,10 +161,6 @@ class MenusController extends Controller
             'allowed_roles' => [
                 'nullable'
             ],
-            'allowed_office' => [
-                'nullable',
-                'string',
-            ],
             'parent_menu' => [
                 'nullable',
                 'integer'
@@ -191,7 +183,6 @@ class MenusController extends Controller
                 'icon' => 'nullable|string',
                 'link' => 'nullable|string',
                 'allowed_roles' => 'nullable',
-                'allowed_office' => 'nullable|string',
                 'parent_menu' => 'nullable|integer',
             ]);
 
@@ -202,7 +193,6 @@ class MenusController extends Controller
 
             foreach ($childMenus as $child) {
                 $child->update([
-                    'allowed_office' => $menu->allowed_office,
                     'allowed_roles' => $menu->allowed_roles
                 ]);
             }

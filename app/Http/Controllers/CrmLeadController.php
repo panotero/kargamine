@@ -135,7 +135,7 @@ class CrmLeadController extends Controller
             'email_type' => ['nullable', 'in:personal,business'],
             'source' => ['required', 'string', 'max:255'],
 
-            'company_name' => ['required_if:client_type,corporate', 'nullable', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255'],
             'type_of_business' => ['nullable', 'string', 'max:255'],
             'industry_description' => ['nullable', 'string'],
 
@@ -212,7 +212,7 @@ class CrmLeadController extends Controller
             \App\Models\CrmCompanyInfo::updateOrCreate(
                 ['lead_id' => $lead->id],
                 [
-                    'company_name' => $data['client_type'] === 'corporate' ? ($data['company_name'] ?? null) : null,
+                    'company_name' => $data['company_name'],
                     'type_of_business' => $data['type_of_business'] ?? null,
                     'industry_description' => $data['industry_description'] ?? null,
                     'authorized_signatory_title' => $data['authorized_signatory_title'] ?? null,

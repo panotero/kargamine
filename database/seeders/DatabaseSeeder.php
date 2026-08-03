@@ -37,6 +37,10 @@ class DatabaseSeeder extends Seeder
             AddressTypeSeeder::class,
             LeadSourceSeeder::class,
             BusinessTypeSeeder::class,
+            IndustrySeeder::class,
+            OrganizationTypeSeeder::class,
+            ClientCategorySeeder::class,
+            ClientClassificationSeeder::class,
 
             // maintenance page sample data - rate/master data tables
             ContainerCatalogSeeder::class,

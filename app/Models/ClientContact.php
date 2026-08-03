@@ -13,17 +13,27 @@ class ClientContact extends Model
 
     protected $fillable = [
         'client_id',
-        'contact_name',
-        'contact_number',
-        'contact_number_type',
-        'contact_email',
-        'contact_email_type',
-        'role',
+        'contact_department',
+        'title',
+        'first_name',
+        'last_name',
+        'gender',
         'position',
+        'landline_number',
+        'landline_type',
+        'mobile',
+        'mobile_type',
+        'email',
+        'email_type',
     ];
 
     public function client()
     {
         return $this->belongsTo(ClientMaster::class, 'client_id');
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(ClientContactAddress::class, 'contact_id');
     }
 }
