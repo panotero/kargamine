@@ -47,27 +47,32 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Mnemonic</label>
-                            <input type="text" name="client_mnemonic" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <input type="text" name="client_mnemonic"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client/Business Name</label>
-                            <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <input type="text" name="company_name"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Category</label>
-                            <select name="client_category" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="client_category"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Client Category</option>
                             </select>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Classification</label>
-                            <select name="client_classification" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="client_classification"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Client Classification</option>
                             </select>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Industry</label>
-                            <select name="industry" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="industry"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Industry</option>
                             </select>
                         </div>
@@ -87,7 +92,8 @@
                 {{-- Addresses - repeatable, one per address type --}}
                 <div class="border-t pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <p class="font-semibold text-zinc-700">Address(es) *</p>
+                        <p class="font-semibold text-zinc-700">Address(es) <span class="req-asterisk">*</span>
+                        </p>
                         <button type="button" id="addAddressBtn"
                             class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add
                             Address</button>
@@ -146,9 +152,11 @@
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Tax Status</label>
-                            <input type="text" name="finance[tax_status]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Registered Tax Type</label>
+                            <select name="finance[registered_tax_type]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">— Select —</option>
+                            </select>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax Code</label>
@@ -180,30 +188,40 @@
                             <input type="number" step="0.01" name="finance[withholding_tax_percent]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
-                        <div>
+                        <div id="modeOfPaymentField">
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Mode of Payment</label>
+                            <select name="finance[mode_of_payment]"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select Mode of Payment</option>
+                            </select>
+                        </div>
+                        <div id="creditTermsField" class="hidden">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Credit Terms</label>
-                            <select name="finance[credit_terms]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="finance[credit_terms]"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Credit Terms</option>
                             </select>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Mode of Payment</label>
-                            <select name="finance[mode_of_payment]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                <option value="">Select Mode of Payment</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Credit Officer (CRO)</label>
-                            <select name="finance[cro_user_id]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                <option value="">Select Credit Officer</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Max Declared Value</label>
-                            <input type="number" step="0.01" name="finance[max_declared_value]"
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Cargo Release Order
+                                (CRO)</label>
+                            <select name="finance[cro]"
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                <option value="">Select CRO</option>
+                            </select>
                         </div>
                     </div>
+                </div>
+
+                {{-- Commodity Type / Maximum Declared Value - repeatable --}}
+                <div class="border-t pt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-semibold text-zinc-700">Commodity Type &amp; Maximum Declared Value</p>
+                        <button type="button" id="addCommodityBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100">+ Add
+                            Commodity</button>
+                    </div>
+                    <div id="commodityContainer" class="space-y-3"></div>
                 </div>
             </form>
 
@@ -252,10 +270,12 @@
 
         let currentStage = 1;
 
-        const MODE_OF_PAYMENT_OPTIONS = ['Cash', 'Check', 'Bank Transfer', 'Online'];
+        const MODE_OF_PAYMENT_OPTIONS = ['Cash', 'Credit'];
         // Hardcoded for now - swap for an LOV-backed dropdown later if the
         // business ends up needing non-standard credit terms.
         const CREDIT_TERMS_OPTIONS = ['COD', '7 Days', '15 Days', '30 Days', '45 Days', '60 Days', '90 Days'];
+        // CRO = Cargo Release Order, not a Credit Officer user.
+        const CRO_OPTIONS = ['Manual', 'Automatic'];
 
         // -------------------- STEPPER --------------------
         function showStage(stage) {
@@ -280,12 +300,29 @@
                     businessNameInput.value = document.querySelector(
                         '#stage1Form [name="company_name"]')?.value || '';
                 }
-            }
-
-            if (stage === 4) {
-                syncAncillarySnapshotFields();
+                applyModeOfPaymentVisibility();
             }
         }
+
+        // -------------------- STAGE 3: Mode of Payment -> Credit Terms --------------------
+        function applyModeOfPaymentVisibility() {
+            const mode = document.querySelector('#stage3Form [name="finance[mode_of_payment]"]')?.value;
+            document.getElementById('creditTermsField').classList.toggle('hidden', mode !== 'Credit');
+        }
+
+        document.querySelector('#stage3Form [name="finance[mode_of_payment]"]')
+            .addEventListener('change', applyModeOfPaymentVisibility);
+
+        // -------------------- STAGE 3: Registered Tax Type -> Tax Percent auto-fill --------------------
+        let taxTypeRatesMap = {};
+
+        document.querySelector('#stage3Form [name="finance[registered_tax_type]"]')
+            .addEventListener('change', function() {
+                const rate = taxTypeRatesMap[this.value];
+                if (rate === undefined || rate === null) return;
+                const taxPercentInput = document.querySelector('#stage3Form [name="finance[tax_percent]"]');
+                if (taxPercentInput) taxPercentInput.value = rate;
+            });
 
         document.querySelectorAll('.stage-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -369,7 +406,8 @@
             }
 
             clientUuid = response.data.uuid;
-            document.querySelector('#stage1Form [name="customer_code"]').value = response.data.customer_code ?? '';
+            document.querySelector('#stage1Form [name="customer_code"]').value = response.data
+                .customer_code ?? '';
             showMessage({
                 status: 'success',
                 title: 'Company Information Saved'
@@ -383,11 +421,13 @@
             document.getElementById('stage3Form').reset();
             document.getElementById('contactsContainer').innerHTML = '';
             document.getElementById('addressesContainer').innerHTML = '';
+            document.getElementById('commodityContainer').innerHTML = '';
             document.getElementById('ancillaryContainer').innerHTML = '';
             document.getElementById('csrDisplay').value = '—';
             document.getElementById('accountManagerDisplay').value = '—';
             contactCounter = 0;
             mnemonicTouched = false;
+            applyModeOfPaymentVisibility();
 
             // Prefill from a CRM lead, if this form was opened from one.
             if (prefillData) {
@@ -511,8 +551,8 @@
         document.getElementById('addContactBtn').addEventListener('click', async () => {
             const card = addContactCard();
             await addAddressCardsFrom([{
-                is_primary: true
-            }], card.querySelector('.contact-addresses-container'),
+                    is_primary: true
+                }], card.querySelector('.contact-addresses-container'),
                 `address_primary_${card.dataset.contactIndex}`);
         });
         document.addEventListener('click', (e) => {
@@ -524,8 +564,8 @@
                 addAddressCard(card.querySelector('.contact-addresses-container'),
                     `address_primary_${card.dataset.contactIndex}`);
             }
-            if (e.target.classList.contains('remove-ancillary')) {
-                e.target.closest('.ancillary-row')?.remove();
+            if (e.target.classList.contains('remove-commodity')) {
+                e.target.closest('.commodity-row')?.remove();
             }
         });
 
@@ -604,6 +644,7 @@
 
             const form = document.getElementById('stage3Form');
             const payload = formToNestedPayload(form);
+            payload.commodity_declared_values = collectCommodityDeclaredValues();
 
             const response = await apiCall({
                 mode: 'POST',
@@ -628,88 +669,88 @@
             showStage(4);
         });
 
-        // -------------------- STAGE 4 --------------------
+        // -------------------- Commodity Type / Max Declared Value: repeatable --------------------
+        function commodityRowHtml() {
+            return `
+            <div class="commodity-row grid grid-cols-1 md:grid-cols-3 gap-2 border rounded-lg p-3 relative">
+                <input type="text" data-field="commodity_type" placeholder="Commodity Type" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" inputmode="decimal" data-field="max_declared_value" placeholder="Maximum Declared Value" class="currency-input border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <div class="flex justify-end">
+                    <button type="button" class="remove-commodity text-red-500 px-2 text-xs font-medium">✕ Remove</button>
+                </div>
+            </div>`;
+        }
+
+        document.getElementById('addCommodityBtn').addEventListener('click', () => {
+            document.getElementById('commodityContainer').insertAdjacentHTML('beforeend',
+                commodityRowHtml());
+        });
+
+        function collectCommodityDeclaredValues() {
+            return Array.from(document.querySelectorAll('#commodityContainer .commodity-row')).map(row => {
+                const obj = {};
+                row.querySelectorAll('[data-field]').forEach(input => {
+                    obj[input.dataset.field] = input.classList.contains('currency-input') ?
+                        parseCurrencyValue(input.value) : input.value;
+                });
+                return obj;
+            });
+        }
+
+        // -------------------- STAGE 4: Ancillary Services --------------------
+        // Just a list of special charges the client is availing - no rates,
+        // no calculation, no payment info. Each row is Special Charge / CY /
+        // Unit / Quantity only.
         function ancillaryRowHtml() {
             return `
             <div class="ancillary-row border rounded-xl p-4 space-y-3 relative">
                 <button type="button" class="remove-ancillary absolute top-3 right-3 text-red-500 text-xs font-medium">✕ Remove</button>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Client Code</label>
-                        <input type="text" data-field="client_code" readonly disabled class="w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50 text-zinc-600 cursor-not-allowed">
+                        <label class="text-[11px] text-zinc-400 uppercase">Special Charge</label>
+                        <select data-field="required_service" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            ${specialChargeOptionsHtml}
+                        </select>
                     </div>
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Client Mnemonic</label>
-                        <input type="text" data-field="client_mnemonic" readonly disabled class="w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50 text-zinc-600 cursor-not-allowed">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Client Business Name</label>
-                        <input type="text" data-field="client_business_name" readonly disabled class="w-full border rounded-lg px-2 py-1.5 text-sm bg-zinc-50 text-zinc-600 cursor-not-allowed">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Required Service</label>
-                        <input type="text" data-field="required_service" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Location</label>
-                        <input type="text" data-field="location" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        <label class="text-[11px] text-zinc-400 uppercase">CY</label>
+                        <select data-field="location" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            ${cargoYardOptionsHtml}
+                        </select>
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Unit</label>
-                        <input type="text" data-field="unit" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Unit Rate (VAT Ex)</label>
-                        <input type="number" step="0.01" data-field="unit_rate_vat_ex" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Mode of Payment</label>
-                        <select data-field="mode_of_payment" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                            <option value="">Select Mode of Payment</option>
-                            ${MODE_OF_PAYMENT_OPTIONS.map(v => `<option value="${v}">${v}</option>`).join('')}
+                        <select data-field="unit" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            ${unitOptionsHtml}
                         </select>
                     </div>
-                    <div class="md:col-span-3">
-                        <label class="text-[11px] text-zinc-400 uppercase">Remarks</label>
-                        <textarea data-field="remarks" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
+                        <input type="number" step="0.01" data-field="quantity" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                 </div>
             </div>`;
         }
 
-        function fillAncillarySnapshotFields(row) {
-            const clientCode = document.querySelector('#stage1Form [name="customer_code"]')?.value || '';
-            const mnemonic = document.querySelector('#stage1Form [name="client_mnemonic"]')?.value || '';
-            const businessName = document.querySelector(
-                '#stage3Form [name="finance[client_business_name]"]')?.value ||
-                document.querySelector('#stage1Form [name="company_name"]')?.value || '';
-            row.querySelector('[data-field="client_code"]').value = clientCode;
-            row.querySelector('[data-field="client_mnemonic"]').value = mnemonic;
-            row.querySelector('[data-field="client_business_name"]').value = businessName;
-        }
-
-        function syncAncillarySnapshotFields() {
-            document.querySelectorAll('#ancillaryContainer .ancillary-row').forEach(
-                fillAncillarySnapshotFields);
-        }
-
         function addAncillaryRow() {
             document.getElementById('ancillaryContainer').insertAdjacentHTML('beforeend',
                 ancillaryRowHtml());
-            const row = document.getElementById('ancillaryContainer').lastElementChild;
-            fillAncillarySnapshotFields(row);
-            return row;
+            return document.getElementById('ancillaryContainer').lastElementChild;
         }
 
         document.getElementById('addAncillaryBtn').addEventListener('click', () => addAncillaryRow());
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-ancillary')) {
+                e.target.closest('.ancillary-row')?.remove();
+            }
+        });
 
         function collectAncillaryServices() {
             return Array.from(document.querySelectorAll('#ancillaryContainer .ancillary-row')).map(
                 row => {
                     const obj = {};
-                    ['required_service', 'location', 'unit', 'unit_rate_vat_ex',
-                        'mode_of_payment', 'remarks'
-                    ].forEach(field => {
+                    ['required_service', 'location', 'unit', 'quantity'].forEach(field => {
                         const el = row.querySelector(`[data-field="${field}"]`);
                         obj[field] = el ? el.value : '';
                     });
@@ -821,20 +862,24 @@
                 });
             }
 
+            document.getElementById('commodityContainer').innerHTML = '';
+            (c.commodity_declared_values || []).forEach(row => {
+                document.getElementById('commodityContainer').insertAdjacentHTML('beforeend',
+                    commodityRowHtml());
+                const el = document.getElementById('commodityContainer').lastElementChild;
+                el.querySelectorAll('[data-field]').forEach(input => {
+                    const val = row[input.dataset.field] ?? '';
+                    input.value = input.classList.contains('currency-input') ?
+                        formatCurrencyDisplay(val) : val;
+                });
+            });
+
             document.getElementById('ancillaryContainer').innerHTML = '';
             (c.ancillary_services || []).forEach(svc => {
                 const row = addAncillaryRow();
-                ['required_service', 'location', 'unit', 'unit_rate_vat_ex',
-                    'mode_of_payment', 'remarks'
-                ].forEach(field => {
+                ['required_service', 'location', 'unit', 'quantity'].forEach(field => {
                     const el = row.querySelector(`[data-field="${field}"]`);
                     if (el) el.value = svc[field] ?? '';
-                });
-                // Snapshot fields prefer the row's own saved values, falling back to
-                // the parent client's current values (already set by addAncillaryRow()).
-                ['client_code', 'client_mnemonic', 'client_business_name'].forEach(field => {
-                    const el = row.querySelector(`[data-field="${field}"]`);
-                    if (el && svc[field]) el.value = svc[field];
                 });
             });
 
@@ -852,6 +897,10 @@
             fillModeOfPaymentOptions(),
             fillCreditTermsOptions(),
             fillCroOptions(),
+            fillRegisteredTaxTypeOptions(),
+            fillSpecialChargeOptions(),
+            fillCargoYardOptions(),
+            fillUnitOptions(),
         ]).then(() => {
             if (clientUuid) {
                 hydrateExisting();
@@ -894,8 +943,15 @@
 
                 const option = document.createElement("option");
 
-                option.value = item.name;
-                option.textContent = item.name;
+                // The PSGC API returns some province/city/barangay names with
+                // inconsistent trailing whitespace. Laravel's TrimStrings
+                // middleware trims it server-side on save, so an untrimmed
+                // option value here would never match the trimmed value
+                // that comes back on hydration - the dropdown would silently
+                // fail to re-select, breaking the city/barangay cascade.
+                const name = (item.name || '').trim();
+                option.value = name;
+                option.textContent = name;
 
                 option.dataset.code = item.code;
 
@@ -954,14 +1010,68 @@
         }
 
         async function fillCroOptions() {
+            const select = document.querySelector('#stage3Form [name="finance[cro]"]');
+            select.insertAdjacentHTML('beforeend', CRO_OPTIONS.map(v =>
+                `<option value="${v}">${v}</option>`).join(''));
+        }
+
+        async function fillRegisteredTaxTypeOptions() {
+            const select = document.querySelector('#stage3Form [name="finance[registered_tax_type]"]');
             const response = await apiCall({
                 mode: 'GET',
-                url: '/api/users/byRole?role=Credit Officer'
+                url: '/api/vatRates?per_page=1000'
             });
-            if (!response.success || !Array.isArray(response.data)) return;
-            const select = document.querySelector('#stage3Form [name="finance[cro_user_id]"]');
-            select.insertAdjacentHTML('beforeend', response.data.map(u =>
-                `<option value="${u.id}">${u.name}</option>`).join(''));
+            if (!response.success || !Array.isArray(response.data?.data)) return;
+
+            // Only active rows represent a currently selectable tax type; also
+            // build the { tax_type: rate_percent } lookup used to auto-fill
+            // Tax Percent on selection.
+            response.data.data
+                .filter(vr => vr.is_active)
+                .forEach(vr => {
+                    taxTypeRatesMap[vr.tax_type] = vr.rate_percent;
+                });
+
+            select.insertAdjacentHTML('beforeend', Object.keys(taxTypeRatesMap).map(v =>
+                `<option value="${v}">${v}</option>`).join(''));
+        }
+
+        // -------------------- STAGE 4 LOVs (Special Charges / CY / Unit) --------------------
+        let specialChargeOptionsHtml = '<option value="">Select Special Charge</option>';
+        let cargoYardOptionsHtml = '<option value="">Select CY</option>';
+        let unitOptionsHtml = '<option value="">Select Unit</option>';
+
+        async function fillSpecialChargeOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/specialCharges?per_page=1000'
+            });
+            if (!response.success || !Array.isArray(response.data?.data)) return;
+            response.data.data.forEach(sc => {
+                specialChargeOptionsHtml += `<option value="${sc.name}">${sc.name}</option>`;
+            });
+        }
+
+        async function fillCargoYardOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/cargoYards?per_page=1000'
+            });
+            if (!response.success || !Array.isArray(response.data?.data)) return;
+            response.data.data.forEach(cy => {
+                cargoYardOptionsHtml += `<option value="${cy.name}">${cy.name}</option>`;
+            });
+        }
+
+        async function fillUnitOptions() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/unit'
+            });
+            if (!Array.isArray(response)) return;
+            response.forEach(lov => {
+                unitOptionsHtml += `<option value="${lov.lov_name}">${lov.lov_name}</option>`;
+            });
         }
 
         // -------------------- ADDRESSES: repeatable cards --------------------

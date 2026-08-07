@@ -94,6 +94,10 @@
                 class="hidden px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white">
                 Terminate Contract
             </button>
+            <button type="button" id="vcApproveBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white">
+                Approve
+            </button>
             <div class="flex justify-end gap-2 flex-1">
                 <a href="#" id="vcDownloadBtn" target="_blank"
                     class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
@@ -302,6 +306,7 @@
             }
 
             document.getElementById('vcTerminateBtn').classList.toggle('hidden', contract.status !== 2);
+            document.getElementById('vcApproveBtn').classList.toggle('hidden', !(contract.status === 1 && contract.can_approve));
             document.getElementById('vcTerminateReasonPanel').classList.add('hidden');
             document.getElementById('vcTerminateReasonInput').value = '';
 
@@ -346,6 +351,29 @@
             }
 
             showMessage({ status: 'success', title: 'Contract terminated' });
+            await openViewContract(currentContractId);
+            renderTable().reload();
+        });
+
+        document.getElementById('vcApproveBtn').addEventListener('click', async function() {
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: {},
+                url: `/api/clientContracts/${currentContractId}/approve`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to approve contract',
+                    message: response.message ?? '',
+                });
+                return;
+            }
+
+            showMessage({ status: 'success', title: 'Contract approved' });
             await openViewContract(currentContractId);
             renderTable().reload();
         });

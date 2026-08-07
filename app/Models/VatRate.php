@@ -11,7 +11,7 @@ class VatRate extends Model
 
     protected $primaryKey = 'vat_rate_id';
 
-    protected $fillable = ['rate_percent', 'effective_date', 'end_date', 'is_active'];
+    protected $fillable = ['rate_percent', 'effective_date', 'end_date', 'is_active', 'tax_type'];
 
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',

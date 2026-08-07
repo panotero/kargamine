@@ -55,7 +55,7 @@ class BookingTest extends TestCase
             'is_active' => true,
         ]);
 
-        VatRate::create(['rate_percent' => 12, 'effective_date' => now()->subDay()->toDateString(), 'is_active' => true]);
+        VatRate::create(['rate_percent' => 12, 'effective_date' => now()->subDay()->toDateString(), 'is_active' => true, 'tax_type' => 'General']);
 
         $this->deliveryType = DeliveryType::create([
             'code' => 'DD',

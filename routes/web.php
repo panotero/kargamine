@@ -29,7 +29,7 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth', 'check.status', 'prevent-back-history'])->group(function () {
+Route::middleware(['auth', 'check.status', 'prevent-back-history', 'must.change.password'])->group(function () {
     Route::get('/app', function () {
         return view('dashboard');
     })->name('dashboard');

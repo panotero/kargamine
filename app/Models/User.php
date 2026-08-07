@@ -24,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'must_change_password',
         'role_id',
         'team_id',
         'is_team_leader',
@@ -62,6 +63,7 @@ class User extends Authenticatable
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
         'is_team_leader' => 'boolean',
+        'must_change_password' => 'boolean',
     ];
 
     public function role()

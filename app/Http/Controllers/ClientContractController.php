@@ -188,7 +188,7 @@ class ClientContractController extends Controller
                 'signed_date' => $validated['signed_date'] ?? null,
                 'valid_from' => $validated['valid_from'],
                 'valid_to' => $validated['valid_to'],
-                'status' => ClientContract::STATUS_ACTIVE,
+                'status' => ClientContract::STATUS_DRAFT,
                 'signed_document_path' => $validated['signed_document_path'] ?? null,
                 'created_by' => $request->user()?->id,
             ]);
@@ -283,7 +283,7 @@ class ClientContractController extends Controller
                 'signed_date' => $validated['signed_date'] ?? null,
                 'valid_from' => $validated['valid_from'],
                 'valid_to' => $validated['valid_to'],
-                'status' => ClientContract::STATUS_ACTIVE,
+                'status' => ClientContract::STATUS_DRAFT,
                 'created_by' => $request->user()?->id,
             ]);
 
@@ -311,6 +311,34 @@ class ClientContractController extends Controller
         $contract->load(self::DETAIL_RELATIONS);
 
         return response()->json(['success' => true, 'data' => $contract], 201);
+    }
+
+    /**
+     * Approval workflow - approve-only (no reject/disapprove), moving a
+     * Draft contract to Active. Mirrors ClientProposalController::approve().
+     */
+    public function approve(Request $request, ClientContract $contract)
+    {
+        if (! $contract->canBeApprovedBy($request->user())) {
+            return response()->json(['success' => false, 'message' => 'You are not authorized to approve contracts.'], 403);
+        }
+
+        if ($contract->status !== ClientContract::STATUS_DRAFT) {
+            return response()->json(['success' => false, 'message' => 'Only draft contracts can be approved.'], 422);
+        }
+
+        $validated = $request->validate(['remarks' => ['nullable', 'string', 'max:500']]);
+
+        $contract->update([
+            'status' => ClientContract::STATUS_ACTIVE,
+            'decided_by' => $request->user()->id,
+            'decided_at' => now(),
+            'decision_remarks' => $validated['remarks'] ?? null,
+        ]);
+
+        $contract->load(self::DETAIL_RELATIONS);
+
+        return response()->json(['success' => true, 'data' => $contract]);
     }
 
     public function terminate(Request $request, ClientContract $contract)

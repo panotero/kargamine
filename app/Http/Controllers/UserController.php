@@ -178,6 +178,7 @@ class UserController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role_id' => $validated['role_id'] ?? null,
+                'must_change_password' => true,
             ]);
             DB::commit();
 

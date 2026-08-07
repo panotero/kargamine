@@ -48,7 +48,7 @@ class RateResolutionService
             ? Carbon::parse($header['booking_date'])
             : Carbon::today();
 
-        $vatRate = VatRate::activeOn($bookingDate)->orderByDesc('effective_date')->first();
+        $vatRate = VatRate::activeOn($bookingDate)->where('tax_type', 'General')->orderByDesc('effective_date')->first();
 
         if (! $vatRate) {
             throw new RuntimeException('No active VAT rate configured.');

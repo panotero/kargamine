@@ -491,7 +491,7 @@
                         <input type="number" min="1" step="1" placeholder="None" class="cc-input-minqty w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ''}">
                     </td>
                     <td class="py-1.5 px-2">
-                        <input type="number" step="0.01" min="0" class="cc-input-base w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.base_rate}">
+                        <input type="text" inputmode="decimal" class="cc-input-base currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.base_rate)}">
                     </td>
                     <td class="py-1.5 px-2">
                         <div class="flex items-center gap-1 justify-end">
@@ -500,11 +500,11 @@
                                 <option value="percentage" ${values.discount_type === 'percentage' ? 'selected' : ''}>%</option>
                                 <option value="fixed" ${values.discount_type === 'fixed' ? 'selected' : ''}>Fixed</option>
                             </select>
-                            <input type="number" step="0.01" min="0" class="cc-input-discval w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.discount_value}">
+                            <input type="text" inputmode="decimal" class="cc-input-discval currency-input w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.discount_value)}">
                         </div>
                     </td>
                     <td class="py-1.5 px-2">
-                        <input type="number" step="0.01" min="0" class="cc-input-final w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.final_rate}">
+                        <input type="text" inputmode="decimal" class="cc-input-final currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.final_rate)}">
                     </td>
                     <td class="py-1.5 px-2 text-right whitespace-nowrap">
                         <button type="button" class="cc-apply-btn text-green-600 hover:text-green-700" title="Apply">✓</button>
@@ -524,16 +524,16 @@
         // this, editing the discount changed nothing the user could see or
         // save, since Final Rate is what actually gets sent as the override.
         function recomputeCcFinalRate(row) {
-            const base = parseFloat(row.querySelector('.cc-input-base').value) || 0;
+            const base = parseFloat(parseCurrencyValue(row.querySelector('.cc-input-base').value)) || 0;
             const type = row.querySelector('.cc-input-disctype').value;
-            const value = parseFloat(row.querySelector('.cc-input-discval').value) || 0;
+            const value = parseFloat(parseCurrencyValue(row.querySelector('.cc-input-discval').value)) || 0;
             const finalInput = row.querySelector('.cc-input-final');
 
             let final = base;
             if (type === 'percentage') final = base - (base * value / 100);
             if (type === 'fixed') final = Math.max(0, base - value);
 
-            finalInput.value = final.toFixed(2);
+            finalInput.value = formatCurrencyDisplay(final.toFixed(2));
         }
 
         document.getElementById('ccRatesBody').addEventListener('input', function(e) {
@@ -572,10 +572,10 @@
                 const minQtyRaw = row.querySelector('.cc-input-minqty').value;
                 const newValues = {
                     min_van_qty: minQtyRaw === '' ? null : Number(minQtyRaw),
-                    base_rate: Number(row.querySelector('.cc-input-base').value),
+                    base_rate: Number(parseCurrencyValue(row.querySelector('.cc-input-base').value)),
                     discount_type: row.querySelector('.cc-input-disctype').value || null,
-                    discount_value: Number(row.querySelector('.cc-input-discval').value || 0),
-                    final_rate: Number(row.querySelector('.cc-input-final').value),
+                    discount_value: Number(parseCurrencyValue(row.querySelector('.cc-input-discval').value) || 0),
+                    final_rate: Number(parseCurrencyValue(row.querySelector('.cc-input-final').value)),
                 };
                 const original = ccOriginalValues(rate);
                 const changed = newValues.min_van_qty !== original.min_van_qty ||

@@ -41,6 +41,9 @@ class DatabaseSeeder extends Seeder
             OrganizationTypeSeeder::class,
             ClientCategorySeeder::class,
             ClientClassificationSeeder::class,
+            UnitSeeder::class,
+            SpecialChargeSeeder::class,
+            CargoYardSeeder::class,
 
             // maintenance page sample data - rate/master data tables
             ContainerCatalogSeeder::class,

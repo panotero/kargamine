@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\TeamService;
+use App\Support\RoleHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,6 +35,9 @@ class ClientContract extends Model
         'terminated_reason',
         'terminated_by',
         'terminated_at',
+        'decided_by',
+        'decided_at',
+        'decision_remarks',
     ];
 
     protected $casts = [
@@ -42,7 +47,12 @@ class ClientContract extends Model
         'valid_from' => 'date:M d, Y',
         'valid_to' => 'date:M d, Y',
         'terminated_at' => 'datetime:M d, Y, h:i A',
+        'decided_at' => 'datetime:M d, Y, h:i A',
     ];
+
+    // Computed permission flag travels with every JSON response, so the
+    // frontend never re-implements this logic - it just reads c.can_approve.
+    protected $appends = ['can_approve'];
 
     public function client()
     {
@@ -67,6 +77,55 @@ class ClientContract extends Model
     public function terminator()
     {
         return $this->belongsTo(User::class, 'terminated_by');
+    }
+
+    public function decisionMaker()
+    {
+        return $this->belongsTo(User::class, 'decided_by');
+    }
+
+    /**
+     * Approval follows the team hierarchy, mirroring
+     * ClientProposal::canBeApprovedBy(): only the team leader over the
+     * contract owner (their own team leader, or a leader further up the
+     * pyramid) may approve - superadmin always can, regardless of team.
+     */
+    public function canBeApprovedBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+            return true;
+        }
+
+        if (!$user->is_team_leader || !$user->team_id) {
+            return false;
+        }
+
+        $ownerTeamId = $this->ownerUser()?->team_id;
+
+        if (!$ownerTeamId) {
+            return false;
+        }
+
+        return TeamService::accessibleTeamIds($user)->contains($ownerTeamId);
+    }
+
+    public function getCanApproveAttribute(): bool
+    {
+        return $this->canBeApprovedBy(auth()->user());
+    }
+
+    /**
+     * The user this contract "belongs to" for team-scoping purposes: its
+     * client's assigned Sales Rep. A contract always has a client_id, so
+     * this is simpler than ClientProposal's lead-fallback chain.
+     */
+    public function ownerUser(): ?User
+    {
+        return $this->client?->salesRep;
     }
 
     /**

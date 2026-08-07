@@ -400,12 +400,15 @@ class CrmLeadController extends Controller
      */
     private function containerRowErrors(array $c, int $index): array
     {
+        // Reefer Van has no ConVan class field at all (hidden on the form) -
+        // and every type now splits Service Mode into origin/destination,
+        // Loose Cargo and Rolling Cargo included.
         $typeFlags = [
             'CV' => ['class' => true, 'size' => true, 'temp' => false, 'split' => true],
             'FR' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
-            'RF' => ['class' => true, 'size' => false, 'temp' => true, 'split' => true],
-            'LC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => false],
-            'RC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => false],
+            'RF' => ['class' => false, 'size' => false, 'temp' => true, 'split' => true],
+            'LC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
+            'RC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
         ];
 
         $errors = [];
@@ -427,6 +430,12 @@ class CrmLeadController extends Controller
         }
         if (empty($c['quantity']) || (int) $c['quantity'] < 1) {
             $errors[] = "Booking requirement #{$index}: quantity is required.";
+        }
+        if (empty($c['frequency'])) {
+            $errors[] = "Booking requirement #{$index}: frequency is required.";
+        }
+        if (empty($c['general_cargo_description'])) {
+            $errors[] = "Booking requirement #{$index}: cargo description is required.";
         }
         if ($flags['class'] && empty($c['container_class_id'])) {
             $errors[] = "Booking requirement #{$index}: ConVan class is required.";

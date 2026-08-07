@@ -55,7 +55,8 @@
                 <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Client Information</p>
                 <div class="flex gap-2">
                     <button type="button" id="cdEditInfoBtn"
-                        class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-200">✎ Edit</button>
+                        class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-200">✎
+                        Edit</button>
                     <button type="button" id="cdSaveInfoBtn"
                         class="hidden text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save</button>
                     <button type="button" id="cdCancelInfoBtn"
@@ -78,8 +79,14 @@
                 </div>
 
                 <div class="border-t pt-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Finance &amp; Billing</p>
+                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Finance</p>
                     <div id="cdFinanceReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+
+                <div class="border-t pt-3">
+                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Commodity Type &amp; Maximum
+                        Declared Value</p>
+                    <div id="cdCommodityReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
                 </div>
             </div>
 
@@ -97,27 +104,32 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Mnemonic</label>
-                            <input type="text" name="client_mnemonic" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <input type="text" name="client_mnemonic"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client/Business Name</label>
-                            <input type="text" name="company_name" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <input type="text" name="company_name"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Category</label>
-                            <select name="client_category" class="cdClientCategorySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="client_category"
+                                class="cdClientCategorySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Client Category</option>
                             </select>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Classification</label>
-                            <select name="client_classification" class="cdClientClassificationSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="client_classification"
+                                class="cdClientClassificationSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Client Classification</option>
                             </select>
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Client Industry</label>
-                            <select name="industry" class="cdIndustrySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="industry"
+                                class="cdIndustrySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Industry</option>
                             </select>
                         </div>
@@ -127,9 +139,11 @@
                 {{-- Addresses --}}
                 <div class="border-t pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <p class="font-semibold text-zinc-700 dark:text-zinc-300">Address(es) *</p>
+                        <p class="font-semibold text-zinc-700 dark:text-zinc-300">Address(es) <span
+                                class="req-asterisk">*</span></p>
                         <button type="button" id="cdAddAddressBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+ Add Address</button>
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                            Add Address</button>
                     </div>
                     <div id="cdAddressesEditContainer" class="space-y-4"></div>
                 </div>
@@ -139,7 +153,8 @@
                     <div class="flex justify-between items-center mb-3">
                         <p class="font-semibold text-zinc-700 dark:text-zinc-300">Contacts</p>
                         <button type="button" id="cdAddContactBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+ Add Contact</button>
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                            Add Contact</button>
                     </div>
                     <div id="cdContactsEditContainer" class="space-y-3"></div>
                 </div>
@@ -148,119 +163,100 @@
                 <div class="border-t pt-4">
                     <form id="cdStage3Form" class="space-y-6">
                         <div>
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Company Finance</p>
+                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Finance</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client Business
+                                        Name</label>
+                                    <input type="text" name="finance[client_business_name]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN Number</label>
+                                    <input type="text" name="finance[tin_number]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registered
+                                        Address</label>
+                                    <textarea name="finance[tin_registered_address]" rows="2"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Registered Tax
+                                        Type</label>
+                                    <select name="finance[registered_tax_type]"
+                                        class="cdRegisteredTaxTypeSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">— Select —</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax
+                                        Code</label>
+                                    <input type="text" name="finance[withholding_tax_code]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Trade Name</label>
+                                    <input type="text" name="finance[trade_name]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registration
+                                        Date</label>
+                                    <input type="date" name="finance[tin_registration_date]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Line of Business</label>
+                                    <input type="text" name="finance[line_of_business]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Tax Percent</label>
+                                    <input type="number" step="0.01" name="finance[tax_percent]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax
+                                        Percent</label>
+                                    <input type="number" step="0.01" name="finance[withholding_tax_percent]"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div id="cdModeOfPaymentField">
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Mode of Payment</label>
+                                    <select name="finance[mode_of_payment]"
+                                        class="cdModeOfPaymentSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Mode of Payment</option>
+                                    </select>
+                                </div>
+                                <div id="cdCreditTermsField" class="hidden">
                                     <label class="text-xs font-medium text-zinc-400 uppercase">Credit Terms</label>
-                                    <input type="text" name="finance[credit_terms]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    <select name="finance[credit_terms]"
+                                        class="cdCreditTermsSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Credit Terms</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Payment Mode</label>
-                                    <input type="text" name="finance[payment_mode]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <label class="flex items-center gap-2 md:col-span-2">
-                                    <input type="checkbox" name="finance[standard_billing_service]" value="1">
-                                    <span class="text-sm dark:text-zinc-200">Standard Billing Service</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="border-t pt-4">
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Invoice Submission</p>
-                            <div class="flex gap-4 mb-3">
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="finance[invoice_submission]" value="electronic" class="cdInvoiceSubmissionRadio">
-                                    <span class="text-sm dark:text-zinc-200">Electronic</span>
-                                </label>
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="finance[invoice_submission]" value="courier" class="cdInvoiceSubmissionRadio">
-                                    <span class="text-sm dark:text-zinc-200">Via Courier</span>
-                                </label>
-                            </div>
-                            <div id="cdInvoiceElectronicFields" class="hidden">
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Invoice Email Address</label>
-                                <input type="email" name="finance[invoice_email_address]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            </div>
-                            <div id="cdInvoiceCourierFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Recipient Name</label>
-                                    <input type="text" name="finance[invoice_courier_recipient]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Recipient Contact</label>
-                                    <input type="text" name="finance[invoice_courier_contact]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Courier Address</label>
-                                    <textarea name="finance[invoice_courier_address]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Cargo Release Order
+                                        (CRO)</label>
+                                    <select name="finance[cro]"
+                                        class="cdCroSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select CRO</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
 
                         <div class="border-t pt-4">
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Payment Method</p>
-                            <div class="flex gap-4 mb-3">
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="finance[payment_method]" value="check_pickup" class="cdPaymentMethodRadio">
-                                    <span class="text-sm dark:text-zinc-200">Check Pickup</span>
-                                </label>
-                                <label class="flex items-center gap-2">
-                                    <input type="radio" name="finance[payment_method]" value="direct_remittance" class="cdPaymentMethodRadio">
-                                    <span class="text-sm dark:text-zinc-200">Direct Remittance to Bank</span>
-                                </label>
+                            <div class="flex justify-between items-center mb-3">
+                                <p class="font-semibold text-zinc-700 dark:text-zinc-300">Commodity Type &amp; Maximum
+                                    Declared Value</p>
+                                <button type="button" id="cdAddCommodityBtn"
+                                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                                    Add Commodity</button>
                             </div>
-                            <div id="cdCheckPickupFields" class="hidden">
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Pickup Address</label>
-                                <textarea name="finance[check_pickup_address]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
-                            </div>
-                            <div id="cdDirectRemittanceFields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Bank Name</label>
-                                    <input type="text" name="finance[bank_name]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Bank Account Number</label>
-                                    <input type="text" name="finance[bank_account_number]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t pt-4">
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Additional Billing Service Request</p>
-                            <div class="flex gap-6 mb-3">
-                                <label class="flex items-center gap-2">
-                                    <input type="checkbox" name="finance[document_handling]" value="1">
-                                    <span class="text-sm dark:text-zinc-200">Document Handling</span>
-                                </label>
-                                <label class="flex items-center gap-2">
-                                    <input type="checkbox" name="finance[billing_summary_report]" value="1">
-                                    <span class="text-sm dark:text-zinc-200">Billing Summary Report</span>
-                                </label>
-                            </div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Others</label>
-                            <textarea name="finance[other_requests]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
-                        </div>
-
-                        <div class="border-t pt-4">
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Billing Details</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Billed To</label>
-                                    <input type="text" name="billing[billed_to]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Company Name</label>
-                                    <input type="text" name="billing[company_name]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Address</label>
-                                    <textarea name="billing[address]" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN</label>
-                                    <input type="text" name="billing[tin]" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                            </div>
+                            <div id="cdCommodityEditContainer" class="space-y-3"></div>
                         </div>
                     </form>
                 </div>
@@ -310,21 +306,25 @@
         <div class="grid grid-cols-3 gap-3">
             <div>
                 <label class="block text-[11px] font-semibold text-zinc-500 uppercase mb-1">Valid From</label>
-                <input type="date" id="ccValidFrom" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="date" id="ccValidFrom"
+                    class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="block text-[11px] font-semibold text-zinc-500 uppercase mb-1">Valid To</label>
-                <input type="date" id="ccValidTo" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="date" id="ccValidTo"
+                    class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
                 <label class="block text-[11px] font-semibold text-zinc-500 uppercase mb-1">Signed Date</label>
-                <input type="date" id="ccSignedDate" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="date" id="ccSignedDate"
+                    class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
         </div>
 
         <div>
             <p class="font-semibold text-sm text-zinc-700 mb-2">Rate Lines</p>
-            <p class="text-xs text-zinc-400 mb-2">Copied from the accepted proposal. Click <span class="font-medium">✎</span> on a line to correct it before saving.</p>
+            <p class="text-xs text-zinc-400 mb-2">Copied from the accepted proposal. Click <span
+                    class="font-medium">✎</span> on a line to correct it before saving.</p>
             <table class="w-full text-xs">
                 <thead class="text-zinc-400 uppercase">
                     <tr>
@@ -394,17 +394,22 @@
     <div class="p-5 space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-                <label class="text-xs font-medium text-zinc-400 uppercase">Valid From *</label>
-                <input type="date" id="acValidFrom" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                <label class="text-xs font-medium text-zinc-400 uppercase">Valid From <span
+                        class="req-asterisk">*</span></label>
+                <input type="date" id="acValidFrom"
+                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
             </div>
             <div>
-                <label class="text-xs font-medium text-zinc-400 uppercase">Valid To *</label>
-                <input type="date" id="acValidTo" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                <label class="text-xs font-medium text-zinc-400 uppercase">Valid To <span
+                        class="req-asterisk">*</span></label>
+                <input type="date" id="acValidTo"
+                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
             </div>
         </div>
         <div>
             <label class="text-xs font-medium text-zinc-400 uppercase">Signed Date</label>
-            <input type="date" id="acSignedDate" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+            <input type="date" id="acSignedDate"
+                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
         </div>
 
         <div class="border-t pt-4">
@@ -434,6 +439,15 @@
         loadCounts();
         fillCdStage1Lovs();
 
+        // Same hardcoded lists as clientMasterForm.blade.php - keep in sync.
+        const CD_MODE_OF_PAYMENT_OPTIONS = ['Cash', 'Credit'];
+        const CD_CREDIT_TERMS_OPTIONS = ['COD', '7 Days', '15 Days', '30 Days', '45 Days', '60 Days', '90 Days'];
+        const CD_CRO_OPTIONS = ['Manual', 'Automatic'];
+
+        // { tax_type: rate_percent } lookup built from the active vatRates rows,
+        // used to auto-fill Tax Percent when Registered Tax Type changes.
+        let cdTaxTypeRatesMap = {};
+
         async function fillCdStage1Lovs() {
             const fill = (selector, list) => {
                 const select = document.querySelector(selector);
@@ -442,9 +456,43 @@
                         `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
                 }
             };
-            fill('.cdIndustrySelect', await apiCall({ mode: 'GET', url: '/api/listofval/industry' }));
-            fill('.cdClientCategorySelect', await apiCall({ mode: 'GET', url: '/api/listofval/clientcategory' }));
-            fill('.cdClientClassificationSelect', await apiCall({ mode: 'GET', url: '/api/listofval/clientclassification' }));
+            fill('.cdIndustrySelect', await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/industry'
+            }));
+            fill('.cdClientCategorySelect', await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/clientcategory'
+            }));
+            fill('.cdClientClassificationSelect', await apiCall({
+                mode: 'GET',
+                url: '/api/listofval/clientclassification'
+            }));
+
+            const fillPlain = (selector, list) => {
+                const select = document.querySelector(selector);
+                if (select) {
+                    select.insertAdjacentHTML('beforeend', list.map((v) =>
+                        `<option value="${v}">${v}</option>`).join(''));
+                }
+            };
+            fillPlain('.cdModeOfPaymentSelect', CD_MODE_OF_PAYMENT_OPTIONS);
+            fillPlain('.cdCreditTermsSelect', CD_CREDIT_TERMS_OPTIONS);
+            fillPlain('.cdCroSelect', CD_CRO_OPTIONS);
+
+            const vatRatesResponse = await apiCall({
+                mode: 'GET',
+                url: '/api/vatRates?per_page=1000'
+            });
+            if (vatRatesResponse.success && Array.isArray(vatRatesResponse.data?.data)) {
+                // Only active rows represent a currently selectable tax type.
+                vatRatesResponse.data.data
+                    .filter((vr) => vr.is_active)
+                    .forEach((vr) => {
+                        cdTaxTypeRatesMap[vr.tax_type] = vr.rate_percent;
+                    });
+                fillPlain('.cdRegisteredTaxTypeSelect', Object.keys(cdTaxTypeRatesMap));
+            }
         }
 
         function statusBadge(isComplete) {
@@ -623,24 +671,31 @@
                 `<p class="text-xs text-zinc-400">No contacts on file.</p>`;
 
             const f = c.finance ?? {};
-            const b = c.billing ?? {};
             document.getElementById('cdFinanceReadContainer').innerHTML = `
-                <p><span class="text-zinc-400">Credit Terms:</span> ${f.credit_terms ?? '-'}</p>
-                <p><span class="text-zinc-400">Payment Mode:</span> ${f.payment_mode ?? '-'}</p>
-                <p><span class="text-zinc-400">Standard Billing Service:</span> ${f.standard_billing_service ? 'Yes' : 'No'}</p>
-                <p><span class="text-zinc-400">Invoice Submission:</span> ${f.invoice_submission ?? '-'}</p>
-                ${f.invoice_submission === 'electronic' ? `<p><span class="text-zinc-400">Invoice Email:</span> ${f.invoice_email_address ?? '-'}</p>` : ''}
-                ${f.invoice_submission === 'courier' ? `<p><span class="text-zinc-400">Courier Recipient:</span> ${f.invoice_courier_recipient ?? '-'} (${f.invoice_courier_contact ?? '-'})</p>` : ''}
-                <p><span class="text-zinc-400">Payment Method:</span> ${f.payment_method ?? '-'}</p>
-                ${f.payment_method === 'direct_remittance' ? `<p><span class="text-zinc-400">Bank:</span> ${f.bank_name ?? '-'} - ${f.bank_account_number ?? '-'}</p>` : ''}
-                <p><span class="text-zinc-400">Document Handling:</span> ${f.document_handling ? 'Yes' : 'No'}</p>
-                <p><span class="text-zinc-400">Billing Summary Report:</span> ${f.billing_summary_report ? 'Yes' : 'No'}</p>
-                <p class="md:col-span-2"><span class="text-zinc-400">Other Requests:</span> ${f.other_requests ?? '-'}</p>
-                <p><span class="text-zinc-400">Billed To:</span> ${b.billed_to ?? '-'}</p>
-                <p><span class="text-zinc-400">Billing Company:</span> ${b.company_name ?? '-'}</p>
-                <p class="md:col-span-2"><span class="text-zinc-400">Billing Address:</span> ${b.address ?? '-'}</p>
-                <p><span class="text-zinc-400">Billing TIN:</span> ${b.tin ?? '-'}</p>
+                <p><span class="text-zinc-400">Client Business Name:</span> ${f.client_business_name ?? '-'}</p>
+                <p><span class="text-zinc-400">TIN Number:</span> ${f.tin_number ?? '-'}</p>
+                <p class="md:col-span-2"><span class="text-zinc-400">TIN Registered Address:</span> ${f.tin_registered_address ?? '-'}</p>
+                <p><span class="text-zinc-400">Registered Tax Type:</span> ${f.registered_tax_type ?? '-'}</p>
+                <p><span class="text-zinc-400">Withholding Tax Code:</span> ${f.withholding_tax_code ?? '-'}</p>
+                <p><span class="text-zinc-400">Trade Name:</span> ${f.trade_name ?? '-'}</p>
+                <p><span class="text-zinc-400">TIN Registration Date:</span> ${f.tin_registration_date ?? '-'}</p>
+                <p><span class="text-zinc-400">Line of Business:</span> ${f.line_of_business ?? '-'}</p>
+                <p><span class="text-zinc-400">Tax Percent:</span> ${f.tax_percent ?? '-'}</p>
+                <p><span class="text-zinc-400">Withholding Tax Percent:</span> ${f.withholding_tax_percent ?? '-'}</p>
+                <p><span class="text-zinc-400">Mode of Payment:</span> ${f.mode_of_payment ?? '-'}</p>
+                ${f.mode_of_payment === 'Credit' ? `<p><span class="text-zinc-400">Credit Terms:</span> ${f.credit_terms ?? '-'}</p>` : ''}
+                <p><span class="text-zinc-400">Cargo Release Order (CRO):</span> ${f.cro ?? '-'}</p>
             `;
+
+            const commodities = c.commodity_declared_values ?? [];
+            document.getElementById('cdCommodityReadContainer').innerHTML = commodities.length ?
+                commodities.map((cv) => `
+                    <div class="border rounded-lg p-3 text-xs">
+                        <p class="font-semibold mb-1">${cv.commodity_type ?? '-'}</p>
+                        <p class="text-zinc-500">Max Declared Value: ${money(cv.max_declared_value)}</p>
+                    </div>
+                `).join('') :
+                `<p class="text-xs text-zinc-400">No commodity declared values on file.</p>`;
         }
 
         // ================= INFO SECTION: EDIT MODE =================
@@ -692,51 +747,73 @@
 
             const stage3Form = document.getElementById('cdStage3Form');
             stage3Form.reset();
-            document.getElementById('cdInvoiceElectronicFields').classList.add('hidden');
-            document.getElementById('cdInvoiceCourierFields').classList.add('hidden');
-            document.getElementById('cdCheckPickupFields').classList.add('hidden');
-            document.getElementById('cdDirectRemittanceFields').classList.add('hidden');
 
             if (c.finance) {
                 Object.entries(c.finance).forEach(([key, val]) => {
                     const el = stage3Form.querySelector(`[name="finance[${key}]"]`);
-                    if (!el) return;
-                    if (el.type === 'checkbox') el.checked = Boolean(val);
-                    else if (el.type === 'radio') {
-                        if (el.value === val) el.checked = true;
-                    } else el.value = val ?? '';
-                });
-                document.querySelector(`.cdInvoiceSubmissionRadio[value="${c.finance.invoice_submission}"]`)
-                    ?.dispatchEvent(new Event('change'));
-                document.querySelector(`.cdPaymentMethodRadio[value="${c.finance.payment_method}"]`)
-                    ?.dispatchEvent(new Event('change'));
-            }
-
-            if (c.billing) {
-                Object.entries(c.billing).forEach(([key, val]) => {
-                    const el = stage3Form.querySelector(`[name="billing[${key}]"]`);
                     if (el) el.value = val ?? '';
                 });
             }
+            applyCdModeOfPaymentVisibility();
+
+            document.getElementById('cdCommodityEditContainer').innerHTML = '';
+            (c.commodity_declared_values || []).forEach((row) => {
+                document.getElementById('cdCommodityEditContainer').insertAdjacentHTML('beforeend',
+                    cdCommodityRowHtml());
+                const el = document.getElementById('cdCommodityEditContainer').lastElementChild;
+                el.querySelectorAll('[data-field]').forEach((input) => {
+                    const val = row[input.dataset.field] ?? '';
+                    input.value = input.classList.contains('currency-input') ?
+                        formatCurrencyDisplay(val) : val;
+                });
+            });
         }
 
-        document.querySelectorAll('.cdInvoiceSubmissionRadio').forEach((r) => {
-            r.addEventListener('change', function() {
-                document.getElementById('cdInvoiceElectronicFields').classList.toggle('hidden', this
-                    .value !== 'electronic');
-                document.getElementById('cdInvoiceCourierFields').classList.toggle('hidden', this
-                    .value !== 'courier');
+        // -------- Finance: Mode of Payment -> Credit Terms (mirrors clientMasterForm.blade.php) --------
+        function applyCdModeOfPaymentVisibility() {
+            const mode = document.querySelector('#cdStage3Form [name="finance[mode_of_payment]"]')?.value;
+            document.getElementById('cdCreditTermsField').classList.toggle('hidden', mode !== 'Credit');
+        }
+
+        document.querySelector('#cdStage3Form [name="finance[mode_of_payment]"]')
+            .addEventListener('change', applyCdModeOfPaymentVisibility);
+
+        // -------- Finance: Registered Tax Type -> Tax Percent auto-fill --------
+        document.querySelector('#cdStage3Form [name="finance[registered_tax_type]"]')
+            .addEventListener('change', function() {
+                const rate = cdTaxTypeRatesMap[this.value];
+                if (rate === undefined || rate === null) return;
+                const taxPercentInput = document.querySelector('#cdStage3Form [name="finance[tax_percent]"]');
+                if (taxPercentInput) taxPercentInput.value = rate;
             });
+
+        // -------- Commodity Type / Max Declared Value: repeatable (mirrors clientMasterForm.blade.php) --------
+        function cdCommodityRowHtml() {
+            return `
+            <div class="commodity-row grid grid-cols-1 md:grid-cols-3 gap-2 border rounded-lg p-3 relative">
+                <input type="text" data-field="commodity_type" placeholder="Commodity Type" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" inputmode="decimal" data-field="max_declared_value" placeholder="Maximum Declared Value" class="currency-input border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <div class="flex justify-end">
+                    <button type="button" class="remove-commodity text-red-500 px-2 text-xs font-medium">✕ Remove</button>
+                </div>
+            </div>`;
+        }
+
+        document.getElementById('cdAddCommodityBtn').addEventListener('click', () => {
+            document.getElementById('cdCommodityEditContainer').insertAdjacentHTML('beforeend',
+                cdCommodityRowHtml());
         });
 
-        document.querySelectorAll('.cdPaymentMethodRadio').forEach((r) => {
-            r.addEventListener('change', function() {
-                document.getElementById('cdCheckPickupFields').classList.toggle('hidden', this.value !==
-                    'check_pickup');
-                document.getElementById('cdDirectRemittanceFields').classList.toggle('hidden', this
-                    .value !== 'direct_remittance');
+        function collectCdCommodityDeclaredValues() {
+            return Array.from(document.querySelectorAll('#cdCommodityEditContainer .commodity-row')).map((row) => {
+                const obj = {};
+                row.querySelectorAll('[data-field]').forEach((input) => {
+                    obj[input.dataset.field] = input.classList.contains('currency-input') ?
+                        parseCurrencyValue(input.value) : input.value;
+                });
+                return obj;
             });
-        });
+        }
 
         // -------- Contacts / trade-ref repeatable rows (mirrors clientMasterForm.blade.php) --------
         function contactRowHtml() {
@@ -776,6 +853,9 @@
             if (e.target.classList.contains('remove-row')) {
                 e.target.closest('.contact-row')?.remove();
             }
+            if (e.target.classList.contains('remove-commodity')) {
+                e.target.closest('.commodity-row')?.remove();
+            }
         });
 
         function collectRows(containerId, rowClass) {
@@ -810,8 +890,13 @@
             resetSelect(select, placeholder);
             items.forEach((item) => {
                 const option = document.createElement('option');
-                option.value = item.name;
-                option.textContent = item.name;
+                // See clientMasterForm.blade.php's populateSelect() for why
+                // this trims: the PSGC API returns inconsistent trailing
+                // whitespace, and Laravel trims it server-side on save, so
+                // an untrimmed value here would never re-match on hydration.
+                const name = (item.name || '').trim();
+                option.value = name;
+                option.textContent = name;
                 option.dataset.code = item.code;
                 select.appendChild(option);
             });
@@ -987,7 +1072,8 @@
                     return;
                 }
 
-                const cities = await psgcRequest(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities`);
+                const cities = await psgcRequest(
+                    `${PSGC_API}/provinces/${provinceCode}/cities-municipalities`);
                 cities.sort((a, b) => a.name.localeCompare(b.name));
                 populateSelect(city, cities, 'Select Town/City');
             }
@@ -1000,7 +1086,8 @@
                     return;
                 }
 
-                const barangays = await psgcRequest(`${PSGC_API}/cities-municipalities/${cityCode}/barangays`);
+                const barangays = await psgcRequest(
+                    `${PSGC_API}/cities-municipalities/${cityCode}/barangays`);
                 barangays.sort((a, b) => a.name.localeCompare(b.name));
                 populateSelect(barangay, barangays, 'Select Barangay');
             }
@@ -1040,20 +1127,16 @@
         function formToNestedPayload(form) {
             const fd = new FormData(form);
             const payload = {
-                finance: {},
-                billing: {}
+                finance: {}
             };
             for (const [key, value] of fd.entries()) {
-                const match = key.match(/^(finance|billing)\[(.+)\]$/);
+                const match = key.match(/^finance\[(.+)\]$/);
                 if (match) {
-                    payload[match[1]][match[2]] = value;
+                    payload.finance[match[1]] = value;
                 } else {
                     payload[key] = value;
                 }
             }
-            ['standard_billing_service', 'document_handling', 'billing_summary_report'].forEach((f) => {
-                payload.finance[f] = form.querySelector(`[name="finance[${f}]"]`)?.checked ?? false;
-            });
             return payload;
         }
 
@@ -1110,6 +1193,7 @@
             }
 
             const stage3Payload = formToNestedPayload(document.getElementById('cdStage3Form'));
+            stage3Payload.commodity_declared_values = collectCdCommodityDeclaredValues();
             const stage3Response = await apiCall({
                 mode: 'POST',
                 isJson: true,
@@ -1120,7 +1204,7 @@
             if (!stage3Response.success) {
                 showMessage({
                     status: 'error',
-                    title: 'Unable to save finance / billing'
+                    title: 'Unable to save finance'
                 });
                 return;
             }
@@ -1192,6 +1276,11 @@
                                 Terminate
                             </button>
                         ` : ''}
+                        ${c.status === 1 && c.can_approve ? `
+                            <button type="button" class="contract-approve-btn shrink-0 text-[11px] px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-900 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40" data-contract-id="${c.id}" title="Approve this contract">
+                                Approve
+                            </button>
+                        ` : ''}
                     </div>
 
                     ${(c.rates ?? []).length ? `
@@ -1222,6 +1311,13 @@
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     terminateContractFromCard(Number(this.dataset.contractId), uuid);
+                });
+            });
+
+            document.querySelectorAll('.contract-approve-btn').forEach((btn) => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    approveContractFromCard(Number(this.dataset.contractId), uuid);
                 });
             });
         }
@@ -1260,6 +1356,30 @@
             showMessage({
                 status: 'success',
                 title: 'Contract terminated'
+            });
+            loadContracts(uuid);
+        }
+
+        async function approveContractFromCard(contractId, uuid) {
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: {},
+                url: `/api/clientContracts/${contractId}/approve`,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to approve contract',
+                    message: response.message ?? 'An unexpected error occurred.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Contract approved'
             });
             loadContracts(uuid);
         }
@@ -1631,7 +1751,8 @@
 
         function renderCcRateRow(rate, editing) {
             const lane = `${rate.origin_port?.code ?? '-'} → ${rate.destination_port?.code ?? '-'}`;
-            const variant = `${rate.container?.name ?? '-'} / ${rate.container_class?.class ?? '-'} / ${rate.container_size?.size ?? '-'}`;
+            const variant =
+                `${rate.container?.name ?? '-'} / ${rate.container_class?.class ?? '-'} / ${rate.container_size?.size ?? '-'}`;
             const values = ccCurrentValues(rate);
             const edited = Boolean(ccRateOverrides[rate.id]);
 
@@ -1661,7 +1782,7 @@
                         <input type="number" min="1" step="1" placeholder="None" class="cc-input-minqty w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ''}">
                     </td>
                     <td class="py-1.5 px-2">
-                        <input type="number" step="0.01" min="0" class="cc-input-base w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.base_rate}">
+                        <input type="text" inputmode="decimal" class="cc-input-base currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.base_rate)}">
                     </td>
                     <td class="py-1.5 px-2">
                         <div class="flex items-center gap-1 justify-end">
@@ -1670,11 +1791,11 @@
                                 <option value="percentage" ${values.discount_type === 'percentage' ? 'selected' : ''}>%</option>
                                 <option value="fixed" ${values.discount_type === 'fixed' ? 'selected' : ''}>Fixed</option>
                             </select>
-                            <input type="number" step="0.01" min="0" class="cc-input-discval w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.discount_value}">
+                            <input type="text" inputmode="decimal" class="cc-input-discval currency-input w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.discount_value)}">
                         </div>
                     </td>
                     <td class="py-1.5 px-2">
-                        <input type="number" step="0.01" min="0" class="cc-input-final w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.final_rate}">
+                        <input type="text" inputmode="decimal" class="cc-input-final currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.final_rate)}">
                     </td>
                     <td class="py-1.5 px-2 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
@@ -1686,8 +1807,7 @@
         }
 
         function renderContractRatesTable() {
-            document.getElementById('ccRatesBody').innerHTML = (currentProposalForContract?.rates ??
-                    [])
+            document.getElementById('ccRatesBody').innerHTML = (currentProposalForContract?.rates ?? [])
                 .map((r) => renderCcRateRow(r, ccEditingRateId === r.id))
                 .join('');
         }
@@ -1697,16 +1817,16 @@
         // this, editing the discount changed nothing the user could see or
         // save, since Final Rate is what actually gets sent as the override.
         function recomputeCcFinalRate(row) {
-            const base = parseFloat(row.querySelector('.cc-input-base').value) || 0;
+            const base = parseFloat(parseCurrencyValue(row.querySelector('.cc-input-base').value)) || 0;
             const type = row.querySelector('.cc-input-disctype').value;
-            const value = parseFloat(row.querySelector('.cc-input-discval').value) || 0;
+            const value = parseFloat(parseCurrencyValue(row.querySelector('.cc-input-discval').value)) || 0;
             const finalInput = row.querySelector('.cc-input-final');
 
             let final = base;
             if (type === 'percentage') final = base - (base * value / 100);
             if (type === 'fixed') final = Math.max(0, base - value);
 
-            finalInput.value = final.toFixed(2);
+            finalInput.value = formatCurrencyDisplay(final.toFixed(2));
         }
 
         document.getElementById('ccRatesBody').addEventListener('input', function(e) {
@@ -1745,10 +1865,13 @@
                 const minQtyRaw = row.querySelector('.cc-input-minqty').value;
                 const newValues = {
                     min_van_qty: minQtyRaw === '' ? null : Number(minQtyRaw),
-                    base_rate: Number(row.querySelector('.cc-input-base').value),
+                    base_rate: Number(parseCurrencyValue(row.querySelector('.cc-input-base')
+                        .value)),
                     discount_type: row.querySelector('.cc-input-disctype').value || null,
-                    discount_value: Number(row.querySelector('.cc-input-discval').value || 0),
-                    final_rate: Number(row.querySelector('.cc-input-final').value),
+                    discount_value: Number(parseCurrencyValue(row.querySelector('.cc-input-discval')
+                        .value) || 0),
+                    final_rate: Number(parseCurrencyValue(row.querySelector('.cc-input-final')
+                        .value)),
                 };
                 const original = ccOriginalValues(rate);
                 const changed = newValues.min_van_qty !== original.min_van_qty ||
@@ -1810,7 +1933,7 @@
                 status: 'success',
                 title: 'Contract created'
             });
-            closemodals();
+            closeModal('createContractModal');
             loadProposals(currentClientUuid, currentProposalsPage);
             loadContracts(currentClientUuid);
         });
@@ -1908,7 +2031,7 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
-                        <input type="text" data-field="base_rate" readonly class="base-rate w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
+                        <input type="text" inputmode="decimal" data-field="base_rate" readonly class="base-rate currency-input w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Discount Type</label>
@@ -1920,11 +2043,11 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Discount Value</label>
-                        <input type="number" step="0.01" min="0" data-field="discount_value" class="discount-value w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
+                        <input type="text" inputmode="decimal" data-field="discount_value" class="discount-value currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Final Rate</label>
-                        <input type="text" data-field="final_rate" readonly class="final-rate w-full border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/40 text-zinc-900 dark:text-blue-100 font-semibold" value="0.00">
+                        <input type="text" inputmode="decimal" data-field="final_rate" readonly class="final-rate currency-input w-full border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/40 text-zinc-900 dark:text-blue-100 font-semibold" value="0.00">
                     </div>
                 </div>
                 <div class="flex justify-end">
@@ -2022,21 +2145,21 @@
                 return;
             }
 
-            baseRateInput.value = Number(response.data.frt).toFixed(2);
+            baseRateInput.value = formatCurrencyDisplay(Number(response.data.frt).toFixed(2));
             recomputeCpFinalRate(row);
         }
 
         function recomputeCpFinalRate(row) {
-            const base = parseFloat(row.querySelector('.base-rate').value) || 0;
+            const base = parseFloat(parseCurrencyValue(row.querySelector('.base-rate').value)) || 0;
             const type = row.querySelector('.discount-type').value;
-            const value = parseFloat(row.querySelector('.discount-value').value) || 0;
+            const value = parseFloat(parseCurrencyValue(row.querySelector('.discount-value').value)) || 0;
             const finalRateInput = row.querySelector('.final-rate');
 
             let final = base;
             if (type === 'percentage') final = base - (base * value / 100);
             if (type === 'fixed') final = Math.max(0, base - value);
 
-            finalRateInput.value = final.toFixed(2);
+            finalRateInput.value = formatCurrencyDisplay(final.toFixed(2));
         }
 
         document.getElementById('cpAddRowBtn').addEventListener('click', addCpProposalRow);
@@ -2077,10 +2200,11 @@
                 container_size_id: row.querySelector('[data-field="container_size_id"]').value,
                 container_variant_id: row.querySelector('[data-field="container_variant_id"]').value,
                 min_van_qty: row.querySelector('[data-field="min_van_qty"]').value || null,
-                base_rate: parseFloat(row.querySelector('.base-rate').value) || 0,
+                base_rate: parseFloat(parseCurrencyValue(row.querySelector('.base-rate').value)) || 0,
                 discount_type: row.querySelector('.discount-type').value || null,
-                discount_value: parseFloat(row.querySelector('.discount-value').value) || 0,
-                final_rate: parseFloat(row.querySelector('.final-rate').value) || 0,
+                discount_value: parseFloat(parseCurrencyValue(row.querySelector('.discount-value')
+                    .value)) || 0,
+                final_rate: parseFloat(parseCurrencyValue(row.querySelector('.final-rate').value)) || 0,
             }));
         }
 

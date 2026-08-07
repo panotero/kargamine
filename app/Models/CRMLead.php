@@ -97,29 +97,42 @@ class CrmLead extends Model
         return ['first_name' => $first, 'middle_name' => $middle, 'last_name' => $last];
     }
 
+    /**
+     * An address only needs type/province/town-city to count as complete -
+     * not every PSGC-cascade sub-field. whereNotNull() alone isn't enough
+     * here since an empty string passes it (unlike missingRequirements()'s
+     * empty() check below) - guard both so the two stay symmetric.
+     */
+    private static function requireNonEmptyColumns($query, array $columns)
+    {
+        foreach ($columns as $column) {
+            $query->whereNotNull($column)->where($column, '!=', '');
+        }
+
+        return $query;
+    }
+
     public function stageCompletionFlags(): array
     {
         $company = $this->company;
         $isCorporate = $this->client_type === 'corporate';
 
-        $hasCompleteAddress = $this->addresses()
-            ->whereNotNull('address_no')
-            ->whereNotNull('address_building')
-            ->whereNotNull('address_street')
-            ->whereNotNull('address_barangay')
-            ->whereNotNull('address_town_city')
-            ->whereNotNull('address_province')
-            ->whereNotNull('address_country')
-            ->whereNotNull('address_postal_code')
-            ->exists();
+        $hasCompleteAddress = self::requireNonEmptyColumns(
+            $this->addresses(),
+            ['address_type', 'address_province', 'address_town_city']
+        )->exists();
 
         $hasAuthorizedSignatory = $company
+            && $company->authorized_signatory_title
             && $company->authorized_signatory_first_name
             && $company->authorized_signatory_last_name
-            && $company->authorized_signatory_position;
+            && $company->authorized_signatory_position
+            && $company->authorized_signatory_email
+            && $company->authorized_signatory_email_type;
 
         $stage1 = (bool) (
-            $this->first_name && $this->last_name && $this->mobile && $this->source && $this->client_type &&
+            $this->first_name && $this->last_name && $this->mobile && $this->mobile_type &&
+            $this->source && $this->client_type &&
             $company && $company->company_name &&
             (! $isCorporate || $company->type_of_business) &&
             (! $isCorporate || $hasAuthorizedSignatory) &&
@@ -149,6 +162,9 @@ class CrmLead extends Model
         if (! $this->mobile) {
             $missing[] = 'Mobile Number';
         }
+        if (! $this->mobile_type) {
+            $missing[] = 'Mobile Number Type';
+        }
         if (! $this->source) {
             $missing[] = 'Lead Source';
         }
@@ -163,23 +179,22 @@ class CrmLead extends Model
             }
             if (
                 ! $company
+                || ! $company->authorized_signatory_title
                 || ! $company->authorized_signatory_first_name
                 || ! $company->authorized_signatory_last_name
                 || ! $company->authorized_signatory_position
             ) {
-                $missing[] = 'Authorized Signatory (First Name, Last Name & Position)';
+                $missing[] = 'Authorized Signatory (Title, First Name, Last Name & Position)';
+            }
+            if (! $company || ! $company->authorized_signatory_email || ! $company->authorized_signatory_email_type) {
+                $missing[] = 'Authorized Signatory Email & Email Type';
             }
         }
 
         $addressFieldLabels = [
-            'address_no' => 'Address No.',
-            'address_building' => 'Address Building',
-            'address_street' => 'Address Street',
-            'address_barangay' => 'Address Barangay',
-            'address_town_city' => 'Address Town/City',
+            'address_type' => 'Address Type',
             'address_province' => 'Address Province',
-            'address_country' => 'Address Country',
-            'address_postal_code' => 'Address Postal Code',
+            'address_town_city' => 'Address Town/City',
         ];
 
         $address = $this->addresses->firstWhere('is_primary', true) ?? $this->addresses->first();

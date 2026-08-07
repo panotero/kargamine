@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingEirController;
 use App\Http\Controllers\BookingGateScanController;
 use App\Http\Controllers\BookingVoyageController;
 use App\Http\Controllers\CargoBuildUpController;
+use App\Http\Controllers\CargoYardController;
 use App\Http\Controllers\ChargeTypeController;
 use App\Http\Controllers\ContainerAssetController;
 use App\Http\Controllers\ContainerClassController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\LaneTariffRateController;
 use App\Http\Controllers\PortChargeController;
 use App\Http\Controllers\PortController;
 use App\Http\Controllers\ServiceableAreaController;
+use App\Http\Controllers\SpecialChargeController;
 use App\Http\Controllers\TruckingTariffController;
 use App\Http\Controllers\VatRateController;
 use App\Http\Controllers\VesselVoyageController;
@@ -78,6 +80,22 @@ Route::prefix('lanes')->group(function () {
     Route::post('/', [LaneController::class, 'store']);
     Route::put('/{lane}', [LaneController::class, 'update']);
     Route::delete('/{lane}', [LaneController::class, 'destroy']);
+});
+
+Route::prefix('specialCharges')->group(function () {
+    Route::get('/', [SpecialChargeController::class, 'index']);
+    Route::get('/{specialCharge}', [SpecialChargeController::class, 'show']);
+    Route::post('/', [SpecialChargeController::class, 'store']);
+    Route::put('/{specialCharge}', [SpecialChargeController::class, 'update']);
+    Route::delete('/{specialCharge}', [SpecialChargeController::class, 'destroy']);
+});
+
+Route::prefix('cargoYards')->group(function () {
+    Route::get('/', [CargoYardController::class, 'index']);
+    Route::get('/{cargoYard}', [CargoYardController::class, 'show']);
+    Route::post('/', [CargoYardController::class, 'store']);
+    Route::put('/{cargoYard}', [CargoYardController::class, 'update']);
+    Route::delete('/{cargoYard}', [CargoYardController::class, 'destroy']);
 });
 
 // =========================================================

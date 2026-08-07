@@ -14,6 +14,12 @@
   will-change: transform;
 }
 
+/* Required-field marker - red asterisk */
+.req-asterisk {
+  color: rgb(239 68 68); /* red-500 */
+  font-size: 1.25rem; /* 20px */
+}
+
 @layer base {
   /* =========================
      BASE SCROLLBAR

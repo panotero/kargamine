@@ -388,7 +388,7 @@
                         </div>
                         <div>
                             <label class="text-[11px] text-zinc-400 uppercase">Booking Declared Value</label>
-                            <input type="number" step="0.01" min="0" data-field="declared_value" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <input type="text" inputmode="decimal" data-field="declared_value" class="currency-input w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                         </div>
                         <div>
                             <label class="text-[11px] text-zinc-400 uppercase">Delivery Date</label>
@@ -536,7 +536,7 @@
                     consignee_contact_number: get('consignee_contact_number').value || null,
                     cargo_type: get('cargo_type').value || null,
                     other_cargo_details: get('other_cargo_details').value || null,
-                    declared_value: get('declared_value').value || null,
+                    declared_value: parseCurrencyValue(get('declared_value').value) || null,
                     delivery_date: get('delivery_date').value || null,
                     delivery_date_notes: get('delivery_date_notes').value || null,
                     first_delivery_date: get('first_delivery_date').value || null,
@@ -719,7 +719,7 @@
                 card.querySelector('[data-field="consignee_contact_number"]').value = line.consignee_contact_number ?? '';
                 card.querySelector('[data-field="cargo_type"]').value = line.cargo_type ?? '';
                 card.querySelector('[data-field="other_cargo_details"]').value = line.other_cargo_details ?? '';
-                card.querySelector('[data-field="declared_value"]').value = line.declared_value ?? '';
+                card.querySelector('[data-field="declared_value"]').value = formatCurrencyDisplay(line.declared_value ?? '');
                 card.querySelector('[data-field="delivery_date"]').value = line.delivery_date ?? '';
                 card.querySelector('[data-field="delivery_date_notes"]').value = line.delivery_date_notes ?? '';
                 card.querySelector('[data-field="first_delivery_date"]').value = line.first_delivery_date ?? '';

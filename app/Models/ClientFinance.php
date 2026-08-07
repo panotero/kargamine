@@ -15,7 +15,7 @@ class ClientFinance extends Model
         'client_business_name',
         'tin_number',
         'tin_registered_address',
-        'tax_status',
+        'registered_tax_type',
         'withholding_tax_code',
         'trade_name',
         'tin_registration_date',
@@ -23,8 +23,7 @@ class ClientFinance extends Model
         'tax_percent',
         'withholding_tax_percent',
         'mode_of_payment',
-        'cro_user_id',
-        'max_declared_value',
+        'cro',
     ];
 
     protected $casts = [
@@ -33,16 +32,10 @@ class ClientFinance extends Model
         'tin_registration_date' => 'date',
         'tax_percent' => 'decimal:2',
         'withholding_tax_percent' => 'decimal:2',
-        'max_declared_value' => 'decimal:2',
     ];
 
     public function client()
     {
         return $this->belongsTo(ClientMaster::class, 'client_id');
-    }
-
-    public function creditOfficer()
-    {
-        return $this->belongsTo(User::class, 'cro_user_id');
     }
 }

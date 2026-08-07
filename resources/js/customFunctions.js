@@ -1,3 +1,61 @@
+// -------------------- CURRENCY INPUT FORMATTING --------------------
+// Any input with class="currency-input" auto-formats with comma thousand
+// separators live as the user types (on the "input" event), preserving
+// caret position by counting digits rather than raw character offset so
+// inserted/removed commas don't shove the cursor around. Event-delegated
+// (not per-element bound), so dynamically-inserted rows in repeatable
+// templates get this for free - no re-init call needed. These must be
+// type="text" (not type="number") since native number inputs reject comma
+// characters outright.
+window.formatCurrencyDisplay = function formatCurrencyDisplay(value) {
+  const clean = String(value ?? "").replace(/,/g, "").trim();
+  if (clean === "" || isNaN(Number(clean))) return clean;
+
+  const negative = clean.startsWith("-");
+  const unsigned = negative ? clean.slice(1) : clean;
+  const [whole, decimal] = unsigned.split(".");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  return (negative ? "-" : "") + grouped + (decimal !== undefined ? "." + decimal : "");
+};
+
+window.parseCurrencyValue = function parseCurrencyValue(value) {
+  return String(value ?? "").replace(/,/g, "").trim();
+};
+
+document.addEventListener(
+  "input",
+  (e) => {
+    if (!e.target.matches || !e.target.matches(".currency-input")) return;
+
+    const el = e.target;
+    const cursorPos = el.selectionStart ?? el.value.length;
+    const digitsBeforeCursor = el.value.slice(0, cursorPos).replace(/,/g, "").length;
+
+    const formatted = formatCurrencyDisplay(el.value);
+    if (formatted === el.value) return;
+    el.value = formatted;
+
+    let newPos = formatted.length;
+    if (digitsBeforeCursor === 0) {
+      newPos = 0;
+    } else {
+      let seen = 0;
+      for (let i = 0; i < formatted.length; i++) {
+        if (formatted[i] !== ",") {
+          seen++;
+          if (seen === digitsBeforeCursor) {
+            newPos = i + 1;
+            break;
+          }
+        }
+      }
+    }
+    el.setSelectionRange(newPos, newPos);
+  },
+  true,
+);
+
 window.initModal = function initModal({ modalId }) {
   const modal = document.getElementById(modalId);
   const closeBtn = modal?.querySelectorAll(".modal-close");
@@ -114,6 +172,34 @@ window.closeSideModal = function closeSideModal(
     window.scrollTo(0, scrollY);
   }, 300);
   clearInputs();
+};
+
+window.closeModal = function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal || modal.classList.contains('hidden')) return;
+
+  const forms = modal.querySelectorAll('form');
+  forms.forEach((form) => form.reset());
+
+  const inputs = modal.querySelectorAll('input, textarea, select');
+  inputs.forEach((input) => {
+    if (input.type === 'checkbox' || input.type === 'radio') {
+      input.checked = false;
+    } else if (input.type !== 'hidden') {
+      input.value = '';
+    }
+  });
+
+  modal.classList.add('hidden');
+
+  // Only restore body scroll if no other .modal is still open.
+  if (checkopenmodal() > 0) return;
+
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
 };
 
 function checkopenmodal() {

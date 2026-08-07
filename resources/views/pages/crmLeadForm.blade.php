@@ -33,7 +33,8 @@
                     <p class="font-semibold text-zinc-700 mb-3">Lead Classification</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Type *</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Type <span
+                                    class="req-asterisk">*</span></label>
                             <div class="flex items-center gap-4 mt-2">
                                 <label class="flex items-center gap-2 text-sm">
                                     <input type="radio" name="client_type" value="corporate" checked
@@ -48,7 +49,8 @@
                             </div>
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Lead Source *</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Lead Source <span
+                                    class="req-asterisk">*</span></label>
                             <select name="source_select" required
                                 class="leadSourceDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Source</option>
@@ -65,7 +67,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Title</label>
-                            <select name="title" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="title"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Title</option>
                                 <option value="Mr.">Mr.</option>
                                 <option value="Mrs.">Mrs.</option>
@@ -78,7 +81,8 @@
                         </div>
                         <div>
                             <label class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
-                            <select name="gender" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                            <select name="gender"
+                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 <option value="">Select Gender</option>
                                 @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
                                     <option value="{{ $genderOption }}">{{ $genderOption }}</option>
@@ -87,12 +91,14 @@
                         </div>
 
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">First Name *</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">First Name <span
+                                    class="req-asterisk">*</span></label>
                             <input type="text" name="first_name" required
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Last Name *</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Last Name <span
+                                    class="req-asterisk">*</span></label>
                             <input type="text" name="last_name" required
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
@@ -109,11 +115,13 @@
                         </div>
 
                         <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number *</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number &amp; Type <span
+                                    class="req-asterisk">*</span></label>
                             <div class="flex gap-2 mt-1">
                                 <input type="text" name="mobile" required
                                     class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
-                                <select name="mobile_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                <select name="mobile_type" required
+                                    class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
                                     <option value="">Type</option>
                                     <option value="personal">Personal</option>
                                     <option value="business">Business</option>
@@ -125,7 +133,8 @@
                             <div class="flex gap-2 mt-1">
                                 <input type="text" name="landline_number"
                                     class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
-                                <select name="landline_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                <select name="landline_type"
+                                    class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
                                     <option value="">Type</option>
                                     <option value="personal">Personal</option>
                                     <option value="business">Business</option>
@@ -136,8 +145,10 @@
                         <div class="md:col-span-2">
                             <label class="text-xs font-medium text-zinc-400 uppercase">Email</label>
                             <div class="flex gap-2 mt-1">
-                                <input type="email" name="email" class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
-                                <select name="email_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                <input type="email" name="email"
+                                    class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                <select name="email_type"
+                                    class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
                                     <option value="">Type</option>
                                     <option value="personal">Personal</option>
                                     <option value="business">Business</option>
@@ -156,7 +167,8 @@
                     <p class="font-semibold text-zinc-700 mb-3" id="companyInfoTitle">Company Information</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase" id="companyNameLabel">Company Name *</label>
+                            <label class="text-xs font-medium text-zinc-400 uppercase" id="companyNameLabel">Company
+                                Name <span class="req-asterisk">*</span></label>
                             <input type="text" name="company_name" required
                                 class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                         </div>
@@ -165,7 +177,8 @@
                     <div id="corporateOnlyFields">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business</label>
+                                <label class="text-xs font-medium text-zinc-400 uppercase">Type of Business <span
+                                        class="req-asterisk">*</span></label>
                                 <select name="type_of_business"
                                     class="typeOfBusinessDropdown w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                     <option value="">Select Type of Business</option>
@@ -179,102 +192,115 @@
                             </div>
                         </div>
 
-                    {{-- Authorized Signatory --}}
-                    <div class="border-t mt-4 pt-4">
-                        <p class="font-semibold text-zinc-700 mb-3">Authorized Signatory</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Title</label>
-                                <select name="authorized_signatory_title" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                    <option value="">Select Title</option>
-                                    <option value="Mr.">Mr.</option>
-                                    <option value="Mrs.">Mrs.</option>
-                                    <option value="Ms.">Ms.</option>
-                                    <option value="Miss">Miss</option>
-                                    <option value="Dr.">Dr.</option>
-                                    <option value="Engr.">Engr.</option>
-                                    <option value="Atty.">Atty.</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
-                                <select name="authorized_signatory_gender" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                    <option value="">Select Gender</option>
-                                    @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
-                                        <option value="{{ $genderOption }}">{{ $genderOption }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">First Name</label>
-                                <input type="text" name="authorized_signatory_first_name"
-                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Last Name</label>
-                                <input type="text" name="authorized_signatory_last_name"
-                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            </div>
-
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Middle Name</label>
-                                <input type="text" name="authorized_signatory_middle_name"
-                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Position</label>
-                                <input type="text" name="authorized_signatory_position"
-                                    class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                            </div>
-
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number</label>
-                                <div class="flex gap-2 mt-1">
-                                    <input type="text" name="authorized_signatory_mobile"
-                                        class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
-                                    <select name="authorized_signatory_mobile_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
-                                        <option value="">Type</option>
-                                        <option value="personal">Personal</option>
-                                        <option value="business">Business</option>
+                        {{-- Authorized Signatory --}}
+                        <div class="border-t mt-4 pt-4">
+                            <p class="font-semibold text-zinc-700 mb-3">Authorized Signatory</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Title <span
+                                            class="req-asterisk">*</span></label>
+                                    <select name="authorized_signatory_title" required
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Title</option>
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                        <option value="Ms.">Ms.</option>
+                                        <option value="Miss">Miss</option>
+                                        <option value="Dr.">Dr.</option>
+                                        <option value="Engr.">Engr.</option>
+                                        <option value="Atty.">Atty.</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Landline Number</label>
-                                <div class="flex gap-2 mt-1">
-                                    <input type="text" name="authorized_signatory_landline"
-                                        class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
-                                    <select name="authorized_signatory_landline_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
-                                        <option value="">Type</option>
-                                        <option value="personal">Personal</option>
-                                        <option value="business">Business</option>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
+                                    <select name="authorized_signatory_gender"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Gender</option>
+                                        @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
+                                            <option value="{{ $genderOption }}">{{ $genderOption }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
-                            </div>
 
-                            <div class="md:col-span-2">
-                                <label class="text-xs font-medium text-zinc-400 uppercase">Email</label>
-                                <div class="flex gap-2 mt-1">
-                                    <input type="email" name="authorized_signatory_email" class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
-                                    <select name="authorized_signatory_email_type" class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
-                                        <option value="">Type</option>
-                                        <option value="personal">Personal</option>
-                                        <option value="business">Business</option>
-                                    </select>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">First Name <span
+                                            class="req-asterisk">*</span></label>
+                                    <input type="text" name="authorized_signatory_first_name" required
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Last Name <span
+                                            class="req-asterisk">*</span></label>
+                                    <input type="text" name="authorized_signatory_last_name" required
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Middle Name</label>
+                                    <input type="text" name="authorized_signatory_middle_name"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Position <span
+                                            class="req-asterisk">*</span></label>
+                                    <input type="text" name="authorized_signatory_position" required
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Mobile Number</label>
+                                    <div class="flex gap-2 mt-1">
+                                        <input type="text" name="authorized_signatory_mobile"
+                                            class="format-mobile flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                        <select name="authorized_signatory_mobile_type"
+                                            class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                            <option value="">Type</option>
+                                            <option value="personal">Personal</option>
+                                            <option value="business">Business</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Landline Number</label>
+                                    <div class="flex gap-2 mt-1">
+                                        <input type="text" name="authorized_signatory_landline"
+                                            class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                        <select name="authorized_signatory_landline_type"
+                                            class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                            <option value="">Type</option>
+                                            <option value="personal">Personal</option>
+                                            <option value="business">Business</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Email <span
+                                            class="req-asterisk">*</span></label>
+                                    <div class="flex gap-2 mt-1">
+                                        <input type="email" name="authorized_signatory_email" required
+                                            class="flex-1 border rounded-lg px-3 py-2 text-sm dark:text-zinc-900">
+                                        <select name="authorized_signatory_email_type" required
+                                            class="w-32 border rounded-lg px-2 py-2 text-sm dark:text-zinc-900">
+                                            <option value="">Type</option>
+                                            <option value="personal">Personal</option>
+                                            <option value="business">Business</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     </div>
                 </div>
 
                 {{-- Addresses - repeatable, one per address type --}}
                 <div class="border-t pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <p class="font-semibold text-zinc-700">Address(es) *</p>
+                        <p class="font-semibold text-zinc-700">Address(es) <span class="req-asterisk">*</span>
+                        </p>
                         <button type="button" id="addAddressBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add
+                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+
+                            Add
                             Address</button>
                     </div>
                     <div id="addressesContainer" class="space-y-4"></div>
@@ -293,7 +319,8 @@
             <div class="flex justify-between items-center mb-3">
                 <p class="font-semibold text-zinc-700">Booking Requirements</p>
                 <button type="button" id="addContainerBtn"
-                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add Booking Requirement</button>
+                    class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 hover:bg-zinc-100 dark:text-zinc-900">+ Add
+                    Booking Requirement</button>
             </div>
             <div id="containersContainer" class="space-y-4"></div>
 
@@ -346,7 +373,12 @@
             },
         ];
 
-        // Which extra field groups show for each container type.
+        // Which extra field groups show for each container type. Reefer Van
+        // has no ConVan class field at all (hidden, not just non-required),
+        // and every type now splits Service Mode into origin/destination -
+        // Loose Cargo and Rolling Cargo included - matching CV/FR/RF. Keep
+        // this in sync with containerRowErrors()'s $typeFlags in
+        // CrmLeadController.php.
         const TYPE_FIELD_VISIBILITY = {
             CV: {
                 convanClass: true,
@@ -363,7 +395,7 @@
                 splitServiceMode: true
             },
             RF: {
-                convanClass: true,
+                convanClass: false,
                 convanSize: false,
                 temperature: true,
                 cbmTon: false,
@@ -374,14 +406,14 @@
                 convanSize: false,
                 temperature: false,
                 cbmTon: true,
-                splitServiceMode: false
+                splitServiceMode: true
             },
             RC: {
                 convanClass: false,
                 convanSize: false,
                 temperature: false,
                 cbmTon: true,
-                splitServiceMode: false
+                splitServiceMode: true
             },
         };
         let portsOptionsHtml = '';
@@ -465,7 +497,8 @@
             if (title) title.textContent = isIndividual ? 'Account Information' : 'Company Information';
 
             const nameLabel = document.getElementById('companyNameLabel');
-            if (nameLabel) nameLabel.textContent = isIndividual ? 'Account Name *' : 'Company Name *';
+            if (nameLabel) nameLabel.innerHTML = (isIndividual ? 'Account Name ' : 'Company Name ') +
+                '<span class="req-asterisk">*</span>';
         }
 
         document.querySelectorAll('.client-type-radio').forEach(radio => {
@@ -582,38 +615,38 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                <select data-field="origin_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Origin <span class="req-asterisk">*</span></label>
+                <select data-field="origin_port_id" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Port</option>${portsOptionsHtml}
                 </select>
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                <select data-field="destination_port_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Destination <span class="req-asterisk">*</span></label>
+                <select data-field="destination_port_id" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Port</option>${portsOptionsHtml}
                 </select>
             </div>
 
             <div class="field-convan-class hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class</label>
+                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class <span class="req-asterisk">*</span></label>
                 <select data-field="container_class_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Class</option>${classOptionsHtml}
                 </select>
             </div>
             <div class="field-convan-size hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Size</label>
+                <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
                 <select data-field="container_size_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Size</option>${sizeOptionsHtml}
                 </select>
             </div>
             <div class="field-temperature hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (°C)</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (°C) <span class="req-asterisk">*</span></label>
                 <input type="number" step="0.1" data-field="minimum_temperature" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                <input type="number" data-field="quantity" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Quantity <span class="req-asterisk">*</span></label>
+                <input type="number" data-field="quantity" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
             <div class="field-cbm-ton hidden">
@@ -627,36 +660,37 @@
 
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Declared Value per Unit</label>
-                <input type="number" step="0.01" data-field="declared_value_per_unit" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <input type="text" inputmode="decimal" data-field="declared_value_per_unit" class="currency-input w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
             <div>
-    <label class="text-[11px] text-zinc-400 uppercase">Frequency</label>
-    <select data-field="frequency" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-        <option value="">Select Frequency</option>
+    <label class="text-[11px] text-zinc-400 uppercase">Frequency <span class="req-asterisk">*</span></label>
+    <select data-field="frequency" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+        <option value="">-</option>
+        <option value="daily">Daily</option>
         <option value="Weekly">Weekly</option>
         <option value="Monthly">Monthly</option>
     </select>
 </div>
 
             <div class="md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description</label>
-                <textarea data-field="general_cargo_description" rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
+                <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description <span class="req-asterisk">*</span></label>
+                <textarea data-field="general_cargo_description" required rows="2" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900"></textarea>
             </div>
 
             <div class="field-split-service hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Origin</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Origin <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode_origin" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
             <div class="field-split-service hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Destination</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Destination <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode_destination" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
             <div class="field-single-service hidden md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">Service Mode</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Service Mode <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
@@ -779,6 +813,8 @@
                 card.querySelectorAll('[data-field]').forEach(el => {
                     if (el.type === 'checkbox') {
                         obj[el.dataset.field] = el.checked;
+                    } else if (el.classList.contains('currency-input')) {
+                        obj[el.dataset.field] = parseCurrencyValue(el.value);
                     } else {
                         obj[el.dataset.field] = el.value;
                     }
@@ -930,6 +966,8 @@
                     const el = card.querySelector(`[data-field="${key}"]`);
                     if (!el) return;
                     if (el.type === 'checkbox') el.checked = Boolean(val);
+                    else if (el.classList.contains('currency-input')) el.value =
+                        formatCurrencyDisplay(val ?? '');
                     else el.value = val ?? '';
                 });
 
@@ -997,8 +1035,15 @@
 
                 const option = document.createElement("option");
 
-                option.value = item.name;
-                option.textContent = item.name;
+                // The PSGC API returns some province/city/barangay names with
+                // inconsistent trailing whitespace. Laravel's TrimStrings
+                // middleware trims it server-side on save, so an untrimmed
+                // option value here would never match the trimmed value
+                // that comes back on hydration - the dropdown would silently
+                // fail to re-select, breaking the city/barangay cascade.
+                const name = (item.name || '').trim();
+                option.value = name;
+                option.textContent = name;
 
                 option.dataset.code = item.code;
 
@@ -1037,7 +1082,7 @@
     <div class="address-card border rounded-xl p-4 space-y-3" data-index="${index}">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900">
+                <select data-field="address_type" required class="w-full border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900">
                     ${addressTypeOptionsHtml}
                 </select>
                 <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
@@ -1068,14 +1113,14 @@
                 </select>
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Province</label>
-                <select data-field="address_province" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Province <span class="req-asterisk">*</span></label>
+                <select data-field="address_province" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Province</option>
                 </select>
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Town/City</label>
-                <select data-field="address_town_city" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900" disabled>
+                <label class="text-[11px] text-zinc-400 uppercase">Town/City <span class="req-asterisk">*</span></label>
+                <select data-field="address_town_city" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900" disabled>
                     <option value="">Select Town/City</option>
                 </select>
             </div>

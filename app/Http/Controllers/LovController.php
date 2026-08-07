@@ -96,4 +96,11 @@ class LovController extends Controller
 
         return $option ? $option->values : collect();
     }
+
+    public function unit()
+    {
+        $option = Option::where('option_name', 'Unit')->first();
+
+        return $option ? $option->values : collect();
+    }
 }

@@ -28,6 +28,7 @@ class Kernel extends HttpKernel
         // existing middleware...
         'check.status' => \App\Http\Middleware\CheckUserStatus::class,
         'prevent-back-history' => \App\Http\Middleware\PreventBackHistory::class,
+        'must.change.password' => \App\Http\Middleware\EnsurePasswordIsChanged::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,

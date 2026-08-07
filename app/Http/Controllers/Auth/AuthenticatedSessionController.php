@@ -51,6 +51,10 @@ class AuthenticatedSessionController extends Controller
         // $user->session_id = $currentSessionId;
         // $user->save();
 
+        if ($user->must_change_password) {
+            return redirect()->route('password.force.create');
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

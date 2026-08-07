@@ -396,7 +396,7 @@
                     Requirements</p>
                 <button id="leadAddContainerBtn"
                     class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
-                    + Add Container
+                    + Add Booking Requirement
                 </button>
             </div>
             <div id="leadContainerListContainer"
@@ -778,7 +778,7 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
-                        <input type="text" data-field="base_rate" readonly class="base-rate w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
+                        <input type="text" inputmode="decimal" data-field="base_rate" readonly class="base-rate currency-input w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Discount Type</label>
@@ -790,11 +790,11 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Discount Value</label>
-                        <input type="number" step="0.01" min="0" data-field="discount_value" class="discount-value w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
+                        <input type="text" inputmode="decimal" data-field="discount_value" class="discount-value currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Final Rate</label>
-                        <input type="text" data-field="final_rate" readonly class="final-rate w-full border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/40 text-zinc-900 dark:text-blue-100 font-semibold" value="0.00">
+                        <input type="text" inputmode="decimal" data-field="final_rate" readonly class="final-rate currency-input w-full border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/40 text-zinc-900 dark:text-blue-100 font-semibold" value="0.00">
                     </div>
                 </div>
                 <div class="flex justify-end">
@@ -891,21 +891,21 @@
                 return;
             }
 
-            baseRateInput.value = Number(response.data.frt).toFixed(2);
+            baseRateInput.value = formatCurrencyDisplay(Number(response.data.frt).toFixed(2));
             recomputeFinalRate(row);
         }
 
         function recomputeFinalRate(row) {
-            const base = parseFloat(row.querySelector('.base-rate').value) || 0;
+            const base = parseFloat(parseCurrencyValue(row.querySelector('.base-rate').value)) || 0;
             const type = row.querySelector('.discount-type').value;
-            const value = parseFloat(row.querySelector('.discount-value').value) || 0;
+            const value = parseFloat(parseCurrencyValue(row.querySelector('.discount-value').value)) || 0;
             const finalRateInput = row.querySelector('.final-rate');
 
             let final = base;
             if (type === 'percentage') final = base - (base * value / 100);
             if (type === 'fixed') final = Math.max(0, base - value);
 
-            finalRateInput.value = final.toFixed(2);
+            finalRateInput.value = formatCurrencyDisplay(final.toFixed(2));
         }
 
         document.getElementById('leadProposalAddRowBtn').addEventListener('click', addProposalRow);
@@ -934,10 +934,13 @@
                 container_variant_id: row.querySelector(
                     '[data-field="container_variant_id"]').value,
                 min_van_qty: row.querySelector('[data-field="min_van_qty"]').value || null,
-                base_rate: parseFloat(row.querySelector('.base-rate').value) || 0,
+                base_rate: parseFloat(parseCurrencyValue(row.querySelector('.base-rate')
+                    .value)) || 0,
                 discount_type: row.querySelector('.discount-type').value || null,
-                discount_value: parseFloat(row.querySelector('.discount-value').value) || 0,
-                final_rate: parseFloat(row.querySelector('.final-rate').value) || 0,
+                discount_value: parseFloat(parseCurrencyValue(row.querySelector(
+                    '.discount-value').value)) || 0,
+                final_rate: parseFloat(parseCurrencyValue(row.querySelector('.final-rate')
+                    .value)) || 0,
             }));
 
             if (rates.some((r) => !r.origin_port_id || !r.destination_port_id || !r
@@ -1049,14 +1052,14 @@
                 convanSize: false,
                 temperature: false,
                 cbmTon: true,
-                splitServiceMode: false
+                splitServiceMode: true
             },
             RC: {
                 convanClass: false,
                 convanSize: false,
                 temperature: false,
                 cbmTon: true,
-                splitServiceMode: false
+                splitServiceMode: true
             },
         };
 
@@ -1119,38 +1122,38 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                <select data-field="origin_port_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <label class="text-[11px] text-zinc-400 uppercase">Origin <span class="req-asterisk">*</span></label>
+                <select data-field="origin_port_id" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     <option value="">Select Port</option>${leadPortsOptionsHtml}
                 </select>
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                <select data-field="destination_port_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <label class="text-[11px] text-zinc-400 uppercase">Destination <span class="req-asterisk">*</span></label>
+                <select data-field="destination_port_id" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     <option value="">Select Port</option>${leadPortsOptionsHtml}
                 </select>
             </div>
 
             <div class="field-convan-class hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class</label>
+                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class <span class="req-asterisk">*</span></label>
                 <select data-field="container_class_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     <option value="">Select Class</option>${leadClassOptionsHtml}
                 </select>
             </div>
             <div class="field-convan-size hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Size</label>
+                <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
                 <select data-field="container_size_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     <option value="">Select Size</option>${leadSizeOptionsHtml}
                 </select>
             </div>
             <div class="field-temperature hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (&deg;C)</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (&deg;C) <span class="req-asterisk">*</span></label>
                 <input type="number" step="0.1" data-field="minimum_temperature" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
 
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                <input type="number" data-field="quantity" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <label class="text-[11px] text-zinc-400 uppercase">Quantity <span class="req-asterisk">*</span></label>
+                <input type="number" data-field="quantity" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
 
             <div class="field-cbm-ton hidden">
@@ -1164,36 +1167,37 @@
 
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Declared Value per Unit</label>
-                <input type="number" step="0.01" data-field="declared_value_per_unit" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" inputmode="decimal" data-field="declared_value_per_unit" class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Frequency</label>
-                <select data-field="frequency" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    <option value="">Select Frequency</option>
+                <label class="text-[11px] text-zinc-400 uppercase">Frequency <span class="req-asterisk">*</span></label>
+                <select data-field="frequency" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">-</option>
+                    <option value="daily">Daily</option>
                     <option value="Weekly">Weekly</option>
                     <option value="Monthly">Monthly</option>
                 </select>
             </div>
 
             <div class="md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description</label>
-                <textarea data-field="general_cargo_description" rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
+                <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description <span class="req-asterisk">*</span></label>
+                <textarea data-field="general_cargo_description" required rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
             </div>
 
             <div class="field-split-service hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Origin</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Origin <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode_origin" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
             <div class="field-split-service hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Destination</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Destination <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode_destination" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
             </div>
             <div class="field-single-service hidden md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">Service Mode</label>
+                <label class="text-[11px] text-zinc-400 uppercase">Service Mode <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     ${serviceModeOptionsHtml('Select Mode')}
                 </select>
@@ -1317,7 +1321,13 @@
 
             const payload = {};
             card.querySelectorAll('[data-field]').forEach((el) => {
-                payload[el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value;
+                if (el.type === 'checkbox') {
+                    payload[el.dataset.field] = el.checked;
+                } else if (el.classList.contains('currency-input')) {
+                    payload[el.dataset.field] = parseCurrencyValue(el.value);
+                } else {
+                    payload[el.dataset.field] = el.value;
+                }
             });
 
             if (!payload.container_type) {

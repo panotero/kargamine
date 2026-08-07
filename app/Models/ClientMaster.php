@@ -143,6 +143,11 @@ class ClientMaster extends Model
         return $this->hasMany(ClientAncillaryService::class, 'client_id');
     }
 
+    public function commodityDeclaredValues()
+    {
+        return $this->hasMany(ClientCommodityDeclaredValue::class, 'client_id');
+    }
+
     public function salesRep()
     {
         return $this->belongsTo(User::class, 'sales_rep_id');

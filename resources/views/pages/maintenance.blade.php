@@ -58,6 +58,12 @@
                 data-tab="vesselVoyages">Vessel Voyages</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                data-tab="specialCharges">Special Charges</button>
+            <button type="button"
+                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                data-tab="cargoYards">Cargo Yard (CY)</button>
+            <button type="button"
+                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="generalLookups">General Lookups</button>
         </nav>
     </div>
@@ -80,6 +86,8 @@
         'truckingTariffs' => 'Trucking Tariffs',
         'vatRates' => 'VAT Rates',
         'vesselVoyages' => 'Vessel Voyages',
+        'specialCharges' => 'Special Charges',
+        'cargoYards' => 'Cargo Yard (CY)',
     ] as $key => $label)
             <div class="tab-panel hidden" data-tab-panel="{{ $key }}">
                 <div class="flex items-center justify-between mb-4">
@@ -176,12 +184,14 @@
 
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Code *</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Code <span
+                        class="req-asterisk">*</span></label>
                 <input type="text" id="containerCodeInput" required placeholder="e.g. CV"
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Name *</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Name <span
+                        class="req-asterisk">*</span></label>
                 <input type="text" id="containerNameInput" required placeholder="e.g. Con Van"
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
@@ -197,7 +207,7 @@
         <div>
             <div class="flex items-center justify-between mb-2">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Class / Size Combinations
-                    *</label>
+                    <span class="req-asterisk">*</span></label>
                 <button type="button" id="addVariantRowBtn"
                     class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -822,8 +832,7 @@
                     {
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -836,8 +845,7 @@
                 editFields: [{
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -887,8 +895,7 @@
                     {
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -901,8 +908,7 @@
                 editFields: [{
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -952,8 +958,7 @@
                     {
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -966,8 +971,7 @@
                 editFields: [{
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -1030,8 +1034,7 @@
                     {
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -1044,8 +1047,7 @@
                 editFields: [{
                         name: 'amount',
                         label: 'Amount',
-                        type: 'number',
-                        step: '0.01',
+                        type: 'currency',
                         required: true
                     },
                     {
@@ -1065,6 +1067,10 @@
                 deleteUrl: (id) => `/api/vatRates/${id}`,
                 versioned: true,
                 columns: [{
+                        key: 'tax_type',
+                        label: 'Tax Type'
+                    },
+                    {
                         key: 'rate_percent',
                         label: 'Rate %',
                         render: (row) => `${money(row.rate_percent)}%`
@@ -1081,6 +1087,29 @@
                     },
                 ],
                 fields: [{
+                        name: 'tax_type',
+                        label: 'Tax Type',
+                        type: 'select',
+                        required: true,
+                        options: [{
+                                value: 'General',
+                                label: 'General'
+                            },
+                            {
+                                value: 'VAT Inclusive',
+                                label: 'VAT Inclusive'
+                            },
+                            {
+                                value: 'VAT Exempt',
+                                label: 'VAT Exempt'
+                            },
+                            {
+                                value: 'Non-VAT',
+                                label: 'Non-VAT'
+                            },
+                        ],
+                    },
+                    {
                         name: 'rate_percent',
                         label: 'Rate %',
                         type: 'number',
@@ -1196,6 +1225,83 @@
                         name: 'estimated_arrival_at',
                         label: 'Estimated Date of Arrival',
                         type: 'date'
+                    },
+                ],
+            },
+
+            specialCharges: {
+                label: 'Special Charge',
+                pk: 'special_charge_id',
+                listUrl: '/api/specialCharges',
+                createUrl: '/api/specialCharges',
+                updateUrl: (id) => `/api/specialCharges/${id}`,
+                deleteUrl: (id) => `/api/specialCharges/${id}`,
+                columns: [{
+                        key: 'name',
+                        label: 'Name'
+                    },
+                    {
+                        key: 'base_value',
+                        label: 'Base Value',
+                        render: (row) => money(row.base_value)
+                    },
+                    {
+                        key: 'is_active',
+                        label: 'Status',
+                        render: (row) => activeBadge(row.is_active)
+                    },
+                ],
+                fields: [{
+                        name: 'name',
+                        label: 'Charge Name',
+                        type: 'text',
+                        required: true,
+                        placeholder: 'e.g. Bullet Seal'
+                    },
+                    {
+                        name: 'base_value',
+                        label: 'Base Value',
+                        type: 'currency',
+                        placeholder: '0.00'
+                    },
+                    {
+                        name: 'is_active',
+                        label: 'Active',
+                        type: 'checkbox',
+                        default: true
+                    },
+                ],
+            },
+
+            cargoYards: {
+                label: 'Cargo Yard',
+                pk: 'cargo_yard_id',
+                listUrl: '/api/cargoYards',
+                createUrl: '/api/cargoYards',
+                updateUrl: (id) => `/api/cargoYards/${id}`,
+                deleteUrl: (id) => `/api/cargoYards/${id}`,
+                columns: [{
+                        key: 'name',
+                        label: 'Name'
+                    },
+                    {
+                        key: 'is_active',
+                        label: 'Status',
+                        render: (row) => activeBadge(row.is_active)
+                    },
+                ],
+                fields: [{
+                        name: 'name',
+                        label: 'CY Name',
+                        type: 'text',
+                        required: true,
+                        placeholder: "e.g. Palawan - Puerto Princesa"
+                    },
+                    {
+                        name: 'is_active',
+                        label: 'Active',
+                        type: 'checkbox',
+                        default: true
                     },
                 ],
             },
@@ -1321,9 +1427,9 @@
             // SOP Step 11: "Admin generates load list" - only the Vessel
             // Voyages tab has a document to generate per row, so this stays
             // a one-off rather than a generic config option used nowhere else.
-            const loadlistLink = key === 'vesselVoyages'
-                ? `<a href="/api/vesselVoyages/${id}/loadlist" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium mr-3">Loadlist</a>`
-                : '';
+            const loadlistLink = key === 'vesselVoyages' ?
+                `<a href="/api/vesselVoyages/${id}/loadlist" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium mr-3">Loadlist</a>` :
+                '';
 
             return `
             <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
@@ -1405,7 +1511,7 @@
                 if (field.type === 'checkbox') {
                     el.checked = Boolean(currentValue);
                 } else if (currentValue !== undefined && currentValue !== null) {
-                    el.value = currentValue;
+                    el.value = field.type === 'currency' ? formatCurrencyDisplay(currentValue) : currentValue;
                 }
             }
         }
@@ -1430,7 +1536,7 @@
 
                 return `
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' *' : ''}</label>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' <span class="req-asterisk">*</span>' : ''}</label>
                     <select name="${field.name}" ${field.required ? 'required' : ''}
                             class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
                         <option value="">Select ${field.label}</option>
@@ -1440,9 +1546,20 @@
             `;
             }
 
+            if (field.type === 'currency') {
+                return `
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' <span class="req-asterisk">*</span>' : ''}</label>
+                    <input type="text" inputmode="decimal" name="${field.name}" ${field.required ? 'required' : ''}
+                           placeholder="${field.placeholder ?? '0.00'}"
+                           class="currency-input w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+            `;
+            }
+
             return `
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' *' : ''}</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' <span class="req-asterisk">*</span>' : ''}</label>
                 <input type="${field.type}" name="${field.name}" ${field.required ? 'required' : ''}
                        ${field.step ? `step="${field.step}"` : ''}
                        placeholder="${field.placeholder ?? ''}"
@@ -1484,6 +1601,9 @@
                     payload[field.name] = el.checked;
                 } else if (field.type === 'number') {
                     payload[field.name] = el.value === '' ? null : Number(el.value);
+                } else if (field.type === 'currency') {
+                    const clean = parseCurrencyValue(el.value);
+                    payload[field.name] = clean === '' ? null : Number(clean);
                 } else {
                     payload[field.name] = el.value;
                 }
@@ -1832,20 +1952,20 @@
                 <span class="font-medium text-zinc-800 dark:text-zinc-100">${variant.container?.name ?? '-'}</span>
                 — ${variant.container_class?.class ?? '-'} / ${variant.container_size?.size ?? '-'}
             </div>
-            <input type="number" step="0.01" min="0" placeholder="0.00"
+            <input type="text" inputmode="decimal" placeholder="0.00"
                    data-variant-id="${variant.id}"
-                   value="${priceByVariant[variant.id] ?? ''}"
-                   class="w-32 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm focus:border-orange-500 focus:ring-orange-500">
+                   value="${formatCurrencyDisplay(priceByVariant[variant.id] ?? '')}"
+                   class="currency-input w-32 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
     `).join('') || '<p class="text-xs text-zinc-400">No containers configured yet — add one from the Containers tab first.</p>';
         }
 
         function collectLaneTariffPrices() {
             return Array.from(document.querySelectorAll('#laneTariffPricingRows [data-variant-id]'))
-                .filter((el) => el.value !== '')
+                .filter((el) => parseCurrencyValue(el.value) !== '')
                 .map((el) => ({
                     container_variant_id: el.dataset.variantId,
-                    frt: Number(el.value)
+                    frt: Number(parseCurrencyValue(el.value))
                 }));
         }
 

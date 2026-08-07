@@ -75,6 +75,7 @@ class ClientMasterController extends Controller
             'accountManager:id,name',
             'addresses',
             'ancillaryServices',
+            'commodityDeclaredValues',
         ])
             ->where('uuid', $uuid)->firstOrFail();
 
@@ -302,7 +303,7 @@ class ClientMasterController extends Controller
             'finance.client_business_name' => ['nullable', 'string', 'max:255'],
             'finance.tin_number' => ['nullable', 'string', 'max:255'],
             'finance.tin_registered_address' => ['nullable', 'string'],
-            'finance.tax_status' => ['nullable', 'string', 'max:255'],
+            'finance.registered_tax_type' => ['nullable', 'string', 'max:255'],
             'finance.withholding_tax_code' => ['nullable', 'string', 'max:255'],
             'finance.trade_name' => ['nullable', 'string', 'max:255'],
             'finance.tin_registration_date' => ['nullable', 'date'],
@@ -310,9 +311,14 @@ class ClientMasterController extends Controller
             'finance.tax_percent' => ['nullable', 'numeric'],
             'finance.withholding_tax_percent' => ['nullable', 'numeric'],
             'finance.credit_terms' => ['nullable', 'string', 'max:255'],
-            'finance.mode_of_payment' => ['nullable', 'string', 'max:255'],
-            'finance.cro_user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'finance.max_declared_value' => ['nullable', 'numeric'],
+            'finance.mode_of_payment' => ['nullable', 'in:Cash,Credit'],
+            // Cargo Release Order - Manual or Automatic. Not a user
+            // reference despite the "CRO" name.
+            'finance.cro' => ['nullable', 'in:Manual,Automatic'],
+
+            'commodity_declared_values' => ['nullable', 'array'],
+            'commodity_declared_values.*.commodity_type' => ['nullable', 'string', 'max:255'],
+            'commodity_declared_values.*.max_declared_value' => ['nullable', 'numeric'],
         ]);
 
         DB::transaction(function () use ($client, $validated) {
@@ -322,6 +328,13 @@ class ClientMasterController extends Controller
                     ['client_id' => $client->id],
                     $validated['finance']
                 );
+            }
+
+            $client->commodityDeclaredValues()->delete();
+            foreach ($validated['commodity_declared_values'] ?? [] as $row) {
+                if (array_filter($row)) {
+                    $client->commodityDeclaredValues()->create($row);
+                }
             }
 
             $client->current_stage = max($client->current_stage, 3);
@@ -340,6 +353,7 @@ class ClientMasterController extends Controller
             'salesRep',
             'accountManager',
             'ancillaryServices',
+            'commodityDeclaredValues',
         ]);
 
         return response()->json([
@@ -349,7 +363,9 @@ class ClientMasterController extends Controller
     }
 
     /**
-     * Stage 4 - ancillary services. Optional (zero rows is a valid save) -
+     * Stage 4 - ancillary services. Just a list of special charges the
+     * client is availing (charge/CY/unit/quantity) - no rates, no
+     * calculation. Optional (zero rows is a valid save) -
      * stageCompletionFlags() always marks this stage complete.
      */
     public function saveStage4(Request $request, $uuid)
@@ -361,25 +377,15 @@ class ClientMasterController extends Controller
             'ancillary_services.*.required_service' => ['nullable', 'string', 'max:255'],
             'ancillary_services.*.location' => ['nullable', 'string', 'max:255'],
             'ancillary_services.*.unit' => ['nullable', 'string', 'max:255'],
-            'ancillary_services.*.unit_rate_vat_ex' => ['nullable', 'numeric'],
-            'ancillary_services.*.mode_of_payment' => ['nullable', 'string', 'max:255'],
-            'ancillary_services.*.remarks' => ['nullable', 'string'],
+            'ancillary_services.*.quantity' => ['nullable', 'numeric'],
         ]);
 
         DB::transaction(function () use ($client, $validated) {
-            $snapshotBusinessName = $client->finance?->client_business_name ?: $client->company_name;
-
             $client->ancillaryServices()->delete();
 
             foreach ($validated['ancillary_services'] ?? [] as $row) {
                 if (array_filter($row)) {
-                    // Snapshot columns are server-set from the parent client,
-                    // ignoring any values the client may have sent for them.
-                    $client->ancillaryServices()->create(array_merge($row, [
-                        'client_code' => $client->customer_code,
-                        'client_mnemonic' => $client->client_mnemonic,
-                        'client_business_name' => $snapshotBusinessName,
-                    ]));
+                    $client->ancillaryServices()->create($row);
                 }
             }
 

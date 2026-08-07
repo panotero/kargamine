@@ -27,11 +27,13 @@ class VatRateController extends Controller
         $validated = $request->validate([
             'rate_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'effective_date' => ['required', 'date'],
+            'tax_type' => ['required', 'string', 'max:255'],
         ]);
 
         $rate = DB::transaction(function () use ($validated) {
-            // VAT is a single global setting - no scoping columns needed.
-            $this->closePreviousVersion(VatRate::class, [], $validated['effective_date']);
+            // Scoped to this tax_type only - each tax type now has its own
+            // independent version history (General, VAT Inclusive, etc.).
+            $this->closePreviousVersion(VatRate::class, ['tax_type' => $validated['tax_type']], $validated['effective_date']);
 
             return VatRate::create($validated + ['is_active' => true]);
         });
@@ -55,6 +57,7 @@ class VatRateController extends Controller
         $validated = $request->validate([
             'rate_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'is_active' => ['boolean'],
+            'tax_type' => ['sometimes', 'string', 'max:255'],
         ]);
 
         $vatRate->update($validated);

@@ -162,6 +162,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/organizationtype', [LovController::class, 'organizationType']);
         Route::get('/clientcategory', [LovController::class, 'clientCategory']);
         Route::get('/clientclassification', [LovController::class, 'clientClassification']);
+        Route::get('/unit', [LovController::class, 'unit']);
     });
 
     // Read is open to any authenticated user (populates role-select
@@ -223,6 +224,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [ClientContractController::class, 'indexAll']);
         Route::get('/{contract}', [ClientContractController::class, 'show']);
         Route::get('/{contract}/pdf', [ClientContractController::class, 'downloadPdf']);
+        Route::post('/{contract}/approve', [ClientContractController::class, 'approve']);
         Route::post('/{contract}/terminate', [ClientContractController::class, 'terminate'])
             ->middleware('permission:contract.terminate');
     });

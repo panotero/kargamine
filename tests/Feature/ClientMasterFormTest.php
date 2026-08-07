@@ -86,24 +86,21 @@ class ClientMasterFormTest extends TestCase
     }
 
     /** @test */
-    public function finance_stage3_persists_new_fields_and_rejects_an_invalid_cro_user_id()
+    public function finance_stage3_persists_new_fields_and_rejects_an_invalid_cro()
     {
         $this->actingUser();
 
         $stage1 = $this->postJson('/api/clientMasters/stage1', $this->stage1Payload())->json('data');
         $uuid = $stage1['uuid'];
 
-        $cro = User::factory()->create();
-
         $response = $this->postJson("/api/clientMasters/{$uuid}/stage3", [
             'finance' => [
                 'client_business_name' => 'Acme Corp Trading',
                 'tin_number' => '123-456-789',
-                'tax_status' => 'VAT',
+                'registered_tax_type' => 'VAT Inclusive',
                 'credit_terms' => 'Net 30',
-                'mode_of_payment' => 'Bank Transfer',
-                'cro_user_id' => $cro->id,
-                'max_declared_value' => 500000.50,
+                'mode_of_payment' => 'Credit',
+                'cro' => 'Manual',
             ],
         ]);
 
@@ -111,16 +108,69 @@ class ClientMasterFormTest extends TestCase
         $this->assertDatabaseHas('client_finance', [
             'client_business_name' => 'Acme Corp Trading',
             'tin_number' => '123-456-789',
-            'cro_user_id' => $cro->id,
+            'mode_of_payment' => 'Credit',
+            'cro' => 'Manual',
         ]);
 
         $invalidResponse = $this->postJson("/api/clientMasters/{$uuid}/stage3", [
             'finance' => [
-                'cro_user_id' => 999999,
+                'cro' => 'Somehow Both',
             ],
         ]);
 
         $invalidResponse->assertStatus(422);
+
+        $invalidModeResponse = $this->postJson("/api/clientMasters/{$uuid}/stage3", [
+            'finance' => [
+                'mode_of_payment' => 'Check',
+            ],
+        ]);
+
+        $invalidModeResponse->assertStatus(422);
+    }
+
+    /** @test */
+    public function finance_stage3_persists_repeatable_commodity_declared_values()
+    {
+        $this->actingUser();
+
+        $stage1 = $this->postJson('/api/clientMasters/stage1', $this->stage1Payload())->json('data');
+        $uuid = $stage1['uuid'];
+
+        $response = $this->postJson("/api/clientMasters/{$uuid}/stage3", [
+            'finance' => ['client_business_name' => 'Acme Corp Trading'],
+            'commodity_declared_values' => [
+                ['commodity_type' => 'Electronics', 'max_declared_value' => 100000],
+                ['commodity_type' => 'Textiles', 'max_declared_value' => 50000],
+            ],
+        ]);
+
+        $response->assertOk();
+
+        $client = ClientMaster::where('uuid', $uuid)->firstOrFail();
+        $this->assertDatabaseHas('client_commodity_declared_values', [
+            'client_id' => $client->id,
+            'commodity_type' => 'Electronics',
+            'max_declared_value' => 100000,
+        ]);
+        $this->assertDatabaseHas('client_commodity_declared_values', [
+            'client_id' => $client->id,
+            'commodity_type' => 'Textiles',
+            'max_declared_value' => 50000,
+        ]);
+
+        // Resubmitting replaces the prior set wholesale.
+        $this->postJson("/api/clientMasters/{$uuid}/stage3", [
+            'commodity_declared_values' => [
+                ['commodity_type' => 'Machinery', 'max_declared_value' => 250000],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseCount('client_commodity_declared_values', 1);
+        $this->assertDatabaseHas('client_commodity_declared_values', [
+            'client_id' => $client->id,
+            'commodity_type' => 'Machinery',
+        ]);
     }
 
     /** @test */
@@ -161,29 +211,20 @@ class ClientMasterFormTest extends TestCase
     }
 
     /** @test */
-    public function ancillary_stage4_snapshots_parent_fields_and_allows_zero_rows()
+    public function ancillary_stage4_persists_special_charge_cy_unit_and_quantity_and_allows_zero_rows()
     {
         $this->actingUser();
 
         $stage1 = $this->postJson('/api/clientMasters/stage1', $this->stage1Payload())->json('data');
         $uuid = $stage1['uuid'];
 
-        $this->postJson("/api/clientMasters/{$uuid}/stage3", [
-            'finance' => ['client_business_name' => 'Acme Business Name'],
-        ])->assertOk();
-
         $response = $this->postJson("/api/clientMasters/{$uuid}/stage4", [
             'ancillary_services' => [
                 [
-                    'required_service' => 'Extra Stuffing',
-                    'location' => 'Manila',
-                    'unit' => 'per container',
-                    'unit_rate_vat_ex' => 1500,
-                    // Client attempts to override the snapshot fields -
-                    // these must be ignored server-side.
-                    'client_code' => 'HACKED',
-                    'client_mnemonic' => 'HACKED',
-                    'client_business_name' => 'HACKED',
+                    'required_service' => 'Bullet Seal',
+                    'location' => 'Palawan - Puerto Princesa',
+                    'unit' => 'piece/s',
+                    'quantity' => 3,
                 ],
             ],
         ]);
@@ -193,10 +234,10 @@ class ClientMasterFormTest extends TestCase
         $client = ClientMaster::where('uuid', $uuid)->firstOrFail();
         $this->assertDatabaseHas('client_ancillary_services', [
             'client_id' => $client->id,
-            'required_service' => 'Extra Stuffing',
-            'client_code' => $client->customer_code,
-            'client_mnemonic' => 'ACME',
-            'client_business_name' => 'Acme Business Name',
+            'required_service' => 'Bullet Seal',
+            'location' => 'Palawan - Puerto Princesa',
+            'unit' => 'piece/s',
+            'quantity' => 3,
         ]);
 
         // Zero rows must be allowed (ancillary is optional).

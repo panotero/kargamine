@@ -58,7 +58,7 @@ class CargoBuildUpTest extends TestCase
             'is_active' => true,
         ]);
 
-        VatRate::create(['rate_percent' => 12, 'effective_date' => now()->subDay()->toDateString(), 'is_active' => true]);
+        VatRate::create(['rate_percent' => 12, 'effective_date' => now()->subDay()->toDateString(), 'is_active' => true, 'tax_type' => 'General']);
 
         DeliveryType::create([
             'code' => 'DD',

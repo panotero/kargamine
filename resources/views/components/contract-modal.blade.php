@@ -66,13 +66,15 @@
             <div></div>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valid From *</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valid From <span
+                        class="req-asterisk">*</span></label>
                 <input type="date" name="valid_from" required
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valid To *</label>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Valid To <span
+                        class="req-asterisk">*</span></label>
                 <input type="date" name="valid_to" required
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
@@ -94,11 +96,16 @@
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
                     <thead class="bg-zinc-50 dark:bg-zinc-800">
                         <tr>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Route</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Container</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Min Qty</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Discount Type</th>
-                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Discount Value</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Route
+                            </th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">
+                                Container</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">Min
+                                Qty</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">
+                                Discount Type</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500 dark:text-zinc-400 uppercase">
+                                Discount Value</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800" id="contractRatesBody"></tbody>
@@ -107,7 +114,8 @@
         </div>
     </form>
 
-    <div class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
+    <div
+        class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
         <button type="button" id="createContractCancelBtn"
             class="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
             Cancel
@@ -295,8 +303,8 @@
                     </select>
                 </td>
                 <td class="px-3 py-2">
-                    <input type="number" step="0.01" min="0" data-field="discount_value" required
-                           class="w-full rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1 text-xs focus:border-orange-500 focus:ring-orange-500">
+                    <input type="text" inputmode="decimal" data-field="discount_value" required
+                           class="currency-input w-full rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1 text-xs focus:border-orange-500 focus:ring-orange-500">
                 </td>
             </tr>
         `;
@@ -307,7 +315,11 @@
             return Array.from(document.querySelectorAll('[data-rate-line]')).map((row) => {
                 const line = {};
                 row.querySelectorAll('[data-field]').forEach((el) => {
-                    line[el.dataset.field] = el.type === 'number' ? Number(el.value) : el.value;
+                    if (el.classList.contains('currency-input')) {
+                        line[el.dataset.field] = Number(parseCurrencyValue(el.value));
+                    } else {
+                        line[el.dataset.field] = el.type === 'number' ? Number(el.value) : el.value;
+                    }
                 });
                 return line;
             });
