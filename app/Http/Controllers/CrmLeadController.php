@@ -98,8 +98,8 @@ class CrmLeadController extends Controller
             ->get();
 
         $statusCounts = $allLeads
-            ->groupBy(fn ($lead) => optional($lead->crmStatus)->status)
-            ->map(fn ($group) => $group->count());
+            ->groupBy(fn($lead) => optional($lead->crmStatus)->status)
+            ->map(fn($group) => $group->count());
 
         return response()->json([
             'success' => true,
@@ -125,7 +125,7 @@ class CrmLeadController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'gender' => ['nullable', 'in:'.implode(',', CrmLead::GENDERS)],
+            'gender' => ['nullable', 'in:' . implode(',', CrmLead::GENDERS)],
             'position' => ['nullable', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'max:50'],
             'mobile_type' => ['nullable', 'in:personal,business'],
@@ -143,7 +143,7 @@ class CrmLeadController extends Controller
             'authorized_signatory_first_name' => ['nullable', 'string', 'max:255'],
             'authorized_signatory_middle_name' => ['nullable', 'string', 'max:255'],
             'authorized_signatory_last_name' => ['nullable', 'string', 'max:255'],
-            'authorized_signatory_gender' => ['nullable', 'in:'.implode(',', CrmLead::GENDERS)],
+            'authorized_signatory_gender' => ['nullable', 'in:' . implode(',', CrmLead::GENDERS)],
             'authorized_signatory_position' => ['nullable', 'string', 'max:255'],
             'authorized_signatory_mobile' => ['nullable', 'string', 'max:50'],
             'authorized_signatory_mobile_type' => ['nullable', 'in:personal,business'],
@@ -234,7 +234,7 @@ class CrmLeadController extends Controller
             $lead->addresses()->delete();
 
             $addresses = $data['addresses'];
-            if (! collect($addresses)->contains(fn ($a) => ! empty($a['is_primary']))) {
+            if (! collect($addresses)->contains(fn($a) => ! empty($a['is_primary']))) {
                 $addresses[0]['is_primary'] = true;
             }
 
@@ -431,9 +431,9 @@ class CrmLeadController extends Controller
         if (empty($c['quantity']) || (int) $c['quantity'] < 1) {
             $errors[] = "Booking requirement #{$index}: quantity is required.";
         }
-        if (empty($c['frequency'])) {
-            $errors[] = "Booking requirement #{$index}: frequency is required.";
-        }
+        // if (empty($c['frequency'])) {
+        //     $errors[] = "Booking requirement #{$index}: frequency is required.";
+        // }
         if (empty($c['general_cargo_description'])) {
             $errors[] = "Booking requirement #{$index}: cargo description is required.";
         }

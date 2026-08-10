@@ -1,102 +1,172 @@
-# Document Tracking & Finance Management System
+# Kargamine — Logistics CRM, Document Tracking & Finance Management
 
-A Laravel 10 application for **document tracking and management**, including **finance tracking**.
+A Laravel 10 (PHP 8.1+) application for document tracking, CRM/lead management, client proposals & contracts, and finance tracking for a logistics/freight business (containers, lanes, ports, trucking tariffs, bookings). Server-rendered Blade views with jQuery/Alpine.js + Tailwind on the frontend, built via Vite.
 
 ---
 
 ## Tech Stack
 
-- **PHP:** 8.2 or later
-- **MySQL:** 5.7 or higher
-- **Composer** (PHP dependency manager)
-- **Node.js** (v16+ recommended)
-- **Laravel:** 10
-- **Frontend build tools:** npm (for assets compilation)
+- **Backend:** PHP 8.1+, Laravel 10
+- **Database:** MySQL 5.7+
+- **Frontend:** Blade templates, jQuery, Alpine.js, Tailwind CSS
+- **Build tool:** Vite (single entry point, `resources/js/app.js`)
+- **PDF generation:** barryvdh/laravel-dompdf
+- **Notable JS libraries:** DataTables, Chart.js, jsPDF + autotable, Leaflet, Swiper, jsQR/QRCode, Glide
+- **Package managers:** Composer (PHP), npm (JS)
 
 ---
 
 ## Application Overview
 
-This application allows users to:
+The app allows users to:
+- Manage CRM leads through to client conversion (`CrmLead` → `ClientMaster` → `ClientProposal` → `ClientContract`)
+- Track documents within the organization (approvals, status, destinations)
+- Manage bookings, containers, lanes, ports, and trucking tariffs
+- Keep finance records linked to documents and contracts
+- Generate reports across documents, CRM, and finance
 
-- Track documents within an organization
-- Manage approvals, status, and destinations
-- Keep finance records linked to documents
-- Generate reports on both documents and finance transactions
+The app shell (`resources/views/dashboard.blade.php`) is rendered once per session; page content is then loaded client-side via AJAX fragments (`/page_*` routes) — see `CLAUDE.md` for architecture details.
 
 ---
 
-## Installation / Migration Procedure
+## Initial Setup (Local Development)
 
-After pulling the repository:
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd kargamine_prototype
+   ```
 
-1. **Install PHP dependencies**
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Install Node.js dependencies** (Node v16+ recommended)
+   ```bash
+   npm install
+   ```
+
+4. **Set up your environment file**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   Then edit `.env` with your local database credentials (see sample below).
+
+5. **Run database migrations**
+   ```bash
+   php artisan migrate
+   ```
+
+6. **Seed the database** (creates the initial admin user and reference data)
+   ```bash
+   php artisan db:seed
+   ```
+
+7. **Build frontend assets**
+   ```bash
+   npm run build
+   # or, for local development with hot-reload:
+   npm run dev
+   ```
+
+8. **Serve the app**
+   ```bash
+   php artisan serve
+   ```
+
+You should now be able to log in with the seeded superadmin account:
+
+- **Email:** `superadmin@email.com`
+- **Password:** `Testing123`
+
+---
+
+## Sample `.env` (local development)
+
+```env
+APP_NAME=Kargamine
+APP_ENV=local
+APP_KEY=base64:GENERATE_YOUR_KEY
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+LOG_CHANNEL=stack
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=kargamine
+DB_USERNAME=root
+DB_PASSWORD=
+
+BROADCAST_DRIVER=log
+CACHE_DRIVER=file
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+```
+
+---
+
+## Running Tests
+
+Tests use PHPUnit with an in-memory SQLite database (see `phpunit.xml`).
 
 ```bash
-composer install
+php artisan test                          # full suite
+php artisan test --filter=AuthFlowTest    # single test class
+php artisan test tests/Feature/AuthFlowTest.php
+vendor/bin/pint                           # code style (Laravel Pint)
+```
 
-Install Node.js dependencies
-npm install
+There is no JS test runner or linter configured — `npm run build` / `npm run dev` are the only frontend scripts.
 
-Run database migrations
-php artisan migrate
+---
 
-Build frontend assets
-npm run build
+## Production Deployment
 
-Seed the database (creates the first admin/user to initialize the system)
-php artisan db:seed
+**Important:** Always run `npm run build` before deploying/restructuring files for production. Do not upload `node_modules/`, `.git/`, or your `.env` file to the hosting server.
 
-You are now ready to access the application.
+### Recommended file structure
 
-the initial user is
-user: superadmin@email.com
-password: Testing123
-
-Deployment File Structure
-Important: Run npm run build before restructuring files for deployment.
-
+```
 root/
 │
-├─ app_core/           <-- All Laravel framework files
-│   ├─ app/
-│   ├─ bootstrap/
-│   ├─ config/
-│   ├─ database/
-│   ├─ resources/
-│   ├─ routes/
-│   ├─ storage/
-│   ├─ vendor/
-│   └─ ...other Laravel files
+├─ app_core/          <-- All Laravel framework files
+│  ├─ app/
+│  ├─ bootstrap/
+│  ├─ config/
+│  ├─ database/
+│  ├─ resources/
+│  ├─ routes/
+│  ├─ storage/
+│  ├─ vendor/
+│  └─ ...other Laravel files
 │
-└─ public/             <-- Frontend entry point
-    ├─ index.php
-    ├─ css/
-    ├─ js/
-    └─ ...other public assets
-Notes:
+└─ public/             <-- Web root / frontend entry point
+   ├─ index.php
+   ├─ css/
+   ├─ js/
+   └─ ...other public assets
+```
 
-app_core contains all backend logic and Laravel files
+- `app_core/` contains all backend logic and Laravel files.
+- `public/` should be the web-accessible root.
+- Update the paths in `public/index.php` to point to `../app_core/` instead of the default `../`.
 
-public/ should be accessible at the web root
+### Sample `.env` (production)
 
-public/index.php update the /../ to /app_core/ to point it to right folder.
+Create this file directly on the production server — never commit it to Git.
 
-"Do not include node_modules, .git folder and ENV when uploading to the hosting! thank you!"
-
-Always run npm run build before moving files
-
-Environment Setup (Production)
-Create a .env file on the production server only. Do not push .env to Git.
-
-Sample .env structure:
-
-APP_NAME=DocumentTrackingApp
+```env
+APP_NAME=Kargamine
 APP_ENV=production
 APP_KEY=base64:GENERATE_YOUR_KEY
 APP_DEBUG=false
 APP_URL=https://your-domain.com
-ASSET_URL=https://your-domain.com //this is crucial becuase the template need to point to your domain in order to get the js and css from build.
+ASSET_URL=https://your-domain.com   # required so the built JS/CSS resolve to the right domain
 
 LOG_CHANNEL=stack
 
@@ -112,39 +182,9 @@ CACHE_DRIVER=file
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
-Use php artisan key:generate on the server to generate a secure APP_KEY.
+```
 
-Git Guidelines
-Do not push your .env file
-
-Always pull from origin/main before starting work:
-
-git pull origin main
-Commit changes with descriptive messages
-
-git add .
-git commit -m "Feature: Added document status filter"
-git push origin main
-For large changes, consider creating a feature branch first
-
-First-time Setup Checklist (Quick Start)
-git clone <repository-url>
-cd <project-folder>
-composer install
-npm install
-php artisan migrate
-npm run build
-php artisan db:seed
-After this, your application should be ready to run.
-
-
-This version is **fully GitHub Markdown compatible** and includes:
-
-- Installation & migration steps
-- Deployment file structure diagram
-- `.env` instructions
-- Git guidelines
-- Quick-start checklist
-
----
+Generate `APP_KEY` on the server with:
+```bash
+php artisan key:generate
 ```

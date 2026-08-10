@@ -81,9 +81,21 @@
                     <div class="flex flex-col gap-1">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Mail
                             Password (optional)</label>
-                        <input type="password" name="mail_password"
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition"
-                            value="{{ old('mail_password', $config->mail_password ?? '') }}">
+                        <div class="relative">
+                            <button type="button" class="js-toggle-password absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                tabindex="-1" data-target="mail_password">
+                                <svg class="js-eye-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.423 7.51
+                               7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431
+                               0 .638C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                            <input type="password" name="mail_password" id="mail_password"
+                                class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 pr-12 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition"
+                                value="{{ old('mail_password', $config->mail_password ?? '') }}">
+                        </div>
                     </div>
                 </div>
 

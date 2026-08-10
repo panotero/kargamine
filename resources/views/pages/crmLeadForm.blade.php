@@ -627,16 +627,17 @@
                 </select>
             </div>
 
-            <div class="field-convan-class hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class <span class="req-asterisk">*</span></label>
-                <select data-field="container_class_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                    <option value="">Select Class</option>${classOptionsHtml}
-                </select>
-            </div>
             <div class="field-convan-size hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
                 <select data-field="container_size_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     <option value="">Select Size</option>${sizeOptionsHtml}
+                </select>
+            </div>
+
+            <div class="field-convan-class hidden">
+                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class<span class="req-asterisk">*</span></label>
+                <select data-field="container_class_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    <option value="">Select Class</option>${classOptionsHtml}
                 </select>
             </div>
             <div class="field-temperature hidden">
@@ -645,7 +646,7 @@
             </div>
 
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Quantity <span class="req-asterisk">*</span></label>
+                <label class="text-[11px] text-zinc-400 uppercase">Quantity unit/s<span class="req-asterisk">*</span></label>
                 <input type="number" data-field="quantity" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
             </div>
 
@@ -664,7 +665,7 @@
             </div>
             <div>
     <label class="text-[11px] text-zinc-400 uppercase">Frequency <span class="req-asterisk">*</span></label>
-    <select data-field="frequency" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+    <select data-field="frequency" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
         <option value="">-</option>
         <option value="daily">Daily</option>
         <option value="Weekly">Weekly</option>
