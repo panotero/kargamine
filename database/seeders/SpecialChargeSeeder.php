@@ -7,6 +7,11 @@ use Illuminate\Database\Seeder;
 
 class SpecialChargeSeeder extends Seeder
 {
+    /** Overrides for charges whose base_value has since been filled in via the Special Charges tab. */
+    private const BASE_VALUE_OVERRIDES = [
+        'Bullet Seal' => 1234567.50,
+    ];
+
     /**
      * Run the database seeds.
      *
@@ -43,7 +48,7 @@ class SpecialChargeSeeder extends Seeder
             'Trucking',
             'Valuation Fee',
         ] as $name) {
-            SpecialCharge::firstOrCreate(['name' => $name], ['base_value' => 0]);
+            SpecialCharge::firstOrCreate(['name' => $name], ['base_value' => self::BASE_VALUE_OVERRIDES[$name] ?? 0]);
         }
     }
 }

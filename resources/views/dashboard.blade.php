@@ -60,7 +60,7 @@
                     <x-dropdown align="right" width="w-auto">
                         <x-slot name="trigger">
                             <button class="text-zinc-700 dark:text-zinc-200">
-                                <div class="flex flex-col items-center justify-center">
+                                <div id="headerAvatarWrap" class="flex flex-col items-center justify-center">
                                     @if (Auth::user()->profile_photo_url)
                                         <img src="{{ Auth::user()->profile_photo_url }}" alt="Avatar"
                                             class="h-10 w-10 rounded-full object-cover">

@@ -17,6 +17,7 @@ use App\Http\Controllers\MenusController;
 use App\Http\Controllers\NavIconController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\TeamController;
@@ -39,6 +40,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/load_menu', [MenusController::class, 'index']);
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
     Route::get('/nav-icons', [NavIconController::class, 'index']);
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'show']);
+        Route::put('/', [ProfileController::class, 'update']);
+        Route::put('/password', [ProfileController::class, 'updatePassword']);
+        Route::post('/photo', [ProfileController::class, 'uploadPhoto']);
+        Route::delete('/photo', [ProfileController::class, 'deletePhoto']);
+    });
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread-count', [NotificationController::class, 'unreadCount']);

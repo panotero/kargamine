@@ -2,59 +2,109 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
+use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    protected $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        $this->fileUploadService = $fileUploadService;
+    }
+
+    public function show()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => Auth::user(),
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    // Name only - email is intentionally not accepted here.
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user = Auth::user();
+        $user->update(['name' => $validated['name']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'data' => $user,
+        ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', Password::defaults(), 'confirmed'],
+        ]);
+
+        Auth::user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully.',
+        ]);
+    }
+
+    public function uploadPhoto(Request $request)
+    {
+        $validated = $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $user = Auth::user();
+
+        $urls = $this->fileUploadService->uploadFile([$validated['photo']], 'uploads/profile-photos');
+        $url = $urls[0] ?? null;
+
+        if (!$url) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to upload the photo.',
+            ], 422);
         }
 
-        $request->user()->save();
+        $oldPath = $user->profile_photo_path;
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        $user->update(['profile_photo_path' => $url]);
+
+        if ($oldPath) {
+            $this->fileUploadService->deleteFile($oldPath);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile photo updated.',
+            'data' => $user,
+        ]);
     }
 
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
+    public function deletePhoto()
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        $user = Auth::user();
+
+        if ($user->profile_photo_path) {
+            $this->fileUploadService->deleteFile($user->profile_photo_path);
+            $user->update(['profile_photo_path' => null]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile photo removed.',
+            'data' => $user,
         ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
     }
 }

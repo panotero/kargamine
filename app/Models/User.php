@@ -28,10 +28,11 @@ class User extends Authenticatable
         'role_id',
         'team_id',
         'is_team_leader',
+        'profile_photo_path',
 
     ];
 
-    protected $appends = ['status_label'];
+    protected $appends = ['status_label', 'profile_photo_url'];
 
     public function getStatusLabelAttribute(): string
     {
@@ -40,6 +41,11 @@ class User extends Authenticatable
             self::STATUS_INACTIVE => 'Inactive',
             default => 'Unknown',
         };
+    }
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        return $this->profile_photo_path;
     }
 
     /**

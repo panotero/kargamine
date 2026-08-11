@@ -180,4 +180,9 @@ class PageController extends Controller
     {
         return view('pages.help');
     }
+
+    public function page_Profile()
+    {
+        return view('pages.profile');
+    }
 }

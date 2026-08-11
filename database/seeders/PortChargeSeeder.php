@@ -15,6 +15,9 @@ class PortChargeSeeder extends Seeder
         'THC' => 1200,
     ];
 
+    // Fixed (rather than now()->subDay()) so re-seeding on a different day - e.g. production - reproduces this environment's exact rows.
+    private const EFFECTIVE_DATE = '2026-07-27';
+
     public function run(): void
     {
         $ports = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->get();
@@ -26,7 +29,7 @@ class PortChargeSeeder extends Seeder
                     [
                         'port_id' => $port->port_id,
                         'charge_type_id' => $chargeType->charge_type_id,
-                        'effective_date' => now()->subDay()->toDateString(),
+                        'effective_date' => self::EFFECTIVE_DATE,
                     ],
                     [
                         'amount' => self::AMOUNT_BY_CHARGE_CODE[$chargeType->code] ?? 500,

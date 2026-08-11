@@ -22,8 +22,13 @@ class LaneTariffRateSeeder extends Seeder
     ];
 
     private const CONTAINER_MULTIPLIER = ['CV' => 1.0, 'RF' => 1.4, 'FR' => 1.1];
+
     private const SIZE_MULTIPLIER = ['20FT' => 1.0, '40FT' => 1.6];
+
     private const CLASS_MULTIPLIER = ['Standard' => 1.0, 'High Cube' => 1.15];
+
+    // Fixed (rather than now()->subDay()) so re-seeding on a different day - e.g. production - reproduces this environment's exact rows.
+    private const EFFECTIVE_DATE = '2026-07-27';
 
     public function run(): void
     {
@@ -41,7 +46,7 @@ class LaneTariffRateSeeder extends Seeder
             $baseRate = self::BASE_RATE_BY_PAIR[$pairKey] ?? 10000;
 
             $tariffRate = LaneTariffRate::firstOrCreate(
-                ['lane_id' => $lane->lane_id, 'effective_date' => now()->subDay()->toDateString()],
+                ['lane_id' => $lane->lane_id, 'effective_date' => self::EFFECTIVE_DATE],
                 ['end_date' => null, 'is_active' => true]
             );
 

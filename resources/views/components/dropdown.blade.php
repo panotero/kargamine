@@ -45,7 +45,7 @@
 
             <!-- User Avatar + Email -->
             <div class="flex items-start justify-center  p-4">
-                <div class="">
+                <div id="dropdownAvatarWrap">
 
                     @if (Auth::user()->profile_photo_url)
                         <img src="{{ Auth::user()->profile_photo_url }}" alt="Avatar"
@@ -60,26 +60,17 @@
                 <div class=" px-3">
 
                     <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->email }}</p>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->name }}</p>
+                    <p id="dropdownUserName" class="text-sm text-gray-700 dark:text-gray-300">{{ Auth::user()->name }}</p>
                 </div>
             </div>
 
-            {{-- Profile
-            @if ($showProfile)
-                <x-dropdown-link :href="route('profile')">
-                    {{ __('Profile') }}
-                </x-dropdown-link>
-            @endif
+            <button type="button" @click="open = false"
+                onclick="window.loadPage({title: 'My Profile', link: '/page_profile'})"
+                class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 transition duration-150 ease-in-out">
+                {{ __('My Profile') }}
+            </button>
 
-            @if ($showSettings)
-                <x-dropdown-link :href="route('settings')">
-                    {{ __('Settings') }}
-                </x-dropdown-link>
-            @endif
-
-            @if ($showProfile || $showSettings)
-                <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-            @endif --}}
+            <div class="border-t border-gray-200 dark:border-gray-600 my-1"></div>
 
             {{-- Logout --}}
             @if ($showLogout)

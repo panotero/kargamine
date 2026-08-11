@@ -30,3 +30,4 @@ Route::get('/page_bookingForm', [PageController::class, 'page_BookingForm']);
 Route::get('/page_cargo_build_up', [PageController::class, 'page_CargoBuildUp']);
 Route::get('/page_pier_checkin', [PageController::class, 'page_PierCheckin']);
 Route::get('/page_help', [PageController::class, 'page_Help']);
+Route::get('/page_profile', [PageController::class, 'page_Profile']);

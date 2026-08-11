@@ -17,6 +17,9 @@ class TruckingTariffSeeder extends Seeder
      */
     private const TRUCKED_DELIVERY_CODES = ['DD', 'DP', 'PD'];
 
+    // Fixed (rather than now()->subDay()) so re-seeding on a different day - e.g. production - reproduces this environment's exact rows.
+    private const EFFECTIVE_DATE = '2026-07-27';
+
     public function run(): void
     {
         $portIds = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->pluck('port_id');
@@ -29,7 +32,7 @@ class TruckingTariffSeeder extends Seeder
                     [
                         'area_id' => $area->area_id,
                         'delivery_type_id' => $deliveryType->delivery_type_id,
-                        'effective_date' => now()->subDay()->toDateString(),
+                        'effective_date' => self::EFFECTIVE_DATE,
                     ],
                     ['amount' => 1500, 'end_date' => null, 'is_active' => true]
                 );
