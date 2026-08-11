@@ -116,11 +116,11 @@
             </tr>
             <tr>
                 <td><strong>Port of Origin</strong></td>
-                <td>{{ $voyage->originPort->name ?? '-' }} ({{ $voyage->originPort->code ?? '-' }})</td>
+                <td>{{ $voyage->originPort->location->name ?? '-' }} - {{ $voyage->originPort->name ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Port of Destination</strong></td>
-                <td>{{ $voyage->destinationPort->name ?? '-' }} ({{ $voyage->destinationPort->code ?? '-' }})</td>
+                <td>{{ $voyage->destinationPort->location->name ?? '-' }} - {{ $voyage->destinationPort->name ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Estimated Departure</strong></td>
@@ -160,7 +160,7 @@
                             {{ $unit->bookingLine->containerClass->class ?? '-' }} /
                             {{ $unit->bookingLine->containerSize->size ?? '-' }}</td>
                         <td>{{ $unit->equivalent_teu !== null ? number_format($unit->equivalent_teu, 2) : '-' }}</td>
-                        <td>{{ $unit->relayPort->code ?? '-' }}</td>
+                        <td>{{ $unit->relayPort ? ($unit->relayPort->location->name ?? '-') . ' - ' . $unit->relayPort->name : '-' }}</td>
                         <td>{{ $unit->bookingLine->consignee_name ?? '-' }}</td>
                         <td>{{ $unit->booking->billOfLading->bol_number ?? 'Not yet issued' }}</td>
                     </tr>

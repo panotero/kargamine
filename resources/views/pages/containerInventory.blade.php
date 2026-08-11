@@ -257,7 +257,7 @@
             if (!response.success) return;
 
             const rows = response.data?.data ?? [];
-            const options = rows.map((p) => `<option value="${p.port_id}">${p.name} (${p.code})</option>`).join(
+            const options = rows.map((p) => `<option value="${p.port_id}">${p.location?.name ?? '-'} - ${p.name}</option>`).join(
                 '');
 
             document.querySelectorAll('.registerPortSelect').forEach((el) => el.insertAdjacentHTML('beforeend',
@@ -286,7 +286,7 @@
                 {
                     title: 'Current Port',
                     key: 'current_port.name',
-                    render: (r) => r.current_port?.name ?? '-',
+                    render: (r) => r.current_port ? (r.current_port.location?.name ?? '-') + ' - ' + r.current_port.name : '-',
                 },
                 {
                     title: 'Pier / Yard',
@@ -392,7 +392,7 @@
                         <span class="font-medium">${h.status_at_time}</span>
                         <span class="text-zinc-400">${h.recorded_at ?? ''}</span>
                     </div>
-                    <div class="text-zinc-500">${h.port?.name ?? '-'}${h.pier_reference ? ' · ' + h.pier_reference : ''}
+                    <div class="text-zinc-500">${h.port ? (h.port.location?.name ?? '-') + ' - ' + h.port.name : '-'}${h.pier_reference ? ' · ' + h.pier_reference : ''}
                         · ${h.source} ${h.recorded_by ? '· ' + (h.recorded_by.name ?? '') : ''}</div>
                 </div>
             `).join('');
@@ -425,7 +425,7 @@
             document.getElementById('caContainerNo').textContent = asset.container_no;
             document.getElementById('caStatusBadge').innerHTML = statusBadge(asset.status);
             document.getElementById('caVariantLabel').textContent = variantLabel(asset.container_variant);
-            document.getElementById('caCurrentPort').textContent = asset.current_port?.name ?? 'Not set';
+            document.getElementById('caCurrentPort').textContent = asset.current_port ? `${asset.current_port.location?.name ?? '-'} - ${asset.current_port.name}` : 'Not set';
             document.getElementById('caPierReference').textContent = asset.current_pier_reference ?? '-';
 
             updateActionVisibility(asset.status);

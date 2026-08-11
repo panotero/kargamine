@@ -417,15 +417,28 @@
             },
         };
         let portsOptionsHtml = '';
+        let locationsOptionsHtml = '';
+        let portsData = [];
         let classOptionsHtml = '';
         let sizeOptionsHtml = '';
 
+        function portOptionsForLocation(locationId) {
+            const ports = locationId ?
+                portsData.filter((p) => String(p.location_id) === String(locationId)) :
+                portsData;
+
+            return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
+        }
 
         async function loadContainerLookups() {
-            const [portsRes, classesRes, sizesRes] = await Promise.all([
+            const [portsRes, locationsRes, classesRes, sizesRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/locations?per_page=200'
                 }),
                 apiCall({
                     mode: 'GET',
@@ -438,8 +451,14 @@
             ]);
 
             if (portsRes.success) {
-                portsOptionsHtml = portsRes.data.data
-                    .map((p) => `<option value="${p.port_id}">${p.code} - ${p.name}</option>`)
+                portsData = portsRes.data.data;
+                portsOptionsHtml = portsData
+                    .map((p) => `<option value="${p.port_id}">${p.location?.name ?? '-'} - ${p.name}</option>`)
+                    .join('');
+            }
+            if (locationsRes.success) {
+                locationsOptionsHtml = locationsRes.data.data
+                    .map((l) => `<option value="${l.location_id}">${l.name}</option>`)
                     .join('');
             }
             if (classesRes.success) {
@@ -615,14 +634,26 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Origin <span class="req-asterisk">*</span></label>
-                <select data-field="origin_port_id" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Origin Location <span class="req-asterisk">*</span></label>
+                <select class="origin-location-select w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    <option value="">Select Location</option>${locationsOptionsHtml}
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Origin Port <span class="req-asterisk">*</span></label>
+                <select data-field="origin_port_id" required disabled class="origin-port-select w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900 disabled:opacity-50 disabled:bg-zinc-100">
                     <option value="">Select Port</option>${portsOptionsHtml}
                 </select>
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Destination <span class="req-asterisk">*</span></label>
-                <select data-field="destination_port_id" required class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                <label class="text-[11px] text-zinc-400 uppercase">Destination Location <span class="req-asterisk">*</span></label>
+                <select class="destination-location-select w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                    <option value="">Select Location</option>${locationsOptionsHtml}
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Destination Port <span class="req-asterisk">*</span></label>
+                <select data-field="destination_port_id" required disabled class="destination-port-select w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900 disabled:opacity-50 disabled:bg-zinc-100">
                     <option value="">Select Port</option>${portsOptionsHtml}
                 </select>
             </div>
@@ -781,6 +812,17 @@
                 syncBookingUnitType(card);
             });
             card.querySelector('.remove-container').addEventListener('click', () => card.remove());
+
+            card.querySelector('.origin-location-select').addEventListener('change', function() {
+                const portSelect = card.querySelector('.origin-port-select');
+                portSelect.innerHTML = `<option value="">Select Port</option>${portOptionsForLocation(this.value)}`;
+                portSelect.disabled = !this.value;
+            });
+            card.querySelector('.destination-location-select').addEventListener('change', function() {
+                const portSelect = card.querySelector('.destination-port-select');
+                portSelect.innerHTML = `<option value="">Select Port</option>${portOptionsForLocation(this.value)}`;
+                portSelect.disabled = !this.value;
+            });
 
             card.querySelector('.dg-file-input').addEventListener('change', async function() {
                 const file = this.files[0];
@@ -975,6 +1017,19 @@
                 card.querySelector('.type-select').value = c.container_type;
                 applyTypeVisibility(card);
                 syncBookingUnitType(card);
+
+                const originPort = portsData.find((p) => String(p.port_id) === String(c.origin_port_id));
+                if (originPort) {
+                    card.querySelector('.origin-location-select').value = originPort.location_id ?? '';
+                    card.querySelector('.origin-port-select').disabled = !originPort.location_id;
+                }
+                const destinationPort = portsData.find((p) => String(p.port_id) === String(c
+                    .destination_port_id));
+                if (destinationPort) {
+                    card.querySelector('.destination-location-select').value = destinationPort
+                        .location_id ?? '';
+                    card.querySelector('.destination-port-select').disabled = !destinationPort.location_id;
+                }
 
                 if (c.dg_documentary_requirement) {
                     card.querySelector('.dg-file-status').textContent =

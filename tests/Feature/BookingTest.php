@@ -14,6 +14,7 @@ use App\Models\DeliveryType;
 use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
+use App\Models\Location;
 use App\Models\Permission;
 use App\Models\Port;
 use App\Models\ServiceableArea;
@@ -40,8 +41,8 @@ class BookingTest extends TestCase
     {
         parent::setUp();
 
-        $this->origin = Port::create(['code' => 'MNL', 'name' => 'Manila', 'is_active' => true]);
-        $this->destination = Port::create(['code' => 'CEB', 'name' => 'Cebu', 'is_active' => true]);
+        $this->origin = Port::create(['location_id' => Location::create(['name' => 'Manila', 'is_active' => true])->location_id, 'name' => 'Manila', 'is_active' => true]);
+        $this->destination = Port::create(['location_id' => Location::create(['name' => 'Cebu', 'is_active' => true])->location_id, 'name' => 'Cebu', 'is_active' => true]);
 
         $this->lane = Lane::create([
             'origin_port_id' => $this->origin->port_id,
@@ -168,7 +169,7 @@ class BookingTest extends TestCase
         $this->makeAsset($variant, 'HHHU1111111');
         $this->makeAsset($variant, 'HHHU2222222');
 
-        $altDestination = Port::create(['code' => 'DVO', 'name' => 'Davao', 'is_active' => true]);
+        $altDestination = Port::create(['location_id' => Location::create(['name' => 'Davao', 'is_active' => true])->location_id, 'name' => 'Davao', 'is_active' => true]);
         $altLane = Lane::create([
             'origin_port_id' => $this->origin->port_id,
             'destination_port_id' => $altDestination->port_id,

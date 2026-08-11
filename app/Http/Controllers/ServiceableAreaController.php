@@ -10,7 +10,7 @@ class ServiceableAreaController extends Controller
     public function index(Request $request)
     {
         $areas = ServiceableArea::query()
-            ->with('port:port_id,code,name')
+            ->with(['port:port_id,location_id,name', 'port.location:location_id,name'])
             ->when($request->filled('port_id'), fn($q) => $q->where('port_id', $request->port_id))
             ->when($request->filled('search'), fn($q) => $q->where('area_name', 'like', "%{$request->search}%"))
             ->orderBy('area_name')
@@ -39,7 +39,7 @@ class ServiceableAreaController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $serviceableArea->load('port'),
+            'data' => $serviceableArea->load('port.location'),
         ]);
     }
 

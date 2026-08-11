@@ -16,11 +16,15 @@ class PortChargeController extends Controller
     public function index(Request $request)
     {
         $charges = PortCharge::query()
-            ->with(['port:port_id,code,name', 'chargeType:charge_type_id,code,name'])
+            ->with([
+                'port:port_id,location_id,name',
+                'port.location:location_id,name',
+                'chargeType:charge_type_id,code,name',
+            ])
             ->when($request->filled('port_id'), fn($q) => $q->where('port_id', $request->port_id))
             ->when($request->filled('charge_type_id'), fn($q) => $q->where('charge_type_id', $request->charge_type_id))
             ->when($request->filled('search'), fn($q) => $q->where(function ($q) use ($request) {
-                $q->whereHas('port', fn($q) => $q->where('code', 'like', "%{$request->search}%"))
+                $q->whereHas('port', fn($q) => $q->where('name', 'like', "%{$request->search}%"))
                     ->orWhereHas('chargeType', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
             }))
             ->orderByDesc('effective_date')
@@ -57,7 +61,7 @@ class PortChargeController extends Controller
 
     public function show(PortCharge $portCharge)
     {
-        return response()->json(['success' => true, 'data' => $portCharge->load(['port', 'chargeType'])]);
+        return response()->json(['success' => true, 'data' => $portCharge->load(['port.location', 'chargeType'])]);
     }
 
     public function update(Request $request, PortCharge $portCharge)

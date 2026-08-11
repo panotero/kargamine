@@ -82,6 +82,7 @@
         let isEdit = false;
         let bookingUuid = null;
         let ports = [];
+        let locations = [];
         let deliveryTypes = [];
         let containerVariants = [];
         let quoteDebounce = null;
@@ -96,19 +97,32 @@
         // Reference data
         // -----------------------------------------------------------------
         async function loadReferenceData() {
-            const [portsRes, deliveryRes, variantsRes] = await Promise.all([
+            const [portsRes, locationsRes, deliveryRes, variantsRes] = await Promise.all([
                 apiCall({ mode: 'GET', url: '/api/ports?per_page=500' }),
+                apiCall({ mode: 'GET', url: '/api/locations?per_page=200' }),
                 apiCall({ mode: 'GET', url: '/api/deliveryTypes?per_page=100' }),
                 apiCall({ mode: 'GET', url: '/api/containers/variants' }),
             ]);
 
             ports = portsRes?.success ? (portsRes.data?.data ?? []) : [];
+            locations = locationsRes?.success ? (locationsRes.data?.data ?? []) : [];
             deliveryTypes = deliveryRes?.success ? (deliveryRes.data?.data ?? []) : [];
             containerVariants = variantsRes?.success ? (variantsRes.data ?? []) : [];
         }
 
         function portOptionsHtml() {
-            return optionsHtml(ports, 'port_id', (p) => `${p.name} (${p.code})`, 'Select port');
+            return optionsHtml(ports, 'port_id', (p) => `${p.location?.name ?? '-'} - ${p.name}`, 'Select port');
+        }
+
+        function locationOptionsHtml() {
+            return optionsHtml(locations, 'location_id', (l) => l.name, 'All Locations');
+        }
+
+        function portOptionsForLocation(locationId) {
+            const filtered = locationId ?
+                ports.filter((p) => String(p.location_id) === String(locationId)) :
+                ports;
+            return optionsHtml(filtered, 'port_id', (p) => p.name, 'Select port');
         }
 
         async function loadAreasForElement(selectEl, portId) {
@@ -218,7 +232,7 @@
                     data-destination-port-id="${rate.destination_port_id}"
                     data-container-variant-id="${rate.container_variant_id}"
                     data-min-van-qty="${rate.min_van_qty ?? ''}">
-                    ${rate.origin_port?.code ?? '?'} &rarr; ${rate.destination_port?.code ?? '?'}
+                    ${rate.origin_port ? (rate.origin_port.location?.name ?? '?') + ' - ' + rate.origin_port.name : '?'} &rarr; ${rate.destination_port ? (rate.destination_port.location?.name ?? '?') + ' - ' + rate.destination_port.name : '?'}
                     &middot; ${rate.container?.name ?? '-'}/${rate.container_class?.class ?? '-'}/${rate.container_size?.size ?? '-'}
                     &middot; &#8369;${money(rate.final_rate)}
                     ${rate.min_van_qty ? `&middot; min ${rate.min_van_qty} for discount` : ''}
@@ -238,12 +252,18 @@
             const card = addLine();
 
             const originSelect = card.querySelector('.line-origin-port');
+            originSelect.disabled = false;
             originSelect.value = chip.dataset.originPortId;
             originSelect.dispatchEvent(new Event('change'));
+            const originPort = ports.find((p) => String(p.port_id) === String(chip.dataset.originPortId));
+            if (originPort) card.querySelector('.line-origin-location').value = originPort.location_id ?? '';
 
             const destinationSelect = card.querySelector('.line-destination-port');
+            destinationSelect.disabled = false;
             destinationSelect.value = chip.dataset.destinationPortId;
             destinationSelect.dispatchEvent(new Event('change'));
+            const destinationPort = ports.find((p) => String(p.port_id) === String(chip.dataset.destinationPortId));
+            if (destinationPort) card.querySelector('.line-destination-location').value = destinationPort.location_id ?? '';
 
             const variantSelect = card.querySelector('[data-field="container_variant_id"]');
             variantSelect.value = chip.dataset.containerVariantId;
@@ -283,14 +303,26 @@
                     <label class="text-[11px] text-zinc-400 uppercase block mb-1.5">Route &amp; Delivery for this cargo</label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Origin Location</label>
+                            <select class="line-origin-location w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                ${locationOptionsHtml()}
+                            </select>
+                        </div>
+                        <div>
                             <label class="text-[11px] text-zinc-400 uppercase">Origin Port</label>
-                            <select data-field="origin_port_id" class="line-origin-port w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <select data-field="origin_port_id" disabled class="line-origin-port w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900 disabled:opacity-50 disabled:bg-zinc-100">
                                 ${portOptions}
                             </select>
                         </div>
                         <div>
+                            <label class="text-[11px] text-zinc-400 uppercase">Destination Location</label>
+                            <select class="line-destination-location w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                                ${locationOptionsHtml()}
+                            </select>
+                        </div>
+                        <div>
                             <label class="text-[11px] text-zinc-400 uppercase">Destination Port</label>
-                            <select data-field="destination_port_id" class="line-destination-port w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <select data-field="destination_port_id" disabled class="line-destination-port w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900 disabled:opacity-50 disabled:bg-zinc-100">
                                 ${portOptions}
                             </select>
                         </div>
@@ -454,6 +486,20 @@
                 loadAreasForElement(card.querySelector('.line-destination-area'), this.value);
             });
 
+            card.querySelector('.line-origin-location').addEventListener('change', function() {
+                const portSelect = card.querySelector('.line-origin-port');
+                portSelect.innerHTML = portOptionsForLocation(this.value);
+                portSelect.disabled = !this.value;
+                portSelect.dispatchEvent(new Event('change'));
+            });
+
+            card.querySelector('.line-destination-location').addEventListener('change', function() {
+                const portSelect = card.querySelector('.line-destination-port');
+                portSelect.innerHTML = portOptionsForLocation(this.value);
+                portSelect.disabled = !this.value;
+                portSelect.dispatchEvent(new Event('change'));
+            });
+
             card.querySelectorAll('.assign-mode').forEach((radio) => {
                 radio.addEventListener('change', () => {
                     const manualBox = card.querySelector('.manual-containers');
@@ -493,7 +539,7 @@
             box.innerHTML = assets.map(a => `
                 <label class="flex items-center gap-2">
                     <input type="checkbox" class="manual-asset-checkbox" value="${a.id}">
-                    ${a.container_no} — ${a.current_port?.name ?? 'Location unknown'}
+                    ${a.container_no} — ${a.current_port ? (a.current_port.location?.name ?? '-') + ' - ' + a.current_port.name : 'Location unknown'}
                 </label>
             `).join('') + `<p class="text-zinc-400 mt-1">Pick exactly ${quantity} container(s).</p>`;
 
@@ -594,8 +640,10 @@
             const b = response.data;
             const portById = Object.fromEntries(ports.map(p => [String(p.port_id), p]));
             const lineRows = (b.lines ?? []).map(l => {
-                const origin = portById[String(l.origin_port_id)]?.code ?? '?';
-                const destination = portById[String(l.destination_port_id)]?.code ?? '?';
+                const originPort = portById[String(l.origin_port_id)];
+                const destinationPort = portById[String(l.destination_port_id)];
+                const origin = originPort ? (originPort.location?.name ?? '?') + ' - ' + originPort.name : '?';
+                const destination = destinationPort ? (destinationPort.location?.name ?? '?') + ' - ' + destinationPort.name : '?';
 
                 return `
                 <div class="flex justify-between text-xs py-1 border-b border-zinc-50 dark:border-zinc-800">
@@ -692,14 +740,20 @@
                 const card = addLine();
 
                 const originSelect = card.querySelector('.line-origin-port');
+                originSelect.disabled = !line.origin_port_id;
                 originSelect.value = line.origin_port_id ?? '';
                 await loadAreasForElement(card.querySelector('.line-origin-area'), line.origin_port_id);
                 card.querySelector('[data-field="origin_area_id"]').value = line.origin_area_id ?? '';
+                const originPort = ports.find((p) => String(p.port_id) === String(line.origin_port_id));
+                if (originPort) card.querySelector('.line-origin-location').value = originPort.location_id ?? '';
 
                 const destinationSelect = card.querySelector('.line-destination-port');
+                destinationSelect.disabled = !line.destination_port_id;
                 destinationSelect.value = line.destination_port_id ?? '';
                 await loadAreasForElement(card.querySelector('.line-destination-area'), line.destination_port_id);
                 card.querySelector('[data-field="destination_area_id"]').value = line.destination_area_id ?? '';
+                const destinationPort = ports.find((p) => String(p.port_id) === String(line.destination_port_id));
+                if (destinationPort) card.querySelector('.line-destination-location').value = destinationPort.location_id ?? '';
 
                 if (line.delivery_type) {
                     card.querySelector('[data-field="origin_mode"]').value = line.delivery_type.includes_origin_trucking ? 'door' : 'pier';

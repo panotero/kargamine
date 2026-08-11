@@ -123,7 +123,7 @@
             const lines = r.lines ?? [];
             if (!lines.length) return '-';
             const first = lines[0];
-            const label = `${first.origin_port?.code ?? '-'} &rarr; ${first.destination_port?.code ?? '-'}`;
+            const label = `${first.origin_port ? (first.origin_port.location?.name ?? '-') + ' - ' + first.origin_port.name : '-'} &rarr; ${first.destination_port ? (first.destination_port.location?.name ?? '-') + ' - ' + first.destination_port.name : '-'}`;
             const sameRoute = lines.every((l) => l.origin_port_id === first.origin_port_id && l.destination_port_id === first.destination_port_id);
             return sameRoute ? label : `${label} +${lines.length - 1} more`;
         }
@@ -183,7 +183,7 @@
 
             document.getElementById('vaVoyage').innerHTML = '<option value="">Select Voyage</option>' +
                 (response.data.data ?? []).map(v =>
-                    `<option value="${v.id}">${v.voyage_mnemonic} (${v.origin_port?.code ?? '?'} &rarr; ${v.destination_port?.code ?? '?'})</option>`
+                    `<option value="${v.id}">${v.voyage_mnemonic} (${v.origin_port ? (v.origin_port.location?.name ?? '?') + ' - ' + v.origin_port.name : '?'} &rarr; ${v.destination_port ? (v.destination_port.location?.name ?? '?') + ' - ' + v.destination_port.name : '?'})</option>`
                 ).join('');
             voyageOptionsLoaded = true;
         }
@@ -194,7 +194,7 @@
             if (!response.success) return;
 
             document.getElementById('vaRelayPort').innerHTML = '<option value="">None</option>' +
-                (response.data.data ?? []).map(p => `<option value="${p.port_id}">${p.code} - ${p.name}</option>`).join('');
+                (response.data.data ?? []).map(p => `<option value="${p.port_id}">${p.location?.name ?? '-'} - ${p.name}</option>`).join('');
             portOptionsLoaded = true;
         }
 

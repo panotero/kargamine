@@ -18,6 +18,7 @@ use App\Http\Controllers\GeneralChargeController;
 use App\Http\Controllers\HandlingFeeController;
 use App\Http\Controllers\LaneController;
 use App\Http\Controllers\LaneTariffRateController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PortChargeController;
 use App\Http\Controllers\PortController;
 use App\Http\Controllers\ServiceableAreaController;
@@ -29,14 +30,28 @@ use Illuminate\Support\Facades\Route;
 
 // =========================================================
 // Maintenance: master data
+//
+// All mutating routes below are gated by nav.access, which checks
+// nav_menus.allowed_roles for /page_maintenance (the "App Settings" nav
+// entry - see EnsureNavMenuAccess) rather than a separately-maintained
+// role list, matching the container-assets pattern further down this
+// file. Reads stay behind plain auth.
 // =========================================================
 
 Route::prefix('ports')->group(function () {
     Route::get('/', [PortController::class, 'index']);
     Route::get('/{port}', [PortController::class, 'show']);
-    Route::post('/', [PortController::class, 'store']);
-    Route::put('/{port}', [PortController::class, 'update']);
-    Route::delete('/{port}', [PortController::class, 'destroy']);
+    Route::post('/', [PortController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{port}', [PortController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{port}', [PortController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
+});
+
+Route::prefix('locations')->group(function () {
+    Route::get('/', [LocationController::class, 'index']);
+    Route::get('/{location}', [LocationController::class, 'show']);
+    Route::post('/', [LocationController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{location}', [LocationController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{location}', [LocationController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 // SOP Step 10 (Voyage Plan) - master data
@@ -45,57 +60,57 @@ Route::prefix('vesselVoyages')->group(function () {
     Route::get('/{vesselVoyage}/loadlist', [VesselVoyageController::class, 'loadlist']) // must stay above /{vesselVoyage}
         ->middleware('permission:booking.generate-loadlist');
     Route::get('/{vesselVoyage}', [VesselVoyageController::class, 'show']);
-    Route::post('/', [VesselVoyageController::class, 'store']);
-    Route::put('/{vesselVoyage}', [VesselVoyageController::class, 'update']);
-    Route::delete('/{vesselVoyage}', [VesselVoyageController::class, 'destroy']);
+    Route::post('/', [VesselVoyageController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{vesselVoyage}', [VesselVoyageController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{vesselVoyage}', [VesselVoyageController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('chargeTypes')->group(function () {
     Route::get('/', [ChargeTypeController::class, 'index']);
     Route::get('/{chargeType}', [ChargeTypeController::class, 'show']);
-    Route::post('/', [ChargeTypeController::class, 'store']);
-    Route::put('/{chargeType}', [ChargeTypeController::class, 'update']);
-    Route::delete('/{chargeType}', [ChargeTypeController::class, 'destroy']);
+    Route::post('/', [ChargeTypeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{chargeType}', [ChargeTypeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{chargeType}', [ChargeTypeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('deliveryTypes')->group(function () {
     Route::get('/', [DeliveryTypeController::class, 'index']);
     Route::get('/{deliveryType}', [DeliveryTypeController::class, 'show']);
-    Route::post('/', [DeliveryTypeController::class, 'store']);
-    Route::put('/{deliveryType}', [DeliveryTypeController::class, 'update']);
-    Route::delete('/{deliveryType}', [DeliveryTypeController::class, 'destroy']);
+    Route::post('/', [DeliveryTypeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{deliveryType}', [DeliveryTypeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{deliveryType}', [DeliveryTypeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('serviceableAreas')->group(function () {
     Route::get('/', [ServiceableAreaController::class, 'index']);
     Route::get('/{serviceableArea}', [ServiceableAreaController::class, 'show']);
-    Route::post('/', [ServiceableAreaController::class, 'store']);
-    Route::put('/{serviceableArea}', [ServiceableAreaController::class, 'update']);
-    Route::delete('/{serviceableArea}', [ServiceableAreaController::class, 'destroy']);
+    Route::post('/', [ServiceableAreaController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{serviceableArea}', [ServiceableAreaController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{serviceableArea}', [ServiceableAreaController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('lanes')->group(function () {
     Route::get('/', [LaneController::class, 'index']);
     Route::get('/{lane}', [LaneController::class, 'show']);
-    Route::post('/', [LaneController::class, 'store']);
-    Route::put('/{lane}', [LaneController::class, 'update']);
-    Route::delete('/{lane}', [LaneController::class, 'destroy']);
+    Route::post('/', [LaneController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{lane}', [LaneController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{lane}', [LaneController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('specialCharges')->group(function () {
     Route::get('/', [SpecialChargeController::class, 'index']);
     Route::get('/{specialCharge}', [SpecialChargeController::class, 'show']);
-    Route::post('/', [SpecialChargeController::class, 'store']);
-    Route::put('/{specialCharge}', [SpecialChargeController::class, 'update']);
-    Route::delete('/{specialCharge}', [SpecialChargeController::class, 'destroy']);
+    Route::post('/', [SpecialChargeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{specialCharge}', [SpecialChargeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{specialCharge}', [SpecialChargeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('cargoYards')->group(function () {
     Route::get('/', [CargoYardController::class, 'index']);
     Route::get('/{cargoYard}', [CargoYardController::class, 'show']);
-    Route::post('/', [CargoYardController::class, 'store']);
-    Route::put('/{cargoYard}', [CargoYardController::class, 'update']);
-    Route::delete('/{cargoYard}', [CargoYardController::class, 'destroy']);
+    Route::post('/', [CargoYardController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{cargoYard}', [CargoYardController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{cargoYard}', [CargoYardController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 // =========================================================
@@ -105,17 +120,17 @@ Route::prefix('cargoYards')->group(function () {
 Route::prefix('laneTariffRates')->group(function () {
     Route::get('/', [LaneTariffRateController::class, 'index']);
     Route::get('/{laneTariffRate}', [LaneTariffRateController::class, 'show']);
-    Route::post('/', [LaneTariffRateController::class, 'store']); // adds a new version, auto-closes the previous one
-    Route::put('/{laneTariffRate}', [LaneTariffRateController::class, 'update']); // corrections only (amounts/is_active)
-    Route::delete('/{laneTariffRate}', [LaneTariffRateController::class, 'destroy']);
+    Route::post('/', [LaneTariffRateController::class, 'store'])->middleware('nav.access:/page_maintenance'); // adds a new version, auto-closes the previous one
+    Route::put('/{laneTariffRate}', [LaneTariffRateController::class, 'update'])->middleware('nav.access:/page_maintenance'); // corrections only (amounts/is_active)
+    Route::delete('/{laneTariffRate}', [LaneTariffRateController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('portCharges')->group(function () {
     Route::get('/', [PortChargeController::class, 'index']);
     Route::get('/{portCharge}', [PortChargeController::class, 'show']);
-    Route::post('/', [PortChargeController::class, 'store']);
-    Route::put('/{portCharge}', [PortChargeController::class, 'update']);
-    Route::delete('/{portCharge}', [PortChargeController::class, 'destroy']);
+    Route::post('/', [PortChargeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{portCharge}', [PortChargeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{portCharge}', [PortChargeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 // General charges - versioned, applies to every booking, not tied to a
@@ -124,33 +139,33 @@ Route::prefix('portCharges')->group(function () {
 Route::prefix('generalCharges')->group(function () {
     Route::get('/', [GeneralChargeController::class, 'index']);
     Route::get('/{generalCharge}', [GeneralChargeController::class, 'show']);
-    Route::post('/', [GeneralChargeController::class, 'store']);
-    Route::put('/{generalCharge}', [GeneralChargeController::class, 'update']);
-    Route::delete('/{generalCharge}', [GeneralChargeController::class, 'destroy']);
+    Route::post('/', [GeneralChargeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{generalCharge}', [GeneralChargeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{generalCharge}', [GeneralChargeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('handlingFees')->group(function () {
     Route::get('/', [HandlingFeeController::class, 'index']);
     Route::get('/{handlingFee}', [HandlingFeeController::class, 'show']);
-    Route::post('/', [HandlingFeeController::class, 'store']);
-    Route::put('/{handlingFee}', [HandlingFeeController::class, 'update']);
-    Route::delete('/{handlingFee}', [HandlingFeeController::class, 'destroy']);
+    Route::post('/', [HandlingFeeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{handlingFee}', [HandlingFeeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{handlingFee}', [HandlingFeeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('truckingTariffs')->group(function () {
     Route::get('/', [TruckingTariffController::class, 'index']);
     Route::get('/{truckingTariff}', [TruckingTariffController::class, 'show']);
-    Route::post('/', [TruckingTariffController::class, 'store']);
-    Route::put('/{truckingTariff}', [TruckingTariffController::class, 'update']);
-    Route::delete('/{truckingTariff}', [TruckingTariffController::class, 'destroy']);
+    Route::post('/', [TruckingTariffController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{truckingTariff}', [TruckingTariffController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{truckingTariff}', [TruckingTariffController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('vatRates')->group(function () {
     Route::get('/', [VatRateController::class, 'index']);
     Route::get('/{vatRate}', [VatRateController::class, 'show']);
-    Route::post('/', [VatRateController::class, 'store']);
-    Route::put('/{vatRate}', [VatRateController::class, 'update']);
-    Route::delete('/{vatRate}', [VatRateController::class, 'destroy']);
+    Route::post('/', [VatRateController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{vatRate}', [VatRateController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{vatRate}', [VatRateController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 // =========================================================
@@ -230,9 +245,9 @@ Route::prefix('containers')->group(function () {
     Route::get('/', [ContainerController::class, 'index']);
     Route::get('/variants', [ContainerController::class, 'variants']); // must stay above /{container}
     Route::get('/{container}', [ContainerController::class, 'show']);
-    Route::post('/', [ContainerController::class, 'store']);
-    Route::put('/{container}', [ContainerController::class, 'update']);
-    Route::delete('/{container}', [ContainerController::class, 'destroy']);
+    Route::post('/', [ContainerController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{container}', [ContainerController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{container}', [ContainerController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 // -----------------------------------------------------------------
@@ -272,15 +287,15 @@ Route::get('/containerTypes', fn () => response()->json([
 Route::prefix('containerClasses')->group(function () {
     Route::get('/', [ContainerClassController::class, 'index']);
     Route::get('/{containerClass}', [ContainerClassController::class, 'show']);
-    Route::post('/', [ContainerClassController::class, 'store']);
-    Route::put('/{containerClass}', [ContainerClassController::class, 'update']);
-    Route::delete('/{containerClass}', [ContainerClassController::class, 'destroy']);
+    Route::post('/', [ContainerClassController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{containerClass}', [ContainerClassController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{containerClass}', [ContainerClassController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 Route::prefix('containerSizes')->group(function () {
     Route::get('/', [ContainerSizeController::class, 'index']);
     Route::get('/{containerSize}', [ContainerSizeController::class, 'show']);
-    Route::post('/', [ContainerSizeController::class, 'store']);
-    Route::put('/{containerSize}', [ContainerSizeController::class, 'update']);
-    Route::delete('/{containerSize}', [ContainerSizeController::class, 'destroy']);
+    Route::post('/', [ContainerSizeController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{containerSize}', [ContainerSizeController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{containerSize}', [ContainerSizeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });

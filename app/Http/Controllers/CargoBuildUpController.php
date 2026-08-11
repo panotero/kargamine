@@ -125,7 +125,7 @@ class CargoBuildUpController extends Controller
         }
 
         $query = Booking::query()->with([
-            'client', 'lines.originPort', 'lines.destinationPort', 'lines.deliveryType', 'lines.dispatchDocument',
+            'client', 'lines.originPort.location', 'lines.destinationPort.location', 'lines.deliveryType', 'lines.dispatchDocument',
             'containerUnits.eirOut', 'containerUnits.eirIn', 'containerUnits.vesselVoyage', 'containerUnits.relayPort',
         ]);
 

@@ -19,7 +19,7 @@ class TruckingTariffSeeder extends Seeder
 
     public function run(): void
     {
-        $portIds = Port::whereIn('code', LaneSeeder::SAMPLE_PORT_CODES)->pluck('port_id');
+        $portIds = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->pluck('port_id');
         $areas = ServiceableArea::whereIn('port_id', $portIds)->get();
         $deliveryTypes = DeliveryType::whereIn('code', self::TRUCKED_DELIVERY_CODES)->get();
 

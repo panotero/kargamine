@@ -8,6 +8,7 @@ use App\Models\ContainerAssetLocationHistory;
 use App\Models\ContainerClass;
 use App\Models\ContainerSize;
 use App\Models\ContainerVariant;
+use App\Models\Location;
 use App\Models\NavMenu;
 use App\Models\Port;
 use App\Models\User;
@@ -34,7 +35,10 @@ class ContainerAssetTest extends TestCase
 
     private function makePort(string $code): Port
     {
-        return Port::create(['code' => $code, 'name' => strtoupper($code).' PORT', 'is_active' => true]);
+        $name = strtoupper($code).' PORT';
+        $location = Location::create(['name' => $name, 'is_active' => true]);
+
+        return Port::create(['location_id' => $location->location_id, 'name' => $name, 'is_active' => true]);
     }
 
     private function actingUser(): User

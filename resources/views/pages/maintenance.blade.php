@@ -13,6 +13,9 @@
         <nav class="flex flex-wrap gap-1 -mb-px" id="maintenanceTabs">
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                data-tab="locations">Locations</button>
+            <button type="button"
+                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="ports">Ports</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
@@ -71,6 +74,7 @@
     {{-- Tab panels --}}
     <div class="mt-5" id="maintenanceTabPanels">
         @foreach ([
+        'locations' => 'Locations',
         'ports' => 'Ports',
         'containers' => 'Containers',
         'containerClasses' => 'Container Classes',
@@ -403,6 +407,43 @@
         // Entity configuration
         // -----------------------------------------------------------------
         const ENTITY_CONFIG = {
+            locations: {
+                label: 'Location',
+                pk: 'location_id',
+                listUrl: '/api/locations',
+                createUrl: '/api/locations',
+                updateUrl: (id) => `/api/locations/${id}`,
+                deleteUrl: (id) => `/api/locations/${id}`,
+                columns: [{
+                        key: 'name',
+                        label: 'Location Name'
+                    },
+                    {
+                        key: 'ports_count',
+                        label: 'Ports',
+                        render: (row) => row.ports_count ?? (row.ports?.length ?? 0)
+                    },
+                    {
+                        key: 'is_active',
+                        label: 'Status',
+                        render: (row) => activeBadge(row.is_active)
+                    },
+                ],
+                fields: [{
+                        name: 'name',
+                        label: 'Location Name',
+                        type: 'text',
+                        required: true,
+                        placeholder: 'e.g. Aklan'
+                    },
+                    {
+                        name: 'is_active',
+                        label: 'Active',
+                        type: 'checkbox',
+                        default: true
+                    },
+                ],
+            },
             ports: {
                 label: 'Port',
                 pk: 'port_id',
@@ -411,8 +452,9 @@
                 updateUrl: (id) => `/api/ports/${id}`,
                 deleteUrl: (id) => `/api/ports/${id}`,
                 columns: [{
-                        key: 'code',
-                        label: 'Code'
+                        key: 'location',
+                        label: 'Location',
+                        render: (row) => row.location?.name ?? '-'
                     },
                     {
                         key: 'name',
@@ -425,18 +467,18 @@
                     },
                 ],
                 fields: [{
-                        name: 'code',
-                        label: 'Port Code',
-                        type: 'text',
+                        name: 'location_id',
+                        label: 'Location',
+                        type: 'select',
                         required: true,
-                        placeholder: 'e.g. MNL'
+                        optionsSource: 'locations'
                     },
                     {
                         name: 'name',
                         label: 'Port Name',
                         type: 'text',
                         required: true,
-                        placeholder: 'e.g. Manila'
+                        placeholder: 'e.g. Caticlan Port'
                     },
                     {
                         name: 'is_active',
@@ -639,7 +681,7 @@
                 columns: [{
                         key: 'port',
                         label: 'Port',
-                        render: (row) => row.port?.code ?? '-'
+                        render: (row) => row.port ? `${row.port.location?.name ?? '-'} - ${row.port.name}` : '-'
                     },
                     {
                         key: 'area_name',
@@ -684,12 +726,12 @@
                 columns: [{
                         key: 'origin',
                         label: 'Origin',
-                        render: (row) => row.origin_port?.code ?? '-'
+                        render: (row) => row.origin_port ? `${row.origin_port.location?.name ?? '-'} - ${row.origin_port.name}` : '-'
                     },
                     {
                         key: 'destination',
                         label: 'Destination',
-                        render: (row) => row.destination_port?.code ?? '-'
+                        render: (row) => row.destination_port ? `${row.destination_port.location?.name ?? '-'} - ${row.destination_port.name}` : '-'
                     },
                     {
                         key: 'is_active',
@@ -732,7 +774,7 @@
                         key: 'lane',
                         label: 'Lane',
                         render: (row) =>
-                            `${row.lane?.origin_port?.code ?? '-'} → ${row.lane?.destination_port?.code ?? '-'}`
+                            `${row.lane?.origin_port ? `${row.lane.origin_port.location?.name ?? '-'} - ${row.lane.origin_port.name}` : '-'} → ${row.lane?.destination_port ? `${row.lane.destination_port.location?.name ?? '-'} - ${row.lane.destination_port.name}` : '-'}`
                     },
                     {
                         key: 'effective_date',
@@ -792,7 +834,7 @@
                 columns: [{
                         key: 'port',
                         label: 'Port',
-                        render: (row) => row.port?.code ?? '-'
+                        render: (row) => row.port ? `${row.port.location?.name ?? '-'} - ${row.port.name}` : '-'
                     },
                     {
                         key: 'charge_type',
@@ -930,7 +972,7 @@
                 columns: [{
                         key: 'port',
                         label: 'Port',
-                        render: (row) => row.port?.code ?? '-'
+                        render: (row) => row.port ? `${row.port.location?.name ?? '-'} - ${row.port.name}` : '-'
                     },
                     {
                         key: 'amount',
@@ -994,7 +1036,7 @@
                         key: 'area',
                         label: 'Serviceable Area',
                         render: (row) =>
-                            `${row.serviceable_area?.port?.code ?? '-'} / ${row.serviceable_area?.area_name ?? '-'}`
+                            `${row.serviceable_area?.port ? `${row.serviceable_area.port.location?.name ?? '-'} - ${row.serviceable_area.port.name}` : '-'} / ${row.serviceable_area?.area_name ?? '-'}`
                     },
                     {
                         key: 'delivery_type',
@@ -1163,12 +1205,12 @@
                     {
                         key: 'origin',
                         label: 'Origin',
-                        render: (row) => row.origin_port?.code ?? '-'
+                        render: (row) => row.origin_port ? `${row.origin_port.location?.name ?? '-'} - ${row.origin_port.name}` : '-'
                     },
                     {
                         key: 'destination',
                         label: 'Destination',
-                        render: (row) => row.destination_port?.code ?? '-'
+                        render: (row) => row.destination_port ? `${row.destination_port.location?.name ?? '-'} - ${row.destination_port.name}` : '-'
                     },
                     {
                         key: 'estimated_departure_at',
@@ -1310,10 +1352,15 @@
         // Where each optionsSource pulls its dropdown list from, and how to
         // build the value/label pair for each <option>.
         const OPTION_SOURCE_MAPPING = {
+            locations: {
+                url: '/api/locations?per_page=200',
+                value: 'location_id',
+                label: (row) => row.name
+            },
             ports: {
-                url: '/api/ports?per_page=100',
+                url: '/api/ports?per_page=200',
                 value: 'port_id',
-                label: (row) => `${row.code} - ${row.name}`
+                label: (row) => `${row.location?.name ?? '?'} - ${row.name}`
             },
             chargeTypes: {
                 url: '/api/chargeTypes?per_page=100',
@@ -1340,12 +1387,13 @@
             lanes: {
                 url: '/api/lanes?per_page=100',
                 value: 'lane_id',
-                label: (row) => `${row.origin_port?.code ?? '?'} → ${row.destination_port?.code ?? '?'}`
+                label: (row) =>
+                    `${row.origin_port ? `${row.origin_port.location?.name ?? '?'} - ${row.origin_port.name}` : '?'} → ${row.destination_port ? `${row.destination_port.location?.name ?? '?'} - ${row.destination_port.name}` : '?'}`
             },
             serviceableAreas: {
                 url: '/api/serviceableAreas?per_page=200',
                 value: 'area_id',
-                label: (row) => `${row.port?.code ?? '?'} / ${row.area_name}`
+                label: (row) => `${row.port ? `${row.port.location?.name ?? '?'} - ${row.port.name}` : '?'} / ${row.area_name}`
             },
         };
 

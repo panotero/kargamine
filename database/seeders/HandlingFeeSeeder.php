@@ -10,7 +10,7 @@ class HandlingFeeSeeder extends Seeder
 {
     public function run(): void
     {
-        $ports = Port::whereIn('code', LaneSeeder::SAMPLE_PORT_CODES)->get();
+        $ports = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->get();
 
         foreach ($ports as $port) {
             HandlingFee::updateOrCreate(

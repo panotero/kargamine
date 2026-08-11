@@ -430,7 +430,7 @@
             const lines = r.lines ?? [];
             if (!lines.length) return '-';
             const first = lines[0];
-            const label = `${first.origin_port?.code ?? '-'} &rarr; ${first.destination_port?.code ?? '-'}`;
+            const label = `${first.origin_port ? (first.origin_port.location?.name ?? '-') + ' - ' + first.origin_port.name : '-'} &rarr; ${first.destination_port ? (first.destination_port.location?.name ?? '-') + ' - ' + first.destination_port.name : '-'}`;
             const sameRoute = lines.every((l) => l.origin_port_id === first.origin_port_id && l.destination_port_id === first.destination_port_id);
             return sameRoute ? label : `${label} +${lines.length - 1} more`;
         }
@@ -563,7 +563,7 @@
                         `${Number(line.discount_value_snapshot).toFixed(2)}%` : money(line
                             .discount_value_snapshot)) :
                     '-';
-                const route = `${line.origin_port?.code ?? '-'} &rarr; ${line.destination_port?.code ?? '-'}`;
+                const route = `${line.origin_port ? (line.origin_port.location?.name ?? '-') + ' - ' + line.origin_port.name : '-'} &rarr; ${line.destination_port ? (line.destination_port.location?.name ?? '-') + ' - ' + line.destination_port.name : '-'}`;
 
                 return `
                     <tr>
@@ -688,7 +688,7 @@
             }
 
             body.innerHTML = lines.map((line) => {
-                const route = `${line.origin_port?.code ?? '-'} &rarr; ${line.destination_port?.code ?? '-'}`;
+                const route = `${line.origin_port ? (line.origin_port.location?.name ?? '-') + ' - ' + line.origin_port.name : '-'} &rarr; ${line.destination_port ? (line.destination_port.location?.name ?? '-') + ' - ' + line.destination_port.name : '-'}`;
                 const doc = line.dispatch_document;
 
                 if (doc) {

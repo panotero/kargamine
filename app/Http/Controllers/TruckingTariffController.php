@@ -14,12 +14,16 @@ class TruckingTariffController extends Controller
     public function index(Request $request)
     {
         $tariffs = TruckingTariff::query()
-            ->with(['serviceableArea.port:port_id,code,name', 'deliveryType:delivery_type_id,code,name'])
+            ->with([
+                'serviceableArea.port:port_id,location_id,name',
+                'serviceableArea.port.location:location_id,name',
+                'deliveryType:delivery_type_id,code,name',
+            ])
             ->when($request->filled('area_id'), fn($q) => $q->where('area_id', $request->area_id))
             ->when($request->filled('delivery_type_id'), fn($q) => $q->where('delivery_type_id', $request->delivery_type_id))
             ->when($request->filled('search'), fn($q) => $q->whereHas('serviceableArea', function ($q) use ($request) {
                 $q->where('area_name', 'like', "%{$request->search}%")
-                    ->orWhereHas('port', fn($q) => $q->where('code', 'like', "%{$request->search}%"));
+                    ->orWhereHas('port', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
             }))
             ->orderByDesc('effective_date')
             ->paginate($request->get('per_page', 25));
@@ -60,7 +64,7 @@ class TruckingTariffController extends Controller
         return response()->json([
             'success' => true,
             'data' => $truckingTariff->load([
-                'serviceableArea',
+                'serviceableArea.port.location',
                 'deliveryType',
             ]),
         ]);

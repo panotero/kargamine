@@ -667,8 +667,18 @@
             const variantInput = row.querySelector('[data-field="container_variant_id"]');
             const baseRateInput = row.querySelector('.base-rate');
 
-            if (def.origin_port_id) originSel.value = def.origin_port_id;
-            if (def.destination_port_id) destSel.value = def.destination_port_id;
+            if (def.origin_port_id) {
+                originSel.value = def.origin_port_id;
+                originSel.disabled = false;
+                const originPort = portsData.find((p) => String(p.port_id) === String(def.origin_port_id));
+                if (originPort) row.querySelector('.origin-location-select').value = originPort.location_id ?? '';
+            }
+            if (def.destination_port_id) {
+                destSel.value = def.destination_port_id;
+                destSel.disabled = false;
+                const destPort = portsData.find((p) => String(p.port_id) === String(def.destination_port_id));
+                if (destPort) row.querySelector('.destination-location-select').value = destPort.location_id ?? '';
+            }
 
             if (def.container_id) {
                 containerSel.value = def.container_id;
@@ -699,13 +709,19 @@
 
         // ================= PROPOSAL ROW BUILDER =================
         let portsOptionsHtml = '';
+        let locationsOptionsHtml = '';
+        let portsData = [];
         let containerVariantsData = [];
 
         async function loadContainerLookups() {
-            const [portsRes, variantsRes] = await Promise.all([
+            const [portsRes, locationsRes, variantsRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/locations?per_page=200'
                 }),
                 apiCall({
                     mode: 'GET',
@@ -714,13 +730,26 @@
             ]);
 
             if (portsRes.success) {
-                portsOptionsHtml = portsRes.data.data
-                    .map((p) => `<option value="${p.port_id}">${p.code} - ${p.name}</option>`)
+                portsData = portsRes.data.data;
+                portsOptionsHtml = portsData
+                    .map((p) => `<option value="${p.port_id}">${p.location?.name ?? '-'} - ${p.name}</option>`)
+                    .join('');
+            }
+            if (locationsRes.success) {
+                locationsOptionsHtml = locationsRes.data.data
+                    .map((l) => `<option value="${l.location_id}">${l.name}</option>`)
                     .join('');
             }
             if (variantsRes.success) {
                 containerVariantsData = variantsRes.data;
             }
+        }
+
+        function portOptionsForLocation(locationId) {
+            const ports = locationId ?
+                portsData.filter((p) => String(p.location_id) === String(locationId)) :
+                portsData;
+            return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
         }
 
         function uniqueContainerOptions() {
@@ -743,14 +772,26 @@
             div.innerHTML = `
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                        <select data-field="origin_port_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                        <label class="text-[11px] text-zinc-400 uppercase">Origin Location</label>
+                        <select class="origin-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            <option value="">All Locations</option>${locationsOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Origin Port</label>
+                        <select data-field="origin_port_id" disabled class="origin-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
                             <option value="">Select</option>${portsOptionsHtml}
                         </select>
                     </div>
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                        <select data-field="destination_port_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                        <label class="text-[11px] text-zinc-400 uppercase">Destination Location</label>
+                        <select class="destination-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            <option value="">All Locations</option>${locationsOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Destination Port</label>
+                        <select data-field="destination_port_id" disabled class="destination-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
                             <option value="">Select</option>${portsOptionsHtml}
                         </select>
                     </div>
@@ -809,6 +850,8 @@
         function wireRow(row) {
             const originSel = row.querySelector('[data-field="origin_port_id"]');
             const destSel = row.querySelector('[data-field="destination_port_id"]');
+            const originLocationSel = row.querySelector('.origin-location-select');
+            const destLocationSel = row.querySelector('.destination-location-select');
             const containerSel = row.querySelector('.container-select');
             const classSel = row.querySelector('.class-select');
             const sizeSel = row.querySelector('.size-select');
@@ -856,6 +899,18 @@
             });
 
             [originSel, destSel].forEach((sel) => sel.addEventListener('change', () => lookupRate(row)));
+
+            originLocationSel.addEventListener('change', () => {
+                originSel.innerHTML = `<option value="">Select</option>${portOptionsForLocation(originLocationSel.value)}`;
+                originSel.disabled = !originLocationSel.value;
+                lookupRate(row);
+            });
+            destLocationSel.addEventListener('change', () => {
+                destSel.innerHTML = `<option value="">Select</option>${portOptionsForLocation(destLocationSel.value)}`;
+                destSel.disabled = !destLocationSel.value;
+                lookupRate(row);
+            });
+
             discountTypeSel.addEventListener('change', () => recomputeFinalRate(row));
             discountValueInput.addEventListener('input', () => recomputeFinalRate(row));
 
@@ -1064,17 +1119,31 @@
         };
 
         let leadPortsOptionsHtml = '';
+        let leadLocationsOptionsHtml = '';
+        let leadPortsData = [];
         let leadClassOptionsHtml = '';
         let leadSizeOptionsHtml = '';
         let leadContainerLookupsLoaded = false;
 
+        function leadPortOptionsForLocation(locationId) {
+            const ports = locationId ?
+                leadPortsData.filter((p) => String(p.location_id) === String(locationId)) :
+                leadPortsData;
+
+            return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
+        }
+
         async function loadLeadContainerLookups() {
             if (leadContainerLookupsLoaded) return;
 
-            const [portsRes, classesRes, sizesRes] = await Promise.all([
+            const [portsRes, locationsRes, classesRes, sizesRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/locations?per_page=200'
                 }),
                 apiCall({
                     mode: 'GET',
@@ -1087,8 +1156,14 @@
             ]);
 
             if (portsRes.success) {
-                leadPortsOptionsHtml = portsRes.data.data
-                    .map((p) => `<option value="${p.port_id}">${p.code} - ${p.name}</option>`)
+                leadPortsData = portsRes.data.data;
+                leadPortsOptionsHtml = leadPortsData
+                    .map((p) => `<option value="${p.port_id}">${p.location?.name ?? '-'} - ${p.name}</option>`)
+                    .join('');
+            }
+            if (locationsRes.success) {
+                leadLocationsOptionsHtml = locationsRes.data.data
+                    .map((l) => `<option value="${l.location_id}">${l.name}</option>`)
                     .join('');
             }
             if (classesRes.success) {
@@ -1122,14 +1197,26 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Origin <span class="req-asterisk">*</span></label>
-                <select data-field="origin_port_id" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <label class="text-[11px] text-zinc-400 uppercase">Origin Location <span class="req-asterisk">*</span></label>
+                <select class="origin-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">Select Location</option>${leadLocationsOptionsHtml}
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Origin Port <span class="req-asterisk">*</span></label>
+                <select data-field="origin_port_id" required disabled class="origin-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
                     <option value="">Select Port</option>${leadPortsOptionsHtml}
                 </select>
             </div>
             <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Destination <span class="req-asterisk">*</span></label>
-                <select data-field="destination_port_id" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <label class="text-[11px] text-zinc-400 uppercase">Destination Location <span class="req-asterisk">*</span></label>
+                <select class="destination-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">Select Location</option>${leadLocationsOptionsHtml}
+                </select>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Destination Port <span class="req-asterisk">*</span></label>
+                <select data-field="destination_port_id" required disabled class="destination-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
                     <option value="">Select Port</option>${leadPortsOptionsHtml}
                 </select>
             </div>
@@ -1281,6 +1368,17 @@
             card.querySelector('.type-select').addEventListener('change', () => {
                 applyLeadContainerTypeVisibility(card);
                 syncLeadContainerBookingUnitType(card);
+            });
+
+            card.querySelector('.origin-location-select').addEventListener('change', function() {
+                const portSelect = card.querySelector('.origin-port-select');
+                portSelect.innerHTML = `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
+                portSelect.disabled = !this.value;
+            });
+            card.querySelector('.destination-location-select').addEventListener('change', function() {
+                const portSelect = card.querySelector('.destination-port-select');
+                portSelect.innerHTML = `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
+                portSelect.disabled = !this.value;
             });
 
             card.querySelector('.dg-file-input').addEventListener('change', async function() {

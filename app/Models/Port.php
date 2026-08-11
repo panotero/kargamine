@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Port extends Model
 {
     protected $primaryKey = 'port_id';
 
-    protected $fillable = ['code', 'name', 'is_active', 'latitude', 'longitude'];
+    protected $fillable = ['location_id', 'name', 'is_active', 'latitude', 'longitude'];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -18,6 +19,11 @@ class Port extends Model
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
     ];
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'location_id', 'location_id');
+    }
 
     public function serviceableAreas(): HasMany
     {

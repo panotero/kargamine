@@ -305,7 +305,7 @@
 
             document.getElementById('cpmRatesBody').innerHTML = p.rates.map((r) => `
                 <tr class="border-t">
-                    <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
+                    <td class="py-1.5">${r.origin_port ? (r.origin_port.location?.name ?? '-') + ' - ' + r.origin_port.name : '-'} → ${r.destination_port ? (r.destination_port.location?.name ?? '-') + ' - ' + r.destination_port.name : '-'}</td>
                     <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                     <td class="py-1.5 text-right">${r.min_van_qty ?? '-'}</td>
                     <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
@@ -460,7 +460,7 @@
         }
 
         function renderRateRow(rate, editing) {
-            const lane = `${rate.origin_port?.code ?? '-'} → ${rate.destination_port?.code ?? '-'}`;
+            const lane = `${rate.origin_port ? (rate.origin_port.location?.name ?? '-') + ' - ' + rate.origin_port.name : '-'} → ${rate.destination_port ? (rate.destination_port.location?.name ?? '-') + ' - ' + rate.destination_port.name : '-'}`;
             const variant = `${rate.container?.name ?? '-'} / ${rate.container_class?.class ?? '-'} / ${rate.container_size?.size ?? '-'}`;
             const values = ccCurrentValues(rate);
             const edited = Boolean(rateOverrides[rate.id]);

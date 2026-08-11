@@ -22,7 +22,7 @@ class BookingGateScanController extends Controller
         $units = BookingContainerUnit::query()
             ->with([
                 'containerAsset', 'booking.client',
-                'bookingLine.dispatchDocument', 'bookingLine.originPort', 'bookingLine.destinationPort',
+                'bookingLine.dispatchDocument', 'bookingLine.originPort.location', 'bookingLine.destinationPort.location',
             ])
             ->whereHas('booking', fn ($q) => $q->live())
             ->where(function ($q) {

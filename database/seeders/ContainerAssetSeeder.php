@@ -31,7 +31,7 @@ class ContainerAssetSeeder extends Seeder
     public function run(): void
     {
         $variants = ContainerVariant::all();
-        $portIds = Port::whereIn('code', LaneSeeder::SAMPLE_PORT_CODES)->pluck('port_id')->values();
+        $portIds = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->pluck('port_id')->values();
 
         if ($variants->isEmpty() || $portIds->isEmpty()) {
             $this->command?->warn('ContainerAssetSeeder: no container variants/ports found - run ContainerCatalogSeeder and LaneSeeder first.');

@@ -280,7 +280,7 @@
 
             const rateRows = (contract.rates ?? []).map((r) => `
                 <tr>
-                    <td class="px-3 py-2">${r.origin_port?.code ?? '-'} &rarr; ${r.destination_port?.code ?? '-'}</td>
+                    <td class="px-3 py-2">${r.origin_port ? (r.origin_port.location?.name ?? '-') + ' - ' + r.origin_port.name : '-'} &rarr; ${r.destination_port ? (r.destination_port.location?.name ?? '-') + ' - ' + r.destination_port.name : '-'}</td>
                     <td class="px-3 py-2">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                     <td class="px-3 py-2 text-right">${Number(r.base_rate).toLocaleString()}</td>
                     <td class="px-3 py-2 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>

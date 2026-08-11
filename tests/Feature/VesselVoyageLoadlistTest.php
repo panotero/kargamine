@@ -13,6 +13,8 @@ use App\Models\DeliveryType;
 use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
+use App\Models\Location;
+use App\Models\NavMenu;
 use App\Models\Permission;
 use App\Models\Port;
 use App\Models\ServiceableArea;
@@ -44,8 +46,8 @@ class VesselVoyageLoadlistTest extends TestCase
     {
         parent::setUp();
 
-        $this->origin = Port::create(['code' => 'MNL', 'name' => 'Manila', 'is_active' => true]);
-        $this->destination = Port::create(['code' => 'CEB', 'name' => 'Cebu', 'is_active' => true]);
+        $this->origin = Port::create(['location_id' => Location::create(['name' => 'Manila', 'is_active' => true])->location_id, 'name' => 'Manila', 'is_active' => true]);
+        $this->destination = Port::create(['location_id' => Location::create(['name' => 'Cebu', 'is_active' => true])->location_id, 'name' => 'Cebu', 'is_active' => true]);
 
         $lane = Lane::create([
             'origin_port_id' => $this->origin->port_id,
@@ -116,6 +118,12 @@ class VesselVoyageLoadlistTest extends TestCase
             $permission = Permission::firstOrCreate(['key' => $key], ['label' => $key, 'module' => 'Booking']);
             $role->permissions()->syncWithoutDetaching([$permission->id]);
         }
+
+        NavMenu::create([
+            'title' => 'App Settings',
+            'link' => '/page_maintenance',
+            'allowed_roles' => json_encode([(string) $role->id]),
+        ]);
 
         $this->actingAs(User::factory()->create(['role_id' => $role->id]));
     }

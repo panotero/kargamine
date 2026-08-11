@@ -14,9 +14,9 @@ class HandlingFeeController extends Controller
     public function index(Request $request)
     {
         $fees = HandlingFee::query()
-            ->with('port:port_id,code,name')
+            ->with(['port:port_id,location_id,name', 'port.location:location_id,name'])
             ->when($request->filled('port_id'), fn($q) => $q->where('port_id', $request->port_id))
-            ->when($request->filled('search'), fn($q) => $q->whereHas('port', fn($q) => $q->where('code', 'like', "%{$request->search}%")))
+            ->when($request->filled('search'), fn($q) => $q->whereHas('port', fn($q) => $q->where('name', 'like', "%{$request->search}%")))
             ->orderByDesc('effective_date')
             ->paginate($request->get('per_page', 25));
 
@@ -51,7 +51,7 @@ class HandlingFeeController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $handlingFee->load('port'),
+            'data' => $handlingFee->load('port.location'),
         ]);
     }
 

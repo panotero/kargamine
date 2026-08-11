@@ -31,8 +31,8 @@ class BookingController extends Controller
         return $query->with([
             'client',
             'clientContract',
-            'lines.originPort',
-            'lines.destinationPort',
+            'lines.originPort.location',
+            'lines.destinationPort.location',
             'lines.deliveryType',
             'lines.container',
             'lines.containerClass',
@@ -58,7 +58,7 @@ class BookingController extends Controller
     public function index(Request $request)
     {
         $bookings = Booking::query()
-            ->with(['client', 'lines.originPort', 'lines.destinationPort', 'lines.deliveryType'])
+            ->with(['client', 'lines.originPort.location', 'lines.destinationPort.location', 'lines.deliveryType'])
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('client_id'), fn($q) => $q->where('client_id', $request->client_id))
             ->when($request->filled('date_from'), fn($q) => $q->whereDate('booking_date', '>=', $request->date_from))
@@ -308,8 +308,8 @@ class BookingController extends Controller
     {
         $booking->load([
             'client',
-            'lines.originPort',
-            'lines.destinationPort',
+            'lines.originPort.location',
+            'lines.destinationPort.location',
             'lines.container',
             'lines.containerClass',
             'lines.containerSize',

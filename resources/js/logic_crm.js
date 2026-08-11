@@ -459,7 +459,7 @@ window.initCrmLogic = function initCrmLogic() {
       .map(
         (r) => `
             <tr class="border-t border-zinc-100">
-                <td class="py-1.5">${r.origin_port?.code ?? "-"} &rarr; ${r.destination_port?.code ?? "-"}</td>
+                <td class="py-1.5">${r.origin_port ? (r.origin_port.location?.name ?? "-") + " - " + r.origin_port.name : "-"} &rarr; ${r.destination_port ? (r.destination_port.location?.name ?? "-") + " - " + r.destination_port.name : "-"}</td>
                 <td class="py-1.5">${r.container?.name ?? "-"} / ${r.container_class?.class ?? "-"} / ${r.container_size?.size ?? "-"}</td>
                 <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
                 <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
@@ -573,8 +573,8 @@ window.initCrmLogic = function initCrmLogic() {
 
     container.innerHTML = containers
       .map((c) => {
-        const origin = c.origin_port?.code ?? "-";
-        const destination = c.destination_port?.code ?? "-";
+        const origin = c.origin_port ? (c.origin_port.location?.name ?? "-") + " - " + c.origin_port.name : "-";
+        const destination = c.destination_port ? (c.destination_port.location?.name ?? "-") + " - " + c.destination_port.name : "-";
         const typeLabel =
           CONTAINER_TYPE_LABELS[c.container_type] ?? c.container_type;
 

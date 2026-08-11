@@ -11,14 +11,14 @@ use Illuminate\Database\Seeder;
 
 class LaneTariffRateSeeder extends Seeder
 {
-    /** Base FRT for an unordered port-code pair - same price either direction. */
+    /** Base FRT for an unordered port-name pair - same price either direction. */
     private const BASE_RATE_BY_PAIR = [
-        'BTG-MNL' => 4000,
-        'CEB-MNL' => 9000,
-        'CGY-MNL' => 15000,
-        'DVO-MNL' => 16000,
-        'ILO-MNL' => 8000,
-        'CEB-DVO' => 7000,
+        'BATANGAS-MANILA' => 4000,
+        'CEBU-MANILA' => 9000,
+        'CAGAYAN-MANILA' => 15000,
+        'DAVAO-MANILA' => 16000,
+        'ILOILO-MANILA' => 8000,
+        'CEBU-DAVAO' => 7000,
     ];
 
     private const CONTAINER_MULTIPLIER = ['CV' => 1.0, 'RF' => 1.4, 'FR' => 1.1];
@@ -27,7 +27,7 @@ class LaneTariffRateSeeder extends Seeder
 
     public function run(): void
     {
-        $ports = Port::whereIn('code', LaneSeeder::SAMPLE_PORT_CODES)->get()->keyBy('port_id');
+        $ports = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->get()->keyBy('port_id');
         $variants = ContainerVariant::with(['container', 'containerClass', 'containerSize'])->get();
 
         $lanes = Lane::whereIn('origin_port_id', $ports->keys())
@@ -35,8 +35,8 @@ class LaneTariffRateSeeder extends Seeder
             ->get();
 
         foreach ($lanes as $lane) {
-            $originCode = $ports[$lane->origin_port_id]->code;
-            $destinationCode = $ports[$lane->destination_port_id]->code;
+            $originCode = $ports[$lane->origin_port_id]->name;
+            $destinationCode = $ports[$lane->destination_port_id]->name;
             $pairKey = collect([$originCode, $destinationCode])->sort()->implode('-');
             $baseRate = self::BASE_RATE_BY_PAIR[$pairKey] ?? 10000;
 

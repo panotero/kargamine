@@ -15,7 +15,7 @@ class VesselVoyageController extends Controller
     public function index(Request $request)
     {
         $voyages = VesselVoyage::query()
-            ->with(['originPort', 'destinationPort'])
+            ->with(['originPort.location', 'destinationPort.location'])
             ->when($request->filled('search'), fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('vessel_name', 'like', "%{$request->search}%")
                     ->orWhere('voyage_mnemonic', 'like', "%{$request->search}%");
@@ -40,14 +40,14 @@ class VesselVoyageController extends Controller
 
         $voyage = VesselVoyage::create($validated);
 
-        return response()->json(['success' => true, 'data' => $voyage->load('originPort', 'destinationPort')], 201);
+        return response()->json(['success' => true, 'data' => $voyage->load('originPort.location', 'destinationPort.location')], 201);
     }
 
     public function show(VesselVoyage $vesselVoyage)
     {
         return response()->json([
             'success' => true,
-            'data' => $vesselVoyage->load('originPort', 'destinationPort'),
+            'data' => $vesselVoyage->load('originPort.location', 'destinationPort.location'),
         ]);
     }
 
@@ -68,7 +68,7 @@ class VesselVoyageController extends Controller
 
         $vesselVoyage->update($validated);
 
-        return response()->json(['success' => true, 'data' => $vesselVoyage->load('originPort', 'destinationPort')]);
+        return response()->json(['success' => true, 'data' => $vesselVoyage->load('originPort.location', 'destinationPort.location')]);
     }
 
     public function destroy(VesselVoyage $vesselVoyage)
@@ -90,7 +90,7 @@ class VesselVoyageController extends Controller
      */
     public function loadlist(VesselVoyage $vesselVoyage)
     {
-        $vesselVoyage->load(['originPort', 'destinationPort']);
+        $vesselVoyage->load(['originPort.location', 'destinationPort.location']);
 
         $units = BookingContainerUnit::where('vessel_voyage_id', $vesselVoyage->id)
             ->with([
@@ -100,7 +100,7 @@ class VesselVoyageController extends Controller
                 'bookingLine.container',
                 'bookingLine.containerClass',
                 'bookingLine.containerSize',
-                'relayPort',
+                'relayPort.location',
             ])
             ->orderBy('booking_id')
             ->get();

@@ -11,10 +11,12 @@ class PortController extends Controller
     public function index(Request $request)
     {
         $ports = Port::query()
+            ->with('location')
             ->when($request->filled('search'), fn($q) => $q->where(function ($q) use ($request) {
-                $q->where('code', 'like', "%{$request->search}%")
-                    ->orWhere('name', 'like', "%{$request->search}%");
+                $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhereHas('location', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
             }))
+            ->when($request->filled('location_id'), fn($q) => $q->where('location_id', $request->location_id))
             ->orderBy('name')
             ->paginate($request->get('per_page', 25));
 
@@ -27,8 +29,13 @@ class PortController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:10', 'unique:ports,code'],
-            'name' => ['required', 'string', 'max:100'],
+            'location_id' => ['required', 'integer', 'exists:locations,location_id'],
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('ports', 'name')->where(fn($q) => $q->where('location_id', $request->location_id)),
+            ],
             'is_active' => ['boolean'],
         ]);
 
@@ -36,7 +43,7 @@ class PortController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $port,
+            'data' => $port->load('location'),
         ], 201);
     }
 
@@ -44,20 +51,24 @@ class PortController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $port->load('serviceableAreas'),
+            'data' => $port->load(['location', 'serviceableAreas']),
         ]);
     }
 
     public function update(Request $request, Port $port)
     {
+        $locationId = $request->input('location_id', $port->location_id);
+
         $validated = $request->validate([
-            'code' => [
+            'location_id' => ['sometimes', 'integer', 'exists:locations,location_id'],
+            'name' => [
                 'sometimes',
                 'string',
-                'max:10',
-                Rule::unique('ports', 'code')->ignore($port->port_id, 'port_id'),
+                'max:100',
+                Rule::unique('ports', 'name')
+                    ->where(fn($q) => $q->where('location_id', $locationId))
+                    ->ignore($port->port_id, 'port_id'),
             ],
-            'name' => ['sometimes', 'string', 'max:100'],
             'is_active' => ['boolean'],
         ]);
 
@@ -65,7 +76,7 @@ class PortController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $port,
+            'data' => $port->load('location'),
         ]);
     }
 

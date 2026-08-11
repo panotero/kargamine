@@ -20,7 +20,7 @@ class ContainerAssetController extends Controller
             'containerVariant.container',
             'containerVariant.containerClass',
             'containerVariant.containerSize',
-            'currentPort',
+            'currentPort.location',
         ]);
     }
 
@@ -46,8 +46,8 @@ class ContainerAssetController extends Controller
             'containerVariant.container',
             'containerVariant.containerClass',
             'containerVariant.containerSize',
-            'currentPort',
-            'locationHistory' => fn ($q) => $q->with(['port', 'recordedBy'])->limit(20),
+            'currentPort.location',
+            'locationHistory' => fn ($q) => $q->with(['port.location', 'recordedBy'])->limit(20),
         ]);
 
         return response()->json([

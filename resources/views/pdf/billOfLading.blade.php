@@ -140,13 +140,11 @@
             @endphp
             <tr>
                 <td><strong>Port of Loading</strong></td>
-                <td>{{ $firstLine?->originPort?->name ?? '-' }}
-                    ({{ $firstLine?->originPort?->code ?? '-' }}){{ $sameRoute ? '' : ' *' }}</td>
+                <td>{{ $firstLine?->originPort?->location?->name ?? '-' }} - {{ $firstLine?->originPort?->name ?? '-' }}{{ $sameRoute ? '' : ' *' }}</td>
             </tr>
             <tr>
                 <td><strong>Port of Discharge</strong></td>
-                <td>{{ $firstLine?->destinationPort?->name ?? '-' }}
-                    ({{ $firstLine?->destinationPort?->code ?? '-' }}){{ $sameRoute ? '' : ' *' }}</td>
+                <td>{{ $firstLine?->destinationPort?->location?->name ?? '-' }} - {{ $firstLine?->destinationPort?->name ?? '-' }}{{ $sameRoute ? '' : ' *' }}</td>
             </tr>
             @unless ($sameRoute)
                 <tr>
@@ -187,8 +185,8 @@
                     @forelse ($line->containerUnits as $unit)
                         <tr>
                             <td>{{ $unit->unit_index }}</td>
-                            <td>{{ $line->originPort?->code ?? '-' }} &rarr;
-                                {{ $line->destinationPort?->code ?? '-' }}</td>
+                            <td>{{ $line->originPort?->location?->name ?? '-' }} - {{ $line->originPort?->name ?? '-' }} &rarr;
+                                {{ $line->destinationPort?->location?->name ?? '-' }} - {{ $line->destinationPort?->name ?? '-' }}</td>
                             <td>{{ $line->container->name ?? '-' }} / {{ $line->containerClass->class ?? '-' }} /
                                 {{ $line->containerSize->size ?? '-' }}</td>
                             <td>{{ $unit->containerAsset->container_no ?? 'Not yet assigned' }}</td>

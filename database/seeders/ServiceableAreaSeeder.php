@@ -17,35 +17,35 @@ class ServiceableAreaSeeder extends Seeder
      * port via the Serviceable Areas admin page as real trucking zones
      * are defined - this just guarantees every port has at least one.
      */
-    private const AREA_BY_PORT_CODE = [
-        'MNL' => 'Port Area, Manila',
-        'BCD' => 'Banago, Bacolod',
-        'BUT' => 'Nasipit',
-        'CEB' => 'Cebu City',
-        'CGY' => 'Macabalan, Cagayan de Oro',
-        'DVO' => 'Sasa, Davao City',
-        'DGT' => 'Dumaguete City',
-        'GES' => 'Makar, General Santos',
-        'ILG' => 'Iligan City',
-        'ILO' => 'Iloilo City',
-        'OZM' => 'Ozamis City',
-        'CRN' => 'Coron, Palawan',
-        'ROX' => 'Roxas City',
-        'CTC' => 'Caticlan, Malay',
-        'ORM' => 'Ormoc City',
-        'TAG' => 'Tagbilaran City',
-        'TAC' => 'Tacloban City',
-        'ZAM' => 'Zamboanga City',
-        'PPS' => 'Puerto Princesa City',
-        'SUR' => 'Surigao City',
-        'COT' => 'Cotabato City',
-        'BTG' => 'Bauan',
+    private const AREA_BY_PORT_NAME = [
+        'MANILA' => 'Port Area, Manila',
+        'BACOLOD PORT' => 'Banago, Bacolod',
+        'BUTUAN' => 'Nasipit',
+        'CEBU' => 'Cebu City',
+        'CAGAYAN' => 'Macabalan, Cagayan de Oro',
+        'DAVAO' => 'Sasa, Davao City',
+        'DUMAGUETE' => 'Dumaguete City',
+        'GEN SAN' => 'Makar, General Santos',
+        'ILIGAN' => 'Iligan City',
+        'ILOILO' => 'Iloilo City',
+        'OSAMIS' => 'Ozamis City',
+        'CORON' => 'Coron, Palawan',
+        'ROXAS' => 'Roxas City',
+        'CATICLAN' => 'Caticlan, Malay',
+        'ORMOC' => 'Ormoc City',
+        'TAGBILARAN' => 'Tagbilaran City',
+        'TACLOBAN' => 'Tacloban City',
+        'ZAMBOANGA' => 'Zamboanga City',
+        'PUERTO PRINCESSA' => 'Puerto Princesa City',
+        'SURIGAO' => 'Surigao City',
+        'COTABATO' => 'Cotabato City',
+        'BATANGAS' => 'Bauan',
     ];
 
     public function run(): void
     {
-        Port::all(['port_id', 'code', 'name'])->each(function (Port $port) {
-            $areaName = self::AREA_BY_PORT_CODE[$port->code] ?? "{$port->name} Area";
+        Port::all(['port_id', 'name'])->each(function (Port $port) {
+            $areaName = self::AREA_BY_PORT_NAME[$port->name] ?? "{$port->name} Area";
 
             ServiceableArea::updateOrCreate(
                 ['port_id' => $port->port_id, 'area_name' => $areaName],

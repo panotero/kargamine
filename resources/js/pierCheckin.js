@@ -167,7 +167,7 @@ import QRCode from "qrcode";
         const action = unit.actual_gate_out_at ? "IN" : "OUT";
         const badgeClasses =
           action === "OUT" ? "bg-orange-50 text-orange-700" : "bg-blue-50 text-blue-700";
-        const route = `${unit.booking_line?.origin_port?.code ?? "-"} → ${unit.booking_line?.destination_port?.code ?? "-"}`;
+        const route = `${unit.booking_line?.origin_port ? (unit.booking_line.origin_port.location?.name ?? "-") + " - " + unit.booking_line.origin_port.name : "-"} → ${unit.booking_line?.destination_port ? (unit.booking_line.destination_port.location?.name ?? "-") + " - " + unit.booking_line.destination_port.name : "-"}`;
 
         return `
           <tr>

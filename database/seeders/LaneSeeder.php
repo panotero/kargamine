@@ -13,20 +13,20 @@ class LaneSeeder extends Seeder
      * ways, so a test booking can pick either port as origin. Kept to a
      * small, well-known set rather than all 200 seeded ports.
      */
-    public const SAMPLE_PORT_CODES = ['MNL', 'CEB', 'BTG', 'DVO', 'ILO', 'CGY'];
+    public const SAMPLE_PORT_NAMES = ['MANILA', 'CEBU', 'BATANGAS', 'DAVAO', 'ILOILO', 'CAGAYAN'];
 
     private const PAIRS = [
-        ['MNL', 'CEB'],
-        ['MNL', 'BTG'],
-        ['MNL', 'DVO'],
-        ['MNL', 'ILO'],
-        ['MNL', 'CGY'],
-        ['CEB', 'DVO'],
+        ['MANILA', 'CEBU'],
+        ['MANILA', 'BATANGAS'],
+        ['MANILA', 'DAVAO'],
+        ['MANILA', 'ILOILO'],
+        ['MANILA', 'CAGAYAN'],
+        ['CEBU', 'DAVAO'],
     ];
 
     public function run(): void
     {
-        $ports = Port::whereIn('code', self::SAMPLE_PORT_CODES)->get()->keyBy('code');
+        $ports = Port::whereIn('name', self::SAMPLE_PORT_NAMES)->get()->keyBy('name');
 
         foreach (self::PAIRS as [$originCode, $destinationCode]) {
             foreach ([[$originCode, $destinationCode], [$destinationCode, $originCode]] as [$from, $to]) {

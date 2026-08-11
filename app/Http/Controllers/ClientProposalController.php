@@ -39,8 +39,8 @@ class ClientProposalController extends Controller
         $client = ClientMaster::where('uuid', $clientUuid)->firstOrFail();
 
         $proposals = ClientProposal::with([
-            'rates.originPort',
-            'rates.destinationPort',
+            'rates.originPort.location',
+            'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
@@ -114,8 +114,8 @@ class ClientProposalController extends Controller
             // so the modal can still show lead info for those.
             'client.lead.company',
             'client.lead.user:id,name,team_id',
-            'rates.originPort',
-            'rates.destinationPort',
+            'rates.originPort.location',
+            'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
@@ -325,8 +325,8 @@ class ClientProposalController extends Controller
             'lead.company',
             'lead.addresses',
             'creator',
-            'rates.originPort',
-            'rates.destinationPort',
+            'rates.originPort.location',
+            'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
@@ -430,8 +430,8 @@ class ClientProposalController extends Controller
         $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
 
         $proposals = ClientProposal::with([
-            'rates.originPort',
-            'rates.destinationPort',
+            'rates.originPort.location',
+            'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
@@ -492,7 +492,7 @@ class ClientProposalController extends Controller
         $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
 
         $rows = $lead->containers()
-            ->with(['originPort', 'destinationPort', 'containerClass', 'containerSize'])
+            ->with(['originPort.location', 'destinationPort.location', 'containerClass', 'containerSize'])
             ->get()
             ->map(function ($lc) {
                 $container = Container::where('code', $lc->container_type)->first();

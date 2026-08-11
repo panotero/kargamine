@@ -17,7 +17,7 @@ class PortChargeSeeder extends Seeder
 
     public function run(): void
     {
-        $ports = Port::whereIn('code', LaneSeeder::SAMPLE_PORT_CODES)->get();
+        $ports = Port::whereIn('name', LaneSeeder::SAMPLE_PORT_NAMES)->get();
         $chargeTypes = ChargeType::where('applicable_to', ChargeType::APPLICABLE_PORT)->get();
 
         foreach ($ports as $port) {

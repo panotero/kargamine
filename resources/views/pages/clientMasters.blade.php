@@ -1287,7 +1287,7 @@
                         <div class="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-1">
                             ${c.rates.map((r) => `
                                 <div class="flex justify-between items-center gap-3 text-xs">
-                                    <span class="text-zinc-500 dark:text-zinc-400 truncate">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'} · ${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</span>
+                                    <span class="text-zinc-500 dark:text-zinc-400 truncate">${r.origin_port ? (r.origin_port.location?.name ?? '-') + ' - ' + r.origin_port.name : '-'} → ${r.destination_port ? (r.destination_port.location?.name ?? '-') + ' - ' + r.destination_port.name : '-'} · ${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</span>
                                     <span class="font-medium text-zinc-700 dark:text-zinc-200 shrink-0">${Number(r.final_rate).toLocaleString()}</span>
                                 </div>
                             `).join('')}
@@ -1469,7 +1469,7 @@
                 <tbody>
                     ${p.rates.map((r) => `
                         <tr class="border-t" data-rate-id="${r.id}">
-                            <td class="py-1.5">${r.origin_port?.code ?? '-'} → ${r.destination_port?.code ?? '-'}</td>
+                            <td class="py-1.5">${r.origin_port ? (r.origin_port.location?.name ?? '-') + ' - ' + r.origin_port.name : '-'} → ${r.destination_port ? (r.destination_port.location?.name ?? '-') + ' - ' + r.destination_port.name : '-'}</td>
                             <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                             <td class="py-1.5 text-right">${r.min_van_qty ?? '-'}</td>
                             <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
@@ -1750,7 +1750,7 @@
         }
 
         function renderCcRateRow(rate, editing) {
-            const lane = `${rate.origin_port?.code ?? '-'} → ${rate.destination_port?.code ?? '-'}`;
+            const lane = `${rate.origin_port ? (rate.origin_port.location?.name ?? '-') + ' - ' + rate.origin_port.name : '-'} → ${rate.destination_port ? (rate.destination_port.location?.name ?? '-') + ' - ' + rate.destination_port.name : '-'}`;
             const variant =
                 `${rate.container?.name ?? '-'} / ${rate.container_class?.class ?? '-'} / ${rate.container_size?.size ?? '-'}`;
             const values = ccCurrentValues(rate);
@@ -1948,16 +1948,22 @@
         };
 
         let cpPortsOptionsHtml = '';
+        let cpLocationsOptionsHtml = '';
+        let cpPortsData = [];
         let cpContainerVariantsData = [];
         let cpLookupsLoaded = false;
 
         async function loadCpContainerLookups() {
             if (cpLookupsLoaded) return;
 
-            const [portsRes, variantsRes] = await Promise.all([
+            const [portsRes, locationsRes, variantsRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/locations?per_page=200'
                 }),
                 apiCall({
                     mode: 'GET',
@@ -1966,14 +1972,27 @@
             ]);
 
             if (portsRes.success) {
-                cpPortsOptionsHtml = portsRes.data.data
-                    .map((p) => `<option value="${p.port_id}">${p.code} - ${p.name}</option>`)
+                cpPortsData = portsRes.data.data;
+                cpPortsOptionsHtml = cpPortsData
+                    .map((p) => `<option value="${p.port_id}">${p.location?.name ?? '-'} - ${p.name}</option>`)
+                    .join('');
+            }
+            if (locationsRes.success) {
+                cpLocationsOptionsHtml = locationsRes.data.data
+                    .map((l) => `<option value="${l.location_id}">${l.name}</option>`)
                     .join('');
             }
             if (variantsRes.success) {
                 cpContainerVariantsData = variantsRes.data;
             }
             cpLookupsLoaded = true;
+        }
+
+        function cpPortOptionsForLocation(locationId) {
+            const ports = locationId ?
+                cpPortsData.filter((p) => String(p.location_id) === String(locationId)) :
+                cpPortsData;
+            return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
         }
 
         function cpUniqueContainerOptions() {
@@ -1996,14 +2015,26 @@
             div.innerHTML = `
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                        <select data-field="origin_port_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                        <label class="text-[11px] text-zinc-400 uppercase">Origin Location</label>
+                        <select class="origin-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            <option value="">All Locations</option>${cpLocationsOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Origin Port</label>
+                        <select data-field="origin_port_id" disabled class="origin-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
                             <option value="">Select</option>${cpPortsOptionsHtml}
                         </select>
                     </div>
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                        <select data-field="destination_port_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                        <label class="text-[11px] text-zinc-400 uppercase">Destination Location</label>
+                        <select class="destination-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            <option value="">All Locations</option>${cpLocationsOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Destination Port</label>
+                        <select data-field="destination_port_id" disabled class="destination-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
                             <option value="">Select</option>${cpPortsOptionsHtml}
                         </select>
                     </div>
@@ -2062,6 +2093,8 @@
         function wireCpRow(row) {
             const originSel = row.querySelector('[data-field="origin_port_id"]');
             const destSel = row.querySelector('[data-field="destination_port_id"]');
+            const originLocationSel = row.querySelector('.origin-location-select');
+            const destLocationSel = row.querySelector('.destination-location-select');
             const containerSel = row.querySelector('.container-select');
             const classSel = row.querySelector('.class-select');
             const sizeSel = row.querySelector('.size-select');
@@ -2110,6 +2143,18 @@
 
             [originSel, destSel].forEach((sel) => sel.addEventListener('change', () => lookupCpRate(
                 row)));
+
+            originLocationSel.addEventListener('change', () => {
+                originSel.innerHTML = `<option value="">Select</option>${cpPortOptionsForLocation(originLocationSel.value)}`;
+                originSel.disabled = !originLocationSel.value;
+                lookupCpRate(row);
+            });
+            destLocationSel.addEventListener('change', () => {
+                destSel.innerHTML = `<option value="">Select</option>${cpPortOptionsForLocation(destLocationSel.value)}`;
+                destSel.disabled = !destLocationSel.value;
+                lookupCpRate(row);
+            });
+
             discountTypeSel.addEventListener('change', () => recomputeCpFinalRate(row));
             discountValueInput.addEventListener('input', () => recomputeCpFinalRate(row));
 

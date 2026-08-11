@@ -184,8 +184,8 @@
                 @foreach ($contract->rates as $index => $rate)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>{{ $rate->originPort->code ?? '-' }}</td>
-                        <td>{{ $rate->destinationPort->code ?? '-' }}</td>
+                        <td>{{ $rate->originPort->location->name ?? '-' }} - {{ $rate->originPort->name ?? '-' }}</td>
+                        <td>{{ $rate->destinationPort->location->name ?? '-' }} - {{ $rate->destinationPort->name ?? '-' }}</td>
                         <td>{{ $rate->container->name ?? '-' }} / {{ $rate->containerClass->class ?? '-' }} /
                             {{ $rate->containerSize->size ?? '-' }}</td>
                         <td>₱{{ number_format($rate->base_rate, 2) }}</td>

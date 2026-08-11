@@ -383,8 +383,10 @@ class CrmLeadController extends Controller
         return response()->json([
             'success' => true,
             'data' => $container->load([
-                'originPort:port_id,code,name',
-                'destinationPort:port_id,code,name',
+                'originPort:port_id,location_id,name',
+                'originPort.location:location_id,name',
+                'destinationPort:port_id,location_id,name',
+                'destinationPort.location:location_id,name',
                 'containerClass:id,class',
                 'containerSize:id,size',
             ]),
@@ -543,8 +545,10 @@ class CrmLeadController extends Controller
             'activities.user',
             'crmStatus:id,status',
             'user',
-            'containers.originPort:port_id,code,name',
-            'containers.destinationPort:port_id,code,name',
+            'containers.originPort:port_id,location_id,name',
+            'containers.originPort.location:location_id,name',
+            'containers.destinationPort:port_id,location_id,name',
+            'containers.destinationPort.location:location_id,name',
             'containers.containerClass:id,class',
             'containers.containerSize:id,size'
         )->where('uuid', $uuid)->firstOrFail();
