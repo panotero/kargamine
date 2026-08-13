@@ -52,6 +52,7 @@ class LaneController extends Controller
                 'originPort.location',
                 'destinationPort.location',
                 'tariffRates' => fn($q) => $q->latest('effective_date'),
+                'tariffRates.prices',
             ]),
         ]);
     }

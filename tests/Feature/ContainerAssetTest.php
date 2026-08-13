@@ -22,8 +22,8 @@ class ContainerAssetTest extends TestCase
     private function makeVariant(): ContainerVariant
     {
         $container = Container::create(['code' => 'DRY', 'name' => 'Dry Van', 'is_active' => true]);
-        $class = ContainerClass::create(['class' => 'High Cube']);
-        $size = ContainerSize::create(['size' => '40ft']);
+        $class = ContainerClass::create(['container_id' => $container->id, 'class' => 'High Cube']);
+        $size = ContainerSize::create(['container_id' => $container->id, 'size' => '40ft']);
 
         return ContainerVariant::create([
             'container_id' => $container->id,

@@ -16,16 +16,7 @@
                 data-tab="locations">Locations</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="ports">Ports</button>
-            <button type="button"
-                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="containers">Containers</button>
-            <button type="button"
-                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="containerClasses">Container Classes</button>
-            <button type="button"
-                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="containerSizes">Container Sizes</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="chargeTypes">Charge Types</button>
@@ -34,13 +25,7 @@
                 data-tab="deliveryTypes">Delivery Types</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="serviceableAreas">Serviceable Areas</button>
-            <button type="button"
-                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="lanes">Lanes</button>
-            <button type="button"
-                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="laneTariffRates">Lane Tariff Rates</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="generalCharges">General Charges</button>
@@ -75,15 +60,10 @@
     <div class="mt-5" id="maintenanceTabPanels">
         @foreach ([
         'locations' => 'Locations',
-        'ports' => 'Ports',
         'containers' => 'Containers',
-        'containerClasses' => 'Container Classes',
-        'containerSizes' => 'Container Sizes',
         'chargeTypes' => 'Charge Types',
         'deliveryTypes' => 'Delivery Types',
-        'serviceableAreas' => 'Serviceable Areas',
         'lanes' => 'Lanes',
-        'laneTariffRates' => 'Lane Tariff Rates',
         'generalCharges' => 'General Charges',
         'portCharges' => 'Port Charges',
         'handlingFees' => 'Handling Fees',
@@ -208,23 +188,44 @@
             </div>
         </div>
 
-        <div>
-            <div class="flex items-center justify-between mb-2">
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Class / Size Combinations
-                    <span class="req-asterisk">*</span></label>
-                <button type="button" id="addVariantRowBtn"
-                    class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Combination
-                </button>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Sizes</label>
+                    <button type="button" id="addSizeRowBtn"
+                        class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Size
+                    </button>
+                </div>
+                <p class="text-xs text-zinc-400 mb-2">e.g. 20-GP, 40-GP</p>
+                <div id="containerSizeRows" class="space-y-2"></div>
             </div>
-            <p class="text-xs text-zinc-400 mb-2">Each row is a distinct class + size combo. Prices for each combo
-                are set later, per lane, in the Lane Tariff Rates tab.</p>
-            <div id="containerVariantRows" class="space-y-2"></div>
+
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Classes</label>
+                    <button type="button" id="addClassRowBtn"
+                        class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Class
+                    </button>
+                </div>
+                <p class="text-xs text-zinc-400 mb-2">Optional - e.g. A, B, C. Leave empty for a size-only
+                    container.</p>
+                <div id="containerClassRows" class="space-y-2"></div>
+            </div>
         </div>
+        <p class="text-xs text-zinc-400">Combinations are generated automatically: a base price per size, plus a
+            price per class + size pair when classes are set. Containers with no fixed size (e.g. Loose Cargo,
+            Rolling Cargo) can leave Sizes empty and add Classes only - each class then gets its own price.
+            Prices themselves are set later, per lane, in the Lane's Tariff Rates section.</p>
     </form>
 
     <div
@@ -236,6 +237,150 @@
         <button type="submit" form="containerForm" id="containerFormSubmitBtn"
             class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
             Save Container
+        </button>
+    </div>
+</x-side-modal>
+
+<x-side-modal id="locationFormModal">
+    <div
+        class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <h3 id="locationFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Location</h3>
+        <button type="button" id="locationFormCloseBtn"
+            class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <form id="locationForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <input type="hidden" id="locationIdInput">
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Location Name <span
+                        class="req-asterisk">*</span></label>
+                <input type="text" id="locationNameInput" required placeholder="e.g. Aklan"
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div class="flex items-end">
+                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 pb-2">
+                    <input type="checkbox" id="locationActiveInput" checked
+                        class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
+                    Active
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Ports</label>
+                <button type="button" id="addPortRowBtn"
+                    class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Add Port
+                </button>
+            </div>
+            <p class="text-xs text-zinc-400 mb-2">e.g. Caticlan Port, Dumaguit Port</p>
+            <div id="locationPortRows" class="space-y-2"></div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Serviceable Areas</label>
+                <button type="button" id="addAreaRowBtn"
+                    class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Add Area
+                </button>
+            </div>
+            <p class="text-xs text-zinc-400 mb-2">Trucking zones within this location, e.g. Cabuyao, Calamba</p>
+            <div id="locationAreaRows" class="space-y-2"></div>
+        </div>
+    </form>
+
+    <div
+        class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
+        <button type="button" id="locationFormCancelBtn"
+            class="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            Cancel
+        </button>
+        <button type="submit" form="locationForm" id="locationFormSubmitBtn"
+            class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+            Save Location
+        </button>
+    </div>
+</x-side-modal>
+
+{{-- Lane modal - Tariff Rates are managed here too (same idea as Ports/Serviceable
+     Areas living inside the Location modal), rather than their own tab. Wider than
+     the default side-modal since the pricing grid is laid out in 2 columns, but
+     still responsive: full-width on mobile, capped width from md up. --}}
+<x-side-modal id="laneFormModal" panelClass="w-full md:w-[600px] lg:w-[900px] xl:w-[1100px]">
+    <div
+        class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <h3 id="laneFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Lane</h3>
+        <button type="button" id="laneFormCloseBtn"
+            class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <form id="laneForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+        <input type="hidden" id="laneIdInput">
+        <input type="hidden" id="laneTariffRateIdInput">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Origin Port <span
+                        class="req-asterisk">*</span></label>
+                <select id="laneOriginPortInput" required
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    <option value="">Select origin port…</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Destination Port
+                    <span class="req-asterisk">*</span></label>
+                <select id="laneDestinationPortInput" required
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    <option value="">Select destination port…</option>
+                </select>
+            </div>
+            <div class="sm:col-span-2">
+                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                    <input type="checkbox" id="laneActiveInput" checked
+                        class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
+                    Active
+                </label>
+            </div>
+        </div>
+
+        <div class="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tariff Rates (FRT per
+                combination)</label>
+            <p class="text-xs text-zinc-400 mb-3" id="laneTariffRateHint">Set the freight rate for every available
+                container combination on this lane. Combinations come from the Containers tab and are grouped by
+                container type below.</p>
+            <div id="laneTariffGroups" class="space-y-5"></div>
+        </div>
+    </form>
+
+    <div
+        class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
+        <button type="button" id="laneFormCancelBtn"
+            class="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            Cancel
+        </button>
+        <button type="submit" form="laneForm" id="laneFormSubmitBtn"
+            class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+            Save Lane
         </button>
     </div>
 </x-side-modal>
@@ -424,41 +569,9 @@
                         render: (row) => row.ports_count ?? (row.ports?.length ?? 0)
                     },
                     {
-                        key: 'is_active',
-                        label: 'Status',
-                        render: (row) => activeBadge(row.is_active)
-                    },
-                ],
-                fields: [{
-                        name: 'name',
-                        label: 'Location Name',
-                        type: 'text',
-                        required: true,
-                        placeholder: 'e.g. Aklan'
-                    },
-                    {
-                        name: 'is_active',
-                        label: 'Active',
-                        type: 'checkbox',
-                        default: true
-                    },
-                ],
-            },
-            ports: {
-                label: 'Port',
-                pk: 'port_id',
-                listUrl: '/api/ports',
-                createUrl: '/api/ports',
-                updateUrl: (id) => `/api/ports/${id}`,
-                deleteUrl: (id) => `/api/ports/${id}`,
-                columns: [{
-                        key: 'location',
-                        label: 'Location',
-                        render: (row) => row.location?.name ?? '-'
-                    },
-                    {
-                        key: 'name',
-                        label: 'Name'
+                        key: 'serviceable_areas_count',
+                        label: 'Serviceable Areas',
+                        render: (row) => row.serviceable_areas_count ?? (row.serviceable_areas?.length ?? 0)
                     },
                     {
                         key: 'is_active',
@@ -466,27 +579,7 @@
                         render: (row) => activeBadge(row.is_active)
                     },
                 ],
-                fields: [{
-                        name: 'location_id',
-                        label: 'Location',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'locations'
-                    },
-                    {
-                        name: 'name',
-                        label: 'Port Name',
-                        type: 'text',
-                        required: true,
-                        placeholder: 'e.g. Caticlan Port'
-                    },
-                    {
-                        name: 'is_active',
-                        label: 'Active',
-                        type: 'checkbox',
-                        default: true
-                    },
-                ],
+                fields: [],
             },
             containers: {
                 label: 'Container',
@@ -514,46 +607,6 @@
                 ],
                 fields: [],
             },
-            containerClasses: {
-                label: 'Container Class',
-                pk: 'id',
-                listUrl: '/api/containerClasses',
-                createUrl: '/api/containerClasses',
-                updateUrl: (id) => `/api/containerClasses/${id}`,
-                deleteUrl: (id) => `/api/containerClasses/${id}`,
-                columns: [{
-                    key: 'class',
-                    label: 'Class'
-                }, ],
-                fields: [{
-                    name: 'class',
-                    label: 'Class',
-                    type: 'text',
-                    required: true,
-                    placeholder: 'e.g. A'
-                }, ],
-            },
-
-            containerSizes: {
-                label: 'Container Size',
-                pk: 'id',
-                listUrl: '/api/containerSizes',
-                createUrl: '/api/containerSizes',
-                updateUrl: (id) => `/api/containerSizes/${id}`,
-                deleteUrl: (id) => `/api/containerSizes/${id}`,
-                columns: [{
-                    key: 'size',
-                    label: 'Size'
-                }, ],
-                fields: [{
-                    name: 'size',
-                    label: 'Size',
-                    type: 'text',
-                    required: true,
-                    placeholder: 'e.g. 20-FOOTER'
-                }, ],
-            },
-
             chargeTypes: {
                 label: 'Charge Type',
                 pk: 'charge_type_id',
@@ -670,58 +723,14 @@
                     },
                 ],
             },
-
-            serviceableAreas: {
-                label: 'Serviceable Area',
-                pk: 'area_id',
-                listUrl: '/api/serviceableAreas',
-                createUrl: '/api/serviceableAreas',
-                updateUrl: (id) => `/api/serviceableAreas/${id}`,
-                deleteUrl: (id) => `/api/serviceableAreas/${id}`,
-                columns: [{
-                        key: 'port',
-                        label: 'Port',
-                        render: (row) => row.port ? `${row.port.location?.name ?? '-'} - ${row.port.name}` : '-'
-                    },
-                    {
-                        key: 'area_name',
-                        label: 'Area Name'
-                    },
-                    {
-                        key: 'is_active',
-                        label: 'Status',
-                        render: (row) => activeBadge(row.is_active)
-                    },
-                ],
-                fields: [{
-                        name: 'port_id',
-                        label: 'Port',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'ports'
-                    },
-                    {
-                        name: 'area_name',
-                        label: 'Area Name',
-                        type: 'text',
-                        required: true,
-                        placeholder: 'e.g. CABUYAO LAGUNA'
-                    },
-                    {
-                        name: 'is_active',
-                        label: 'Active',
-                        type: 'checkbox',
-                        default: true
-                    },
-                ],
-            },
-
+            // Add/Edit uses a dedicated modal (openLaneForm) - Tariff Rates are
+            // managed inline there, same idea as Ports/Serviceable Areas living
+            // inside the Location modal. This config still drives the Lanes
+            // table itself (columns/listUrl/deleteUrl).
             lanes: {
                 label: 'Lane',
                 pk: 'lane_id',
                 listUrl: '/api/lanes',
-                createUrl: '/api/lanes',
-                updateUrl: (id) => `/api/lanes/${id}`,
                 deleteUrl: (id) => `/api/lanes/${id}`,
                 columns: [{
                         key: 'origin',
@@ -739,88 +748,7 @@
                         render: (row) => activeBadge(row.is_active)
                     },
                 ],
-                fields: [{
-                        name: 'origin_port_id',
-                        label: 'Origin Port',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'ports'
-                    },
-                    {
-                        name: 'destination_port_id',
-                        label: 'Destination Port',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'ports'
-                    },
-                    {
-                        name: 'is_active',
-                        label: 'Active',
-                        type: 'checkbox',
-                        default: true
-                    },
-                ],
-            },
-
-            laneTariffRates: {
-                label: 'Lane Tariff Rate',
-                pk: 'rate_id',
-                listUrl: '/api/laneTariffRates',
-                createUrl: '/api/laneTariffRates',
-                updateUrl: (id) => `/api/laneTariffRates/${id}`,
-                deleteUrl: (id) => `/api/laneTariffRates/${id}`,
-                versioned: true, // adding = new version, editing = correction only
-                columns: [{
-                        key: 'lane',
-                        label: 'Lane',
-                        render: (row) =>
-                            `${row.lane?.origin_port ? `${row.lane.origin_port.location?.name ?? '-'} - ${row.lane.origin_port.name}` : '-'} → ${row.lane?.destination_port ? `${row.lane.destination_port.location?.name ?? '-'} - ${row.lane.destination_port.name}` : '-'}`
-                    },
-                    {
-                        key: 'effective_date',
-                        label: 'Effective',
-                        render: (row) => formatDate(row.effective_date)
-                    },
-                    {
-                        key: 'end_date',
-                        label: 'End Date',
-                        render: (row) => formatDate(row.end_date)
-
-                    },
-                    {
-                        key: 'is_active',
-                        label: 'Status',
-                        render: (row) => activeBadge(row.is_active)
-                    },
-                ],
-                // Shown when adding a brand new rate version
-                fields: [{
-                        name: 'lane_id',
-                        label: 'Lane',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'lanes'
-                    },
-                    {
-                        name: 'effective_date',
-                        label: 'Effective Date',
-                        type: 'date',
-                        required: true
-                    },
-                    {
-                        name: 'end_date',
-                        label: 'Expiration Date',
-                        type: 'date',
-                        required: true
-                    },
-                ],
-                // Shown when editing an existing row - amounts + status only,
-                // matches the controller's update() which won't touch lane_id/effective_date
-                editFields: [{
-                    name: 'is_active',
-                    label: 'Active',
-                    type: 'checkbox'
-                }, ],
+                fields: [],
             },
 
             portCharges: {
@@ -1036,7 +964,7 @@
                         key: 'area',
                         label: 'Serviceable Area',
                         render: (row) =>
-                            `${row.serviceable_area?.port ? `${row.serviceable_area.port.location?.name ?? '-'} - ${row.serviceable_area.port.name}` : '-'} / ${row.serviceable_area?.area_name ?? '-'}`
+                            `${row.serviceable_area?.location?.name ?? '-'} / ${row.serviceable_area?.area_name ?? '-'}`
                     },
                     {
                         key: 'delivery_type',
@@ -1384,23 +1312,17 @@
                 value: 'delivery_type_id',
                 label: (row) => `${row.code} - ${row.name}`
             },
-            lanes: {
-                url: '/api/lanes?per_page=100',
-                value: 'lane_id',
-                label: (row) =>
-                    `${row.origin_port ? `${row.origin_port.location?.name ?? '?'} - ${row.origin_port.name}` : '?'} → ${row.destination_port ? `${row.destination_port.location?.name ?? '?'} - ${row.destination_port.name}` : '?'}`
-            },
             serviceableAreas: {
                 url: '/api/serviceableAreas?per_page=200',
                 value: 'area_id',
-                label: (row) => `${row.port ? `${row.port.location?.name ?? '?'} - ${row.port.name}` : '?'} / ${row.area_name}`
+                label: (row) => `${row.location?.name ?? '?'} / ${row.area_name}`
             },
         };
 
         // -----------------------------------------------------------------
         // State
         // -----------------------------------------------------------------
-        let activeTab = 'ports';
+        let activeTab = 'locations';
         let editingId = null;
 
         // -----------------------------------------------------------------
@@ -1480,11 +1402,10 @@
                 '';
 
             return `
-            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            <tr class="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800" data-row-id="${id}">
                 ${cells}
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">
                     ${loadlistLink}
-                    <button type="button" class="text-orange-600 hover:text-orange-700 text-sm font-medium mr-3" data-edit-id="${id}">Edit</button>
                     <button type="button" class="text-zinc-400 hover:text-red-600 text-sm font-medium" data-delete-id="${id}">Delete</button>
                 </td>
             </tr>
@@ -1514,16 +1435,22 @@
                 colspan: config.columns.length + 1,
                 rowTemplate: (row) => buildRow(key, config, row),
                 afterRender: () => {
-                    document.querySelectorAll(`[data-table-body="${key}"] [data-edit-id]`).forEach((
-                        btn) => {
-                        btn.addEventListener('click', () => openEditForm(key, btn.dataset
-                            .editId));
+                    document.querySelectorAll(`[data-table-body="${key}"] [data-row-id]`).forEach((
+                        row) => {
+                        row.addEventListener('click', () => openEditForm(key, row.dataset
+                            .rowId));
                     });
 
                     document.querySelectorAll(`[data-table-body="${key}"] [data-delete-id]`).forEach((
                         btn) => {
-                        btn.addEventListener('click', () => deleteRow(key, btn.dataset
-                            .deleteId));
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deleteRow(key, btn.dataset.deleteId);
+                        });
+                    });
+
+                    document.querySelectorAll(`[data-table-body="${key}"] a`).forEach((link) => {
+                        link.addEventListener('click', (e) => e.stopPropagation());
                     });
                 },
             });
@@ -1667,8 +1594,6 @@
             document.getElementById('maintenanceFormTitle').textContent = `Add ${config.label}`;
             renderFormFields(config, false);
 
-            if (key === 'laneTariffRates') await renderLaneTariffPricingGrid(null);
-
             initSideModal({
                 modalId: 'maintenanceFormModal'
             });
@@ -1676,6 +1601,8 @@
 
         async function openEditForm(key, id) {
             if (key === 'containers') return openContainerForm(id);
+            if (key === 'locations') return openLocationForm(id);
+            if (key === 'lanes') return openLaneForm(id);
             const config = ENTITY_CONFIG[key];
             editingId = id;
 
@@ -1699,7 +1626,6 @@
 
             document.getElementById('maintenanceFormTitle').textContent = `Edit ${config.label}`;
             await renderFormFields(config, true, row);
-            if (key === 'laneTariffRates') await renderLaneTariffPricingGrid(row);
 
             initSideModal({
                 modalId: 'maintenanceFormModal'
@@ -1712,9 +1638,6 @@
             const config = ENTITY_CONFIG[activeTab];
             const isEdit = Boolean(editingId);
             const payload = collectFormData(config, isEdit);
-            if (activeTab === 'laneTariffRates') {
-                payload.prices = collectLaneTariffPrices();
-            }
             const button = document.getElementById('maintenanceFormSubmitBtn');
 
             const response = await apiCall({
@@ -1786,6 +1709,10 @@
                 btn.addEventListener('click', () => {
                     if (btn.dataset.entity === 'containers') {
                         openContainerForm();
+                    } else if (btn.dataset.entity === 'locations') {
+                        openLocationForm();
+                    } else if (btn.dataset.entity === 'lanes') {
+                        openLaneForm();
                     } else {
                         openAddForm(btn.dataset.entity);
                     }
@@ -1805,48 +1732,13 @@
         init();
 
         let editingContainerId = null;
-        let containerClassOptionsHtml = '';
-        let containerSizeOptionsHtml = '';
 
-        async function loadContainerLookups() {
-            const [typesRes, classesRes, sizesRes] = await Promise.all([
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containerTypes'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containerClasses'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containerSizes'
-                }),
-            ]);
-
-            // to:
-            if (classesRes.success) {
-                containerClassOptionsHtml = classesRes.data.data.map((c) =>
-                    `<option value="${c.id}">${c.class}</option>`).join('');
-            }
-            if (sizesRes.success) {
-                containerSizeOptionsHtml = sizesRes.data.data.map((s) =>
-                    `<option value="${s.id}">${s.size}</option>`).join('');
-            }
-        }
-
-        function variantRowHtml() {
+        function catalogRowHtml(field, placeholder) {
             return `
-        <div class="variant-row flex items-center gap-2" data-variant-row>
-            <select data-field="container_class_id" required
-                    class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
-                <option value="">Select Class</option>${containerClassOptionsHtml}
-            </select>
-            <select data-field="container_size_id" required
-                    class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
-                <option value="">Select Size</option>${containerSizeOptionsHtml}
-            </select>
-            <button type="button" class="remove-variant-row text-zinc-400 hover:text-red-600 p-1">
+        <div class="catalog-row flex items-center gap-2" data-catalog-row>
+            <input type="text" data-field="${field}" required placeholder="${placeholder}"
+                   class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            <button type="button" class="remove-catalog-row text-zinc-400 hover:text-red-600 p-1">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
@@ -1855,28 +1747,35 @@
     `;
         }
 
-        function addVariantRow(selectedClassId = '', selectedSizeId = '') {
-            const wrap = document.getElementById('containerVariantRows');
-            wrap.insertAdjacentHTML('beforeend', variantRowHtml());
-            const row = wrap.lastElementChild;
-            if (selectedClassId) row.querySelector('[data-field="container_class_id"]').value = selectedClassId;
-            if (selectedSizeId) row.querySelector('[data-field="container_size_id"]').value = selectedSizeId;
+        function addSizeRow(value = '') {
+            const wrap = document.getElementById('containerSizeRows');
+            wrap.insertAdjacentHTML('beforeend', catalogRowHtml('size', 'e.g. 20-GP'));
+            if (value) wrap.lastElementChild.querySelector('[data-field="size"]').value = value;
         }
 
-        document.getElementById('containerVariantRows').addEventListener('click', (e) => {
-            const btn = e.target.closest('.remove-variant-row');
-            if (btn) btn.closest('[data-variant-row]').remove();
-        });
+        function addClassRow(value = '') {
+            const wrap = document.getElementById('containerClassRows');
+            wrap.insertAdjacentHTML('beforeend', catalogRowHtml('class', 'e.g. A'));
+            if (value) wrap.lastElementChild.querySelector('[data-field="class"]').value = value;
+        }
 
-        document.getElementById('addVariantRowBtn').addEventListener('click', () => addVariantRow());
+        function removeCatalogRowOnClick(e) {
+            const btn = e.target.closest('.remove-catalog-row');
+            if (btn) btn.closest('[data-catalog-row]').remove();
+        }
+
+        document.getElementById('containerSizeRows').addEventListener('click', removeCatalogRowOnClick);
+        document.getElementById('containerClassRows').addEventListener('click', removeCatalogRowOnClick);
+
+        document.getElementById('addSizeRowBtn').addEventListener('click', () => addSizeRow());
+        document.getElementById('addClassRowBtn').addEventListener('click', () => addClassRow());
 
         async function openContainerForm(id = null) {
             editingContainerId = id;
             document.getElementById('containerForm').reset();
-            document.getElementById('containerVariantRows').innerHTML = '';
+            document.getElementById('containerSizeRows').innerHTML = '';
+            document.getElementById('containerClassRows').innerHTML = '';
             document.getElementById('containerFormTitle').textContent = id ? 'Edit Container' : 'Add Container';
-
-            await loadContainerLookups();
 
             if (id) {
                 const response = await apiCall({
@@ -1896,10 +1795,11 @@
                 document.getElementById('containerCodeInput').value = row.code;
                 document.getElementById('containerNameInput').value = row.name;
                 document.getElementById('containerActiveInput').checked = Boolean(row.is_active);
-                (row.variants ?? []).forEach((v) => addVariantRow(v.container_class_id, v.container_size_id));
+                (row.sizes ?? []).forEach((s) => addSizeRow(s.size));
+                (row.classes ?? []).forEach((c) => addClassRow(c.class));
             } else {
                 document.getElementById('containerIdInput').value = '';
-                addVariantRow();
+                addSizeRow();
             }
 
             initSideModal({
@@ -1907,23 +1807,23 @@
             });
         }
 
-        function collectContainerVariants() {
-            return Array.from(document.querySelectorAll('#containerVariantRows [data-variant-row]')).map((row) => ({
-                container_class_id: row.querySelector('[data-field="container_class_id"]').value,
-                container_size_id: row.querySelector('[data-field="container_size_id"]').value,
-            }));
+        function collectCatalogValues(wrapperId, field) {
+            return Array.from(document.querySelectorAll(`#${wrapperId} [data-field="${field}"]`))
+                .map((el) => el.value.trim())
+                .filter(Boolean);
         }
 
         document.getElementById('containerForm').addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            const variants = collectContainerVariants();
-            if (!variants.length || variants.some((v) => !v.container_class_id || !v
-                    .container_size_id)) {
+            const sizes = collectCatalogValues('containerSizeRows', 'size');
+            const classes = collectCatalogValues('containerClassRows', 'class');
+
+            if (!sizes.length && !classes.length) {
                 showMessage({
                     status: 'error',
                     title: 'Incomplete',
-                    message: 'Add at least one complete class + size combination.'
+                    message: 'Add at least one size, or at least one class for containers with no fixed size (e.g. Loose Cargo, Rolling Cargo).'
                 });
                 return;
             }
@@ -1932,7 +1832,8 @@
                 code: document.getElementById('containerCodeInput').value,
                 name: document.getElementById('containerNameInput').value,
                 is_active: document.getElementById('containerActiveInput').checked,
-                variants,
+                sizes,
+                classes,
             };
 
             const isEdit = Boolean(editingContainerId);
@@ -1969,53 +1870,344 @@
         document.getElementById('containerFormCancelBtn').addEventListener('click', () => closeSideModal(
             'containerFormModal'));
 
-        async function renderLaneTariffPricingGrid(existingRow = null) {
-            const fieldsContainer = document.getElementById('maintenanceFormFields');
+        // -----------------------------------------------------------------
+        // Location form - Ports and Serviceable Areas are managed as
+        // nested multi-row lists here (same catalogRowHtml pattern as the
+        // Container modal's Sizes/Classes), instead of their own tabs.
+        // Each row optionally carries the existing port_id/area_id (hidden
+        // input) so Location::syncPorts()/syncServiceableAreas() can tell
+        // an edit from a brand new row.
+        // -----------------------------------------------------------------
+        let editingLocationId = null;
 
-            const wrapper = document.createElement('div');
-            wrapper.id = 'laneTariffPricingWrapper';
-            wrapper.className = 'space-y-2 border-t border-zinc-200 dark:border-zinc-800 pt-4';
-            wrapper.innerHTML = `
-        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Container Pricing (FRT per combination)</label>
-        <p class="text-xs text-zinc-400 mb-2">Set the freight rate for each container class/size combination on this lane.</p>
-        <div id="laneTariffPricingRows" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+        function idRowHtml(idField, textField, placeholder) {
+            return `
+        <div class="catalog-row flex items-center gap-2" data-catalog-row>
+            <input type="hidden" data-field="${idField}">
+            <input type="text" data-field="${textField}" required placeholder="${placeholder}"
+                   class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            <button type="button" class="remove-catalog-row text-zinc-400 hover:text-red-600 p-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
     `;
-            fieldsContainer.appendChild(wrapper);
+        }
+
+        function addPortRow(name = '', portId = null) {
+            const wrap = document.getElementById('locationPortRows');
+            wrap.insertAdjacentHTML('beforeend', idRowHtml('port_id', 'name', 'e.g. Caticlan Port'));
+            const row = wrap.lastElementChild;
+            row.querySelector('[data-field="name"]').value = name;
+            row.querySelector('[data-field="port_id"]').value = portId ?? '';
+        }
+
+        function addAreaRow(name = '', areaId = null) {
+            const wrap = document.getElementById('locationAreaRows');
+            wrap.insertAdjacentHTML('beforeend', idRowHtml('area_id', 'area_name', 'e.g. Cabuyao'));
+            const row = wrap.lastElementChild;
+            row.querySelector('[data-field="area_name"]').value = name;
+            row.querySelector('[data-field="area_id"]').value = areaId ?? '';
+        }
+
+        document.getElementById('locationPortRows').addEventListener('click', removeCatalogRowOnClick);
+        document.getElementById('locationAreaRows').addEventListener('click', removeCatalogRowOnClick);
+
+        document.getElementById('addPortRowBtn').addEventListener('click', () => addPortRow());
+        document.getElementById('addAreaRowBtn').addEventListener('click', () => addAreaRow());
+
+        async function openLocationForm(id = null) {
+            editingLocationId = id;
+            document.getElementById('locationForm').reset();
+            document.getElementById('locationPortRows').innerHTML = '';
+            document.getElementById('locationAreaRows').innerHTML = '';
+            document.getElementById('locationFormTitle').textContent = id ? 'Edit Location' : 'Add Location';
+
+            if (id) {
+                const response = await apiCall({
+                    mode: 'GET',
+                    url: `/api/locations/${id}`
+                });
+                if (!response.success) {
+                    showMessage({
+                        status: 'error',
+                        title: 'Error',
+                        message: 'Unable to load this location.'
+                    });
+                    return;
+                }
+                const row = response.data;
+                document.getElementById('locationIdInput').value = row.location_id;
+                document.getElementById('locationNameInput').value = row.name;
+                document.getElementById('locationActiveInput').checked = Boolean(row.is_active);
+                (row.ports ?? []).forEach((p) => addPortRow(p.name, p.port_id));
+                (row.serviceable_areas ?? []).forEach((a) => addAreaRow(a.area_name, a.area_id));
+            } else {
+                document.getElementById('locationIdInput').value = '';
+            }
+
+            initSideModal({
+                modalId: 'locationFormModal'
+            });
+        }
+
+        function collectIdRows(wrapperId, idField, textField) {
+            return Array.from(document.querySelectorAll(`#${wrapperId} [data-catalog-row]`))
+                .map((row) => {
+                    const textValue = row.querySelector(`[data-field="${textField}"]`).value.trim();
+                    const idValue = row.querySelector(`[data-field="${idField}"]`).value.trim();
+                    const entry = {
+                        [textField]: textValue
+                    };
+                    if (idValue) entry[idField] = Number(idValue);
+                    return entry;
+                })
+                .filter((entry) => entry[textField]);
+        }
+
+        document.getElementById('locationForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const payload = {
+                name: document.getElementById('locationNameInput').value,
+                is_active: document.getElementById('locationActiveInput').checked,
+                ports: collectIdRows('locationPortRows', 'port_id', 'name'),
+                serviceable_areas: collectIdRows('locationAreaRows', 'area_id', 'area_name'),
+            };
+
+            const isEdit = Boolean(editingLocationId);
+            const button = document.getElementById('locationFormSubmitBtn');
+
+            const response = await apiCall({
+                mode: isEdit ? 'PUT' : 'POST',
+                isJson: true,
+                payload,
+                url: isEdit ? `/api/locations/${editingLocationId}` : '/api/locations',
+                button,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to save this location. A port or serviceable area removed here may still be referenced elsewhere.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Saved',
+                message: `Location ${isEdit ? 'updated' : 'added'}.`
+            });
+            closeSideModal('locationFormModal');
+            getOrCreateTable('locations').reload();
+        });
+
+        document.getElementById('locationFormCloseBtn').addEventListener('click', () => closeSideModal(
+            'locationFormModal'));
+        document.getElementById('locationFormCancelBtn').addEventListener('click', () => closeSideModal(
+            'locationFormModal'));
+
+        // -----------------------------------------------------------------
+        // Lane form - Tariff Rates live here instead of their own tab (same
+        // idea as Ports/Serviceable Areas inside the Location modal). Every
+        // available container combination (base size-only, size+class, and
+        // class-only for no-fixed-size types like Loose/Rolling Cargo) is
+        // auto-listed, grouped by container type, 2 columns wide. There's no
+        // explicit "add new rate version" UI: saving always writes to the
+        // lane's single current/active tariff rate (creating one on first
+        // save), matching how this modal is just "the lane's pricing", not a
+        // rate-history editor.
+        // -----------------------------------------------------------------
+        let editingLaneId = null;
+        let editingLaneTariffRateId = null;
+
+        function variantLabel(variant) {
+            const size = variant.container_size?.size ?? null;
+            const cls = variant.container_class?.class ?? null;
+            if (size && cls) return `${size} / ${cls}`;
+            if (size) return `${size} (Base)`;
+            if (cls) return cls;
+            return 'Base';
+        }
+
+        async function renderLaneTariffGroups(existingRates = []) {
+            const groupsEl = document.getElementById('laneTariffGroups');
+            groupsEl.innerHTML = '<p class="text-xs text-zinc-400">Loading container combinations…</p>';
 
             const response = await apiCall({
                 mode: 'GET',
                 url: '/api/containers/variants'
             });
-            if (!response.success) return;
+            if (!response.success) {
+                groupsEl.innerHTML = '<p class="text-xs text-zinc-400">Unable to load container combinations.</p>';
+                return;
+            }
 
             const priceByVariant = {};
-            (existingRow?.prices ?? []).forEach((p) => {
+            (existingRates?.[0]?.prices ?? []).forEach((p) => {
                 priceByVariant[p.container_variant_id] = p.frt;
             });
+            editingLaneTariffRateId = existingRates?.[0]?.rate_id ?? null;
 
-            const rows = document.getElementById('laneTariffPricingRows');
-            rows.innerHTML = response.data.map((variant) => `
-        <div class="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2">
-            <div class="flex-1 text-xs text-zinc-600 dark:text-zinc-300">
-                <span class="font-medium text-zinc-800 dark:text-zinc-100">${variant.container?.name ?? '-'}</span>
-                — ${variant.container_class?.class ?? '-'} / ${variant.container_size?.size ?? '-'}
+            const byContainer = new Map();
+            response.data.forEach((variant) => {
+                const key = variant.container?.id ?? 'unknown';
+                if (!byContainer.has(key)) byContainer.set(key, {
+                    name: variant.container?.name ?? 'Container',
+                    code: variant.container?.code ?? '',
+                    variants: []
+                });
+                byContainer.get(key).variants.push(variant);
+            });
+
+            if (!byContainer.size) {
+                groupsEl.innerHTML =
+                    '<p class="text-xs text-zinc-400">No containers configured yet — add one from the Containers tab first.</p>';
+                return;
+            }
+
+            groupsEl.innerHTML = Array.from(byContainer.values()).map((group) => `
+        <div>
+            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100 mb-2">${group.name}${group.code ? ` <span class="text-zinc-400 font-normal">(${group.code})</span>` : ''}</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                ${group.variants.map((variant) => `
+                <div class="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2">
+                    <div class="flex-1 text-xs text-zinc-600 dark:text-zinc-300">${variantLabel(variant)}</div>
+                    <input type="text" inputmode="decimal" placeholder="0.00"
+                           data-variant-id="${variant.id}"
+                           value="${formatCurrencyDisplay(priceByVariant[variant.id] ?? '')}"
+                           class="currency-input w-28 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+                `).join('')}
             </div>
-            <input type="text" inputmode="decimal" placeholder="0.00"
-                   data-variant-id="${variant.id}"
-                   value="${formatCurrencyDisplay(priceByVariant[variant.id] ?? '')}"
-                   class="currency-input w-32 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
-    `).join('') || '<p class="text-xs text-zinc-400">No containers configured yet — add one from the Containers tab first.</p>';
+    `).join('');
         }
 
         function collectLaneTariffPrices() {
-            return Array.from(document.querySelectorAll('#laneTariffPricingRows [data-variant-id]'))
+            return Array.from(document.querySelectorAll('#laneTariffGroups [data-variant-id]'))
                 .filter((el) => parseCurrencyValue(el.value) !== '')
                 .map((el) => ({
                     container_variant_id: el.dataset.variantId,
                     frt: Number(parseCurrencyValue(el.value))
                 }));
         }
+
+        async function openLaneForm(id = null) {
+            editingLaneId = id;
+            editingLaneTariffRateId = null;
+            document.getElementById('laneForm').reset();
+            document.getElementById('laneOriginPortInput').innerHTML = '<option value="">Select origin port…</option>';
+            document.getElementById('laneDestinationPortInput').innerHTML =
+                '<option value="">Select destination port…</option>';
+            document.getElementById('laneFormTitle').textContent = id ? 'Edit Lane' : 'Add Lane';
+
+            await Promise.all([
+                populateSelectOptions(document.getElementById('laneOriginPortInput'), 'ports'),
+                populateSelectOptions(document.getElementById('laneDestinationPortInput'), 'ports'),
+            ]);
+
+            let existingRates = [];
+
+            if (id) {
+                const response = await apiCall({
+                    mode: 'GET',
+                    url: `/api/lanes/${id}`
+                });
+                if (!response.success) {
+                    showMessage({
+                        status: 'error',
+                        title: 'Error',
+                        message: 'Unable to load this lane.'
+                    });
+                    return;
+                }
+                const row = response.data;
+                document.getElementById('laneIdInput').value = row.lane_id;
+                document.getElementById('laneOriginPortInput').value = row.origin_port_id;
+                document.getElementById('laneDestinationPortInput').value = row.destination_port_id;
+                document.getElementById('laneActiveInput').checked = Boolean(row.is_active);
+                existingRates = row.tariff_rates ?? [];
+            } else {
+                document.getElementById('laneIdInput').value = '';
+            }
+
+            await renderLaneTariffGroups(existingRates);
+
+            initSideModal({
+                modalId: 'laneFormModal'
+            });
+        }
+
+        document.getElementById('laneForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const isEdit = Boolean(editingLaneId);
+            const button = document.getElementById('laneFormSubmitBtn');
+
+            const lanePayload = {
+                origin_port_id: Number(document.getElementById('laneOriginPortInput').value),
+                destination_port_id: Number(document.getElementById('laneDestinationPortInput').value),
+                is_active: document.getElementById('laneActiveInput').checked,
+            };
+
+            const laneResponse = await apiCall({
+                mode: isEdit ? 'PUT' : 'POST',
+                isJson: true,
+                payload: lanePayload,
+                url: isEdit ? `/api/lanes/${editingLaneId}` : '/api/lanes',
+                button,
+            });
+
+            if (!laneResponse.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to save this lane.'
+                });
+                return;
+            }
+
+            const laneId = editingLaneId ?? laneResponse.data.lane_id;
+            const prices = collectLaneTariffPrices();
+
+            const rateResponse = await apiCall({
+                mode: editingLaneTariffRateId ? 'PUT' : 'POST',
+                isJson: true,
+                payload: editingLaneTariffRateId ?
+                    { prices } : {
+                        lane_id: laneId,
+                        effective_date: new Date().toISOString().slice(0, 10),
+                        prices,
+                    },
+                url: editingLaneTariffRateId ?
+                    `/api/laneTariffRates/${editingLaneTariffRateId}` : '/api/laneTariffRates',
+            });
+
+            if (!rateResponse.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Lane saved, but the tariff rates could not be saved.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Saved',
+                message: `Lane ${isEdit ? 'updated' : 'added'}.`
+            });
+            closeSideModal('laneFormModal');
+            getOrCreateTable('lanes').reload();
+        });
+
+        document.getElementById('laneFormCloseBtn').addEventListener('click', () => closeSideModal('laneFormModal'));
+        document.getElementById('laneFormCancelBtn').addEventListener('click', () => closeSideModal(
+            'laneFormModal'));
 
         // -----------------------------------------------------------------
         // General Lookups tab - generic Option -> List-of-Values management

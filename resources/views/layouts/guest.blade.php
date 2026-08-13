@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
+@php $__appInfo = \App\Models\AppInformationSetting::current(); @endphp
 <head>
-    <link rel="icon" href="/favicon.ico?v=999">
+    <link rel="icon" href="{{ $__appInfo->icon_path ?: '/favicon.ico?v=999' }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ $__appInfo->app_name }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -30,19 +31,23 @@
                 <div class="absolute -right-4 top-24 w-24 h-24 rounded-full bg-orange-500/10"></div>
 
                 <div class="relative">
-                    <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center mb-6">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 .97-.616 1.813-1.5 2.097M3.75 8.511c-.884.284-1.5 1.128-1.5 2.097v4.286c0 .97.616 1.813 1.5 2.097m16.5-8.48L12 3 3.75 8.511m16.5 0L12 13.5m-8.25-4.989L12 13.5m0 0v7.5" />
-                        </svg>
-                    </div>
-                    <h1 class="text-2xl font-bold leading-tight">{{ config('app.name', 'Management System') }}</h1>
+                    @if ($__appInfo->logo_path)
+                        <img src="{{ $__appInfo->logo_path }}" alt="{{ $__appInfo->app_name }}" class="h-10 max-w-[10rem] object-contain mb-6">
+                    @else
+                        <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center mb-6">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 .97-.616 1.813-1.5 2.097M3.75 8.511c-.884.284-1.5 1.128-1.5 2.097v4.286c0 .97.616 1.813 1.5 2.097m16.5-8.48L12 3 3.75 8.511m16.5 0L12 13.5m-8.25-4.989L12 13.5m0 0v7.5" />
+                            </svg>
+                        </div>
+                    @endif
+                    <h1 class="text-2xl font-bold leading-tight">{{ $__appInfo->app_name }}</h1>
                     <p class="text-sm text-zinc-400 mt-3 max-w-xs">
                         Document tracking, CRM, proposals, contracts, and finance - all in one place.
                     </p>
                 </div>
 
                 <div class="relative text-xs text-zinc-500">
-                    &copy; {{ now()->year }} {{ config('app.name', 'Management System') }}
+                    &copy; {{ now()->year }} {{ $__appInfo->app_name }}
                 </div>
             </div>
 

@@ -51,7 +51,7 @@ class PortController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $port->load(['location', 'serviceableAreas']),
+            'data' => $port->load(['location.serviceableAreas']),
         ]);
     }
 

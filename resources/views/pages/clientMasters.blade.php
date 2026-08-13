@@ -2106,13 +2106,17 @@
 
             containerSel.addEventListener('change', () => {
                 const containerId = containerSel.value;
+                const variantsForContainer = cpContainerVariantsData.filter((v) => String(v.container
+                    .id) === containerId);
                 const classes = [...new Map(
-                    cpContainerVariantsData
-                    .filter((v) => String(v.container.id) === containerId)
+                    variantsForContainer
+                    .filter((v) => v.container_class)
                     .map((v) => [v.container_class.id, v.container_class])
                 ).values()];
+                const hasBase = variantsForContainer.some((v) => !v.container_class);
 
                 classSel.innerHTML = `<option value="">Select</option>` +
+                    (hasBase ? `<option value="__base__">Base (No Class)</option>` : '') +
                     classes.map((c) => `<option value="${c.id}">${c.class}</option>`).join('');
                 sizeSel.innerHTML = `<option value="">Select class first</option>`;
                 variantInput.value = '';
@@ -2123,8 +2127,8 @@
                 const containerId = containerSel.value;
                 const classId = classSel.value;
                 const sizes = cpContainerVariantsData.filter(
-                    (v) => String(v.container.id) === containerId && String(v.container_class.id) ===
-                    classId
+                    (v) => String(v.container.id) === containerId && (classId === '__base__' ? !v
+                        .container_class : String(v.container_class?.id) === classId)
                 );
 
                 sizeSel.innerHTML = `<option value="">Select</option>` +

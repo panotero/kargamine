@@ -9,19 +9,27 @@ use Illuminate\Database\Seeder;
 class LaneSeeder extends Seeder
 {
     /**
-     * A handful of real named ports (see PortSeeder) wired into lanes both
-     * ways, so a test booking can pick either port as origin. Kept to a
-     * small, well-known set rather than all 200 seeded ports.
+     * A handful of real named ports (see PortSeeder, sourced from the Rate
+     * Maintenance Excel via data/locations.json) wired into lanes both
+     * ways, so a test booking can pick either port as origin. One port per
+     * sample location - Manila, Cebu, Batangas, Davao, Bacolod, CDO.
      */
-    public const SAMPLE_PORT_NAMES = ['MANILA', 'CEBU', 'BATANGAS', 'DAVAO', 'ILOILO', 'CAGAYAN'];
+    public const SAMPLE_PORT_NAMES = [
+        'North Harbour', // Manila
+        'KTC Port', // Cebu
+        'Tabangao Port', // Batangas
+        'Sasa Port', // Davao
+        'Banogo Power Plant Port', // Bacolod
+        'Oro Port', // CDO
+    ];
 
     private const PAIRS = [
-        ['MANILA', 'CEBU'],
-        ['MANILA', 'BATANGAS'],
-        ['MANILA', 'DAVAO'],
-        ['MANILA', 'ILOILO'],
-        ['MANILA', 'CAGAYAN'],
-        ['CEBU', 'DAVAO'],
+        ['North Harbour', 'KTC Port'],
+        ['North Harbour', 'Tabangao Port'],
+        ['North Harbour', 'Sasa Port'],
+        ['North Harbour', 'Banogo Power Plant Port'],
+        ['North Harbour', 'Oro Port'],
+        ['KTC Port', 'Sasa Port'],
     ];
 
     public function run(): void

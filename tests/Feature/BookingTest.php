@@ -65,8 +65,8 @@ class BookingTest extends TestCase
             'includes_destination_trucking' => false,
         ]);
 
-        $this->originArea = ServiceableArea::create(['port_id' => $this->origin->port_id, 'area_name' => 'Origin Area']);
-        $this->destinationArea = ServiceableArea::create(['port_id' => $this->destination->port_id, 'area_name' => 'Dest Area']);
+        $this->originArea = ServiceableArea::create(['location_id' => $this->origin->location_id, 'area_name' => 'Origin Area']);
+        $this->destinationArea = ServiceableArea::create(['location_id' => $this->destination->location_id, 'area_name' => 'Dest Area']);
 
         $this->client = ClientMaster::create(['customer_code' => 'CM-2026-0001', 'company_name' => 'Test Client', 'current_stage' => 1]);
     }
@@ -74,8 +74,8 @@ class BookingTest extends TestCase
     private function makeVariant(string $containerCode = 'DRY'): ContainerVariant
     {
         $container = Container::create(['code' => $containerCode, 'name' => 'Dry Van', 'is_active' => true]);
-        $class = ContainerClass::create(['class' => 'A']);
-        $size = ContainerSize::create(['size' => '20ft']);
+        $class = ContainerClass::create(['container_id' => $container->id, 'class' => 'A']);
+        $size = ContainerSize::create(['container_id' => $container->id, 'size' => '20ft']);
 
         $variant = ContainerVariant::create([
             'container_id' => $container->id,
@@ -185,7 +185,7 @@ class BookingTest extends TestCase
             'container_variant_id' => $variant->id,
             'frt' => 15000,
         ]);
-        $altDestinationArea = ServiceableArea::create(['port_id' => $altDestination->port_id, 'area_name' => 'Alt Dest Area']);
+        $altDestinationArea = ServiceableArea::create(['location_id' => $altDestination->location_id, 'area_name' => 'Alt Dest Area']);
 
         $payload = $this->basePayload($variant);
         $payload['lines'][] = [

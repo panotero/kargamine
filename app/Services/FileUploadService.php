@@ -49,16 +49,16 @@ class FileUploadService
             // ==================================================
             if (str_starts_with($mime, 'image/')) {
 
-                // PNG → KEEP AS IS
-                if ($mime === 'image/png') {
-                    $finalFile = $file;
-                    $extension = 'png';
-                }
-
                 // JPG/JPEG → CONVERT TO WEBP
-                else {
+                if (in_array($mime, ['image/jpeg', 'image/jpg'])) {
                     $finalFile = $this->convertJpegToWebp($file);
                     $extension = 'webp';
+                }
+
+                // PNG, SVG, and everything else → KEEP AS IS
+                else {
+                    $finalFile = $file;
+                    $extension = $file->getClientOriginalExtension() ?: str_replace('image/', '', $mime);
                 }
             } else {
                 // NON-IMAGE FILES

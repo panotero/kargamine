@@ -10,7 +10,7 @@ class ServiceableArea extends Model
 {
     protected $primaryKey = 'area_id';
 
-    protected $fillable = ['port_id', 'area_name', 'is_active'];
+    protected $fillable = ['location_id', 'area_name', 'is_active'];
 
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
@@ -18,9 +18,9 @@ class ServiceableArea extends Model
         'is_active' => 'boolean',
     ];
 
-    public function port(): BelongsTo
+    public function location(): BelongsTo
     {
-        return $this->belongsTo(Port::class, 'port_id', 'port_id');
+        return $this->belongsTo(Location::class, 'location_id', 'location_id');
     }
 
     public function truckingTariffs(): HasMany

@@ -38,6 +38,11 @@ class PageController extends Controller
         return view('pages.settings.theme');
     }
 
+    public function page_AppInformation()
+    {
+        return view('pages.settings.app_information');
+    }
+
     public function page_NotificationTest()
     {
         return view('pages.settings.notification_test', [

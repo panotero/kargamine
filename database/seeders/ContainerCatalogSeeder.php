@@ -3,16 +3,15 @@
 namespace Database\Seeders;
 
 use App\Models\Container;
-use App\Models\ContainerClass;
-use App\Models\ContainerSize;
-use App\Models\ContainerVariant;
 use Illuminate\Database\Seeder;
 
 class ContainerCatalogSeeder extends Seeder
 {
     /**
-     * Container Classes, Sizes, Containers and their Class/Size Variants -
-     * the "Containers" family of tabs on the Maintenance page.
+     * Containers, each with its own Classes and Sizes (the "Containers"
+     * tab on the Maintenance page) - Container::syncCatalog() generates
+     * the class/size Variants from these, including a "base" (no class)
+     * variant per size.
      *
      * Container Types (the container_type table) is intentionally left
      * alone here - containers.container_type_id was added in
@@ -22,16 +21,14 @@ class ContainerCatalogSeeder extends Seeder
      */
     public function run(): void
     {
-        $classes = collect(['Standard', 'High Cube'])
-            ->mapWithKeys(fn ($class) => [$class => ContainerClass::firstOrCreate(['class' => $class])]);
-
-        $sizes = collect(['20FT', '40FT'])
-            ->mapWithKeys(fn ($size) => [$size => ContainerSize::firstOrCreate(['size' => $size])]);
-
         $containers = [
-            ['code' => 'CV', 'name' => 'Container Van', 'variants' => [['Standard', '20FT'], ['Standard', '40FT'], ['High Cube', '40FT']]],
-            ['code' => 'RF', 'name' => 'Reefer Van', 'variants' => [['Standard', '20FT'], ['Standard', '40FT']]],
-            ['code' => 'FR', 'name' => 'Flat Rack', 'variants' => [['Standard', '20FT'], ['Standard', '40FT']]],
+            ['code' => 'CV', 'name' => 'Container Van', 'sizes' => ['20FT', '40FT'], 'classes' => ['Standard', 'High Cube']],
+            ['code' => 'RF', 'name' => 'Reefer Van', 'sizes' => ['20FT', '40FT'], 'classes' => []],
+            ['code' => 'FR', 'name' => 'Flat Rack', 'sizes' => ['20FT', '40FT'], 'classes' => []],
+            // Loose Cargo / Rolling Cargo don't have a fixed size - they vary
+            // and are priced by class only (MT/CBM).
+            ['code' => 'LC', 'name' => 'Loose Cargo', 'sizes' => [], 'classes' => ['MT', 'CBM']],
+            ['code' => 'RC', 'name' => 'Rolling Cargo', 'sizes' => [], 'classes' => ['MT', 'CBM']],
         ];
 
         foreach ($containers as $definition) {
@@ -40,15 +37,7 @@ class ContainerCatalogSeeder extends Seeder
                 ['name' => $definition['name'], 'is_active' => true]
             );
 
-            foreach ($definition['variants'] as [$className, $sizeName]) {
-                ContainerVariant::firstOrCreate([
-                    'container_id' => $container->id,
-                    'container_class_id' => $classes[$className]->id,
-                    'container_size_id' => $sizes[$sizeName]->id,
-                ], [
-                    'is_active' => true,
-                ]);
-            }
+            $container->syncCatalog($definition['classes'], $definition['sizes']);
         }
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppInformationController;
 use App\Http\Controllers\AppThemeController;
 use App\Http\Controllers\ClientContractController;
 use App\Http\Controllers\ClientMasterController;
@@ -94,6 +95,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('app-theme')->group(function () {
         Route::get('/', [AppThemeController::class, 'show']);
         Route::post('/', [AppThemeController::class, 'update']);
+    });
+
+    Route::prefix('app-information')->group(function () {
+        Route::get('/', [AppInformationController::class, 'show']);
+        Route::post('/', [AppInformationController::class, 'update']);
+        Route::delete('/logo', [AppInformationController::class, 'removeLogo']);
+        Route::delete('/icon', [AppInformationController::class, 'removeIcon']);
     });
 
     Route::prefix('options')->group(function () {

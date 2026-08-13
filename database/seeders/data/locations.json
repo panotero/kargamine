@@ -1,0 +1,461 @@
+{
+  "locations": [
+    {
+      "name": "Aklan",
+      "ports": [
+        "Caticlan Port",
+        "Dumaguit Port"
+      ],
+      "serviceable_areas": [
+        "Caticlan",
+        "Dumaguit",
+        "Kalibo"
+      ]
+    },
+    {
+      "name": "Bacolod",
+      "ports": [
+        "Banogo Power Plant Port"
+      ],
+      "serviceable_areas": [
+        "Bacolod",
+        "Banago",
+        "Pulupandan"
+      ]
+    },
+    {
+      "name": "Bataan",
+      "ports": [
+        "Mariveles Port",
+        "Orion Dockyard"
+      ],
+      "serviceable_areas": [
+        "Mariveles",
+        "Orion"
+      ]
+    },
+    {
+      "name": "Batangas",
+      "ports": [
+        "BIPI",
+        "Frabelle, Bauan",
+        "JGSP",
+        "Kepco Ilijan Port",
+        "San Juan Port",
+        "Sem Calaca Power Plant",
+        "Tabangao Port"
+      ],
+      "serviceable_areas": [
+        "Alaminos",
+        "BIPI, Bauan",
+        "Balagtas",
+        "Balayan",
+        "Banaybanay",
+        "Batangas City",
+        "Bauan",
+        "Binan",
+        "Cabuyao",
+        "Calaca",
+        "Calamba",
+        "Calatagan",
+        "Candelaria",
+        "Canlubang",
+        "Frabelle, Bauan",
+        "Gulod",
+        "Ibaan",
+        "Ilijan",
+        "Lemery",
+        "Lian",
+        "Lipa City",
+        "Lipa-Malvar",
+        "Los Banos",
+        "Lubang",
+        "Lucena",
+        "Maapaz",
+        "Mabini",
+        "Mahabang Parang",
+        "Malvar",
+        "PNOC",
+        "Padre Garcia",
+        "Rosario",
+        "Roxas",
+        "San Jose",
+        "San Juan",
+        "San Pablo",
+        "San Pascual",
+        "San Pedro",
+        "Sariaya",
+        "Simlong",
+        "Sorosoro",
+        "Sta. Clara",
+        "Sta. Rosa",
+        "Sto. Tomas",
+        "Tabangao",
+        "Tabangao Port",
+        "Talisay",
+        "Tayabas",
+        "Taysan",
+        "Tiaong"
+      ]
+    },
+    {
+      "name": "Bicol",
+      "ports": [
+        "Legaspi Port",
+        "Tabaco Port"
+      ],
+      "serviceable_areas": [
+        "Albay",
+        "Daet",
+        "Legaspi",
+        "Milaor",
+        "Naga",
+        "Sorsogon",
+        "Tabaco City Port"
+      ]
+    },
+    {
+      "name": "Butuan",
+      "ports": [
+        "Port of Masao"
+      ],
+      "serviceable_areas": [
+        "Butuan",
+        "Masao"
+      ]
+    },
+    {
+      "name": "CDO",
+      "ports": [
+        "BBASI Port",
+        "Gracia Port",
+        "Oro Port"
+      ],
+      "serviceable_areas": [
+        "BBASI Port",
+        "Bulua",
+        "CDO Bugo",
+        "CDO Mitimco",
+        "El Salvador",
+        "Gracia Port",
+        "Iligan City",
+        "Malasag, Cugman",
+        "Opol",
+        "Tablon",
+        "Villanueva"
+      ]
+    },
+    {
+      "name": "Cebu",
+      "ports": [
+        "KTC Port"
+      ],
+      "serviceable_areas": [
+        "Banilad",
+        "Basak, Mandaue",
+        "Canduman, Mandaue",
+        "Cebu",
+        "Compostela",
+        "Consolacion",
+        "Cordova",
+        "Danao",
+        "KTC Port",
+        "Labangon",
+        "Lapu-Lapu City",
+        "Lilo-an",
+        "Mabolo",
+        "Malabuyoc",
+        "Mambaling",
+        "Mandaue",
+        "Minglanilla",
+        "Naga",
+        "Opao, Mandaue",
+        "Pagsabungan, Mandaue",
+        "Pakna-an, Mandaue",
+        "San Fernando",
+        "Tabok, Mandaue",
+        "Talisay",
+        "Tawason, Mandaue",
+        "Tayud, Consolacion",
+        "Tingub, Mandaue",
+        "Tipolo, Mandaue"
+      ]
+    },
+    {
+      "name": "Davao",
+      "ports": [
+        "Sasa Port",
+        "Tibungco Port"
+      ],
+      "serviceable_areas": [
+        "AO Panabo",
+        "Agdao",
+        "Buhangin",
+        "Buhisan",
+        "Bunawan",
+        "Cagangohan, Panabo",
+        "Coronan",
+        "Darong",
+        "Davao",
+        "Davao Del Sur",
+        "Digos",
+        "General Santos",
+        "KTC Port",
+        "Kidapawan",
+        "Lanang",
+        "Lanao",
+        "Lapu-Lapu",
+        "Maa",
+        "Malitbog, Panabo",
+        "Manay, Panabo",
+        "Mati",
+        "Matina",
+        "Nanyo, Panabo",
+        "Obrero",
+        "Panabo",
+        "Panacan",
+        "Sasa",
+        "South Cotabato",
+        "Sto. Tomas",
+        "Tagpore, Panabo",
+        "Tagum",
+        "Talomo",
+        "Tibungco",
+        "Toril",
+        "Ulas"
+      ]
+    },
+    {
+      "name": "Dinagat",
+      "ports": [
+        "Dinagat Port"
+      ],
+      "serviceable_areas": [
+        "Dinagat"
+      ]
+    },
+    {
+      "name": "La Union",
+      "ports": [
+        "Poro, San Fernando",
+        "Sto. Tomas Fish Port"
+      ],
+      "serviceable_areas": [
+        "Bauang",
+        "Cauayan",
+        "La Trinidad",
+        "Magsingal",
+        "San Fernando",
+        "Sto.Tomas"
+      ]
+    },
+    {
+      "name": "Leyte",
+      "ports": [
+        "Liloan Port",
+        "San Ricardo Port"
+      ],
+      "serviceable_areas": [
+        "Baybay",
+        "Benit",
+        "Carigara",
+        "Maasin",
+        "Ormoc",
+        "Poblacion",
+        "San Ricardo"
+      ]
+    },
+    {
+      "name": "Manila",
+      "ports": [
+        "Harbour Center",
+        "Navotas Fish Port",
+        "North Harbour",
+        "Vitas Pier 18"
+      ],
+      "serviceable_areas": [
+        "Angeles",
+        "Antipolo",
+        "Bacoor",
+        "Bagong Ilog",
+        "Balintawak",
+        "Bicutan",
+        "Cainta",
+        "Caloocan",
+        "Calumpit",
+        "Capas",
+        "Carmona",
+        "Cavite",
+        "Dasmarinas",
+        "General Trias",
+        "Guiguinto",
+        "Harbour Center",
+        "Imus",
+        "Kawit",
+        "Lagro",
+        "Las Pinas",
+        "Libis",
+        "Mabalacat",
+        "Makati",
+        "Malabon",
+        "Mandaluyong",
+        "Manila",
+        "Marikina",
+        "Marilao",
+        "Meycauayan",
+        "Multipurpose Terminal",
+        "Muntinlupa",
+        "Navotas",
+        "North Harbour",
+        "Paco",
+        "Paranaque",
+        "Pasay",
+        "Pasig",
+        "Pinagbuhatan",
+        "Pulilan",
+        "Quezon City",
+        "Rizal",
+        "Rodriguez",
+        "Rosario",
+        "San Fernando",
+        "San Ildefonso",
+        "San Isidro",
+        "San Juan",
+        "San Rafael",
+        "Silang",
+        "Sta. Maria",
+        "Sucat",
+        "Taguig",
+        "Tanza",
+        "Taytay",
+        "Valenzuela",
+        "Vitas Pier 18"
+      ]
+    },
+    {
+      "name": "Masbate",
+      "ports": [
+        "Algimar Port"
+      ],
+      "serviceable_areas": [
+        "Masbate",
+        "Masbate Port",
+        "Ticao",
+        "Tugbo"
+      ]
+    },
+    {
+      "name": "Palawan",
+      "ports": [
+        "Coron Port",
+        "Port of Brooke's Point",
+        "Puerto Princesa Port",
+        "San Vicente Port",
+        "Taytay Port",
+        "Villa Marcelo, Puerto Princesa"
+      ],
+      "serviceable_areas": [
+        "Balabac",
+        "Bataraza",
+        "Brooke's Point",
+        "Coron",
+        "El Nido",
+        "Narra",
+        "Pamalican",
+        "Puerto Princesa",
+        "Punta Baja, Rizal",
+        "Quezon",
+        "Ransang, Rizal",
+        "Retayir Port",
+        "Rio Tuba",
+        "Rizal",
+        "Roxas",
+        "San Manuel",
+        "San Vicente",
+        "Taytay"
+      ]
+    },
+    {
+      "name": "Pangasinan",
+      "ports": [
+        "Sual Port"
+      ],
+      "serviceable_areas": [
+        "Lingayen",
+        "Magalianes",
+        "San Fernando",
+        "San Nicolas",
+        "Sual"
+      ]
+    },
+    {
+      "name": "Romblon",
+      "ports": [
+        "Romblon Port"
+      ],
+      "serviceable_areas": [
+        "Romblon"
+      ]
+    },
+    {
+      "name": "Roxas",
+      "ports": [
+        "Culasi Port"
+      ],
+      "serviceable_areas": [
+        "Dumangas",
+        "Iloilo City",
+        "Roxas City",
+        "San Miguel"
+      ]
+    },
+    {
+      "name": "Surigao",
+      "ports": [
+        "Nonoc Island Port",
+        "Surigao Port"
+      ],
+      "serviceable_areas": [
+        "Nonoc Island",
+        "Surigao"
+      ]
+    },
+    {
+      "name": "Tacloban",
+      "ports": [
+        "Tacloban Port"
+      ],
+      "serviceable_areas": [
+        "Calbayog",
+        "Sta. Fe",
+        "Tacloban",
+        "Tacloban Port",
+        "Tanauan"
+      ]
+    },
+    {
+      "name": "Zambales",
+      "ports": [
+        "Rivera Port, Subic",
+        "Alpha Water Port",
+        "Masinloc Power Partners Port"
+      ],
+      "serviceable_areas": [
+        "Iba",
+        "Masinloc",
+        "Subic"
+      ]
+    },
+    {
+      "name": "Zamboanga",
+      "ports": [
+        "Lamao Port",
+        "Liloy Port"
+      ],
+      "serviceable_areas": [
+        "Lamao",
+        "Liloy"
+      ]
+    }
+  ]
+}

@@ -36,11 +36,10 @@ class LaneTariffRateController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $validated = $request->validate([
             'lane_id' => ['required', 'integer', 'exists:lanes,lane_id'],
             'effective_date' => ['required', 'date'],
-            'end_date' => ['required', 'date'],
+            'end_date' => ['nullable', 'date'],
         ]);
 
 

@@ -13,12 +13,12 @@ class LaneTariffRateSeeder extends Seeder
 {
     /** Base FRT for an unordered port-name pair - same price either direction. */
     private const BASE_RATE_BY_PAIR = [
-        'BATANGAS-MANILA' => 4000,
-        'CEBU-MANILA' => 9000,
-        'CAGAYAN-MANILA' => 15000,
-        'DAVAO-MANILA' => 16000,
-        'ILOILO-MANILA' => 8000,
-        'CEBU-DAVAO' => 7000,
+        'North Harbour-Tabangao Port' => 4000, // Manila-Batangas
+        'KTC Port-North Harbour' => 9000, // Manila-Cebu
+        'North Harbour-Oro Port' => 15000, // Manila-CDO
+        'North Harbour-Sasa Port' => 16000, // Manila-Davao
+        'Banogo Power Plant Port-North Harbour' => 8000, // Manila-Bacolod
+        'KTC Port-Sasa Port' => 7000, // Cebu-Davao
     ];
 
     private const CONTAINER_MULTIPLIER = ['CV' => 1.0, 'RF' => 1.4, 'FR' => 1.1];
@@ -53,7 +53,10 @@ class LaneTariffRateSeeder extends Seeder
             foreach ($variants as $variant) {
                 $containerMultiplier = self::CONTAINER_MULTIPLIER[$variant->container->code] ?? 1.0;
                 $sizeMultiplier = self::SIZE_MULTIPLIER[$variant->containerSize->size] ?? 1.0;
-                $classMultiplier = self::CLASS_MULTIPLIER[$variant->containerClass->class] ?? 1.0;
+                // Base (no-class) variants - e.g. Reefer Van, Flat Rack - use the plain size rate.
+                $classMultiplier = $variant->containerClass
+                    ? (self::CLASS_MULTIPLIER[$variant->containerClass->class] ?? 1.0)
+                    : 1.0;
 
                 $frt = round($baseRate * $containerMultiplier * $sizeMultiplier * $classMultiplier / 100) * 100;
 

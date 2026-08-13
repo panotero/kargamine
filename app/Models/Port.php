@@ -25,11 +25,6 @@ class Port extends Model
         return $this->belongsTo(Location::class, 'location_id', 'location_id');
     }
 
-    public function serviceableAreas(): HasMany
-    {
-        return $this->hasMany(ServiceableArea::class, 'port_id', 'port_id');
-    }
-
     public function portCharges(): HasMany
     {
         return $this->hasMany(PortCharge::class, 'port_id', 'port_id');

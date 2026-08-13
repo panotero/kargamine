@@ -9,8 +9,13 @@
            overflow-hidden
            z-40">
             <div class="w-full p-5 text-zinc-900 dark:text-white flex items-center justify-between gap-2">
+                @php $__appInfo = \App\Models\AppInformationSetting::current(); @endphp
                 <div id="sidebar-brand" class="min-w-0 overflow-hidden whitespace-nowrap transition-opacity duration-150">
-                    <h1 class="font-semibold text-sm">Management System</h1>
+                    @if ($__appInfo->logo_path)
+                        <img src="{{ $__appInfo->logo_path }}" alt="{{ $__appInfo->app_name }}" class="h-8 max-w-full object-contain">
+                    @else
+                        <h1 class="font-semibold text-sm">{{ $__appInfo->app_name }}</h1>
+                    @endif
                     <h1 class="text-md md:text-md font-bold"></h1>
                 </div>
                 <button id="sidebar-collapse-toggle" type="button"

@@ -684,11 +684,14 @@
                 containerSel.value = def.container_id;
                 containerSel.dispatchEvent(new Event('change'));
             }
-            if (def.container_class_id) {
-                classSel.value = def.container_class_id;
-                classSel.dispatchEvent(new Event('change'));
-            }
-            if (def.container_size_id) sizeSel.value = def.container_size_id;
+            // classSel always has a real value here - base (no-class) variants
+            // use the synthetic "__base__" option, not null/empty, so a
+            // class-only variant (no size) is still reachable via classSel.
+            classSel.value = def.container_class_id ?? '__base__';
+            classSel.dispatchEvent(new Event('change'));
+            // sizeSel is keyed by variant id (not container_size_id) so it
+            // stays correct for class-only variants with no size at all.
+            if (def.container_variant_id) sizeSel.value = def.container_variant_id;
             if (def.container_variant_id) variantInput.value = def.container_variant_id;
             if (def.base_rate) baseRateInput.value = Number(def.base_rate).toFixed(2);
 
@@ -863,13 +866,17 @@
 
             containerSel.addEventListener('change', () => {
                 const containerId = containerSel.value;
+                const variantsForContainer = containerVariantsData.filter((v) => String(v.container
+                    .id) === containerId);
                 const classes = [...new Map(
-                    containerVariantsData
-                    .filter((v) => String(v.container.id) === containerId)
+                    variantsForContainer
+                    .filter((v) => v.container_class)
                     .map((v) => [v.container_class.id, v.container_class])
                 ).values()];
+                const hasBase = variantsForContainer.some((v) => !v.container_class);
 
                 classSel.innerHTML = `<option value="">Select</option>` +
+                    (hasBase ? `<option value="__base__">Base (No Class)</option>` : '') +
                     classes.map((c) => `<option value="${c.id}">${c.class}</option>`).join('');
                 sizeSel.innerHTML = `<option value="">Select class first</option>`;
                 variantInput.value = '';
@@ -880,13 +887,16 @@
                 const containerId = containerSel.value;
                 const classId = classSel.value;
                 const sizes = containerVariantsData.filter(
-                    (v) => String(v.container.id) === containerId && String(v.container_class.id) ===
-                    classId
+                    (v) => String(v.container.id) === containerId && (classId === '__base__' ? !v
+                        .container_class : String(v.container_class?.id) === classId)
                 );
 
+                // Value/key on the variant id (not container_size.id) so this
+                // stays safe for class-only variants with no size at all
+                // (Loose Cargo / Rolling Cargo, priced by class alone).
                 sizeSel.innerHTML = `<option value="">Select</option>` +
                     sizes.map((v) =>
-                        `<option value="${v.container_size.id}" data-variant-id="${v.id}">${v.container_size.size}</option>`
+                        `<option value="${v.id}" data-variant-id="${v.id}">${v.container_size?.size ?? 'N/A (no fixed size)'}</option>`
                     ).join('');
                 variantInput.value = '';
                 resetRate(baseRateInput, finalRateInput);

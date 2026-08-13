@@ -22,6 +22,7 @@ Route::get('/settings', [PageController::class, 'settings'])->name('settings');
 
 Route::get('/page_mailer', [PageController::class, 'page_Mailer']);
 Route::get('/page_theme', [PageController::class, 'page_Themes']);
+Route::get('/page_app_information', [PageController::class, 'page_AppInformation']);
 Route::get('/page_notification_test', [PageController::class, 'page_NotificationTest']);
 Route::get('/page_team_management', [PageController::class, 'page_TeamManagement']);
 Route::get('/page_container_inventory', [PageController::class, 'page_ContainerInventory']);

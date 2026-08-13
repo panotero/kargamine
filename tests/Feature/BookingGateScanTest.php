@@ -69,14 +69,14 @@ class BookingGateScanTest extends TestCase
             'includes_destination_trucking' => true,
         ]);
 
-        $this->originArea = ServiceableArea::create(['port_id' => $this->origin->port_id, 'area_name' => 'Origin Area']);
-        $this->destinationArea = ServiceableArea::create(['port_id' => $this->destination->port_id, 'area_name' => 'Dest Area']);
+        $this->originArea = ServiceableArea::create(['location_id' => $this->origin->location_id, 'area_name' => 'Origin Area']);
+        $this->destinationArea = ServiceableArea::create(['location_id' => $this->destination->location_id, 'area_name' => 'Dest Area']);
 
         $this->client = ClientMaster::create(['customer_code' => 'CM-2026-0001', 'company_name' => 'Test Client', 'current_stage' => 1]);
 
         $container = Container::create(['code' => 'DRY', 'name' => 'Dry Van', 'is_active' => true]);
-        $class = ContainerClass::create(['class' => 'A']);
-        $size = ContainerSize::create(['size' => '20ft']);
+        $class = ContainerClass::create(['container_id' => $container->id, 'class' => 'A']);
+        $size = ContainerSize::create(['container_id' => $container->id, 'size' => '20ft']);
 
         $this->variant = ContainerVariant::create([
             'container_id' => $container->id,

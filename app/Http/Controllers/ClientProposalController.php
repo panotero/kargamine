@@ -483,9 +483,11 @@ class ClientProposalController extends Controller
      * form opens already populated. The frontend still lets the user edit,
      * add, or remove any row before saving.
      *
-     * Only CV/FR/RF resolve fully (they carry class+size); LC/RC come back
-     * with ports filled and container/class/size left null for manual pick,
-     * since those types don't carry a class/size on the lead form.
+     * Variant matching tolerates null class and/or size on both sides: a
+     * container that has no classes (e.g. Flat Rack, Reefer Van) or no
+     * sizes (Loose Cargo, Rolling Cargo - priced by class only) will only
+     * ever have variants with that side null, so the lookup matches null
+     * to null rather than requiring both to be set.
      */
     public function leadContainerDefaults($leadUuid)
     {
@@ -499,10 +501,18 @@ class ClientProposalController extends Controller
                 $variant = null;
                 $baseRate = null;
 
-                if ($container && $lc->container_class_id && $lc->container_size_id) {
+                if ($container) {
                     $variant = ContainerVariant::where('container_id', $container->id)
-                        ->where('container_class_id', $lc->container_class_id)
-                        ->where('container_size_id', $lc->container_size_id)
+                        ->where(function ($q) use ($lc) {
+                            $lc->container_class_id
+                                ? $q->where('container_class_id', $lc->container_class_id)
+                                : $q->whereNull('container_class_id');
+                        })
+                        ->where(function ($q) use ($lc) {
+                            $lc->container_size_id
+                                ? $q->where('container_size_id', $lc->container_size_id)
+                                : $q->whereNull('container_size_id');
+                        })
                         ->first();
                 }
 

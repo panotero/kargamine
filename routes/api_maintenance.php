@@ -9,9 +9,7 @@ use App\Http\Controllers\CargoBuildUpController;
 use App\Http\Controllers\CargoYardController;
 use App\Http\Controllers\ChargeTypeController;
 use App\Http\Controllers\ContainerAssetController;
-use App\Http\Controllers\ContainerClassController;
 use App\Http\Controllers\ContainerController;
-use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DeliveryTypeController;
 use App\Http\Controllers\GeneralChargeController;
@@ -284,18 +282,3 @@ Route::get('/containerTypes', fn () => response()->json([
     'success' => true,
     'data' => \DB::table('container_type')->orderBy('type')->get(),
 ]));
-Route::prefix('containerClasses')->group(function () {
-    Route::get('/', [ContainerClassController::class, 'index']);
-    Route::get('/{containerClass}', [ContainerClassController::class, 'show']);
-    Route::post('/', [ContainerClassController::class, 'store'])->middleware('nav.access:/page_maintenance');
-    Route::put('/{containerClass}', [ContainerClassController::class, 'update'])->middleware('nav.access:/page_maintenance');
-    Route::delete('/{containerClass}', [ContainerClassController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
-});
-
-Route::prefix('containerSizes')->group(function () {
-    Route::get('/', [ContainerSizeController::class, 'index']);
-    Route::get('/{containerSize}', [ContainerSizeController::class, 'show']);
-    Route::post('/', [ContainerSizeController::class, 'store'])->middleware('nav.access:/page_maintenance');
-    Route::put('/{containerSize}', [ContainerSizeController::class, 'update'])->middleware('nav.access:/page_maintenance');
-    Route::delete('/{containerSize}', [ContainerSizeController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
-});

@@ -178,6 +178,14 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '3',
             ],
             [
+                'title' => 'Application Information',
+                'icon' => 'information-circle',
+                'link' => '/page_app_information',
+                'allowed_roles' => ['4', '1'],
+                'parent_title' => 'Developer Option',
+                'menu_order' => '5',
+            ],
+            [
                 'title' => 'Notification Test',
                 'icon' => 'bell',
                 'link' => '/page_notification_test',

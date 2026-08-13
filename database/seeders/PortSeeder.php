@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use App\Models\Location;
 use App\Models\Port;
 use Illuminate\Database\Seeder;
@@ -8,32 +9,34 @@ use Illuminate\Database\Seeder;
 class PortSeeder extends Seeder
 {
     /**
-     * Each entry seeds one Location plus its single port, named after the
-     * city - rename/regroup these via the Locations & Ports settings UI
-     * once real locations (e.g. one location with multiple ports, like
-     * Aklan -> Caticlan Port + Dumaguit Port) are known.
+     * Seeds real Locations + Ports from the Rate Maintenance Excel export
+     * (database/seeders/data/locations.json is the single source of truth
+     * - see ServiceableAreaSeeder for the matching serviceable-area data).
+     * Only the 22 real port locations from the Excel's "PORT LOCATION"
+     * column are seeded here - trucking-zone province labels from the
+     * "SERVICEABLE AREA" column (e.g. Laguna, Rizal, Cavite) are folded
+     * into whichever real port location actually services them, rather
+     * than becoming standalone locations of their own.
      */
     public function run(): void
     {
-        $ports = [
-            'MANILA', 'BACOLOD PORT', 'BUTUAN', 'CEBU', 'CAGAYAN', 'DAVAO',
-            'DUMAGUETE', 'GEN SAN', 'ILIGAN', 'ILOILO', 'OSAMIS', 'CORON',
-            'ROXAS', 'CATICLAN', 'ORMOC', 'TAGBILARAN', 'TACLOBAN', 'ZAMBOANGA',
-            'PUERTO PRINCESSA', 'SURIGAO', 'COTABATO', 'BATANGAS',
-        ];
+        $data = json_decode(
+            file_get_contents(__DIR__.'/data/locations.json'),
+            associative: true
+        );
 
-        // Generate ports until there are 200
-        for ($i = count($ports) + 1; $i <= 200; $i++) {
-            $ports[] = 'PORT ' . $i;
-        }
-
-        foreach ($ports as $name) {
-            $location = Location::firstOrCreate(['name' => $name], ['is_active' => true]);
-
-            Port::updateOrCreate(
-                ['location_id' => $location->location_id, 'name' => $name],
+        foreach ($data['locations'] as $locationData) {
+            $location = Location::updateOrCreate(
+                ['name' => $locationData['name']],
                 ['is_active' => true]
             );
+
+            foreach ($locationData['ports'] as $portName) {
+                Port::updateOrCreate(
+                    ['location_id' => $location->location_id, 'name' => $portName],
+                    ['is_active' => true]
+                );
+            }
         }
     }
 }

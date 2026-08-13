@@ -84,20 +84,7 @@ class lovSeeder extends Seeder
             );
         }
 
-        $containerClasses = ['A', 'B', 'C', 'D'];
-        foreach ($containerClasses as $class) {
-            DB::table('container_class')->updateOrInsert(
-                ['class' => $class],
-                ['updated_at' => now()]
-            );
-        }
-
-        $containerSizes = ['10-FOOTER', '20-FOOTER', '40-FOOTER STD', '40-FOOTER HC'];
-        foreach ($containerSizes as $size) {
-            DB::table('container_size')->updateOrInsert(
-                ['size' => $size],
-                ['updated_at' => now()]
-            );
-        }
+        // Container classes/sizes are now container-scoped (container_id FK)
+        // and owned by ContainerCatalogSeeder via Container::syncCatalog().
     }
 }

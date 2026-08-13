@@ -126,12 +126,14 @@
         }
 
         async function loadAreasForElement(selectEl, portId) {
-            if (!portId) {
+            const port = ports.find((p) => String(p.port_id) === String(portId));
+
+            if (!portId || !port) {
                 selectEl.innerHTML = '<option value="">Select port first</option>';
                 return;
             }
 
-            const response = await apiCall({ mode: 'GET', url: `/api/serviceableAreas?port_id=${portId}&per_page=200` });
+            const response = await apiCall({ mode: 'GET', url: `/api/serviceableAreas?location_id=${port.location_id}&per_page=200` });
             const areas = response?.success ? (response.data?.data ?? []) : [];
             selectEl.innerHTML = optionsHtml(areas, 'area_id', (a) => a.area_name, 'Select area');
         }

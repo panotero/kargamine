@@ -12,7 +12,7 @@ class ContainerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Container::with(['variants.containerClass', 'variants.containerSize']);
+        $query = Container::with(['classes', 'sizes', 'variants.containerClass', 'variants.containerSize']);
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -28,7 +28,7 @@ class ContainerController extends Controller
 
     public function show(Container $container)
     {
-        $container->load(['type', 'variants.containerClass', 'variants.containerSize']);
+        $container->load(['classes', 'sizes', 'variants.containerClass', 'variants.containerSize']);
 
         return response()->json(['success' => true, 'data' => $container]);
     }
@@ -39,10 +39,19 @@ class ContainerController extends Controller
             'code' => ['required', 'string', 'max:255', 'unique:containers,code'],
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
-            'variants' => ['required', 'array', 'min:1'],
-            'variants.*.container_class_id' => ['required', 'exists:container_class,id'],
-            'variants.*.container_size_id' => ['required', 'exists:container_size,id'],
+            'sizes' => ['present', 'array'],
+            'sizes.*' => ['required', 'string', 'max:255'],
+            'classes' => ['sometimes', 'array'],
+            'classes.*' => ['required', 'string', 'max:255'],
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            // Loose Cargo / Rolling Cargo have no fixed size, so sizes can
+            // be empty - but a container needs at least one size or class.
+            if (empty($request->input('sizes')) && empty($request->input('classes'))) {
+                $validator->errors()->add('sizes', 'Add at least one size, or at least one class for containers with no fixed size.');
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'invalid_fields' => $validator->errors()], 422);
@@ -57,20 +66,12 @@ class ContainerController extends Controller
                 'is_active' => $data['is_active'] ?? true,
             ]);
 
-            $variants = collect($data['variants'])
-                ->unique(fn($v) => $v['container_class_id'] . '-' . $v['container_size_id'])
-                ->map(fn($v) => [
-                    'container_class_id' => $v['container_class_id'],
-                    'container_size_id' => $v['container_size_id'],
-                    'is_active' => true,
-                ]);
-
-            $container->variants()->createMany($variants->all());
+            $container->syncCatalog($data['classes'] ?? [], $data['sizes']);
 
             return $container;
         });
 
-        $container->load(['type', 'variants.containerClass', 'variants.containerSize']);
+        $container->load(['classes', 'sizes', 'variants.containerClass', 'variants.containerSize']);
 
         return response()->json(['success' => true, 'data' => $container], 201);
     }
@@ -78,14 +79,22 @@ class ContainerController extends Controller
     public function update(Request $request, Container $container)
     {
         $validator = Validator::make($request->all(), [
-            'container_type_id' => ['sometimes', 'required', 'exists:container_type,id'],
             'code' => ['sometimes', 'required', 'string', 'max:255', 'unique:containers,code,' . $container->id],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
-            'variants' => ['sometimes', 'array'],
-            'variants.*.container_class_id' => ['required_with:variants', 'exists:container_class,id'],
-            'variants.*.container_size_id' => ['required_with:variants', 'exists:container_size,id'],
+            'sizes' => ['sometimes', 'array'],
+            'sizes.*' => ['required', 'string', 'max:255'],
+            'classes' => ['sometimes', 'array'],
+            'classes.*' => ['required', 'string', 'max:255'],
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            // Loose Cargo / Rolling Cargo have no fixed size, so sizes can
+            // be empty - but a container needs at least one size or class.
+            if ($request->has('sizes') && empty($request->input('sizes')) && empty($request->input('classes'))) {
+                $validator->errors()->add('sizes', 'Add at least one size, or at least one class for containers with no fixed size.');
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'invalid_fields' => $validator->errors()], 422);
@@ -95,10 +104,9 @@ class ContainerController extends Controller
 
         DB::transaction(function () use ($data, $container) {
             $container->fill(array_filter([
-                'container_type_id' => $data['container_type_id'] ?? null,
                 'code' => $data['code'] ?? null,
                 'name' => $data['name'] ?? null,
-            ], fn($v) => $v !== null));
+            ], fn ($v) => $v !== null));
 
             if (array_key_exists('is_active', $data)) {
                 $container->is_active = $data['is_active'];
@@ -106,27 +114,16 @@ class ContainerController extends Controller
 
             $container->save();
 
-            // Full replace when variants are supplied. A removed variant
-            // that already has lane tariff pricing tied to it will fail
-            // here (restrictOnDelete) - that's intentional, it protects
-            // existing pricing history.
-            if (array_key_exists('variants', $data)) {
-                $keep = collect($data['variants'])
-                    ->unique(fn($v) => $v['container_class_id'] . '-' . $v['container_size_id']);
-
-                $container->variants()->delete();
-
-                $container->variants()->createMany(
-                    $keep->map(fn($v) => [
-                        'container_class_id' => $v['container_class_id'],
-                        'container_size_id' => $v['container_size_id'],
-                        'is_active' => true,
-                    ])->all()
-                );
+            // Full replace when sizes are supplied. A removed combo that
+            // already has lane tariff pricing tied to it will fail here
+            // (restrictOnDelete) - that's intentional, it protects existing
+            // pricing history.
+            if (array_key_exists('sizes', $data)) {
+                $container->syncCatalog($data['classes'] ?? [], $data['sizes']);
             }
         });
 
-        $container->load(['type', 'variants.containerClass', 'variants.containerSize']);
+        $container->load(['classes', 'sizes', 'variants.containerClass', 'variants.containerSize']);
 
         return response()->json(['success' => true, 'data' => $container]);
     }
@@ -146,8 +143,8 @@ class ContainerController extends Controller
     public function variants()
     {
         $variants = ContainerVariant::query()
-            ->with(['container.type', 'containerClass', 'containerSize'])
-            ->whereHas('container', fn($q) => $q->where('is_active', true))
+            ->with(['container', 'containerClass', 'containerSize'])
+            ->whereHas('container', fn ($q) => $q->where('is_active', true))
             ->where('is_active', true)
             ->get();
 
