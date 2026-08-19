@@ -1,0 +1,2 @@
+- [Searchable select decision](project_searchable_select_decision.md) — why we hand-rolled the combobox instead of adding Select2/Choices/TomSelect
+- [Nullable class/size pipeline](project_nullable_class_size.md) — class/size nullable end-to-end, plus two rate-row payload bugs found doing it

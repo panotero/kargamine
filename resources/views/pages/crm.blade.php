@@ -696,6 +696,13 @@
             if (def.base_rate) baseRateInput.value = Number(def.base_rate).toFixed(2);
 
             recomputeFinalRate(row);
+
+            [
+                row.querySelector('.origin-location-select'),
+                row.querySelector('.destination-location-select'),
+                originSel,
+                destSel,
+            ].forEach(refreshSearchable);
         }
 
         window.openLeadAddContainerModal = function(proposalId) {
@@ -753,6 +760,20 @@
                 portsData.filter((p) => String(p.location_id) === String(locationId)) :
                 portsData;
             return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
+        }
+
+        function refreshSearchable(el) {
+            el?._searchableSelect?.refresh();
+        }
+
+        function classIdForPayload(sel) {
+            const v = sel.value;
+            return (v === '' || v === '__base__') ? null : v;
+        }
+
+        function sizeIdForPayload(sel) {
+            const id = sel.options[sel.selectedIndex]?.dataset.sizeId;
+            return id ? id : null;
         }
 
         function uniqueContainerOptions() {
@@ -855,6 +876,7 @@
             const destSel = row.querySelector('[data-field="destination_port_id"]');
             const originLocationSel = row.querySelector('.origin-location-select');
             const destLocationSel = row.querySelector('.destination-location-select');
+            [originLocationSel, originSel, destLocationSel, destSel].forEach((el) => makeSearchableSelect(el));
             const containerSel = row.querySelector('.container-select');
             const classSel = row.querySelector('.class-select');
             const sizeSel = row.querySelector('.size-select');
@@ -896,7 +918,7 @@
                 // (Loose Cargo / Rolling Cargo, priced by class alone).
                 sizeSel.innerHTML = `<option value="">Select</option>` +
                     sizes.map((v) =>
-                        `<option value="${v.id}" data-variant-id="${v.id}">${v.container_size?.size ?? 'N/A (no fixed size)'}</option>`
+                        `<option value="${v.id}" data-variant-id="${v.id}" data-size-id="${v.container_size?.id ?? ''}">${v.container_size?.size ?? 'N/A (no fixed size)'}</option>`
                     ).join('');
                 variantInput.value = '';
                 resetRate(baseRateInput, finalRateInput);
@@ -913,11 +935,13 @@
             originLocationSel.addEventListener('change', () => {
                 originSel.innerHTML = `<option value="">Select</option>${portOptionsForLocation(originLocationSel.value)}`;
                 originSel.disabled = !originLocationSel.value;
+                refreshSearchable(originSel);
                 lookupRate(row);
             });
             destLocationSel.addEventListener('change', () => {
                 destSel.innerHTML = `<option value="">Select</option>${portOptionsForLocation(destLocationSel.value)}`;
                 destSel.disabled = !destLocationSel.value;
+                refreshSearchable(destSel);
                 lookupRate(row);
             });
 
@@ -992,10 +1016,10 @@
                 destination_port_id: row.querySelector('[data-field="destination_port_id"]')
                     .value,
                 container_id: row.querySelector('[data-field="container_id"]').value,
-                container_class_id: row.querySelector('[data-field="container_class_id"]')
-                    .value,
-                container_size_id: row.querySelector('[data-field="container_size_id"]')
-                    .value,
+                container_class_id: classIdForPayload(row.querySelector(
+                    '[data-field="container_class_id"]')),
+                container_size_id: sizeIdForPayload(row.querySelector(
+                    '[data-field="container_size_id"]')),
                 container_variant_id: row.querySelector(
                     '[data-field="container_variant_id"]').value,
                 min_van_qty: row.querySelector('[data-field="min_van_qty"]').value || null,
@@ -1143,6 +1167,10 @@
                 leadPortsData;
 
             return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
+        }
+
+        function refreshSearchable(el) {
+            el?._searchableSelect?.refresh();
         }
 
         async function loadLeadContainerLookups() {
@@ -1388,6 +1416,9 @@
             wrap.innerHTML = leadContainerCardHtml();
             const card = wrap.firstElementChild;
 
+            ['.origin-location-select', '.origin-port-select', '.destination-location-select', '.destination-port-select']
+                .forEach((sel) => makeSearchableSelect(card.querySelector(sel)));
+
             card.querySelector('.type-select').addEventListener('change', () => {
                 applyLeadContainerTypeVisibility(card);
                 syncLeadContainerBookingUnitType(card);
@@ -1398,11 +1429,13 @@
                 const portSelect = card.querySelector('.origin-port-select');
                 portSelect.innerHTML = `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
                 portSelect.disabled = !this.value;
+                refreshSearchable(portSelect);
             });
             card.querySelector('.destination-location-select').addEventListener('change', function() {
                 const portSelect = card.querySelector('.destination-port-select');
                 portSelect.innerHTML = `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
                 portSelect.disabled = !this.value;
+                refreshSearchable(portSelect);
             });
 
             card.querySelector('.dg-file-input').addEventListener('change', async function() {

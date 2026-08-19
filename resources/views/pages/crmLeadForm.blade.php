@@ -432,6 +432,10 @@
             return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
         }
 
+        function refreshSearchable(el) {
+            el?._searchableSelect?.refresh();
+        }
+
         async function loadContainerLookups() {
             const [portsRes, locationsRes, containersRes] = await Promise.all([
                 apiCall({
@@ -820,6 +824,9 @@
             wrap.insertAdjacentHTML('beforeend', containerCardHtml(index));
             const card = wrap.lastElementChild;
 
+            ['.origin-location-select', '.origin-port-select', '.destination-location-select', '.destination-port-select']
+                .forEach((sel) => makeSearchableSelect(card.querySelector(sel)));
+
             card.querySelector('.type-select').addEventListener('change', () => {
                 applyTypeVisibility(card);
                 syncBookingUnitType(card);
@@ -833,11 +840,13 @@
                 const portSelect = card.querySelector('.origin-port-select');
                 portSelect.innerHTML = `<option value="">Select Port</option>${portOptionsForLocation(this.value)}`;
                 portSelect.disabled = !this.value;
+                refreshSearchable(portSelect);
             });
             card.querySelector('.destination-location-select').addEventListener('change', function() {
                 const portSelect = card.querySelector('.destination-port-select');
                 portSelect.innerHTML = `<option value="">Select Port</option>${portOptionsForLocation(this.value)}`;
                 portSelect.disabled = !this.value;
+                refreshSearchable(portSelect);
             });
 
             card.querySelector('.dg-file-input').addEventListener('change', async function() {
@@ -1047,6 +1056,9 @@
                         .location_id ?? '';
                     card.querySelector('.destination-port-select').disabled = !destinationPort.location_id;
                 }
+
+                ['.origin-location-select', '.origin-port-select', '.destination-location-select', '.destination-port-select']
+                    .forEach((sel) => refreshSearchable(card.querySelector(sel)));
 
                 if (c.dg_documentary_requirement) {
                     card.querySelector('.dg-file-status').textContent =
