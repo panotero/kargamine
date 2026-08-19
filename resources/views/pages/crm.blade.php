@@ -1131,8 +1131,10 @@
         let leadPortsOptionsHtml = '';
         let leadLocationsOptionsHtml = '';
         let leadPortsData = [];
-        let leadClassOptionsHtml = '';
-        let leadSizeOptionsHtml = '';
+        // Class/size lists are owned per-Container (see Container::syncCatalog())
+        // and keyed here by Container.code, which lines up with CONTAINER_TYPES'
+        // values (CV/RF/FR/LC/RC) - not global lookups anymore.
+        let leadContainerCatalogByCode = {};
         let leadContainerLookupsLoaded = false;
 
         function leadPortOptionsForLocation(locationId) {
@@ -1146,7 +1148,7 @@
         async function loadLeadContainerLookups() {
             if (leadContainerLookupsLoaded) return;
 
-            const [portsRes, locationsRes, classesRes, sizesRes] = await Promise.all([
+            const [portsRes, locationsRes, containersRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
@@ -1157,11 +1159,7 @@
                 }),
                 apiCall({
                     mode: 'GET',
-                    url: '/api/containerClasses?per_page=200'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containerSizes?per_page=200'
+                    url: '/api/containers?per_page=200'
                 }),
             ]);
 
@@ -1176,17 +1174,32 @@
                     .map((l) => `<option value="${l.location_id}">${l.name}</option>`)
                     .join('');
             }
-            if (classesRes.success) {
-                leadClassOptionsHtml = classesRes.data.data
-                    .map((c) => `<option value="${c.id}">${c.class}</option>`)
-                    .join('');
-            }
-            if (sizesRes.success) {
-                leadSizeOptionsHtml = sizesRes.data.data
-                    .map((s) => `<option value="${s.id}">${s.size}</option>`)
-                    .join('');
+            if (containersRes.success) {
+                leadContainerCatalogByCode = {};
+                containersRes.data.data.forEach((container) => {
+                    leadContainerCatalogByCode[container.code] = {
+                        sizes: container.sizes ?? [],
+                        classes: container.classes ?? [],
+                    };
+                });
             }
             leadContainerLookupsLoaded = true;
+        }
+
+        function populateLeadSizeClassOptions(card) {
+            const type = card.querySelector('.type-select').value;
+            const catalog = leadContainerCatalogByCode[type] ?? {
+                sizes: [],
+                classes: []
+            };
+
+            card.querySelector('[data-field="container_size_id"]').innerHTML =
+                '<option value="">Select Size</option>' +
+                catalog.sizes.map((s) => `<option value="${s.id}">${s.size}</option>`).join('');
+
+            card.querySelector('[data-field="container_class_id"]').innerHTML =
+                '<option value="">Select Class</option>' +
+                catalog.classes.map((c) => `<option value="${c.id}">${c.class}</option>`).join('');
         }
 
         const serviceModeOptionsHtml = (placeholder) =>
@@ -1234,13 +1247,13 @@
             <div class="field-convan-class hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Class <span class="req-asterisk">*</span></label>
                 <select data-field="container_class_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    <option value="">Select Class</option>${leadClassOptionsHtml}
+                    <option value="">Select Class</option>
                 </select>
             </div>
             <div class="field-convan-size hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
                 <select data-field="container_size_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    <option value="">Select Size</option>${leadSizeOptionsHtml}
+                    <option value="">Select Size</option>
                 </select>
             </div>
             <div class="field-temperature hidden">
@@ -1378,6 +1391,7 @@
             card.querySelector('.type-select').addEventListener('change', () => {
                 applyLeadContainerTypeVisibility(card);
                 syncLeadContainerBookingUnitType(card);
+                populateLeadSizeClassOptions(card);
             });
 
             card.querySelector('.origin-location-select').addEventListener('change', function() {
@@ -1413,6 +1427,7 @@
 
             applyLeadContainerTypeVisibility(card);
             syncLeadContainerBookingUnitType(card);
+            populateLeadSizeClassOptions(card);
         }
 
         document.getElementById('leadAddContainerBtn').addEventListener('click', async function() {

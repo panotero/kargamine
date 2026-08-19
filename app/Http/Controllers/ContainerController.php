@@ -40,9 +40,11 @@ class ContainerController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
             'sizes' => ['present', 'array'],
-            'sizes.*' => ['required', 'string', 'max:255'],
+            'sizes.*.id' => ['nullable', 'integer'],
+            'sizes.*.size' => ['required', 'string', 'max:255'],
             'classes' => ['sometimes', 'array'],
-            'classes.*' => ['required', 'string', 'max:255'],
+            'classes.*.id' => ['nullable', 'integer'],
+            'classes.*.class' => ['required', 'string', 'max:255'],
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -83,9 +85,11 @@ class ContainerController extends Controller
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
             'sizes' => ['sometimes', 'array'],
-            'sizes.*' => ['required', 'string', 'max:255'],
+            'sizes.*.id' => ['nullable', 'integer'],
+            'sizes.*.size' => ['required', 'string', 'max:255'],
             'classes' => ['sometimes', 'array'],
-            'classes.*' => ['required', 'string', 'max:255'],
+            'classes.*.id' => ['nullable', 'integer'],
+            'classes.*.class' => ['required', 'string', 'max:255'],
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -102,26 +106,44 @@ class ContainerController extends Controller
 
         $data = $validator->validated();
 
-        DB::transaction(function () use ($data, $container) {
-            $container->fill(array_filter([
-                'code' => $data['code'] ?? null,
-                'name' => $data['name'] ?? null,
-            ], fn ($v) => $v !== null));
+        try {
+            DB::transaction(function () use ($data, $container) {
+                $container->fill(array_filter([
+                    'code' => $data['code'] ?? null,
+                    'name' => $data['name'] ?? null,
+                ], fn ($v) => $v !== null));
 
-            if (array_key_exists('is_active', $data)) {
-                $container->is_active = $data['is_active'];
+                if (array_key_exists('is_active', $data)) {
+                    $container->is_active = $data['is_active'];
+                }
+
+                $container->save();
+
+                // syncCatalog() only removes sizes/classes that were dropped
+                // from the submitted lists - kept ones (and their variants)
+                // are left alone. A removed size/class takes its lane tariff
+                // prices and container assets with it, but still fails here
+                // if a variant is tied to a proposal, contract or booking
+                // line (restrictOnDelete), or one of its assets is already
+                // assigned to a booking (ProtectedRecordException) - that's
+                // intentional, it protects existing operational/financial
+                // records.
+                if (array_key_exists('sizes', $data)) {
+                    $container->syncCatalog($data['classes'] ?? [], $data['sizes']);
+                }
+            });
+        } catch (\Illuminate\Database\QueryException|\App\Exceptions\ProtectedRecordException $e) {
+            if ($e instanceof \App\Exceptions\ProtectedRecordException || $e->getCode() === '23000') {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e instanceof \App\Exceptions\ProtectedRecordException
+                        ? $e->getMessage()
+                        : 'Unable to remove one or more of those sizes/classes - they still have proposals, contracts, or bookings tied to them. Keep those entries (or clear out the related records first) and try again.',
+                ], 422);
             }
 
-            $container->save();
-
-            // Full replace when sizes are supplied. A removed combo that
-            // already has lane tariff pricing tied to it will fail here
-            // (restrictOnDelete) - that's intentional, it protects existing
-            // pricing history.
-            if (array_key_exists('sizes', $data)) {
-                $container->syncCatalog($data['classes'] ?? [], $data['sizes']);
-            }
-        });
+            throw $e;
+        }
 
         $container->load(['classes', 'sizes', 'variants.containerClass', 'variants.containerSize']);
 

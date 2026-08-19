@@ -419,8 +419,10 @@
         let portsOptionsHtml = '';
         let locationsOptionsHtml = '';
         let portsData = [];
-        let classOptionsHtml = '';
-        let sizeOptionsHtml = '';
+        // Class/size lists are owned per-Container (see Container::syncCatalog())
+        // and keyed here by Container.code, which lines up with CONTAINER_TYPES'
+        // values (CV/RF/FR/LC/RC) - not global lookups anymore.
+        let containerCatalogByCode = {};
 
         function portOptionsForLocation(locationId) {
             const ports = locationId ?
@@ -431,7 +433,7 @@
         }
 
         async function loadContainerLookups() {
-            const [portsRes, locationsRes, classesRes, sizesRes] = await Promise.all([
+            const [portsRes, locationsRes, containersRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
@@ -442,11 +444,7 @@
                 }),
                 apiCall({
                     mode: 'GET',
-                    url: '/api/containerClasses?per_page=200'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containerSizes?per_page=200'
+                    url: '/api/containers?per_page=200'
                 }),
             ]);
 
@@ -461,16 +459,31 @@
                     .map((l) => `<option value="${l.location_id}">${l.name}</option>`)
                     .join('');
             }
-            if (classesRes.success) {
-                classOptionsHtml = classesRes.data.data
-                    .map((c) => `<option value="${c.id}">${c.class}</option>`)
-                    .join('');
+            if (containersRes.success) {
+                containerCatalogByCode = {};
+                containersRes.data.data.forEach((container) => {
+                    containerCatalogByCode[container.code] = {
+                        sizes: container.sizes ?? [],
+                        classes: container.classes ?? [],
+                    };
+                });
             }
-            if (sizesRes.success) {
-                sizeOptionsHtml = sizesRes.data.data
-                    .map((s) => `<option value="${s.id}">${s.size}</option>`)
-                    .join('');
-            }
+        }
+
+        function populateSizeClassOptions(card) {
+            const type = card.querySelector('.type-select').value;
+            const catalog = containerCatalogByCode[type] ?? {
+                sizes: [],
+                classes: []
+            };
+
+            card.querySelector('[data-field="container_size_id"]').innerHTML =
+                '<option value="">Select Size</option>' +
+                catalog.sizes.map((s) => `<option value="${s.id}">${s.size}</option>`).join('');
+
+            card.querySelector('[data-field="container_class_id"]').innerHTML =
+                '<option value="">Select Class</option>' +
+                catalog.classes.map((c) => `<option value="${c.id}">${c.class}</option>`).join('');
         }
 
         const serviceModeOptionsHtml = (placeholder) =>
@@ -661,14 +674,14 @@
             <div class="field-convan-size hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
                 <select data-field="container_size_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                    <option value="">Select Size</option>${sizeOptionsHtml}
+                    <option value="">Select Size</option>
                 </select>
             </div>
 
             <div class="field-convan-class hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">ConVan Class<span class="req-asterisk">*</span></label>
                 <select data-field="container_class_id" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
-                    <option value="">Select Class</option>${classOptionsHtml}
+                    <option value="">Select Class</option>
                 </select>
             </div>
             <div class="field-temperature hidden">
@@ -810,8 +823,11 @@
             card.querySelector('.type-select').addEventListener('change', () => {
                 applyTypeVisibility(card);
                 syncBookingUnitType(card);
+                populateSizeClassOptions(card);
             });
             card.querySelector('.remove-container').addEventListener('click', () => card.remove());
+
+            populateSizeClassOptions(card);
 
             card.querySelector('.origin-location-select').addEventListener('change', function() {
                 const portSelect = card.querySelector('.origin-port-select');
@@ -1005,6 +1021,11 @@
                 addContainerCard();
                 const card = document.getElementById('containersContainer').lastElementChild;
 
+                card.querySelector('.type-select').value = c.container_type;
+                applyTypeVisibility(card);
+                syncBookingUnitType(card);
+                populateSizeClassOptions(card);
+
                 Object.entries(c).forEach(([key, val]) => {
                     const el = card.querySelector(`[data-field="${key}"]`);
                     if (!el) return;
@@ -1013,10 +1034,6 @@
                         formatCurrencyDisplay(val ?? '');
                     else el.value = val ?? '';
                 });
-
-                card.querySelector('.type-select').value = c.container_type;
-                applyTypeVisibility(card);
-                syncBookingUnitType(card);
 
                 const originPort = portsData.find((p) => String(p.port_id) === String(c.origin_port_id));
                 if (originPort) {

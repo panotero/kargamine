@@ -21,7 +21,7 @@ class PortSeeder extends Seeder
     public function run(): void
     {
         $data = json_decode(
-            file_get_contents(__DIR__.'/data/locations.json'),
+            file_get_contents(__DIR__ . '/data/locations.json'),
             associative: true
         );
 

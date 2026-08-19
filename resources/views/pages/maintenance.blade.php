@@ -1733,35 +1733,43 @@
 
         let editingContainerId = null;
 
-        function catalogRowHtml(field, placeholder) {
-            return `
-        <div class="catalog-row flex items-center gap-2" data-catalog-row>
-            <input type="text" data-field="${field}" required placeholder="${placeholder}"
-                   class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
-            <button type="button" class="remove-catalog-row text-zinc-400 hover:text-red-600 p-1">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-    `;
-        }
-
-        function addSizeRow(value = '') {
+        // Size/class rows carry the existing row's id (hidden input, same
+        // idRowHtml pattern as the Location modal's Ports/Serviceable Areas
+        // below) so Container::syncCatalog() can rename a row in place
+        // instead of deleting + recreating it - a rename never touches
+        // anything already referencing that id (variants, lane tariff
+        // pricing, proposals, contracts, bookings, container assets).
+        function addSizeRow(value = '', id = null) {
             const wrap = document.getElementById('containerSizeRows');
-            wrap.insertAdjacentHTML('beforeend', catalogRowHtml('size', 'e.g. 20-GP'));
-            if (value) wrap.lastElementChild.querySelector('[data-field="size"]').value = value;
+            wrap.insertAdjacentHTML('beforeend', idRowHtml('id', 'size', 'e.g. 20-GP'));
+            const row = wrap.lastElementChild;
+            row.querySelector('[data-field="size"]').value = value;
+            row.querySelector('[data-field="id"]').value = id ?? '';
         }
 
-        function addClassRow(value = '') {
+        function addClassRow(value = '', id = null) {
             const wrap = document.getElementById('containerClassRows');
-            wrap.insertAdjacentHTML('beforeend', catalogRowHtml('class', 'e.g. A'));
-            if (value) wrap.lastElementChild.querySelector('[data-field="class"]').value = value;
+            wrap.insertAdjacentHTML('beforeend', idRowHtml('id', 'class', 'e.g. A'));
+            const row = wrap.lastElementChild;
+            row.querySelector('[data-field="class"]').value = value;
+            row.querySelector('[data-field="id"]').value = id ?? '';
         }
 
-        function removeCatalogRowOnClick(e) {
+        async function removeCatalogRowOnClick(e) {
             const btn = e.target.closest('.remove-catalog-row');
-            if (btn) btn.closest('[data-catalog-row]').remove();
+            if (!btn) return;
+
+            const row = btn.closest('[data-catalog-row]');
+
+            // Only confirm for rows backed by an existing DB record - a
+            // freshly-added blank row has no id yet and nothing to lose.
+            const idInput = row.querySelector('input[type="hidden"]');
+            if (idInput && idInput.value) {
+                const confirmed = await window.customConfirm('Remove this entry? Any pricing built only on it (lane tariff rates, port charges, handling fees, trucking tariffs) will be deleted too once saved. This cannot be undone.');
+                if (!confirmed) return;
+            }
+
+            row.remove();
         }
 
         document.getElementById('containerSizeRows').addEventListener('click', removeCatalogRowOnClick);
@@ -1795,8 +1803,8 @@
                 document.getElementById('containerCodeInput').value = row.code;
                 document.getElementById('containerNameInput').value = row.name;
                 document.getElementById('containerActiveInput').checked = Boolean(row.is_active);
-                (row.sizes ?? []).forEach((s) => addSizeRow(s.size));
-                (row.classes ?? []).forEach((c) => addClassRow(c.class));
+                (row.sizes ?? []).forEach((s) => addSizeRow(s.size, s.id));
+                (row.classes ?? []).forEach((c) => addClassRow(c.class, c.id));
             } else {
                 document.getElementById('containerIdInput').value = '';
                 addSizeRow();
@@ -1807,17 +1815,11 @@
             });
         }
 
-        function collectCatalogValues(wrapperId, field) {
-            return Array.from(document.querySelectorAll(`#${wrapperId} [data-field="${field}"]`))
-                .map((el) => el.value.trim())
-                .filter(Boolean);
-        }
-
         document.getElementById('containerForm').addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            const sizes = collectCatalogValues('containerSizeRows', 'size');
-            const classes = collectCatalogValues('containerClassRows', 'class');
+            const sizes = collectIdRows('containerSizeRows', 'id', 'size');
+            const classes = collectIdRows('containerClassRows', 'id', 'class');
 
             if (!sizes.length && !classes.length) {
                 showMessage({

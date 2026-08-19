@@ -23,8 +23,8 @@ class ContainerCatalogSeeder extends Seeder
     {
         $containers = [
             ['code' => 'CV', 'name' => 'Container Van', 'sizes' => ['20FT', '40FT'], 'classes' => ['Standard', 'High Cube']],
-            ['code' => 'RF', 'name' => 'Reefer Van', 'sizes' => ['20FT', '40FT'], 'classes' => []],
-            ['code' => 'FR', 'name' => 'Flat Rack', 'sizes' => ['20FT', '40FT'], 'classes' => []],
+            ['code' => 'RF', 'name' => 'Reefer Van', 'sizes' => ['20FT', '40FT'], 'classes' => ['Standard', 'High Cube']],
+            ['code' => 'FR', 'name' => 'Flat Rack', 'sizes' => ['20FT', '40FT'], 'classes' => ['Standard', 'Collapsible']],
             // Loose Cargo / Rolling Cargo don't have a fixed size - they vary
             // and are priced by class only (MT/CBM).
             ['code' => 'LC', 'name' => 'Loose Cargo', 'sizes' => [], 'classes' => ['MT', 'CBM']],
@@ -37,7 +37,10 @@ class ContainerCatalogSeeder extends Seeder
                 ['name' => $definition['name'], 'is_active' => true]
             );
 
-            $container->syncCatalog($definition['classes'], $definition['sizes']);
+            $container->syncCatalog(
+                collect($definition['classes'])->map(fn ($class) => ['class' => $class])->all(),
+                collect($definition['sizes'])->map(fn ($size) => ['size' => $size])->all()
+            );
         }
     }
 }
