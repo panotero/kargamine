@@ -5,40 +5,49 @@
             <h1 class="text-2xl font-bold">Clients Master Data</h1>
             <p class="text-zinc-500">Manage company master file records</p>
         </div>
-        <button id="btnNewClient" class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-lg">
-            + New Client
-        </button>
+        <div class="flex items-center gap-4">
+            <div class="text-right">
+                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400">Incomplete</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countIncompleteStat">0</p>
+            </div>
+            <button id="btnNewClient" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg">
+                + New Client
+            </button>
+        </div>
     </div>
 
-    {{-- Status count cards --}}
+    {{-- Status filter chips - a 2-state (Complete/Incomplete) binary, so a
+         directional stepper (like Proposals' 5-status workflow strip) would
+         be dishonest about what the data represents. --}}
     <section class="w-full my-5">
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div class="clientStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer ring-2 ring-blue-500"
+        <div class="flex items-center flex-wrap gap-2">
+            <button type="button"
+                class="clientStatusBtn rounded-full px-3 py-1.5 text-xs font-semibold border border-dashed border-zinc-300 text-zinc-500 dark:border-zinc-600 dark:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                 data-status="all">
-                <div class="w-full py-1 rounded-full bg-blue-500"></div>
-                <p class="text-xs text-zinc-400 font-semibold mt-2">ALL</p>
-                <p class="text-2xl font-bold text-black" id="countAll">0</p>
-            </div>
-            <div class="clientStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
+                All <span id="countAll">0</span>
+            </button>
+            <button type="button"
+                class="clientStatusBtn rounded-full px-3 py-1.5 text-xs font-semibold border border-green-300 text-green-600 dark:border-green-700 dark:text-green-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                 data-status="complete">
-                <div class="w-full py-1 rounded-full bg-green-500"></div>
-                <p class="text-xs text-zinc-400 font-semibold mt-2">COMPLETE</p>
-                <p class="text-2xl font-bold text-black" id="countComplete">0</p>
-            </div>
-            <div class="clientStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
+                Complete <span id="countComplete">0</span>
+            </button>
+            <button type="button"
+                class="clientStatusBtn rounded-full px-3 py-1.5 text-xs font-semibold border border-amber-300 text-amber-600 dark:border-amber-700 dark:text-amber-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                 data-status="incomplete">
-                <div class="w-full py-1 rounded-full bg-amber-500"></div>
-                <p class="text-xs text-zinc-400 font-semibold mt-2">INCOMPLETE</p>
-                <p class="text-2xl font-bold text-black" id="countIncomplete">0</p>
-            </div>
+                Incomplete <span id="countIncomplete">0</span>
+            </button>
         </div>
     </section>
 
     <x-table id="tableClientMasters" />
 </div>
 
-{{-- Complete-client detail modal - single scrolling page, no tabs --}}
-<x-modal id="ClientDetailModal">
+{{-- Complete-client detail modal - left rail (read-only reference facts) +
+     right pane with a tab bar. Proposals/Contracts are ordered first since
+     this modal is usually opened on an already-complete client specifically
+     to work a proposal or contract, matching how the CRM Lead Info modal
+     orders its own tabs. --}}
+<x-modal id="ClientDetailModal" maxWidth="lg:max-w-[78vw]">
     <div class="p-5 border-b flex justify-between items-center">
         <div>
             <p class="text-lg font-semibold" id="cdClientName">-</p>
@@ -47,245 +56,318 @@
         <button class="modal-close">✕</button>
     </div>
 
-    <div class="max-h-[75vh] overflow-y-auto p-5 space-y-6">
+    <div class="flex" style="max-height: 75vh;">
 
-        {{-- ================= CLIENT INFORMATION ================= --}}
-        <section class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Client Information</p>
-                <div class="flex gap-2">
-                    <button type="button" id="cdEditInfoBtn"
-                        class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-200">✎
-                        Edit</button>
-                    <button type="button" id="cdSaveInfoBtn"
-                        class="hidden text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save</button>
-                    <button type="button" id="cdCancelInfoBtn"
-                        class="hidden text-xs px-3 py-1.5 rounded-lg border dark:text-zinc-200">Cancel</button>
-                </div>
+        {{-- ================= LEFT RAIL - read-only reference data ================= --}}
+        <div class="w-64 shrink-0 border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4 space-y-6 overflow-y-auto">
+            <div>
+                <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Company</p>
+                <div id="cdRailCompany" class="space-y-3"></div>
+            </div>
+            <div>
+                <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Ownership</p>
+                <div id="cdRailOwnership" class="space-y-3"></div>
+            </div>
+        </div>
+
+        {{-- ================= RIGHT PANE - tab bar + panes ================= --}}
+        <div class="flex-1 min-w-0 flex flex-col">
+            <div class="flex gap-1 border-b border-zinc-200 dark:border-zinc-700 px-3 pt-2 shrink-0">
+                <button type="button" data-tab="proposals"
+                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Proposals</button>
+                <button type="button" data-tab="contracts"
+                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Contracts</button>
+                <button type="button" data-tab="company"
+                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Company
+                    Info &amp; Addresses</button>
+                <button type="button" data-tab="contacts"
+                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Contacts</button>
+                <button type="button" data-tab="finance"
+                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Finance
+                    &amp; Commodity</button>
             </div>
 
-            {{-- ---------- READ-ONLY VIEW ---------- --}}
-            <div id="cdInfoReadView" class="space-y-4 text-sm">
-                <div id="cdInfoContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            <div class="flex-1 overflow-y-auto p-5">
 
-                <div class="border-t pt-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Addresses</p>
-                    <div id="cdAddressesReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
-                </div>
-
-                <div class="border-t pt-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Contacts</p>
-                    <div id="cdContactsReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
-                </div>
-
-                <div class="border-t pt-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Finance</p>
-                    <div id="cdFinanceReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-                </div>
-
-                <div class="border-t pt-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Commodity Type &amp; Maximum
-                        Declared Value</p>
-                    <div id="cdCommodityReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
-                </div>
-            </div>
-
-            {{-- ---------- EDIT VIEW ---------- --}}
-            <div id="cdInfoEditView" class="hidden space-y-6 text-sm">
-
-                {{-- Company Information --}}
-                <div>
-                    <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Company Information</p>
-                    <form id="cdStage1Form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Code</label>
-                            <input type="text" name="customer_code" readonly
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Mnemonic</label>
-                            <input type="text" name="client_mnemonic"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client/Business Name</label>
-                            <input type="text" name="company_name"
-                                class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Category</label>
-                            <select name="client_category"
-                                class="cdClientCategorySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                <option value="">Select Client Category</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Classification</label>
-                            <select name="client_classification"
-                                class="cdClientClassificationSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                <option value="">Select Client Classification</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium text-zinc-400 uppercase">Client Industry</label>
-                            <select name="industry"
-                                class="cdIndustrySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                <option value="">Select Industry</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-
-                {{-- Addresses --}}
-                <div class="border-t pt-4">
+                {{-- ================= TAB: PROPOSALS ================= --}}
+                <div class="cd-tab-pane" data-tab-pane="proposals">
                     <div class="flex justify-between items-center mb-3">
-                        <p class="font-semibold text-zinc-700 dark:text-zinc-300">Address(es) <span
-                                class="req-asterisk">*</span></p>
-                        <button type="button" id="cdAddAddressBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
-                            Add Address</button>
+                        <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Proposals</p>
+                        <button id="cdAddProposalBtn"
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">+ Add
+                            Proposal</button>
                     </div>
-                    <div id="cdAddressesEditContainer" class="space-y-4"></div>
+                    <div id="cdProposalsContainer" class="space-y-3"></div>
+                    <div id="cdProposalsPagination"></div>
                 </div>
 
-                {{-- Contacts --}}
-                <div class="border-t pt-4">
+                {{-- ================= TAB: CONTRACTS ================= --}}
+                <div class="cd-tab-pane hidden" data-tab-pane="contracts">
                     <div class="flex justify-between items-center mb-3">
-                        <p class="font-semibold text-zinc-700 dark:text-zinc-300">Contacts</p>
-                        <button type="button" id="cdAddContactBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
-                            Add Contact</button>
+                        <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Contracts</p>
+                        <button id="cdAddContractBtn"
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">+ Add
+                            Contract</button>
                     </div>
-                    <div id="cdContactsEditContainer" class="space-y-3"></div>
+                    <div id="cdContractsContainer" class="space-y-2"></div>
                 </div>
 
-                {{-- Finance & Billing --}}
-                <div class="border-t pt-4">
-                    <form id="cdStage3Form" class="space-y-6">
+                {{-- ================= TAB: COMPANY INFO & ADDRESSES ================= --}}
+                <div class="cd-tab-pane hidden" data-tab-pane="company">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Company Info &amp;
+                            Addresses</p>
+                        <div class="flex gap-2">
+                            <button type="button" id="ciEditBtn"
+                                class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-200">✎
+                                Edit</button>
+                            <button type="button" id="ciSaveBtn"
+                                class="hidden text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save</button>
+                            <button type="button" id="ciCancelBtn"
+                                class="hidden text-xs px-3 py-1.5 rounded-lg border dark:text-zinc-200">Cancel</button>
+                        </div>
+                    </div>
+
+                    {{-- ---------- READ-ONLY VIEW ---------- --}}
+                    <div id="ciReadView" class="space-y-4 text-sm">
+                        <div id="ciCompanyReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+
+                        <div class="border-t pt-3">
+                            <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Addresses</p>
+                            <div id="cdAddressesReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                        </div>
+                    </div>
+
+                    {{-- ---------- EDIT VIEW ---------- --}}
+                    <div id="ciEditView" class="hidden space-y-6 text-sm">
+
+                        {{-- Company Information --}}
                         <div>
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Finance</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Company Information</p>
+                            <form id="cdStage1Form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client Business
-                                        Name</label>
-                                    <input type="text" name="finance[client_business_name]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client Code</label>
+                                    <input type="text" name="customer_code" readonly
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-zinc-50 text-zinc-600 cursor-not-allowed">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN Number</label>
-                                    <input type="text" name="finance[tin_number]"
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client Mnemonic</label>
+                                    <input type="text" name="client_mnemonic"
                                         class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registered
-                                        Address</label>
-                                    <textarea name="finance[tin_registered_address]" rows="2"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client/Business
+                                        Name</label>
+                                    <input type="text" name="company_name"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Registered Tax
-                                        Type</label>
-                                    <select name="finance[registered_tax_type]"
-                                        class="cdRegisteredTaxTypeSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                        <option value="">— Select —</option>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client Category</label>
+                                    <select name="client_category"
+                                        class="cdClientCategorySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Client Category</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax
-                                        Code</label>
-                                    <input type="text" name="finance[withholding_tax_code]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Trade Name</label>
-                                    <input type="text" name="finance[trade_name]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registration
-                                        Date</label>
-                                    <input type="date" name="finance[tin_registration_date]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Line of Business</label>
-                                    <input type="text" name="finance[line_of_business]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Tax Percent</label>
-                                    <input type="number" step="0.01" name="finance[tax_percent]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax
-                                        Percent</label>
-                                    <input type="number" step="0.01" name="finance[withholding_tax_percent]"
-                                        class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                </div>
-                                <div id="cdModeOfPaymentField">
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Mode of Payment</label>
-                                    <select name="finance[mode_of_payment]"
-                                        class="cdModeOfPaymentSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                        <option value="">Select Mode of Payment</option>
-                                    </select>
-                                </div>
-                                <div id="cdCreditTermsField" class="hidden">
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Credit Terms</label>
-                                    <select name="finance[credit_terms]"
-                                        class="cdCreditTermsSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                        <option value="">Select Credit Terms</option>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client
+                                        Classification</label>
+                                    <select name="client_classification"
+                                        class="cdClientClassificationSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Client Classification</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-medium text-zinc-400 uppercase">Cargo Release Order
-                                        (CRO)</label>
-                                    <select name="finance[cro]"
-                                        class="cdCroSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
-                                        <option value="">Select CRO</option>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Client Industry</label>
+                                    <select name="industry"
+                                        class="cdIndustrySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                        <option value="">Select Industry</option>
                                     </select>
                                 </div>
-                            </div>
+                            </form>
                         </div>
 
+                        {{-- Addresses --}}
                         <div class="border-t pt-4">
                             <div class="flex justify-between items-center mb-3">
-                                <p class="font-semibold text-zinc-700 dark:text-zinc-300">Commodity Type &amp; Maximum
-                                    Declared Value</p>
-                                <button type="button" id="cdAddCommodityBtn"
+                                <p class="font-semibold text-zinc-700 dark:text-zinc-300">Address(es) <span
+                                        class="req-asterisk">*</span></p>
+                                <button type="button" id="cdAddAddressBtn"
                                     class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
-                                    Add Commodity</button>
+                                    Add Address</button>
                             </div>
-                            <div id="cdCommodityEditContainer" class="space-y-3"></div>
+                            <div id="cdAddressesEditContainer" class="space-y-4"></div>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </section>
 
-        {{-- ================= CONTRACTS ================= --}}
-        <section class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Contracts</p>
-                <button id="cdAddContractBtn"
-                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">+ Add
-                    Contract</button>
-            </div>
-            <div id="cdContractsContainer" class="space-y-2"></div>
-        </section>
+                {{-- ================= TAB: CONTACTS ================= --}}
+                <div class="cd-tab-pane hidden" data-tab-pane="contacts">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Contacts</p>
+                        <div class="flex gap-2">
+                            <button type="button" id="ctEditBtn"
+                                class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-200">✎
+                                Edit</button>
+                            <button type="button" id="ctSaveBtn"
+                                class="hidden text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save</button>
+                            <button type="button" id="ctCancelBtn"
+                                class="hidden text-xs px-3 py-1.5 rounded-lg border dark:text-zinc-200">Cancel</button>
+                        </div>
+                    </div>
 
-        {{-- ================= PROPOSALS ================= --}}
-        <section class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Proposals</p>
-                <button id="cdAddProposalBtn"
-                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">+ Add
-                    Proposal</button>
-            </div>
-            <div id="cdProposalsContainer" class="space-y-3"></div>
-            <div id="cdProposalsPagination"></div>
-        </section>
+                    {{-- ---------- READ-ONLY VIEW ---------- --}}
+                    <div id="ctReadView" class="text-sm">
+                        <div id="cdContactsReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                    </div>
 
+                    {{-- ---------- EDIT VIEW ---------- --}}
+                    <div id="ctEditView" class="hidden text-sm">
+                        <div class="flex justify-end mb-3">
+                            <button type="button" id="cdAddContactBtn"
+                                class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                                Add Contact</button>
+                        </div>
+                        <div id="cdContactsEditContainer" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                {{-- ================= TAB: FINANCE & COMMODITY ================= --}}
+                <div class="cd-tab-pane hidden" data-tab-pane="finance">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Finance &amp;
+                            Commodity</p>
+                        <div class="flex gap-2">
+                            <button type="button" id="fnEditBtn"
+                                class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 dark:text-zinc-200">✎
+                                Edit</button>
+                            <button type="button" id="fnSaveBtn"
+                                class="hidden text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save</button>
+                            <button type="button" id="fnCancelBtn"
+                                class="hidden text-xs px-3 py-1.5 rounded-lg border dark:text-zinc-200">Cancel</button>
+                        </div>
+                    </div>
+
+                    {{-- ---------- READ-ONLY VIEW ---------- --}}
+                    <div id="fnReadView" class="space-y-4 text-sm">
+                        <div>
+                            <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Finance</p>
+                            <div id="cdFinanceReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                        </div>
+                        <div class="border-t pt-3">
+                            <p class="text-[11px] font-semibold text-zinc-400 uppercase mb-2">Commodity Type &amp;
+                                Maximum Declared Value</p>
+                            <div id="cdCommodityReadContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                        </div>
+                    </div>
+
+                    {{-- ---------- EDIT VIEW ---------- --}}
+                    <div id="fnEditView" class="hidden space-y-6 text-sm">
+                        <form id="cdStage3Form" class="space-y-6">
+                            <div>
+                                <p class="font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Finance</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Client Business
+                                            Name</label>
+                                        <input type="text" name="finance[client_business_name]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">TIN Number</label>
+                                        <input type="text" name="finance[tin_number]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registered
+                                            Address</label>
+                                        <textarea name="finance[tin_registered_address]" rows="2"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Registered Tax
+                                            Type</label>
+                                        <select name="finance[registered_tax_type]"
+                                            class="cdRegisteredTaxTypeSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                            <option value="">— Select —</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax
+                                            Code</label>
+                                        <input type="text" name="finance[withholding_tax_code]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Trade Name</label>
+                                        <input type="text" name="finance[trade_name]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">TIN Registration
+                                            Date</label>
+                                        <input type="date" name="finance[tin_registration_date]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Line of
+                                            Business</label>
+                                        <input type="text" name="finance[line_of_business]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Tax Percent</label>
+                                        <input type="number" step="0.01" name="finance[tax_percent]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Withholding Tax
+                                            Percent</label>
+                                        <input type="number" step="0.01" name="finance[withholding_tax_percent]"
+                                            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                    </div>
+                                    <div id="cdModeOfPaymentField">
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Mode of
+                                            Payment</label>
+                                        <select name="finance[mode_of_payment]"
+                                            class="cdModeOfPaymentSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                            <option value="">Select Mode of Payment</option>
+                                        </select>
+                                    </div>
+                                    <div id="cdCreditTermsField" class="hidden">
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Credit
+                                            Terms</label>
+                                        <select name="finance[credit_terms]"
+                                            class="cdCreditTermsSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                            <option value="">Select Credit Terms</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-medium text-zinc-400 uppercase">Cargo Release
+                                            Order (CRO)</label>
+                                        <select name="finance[cro]"
+                                            class="cdCroSelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
+                                            <option value="">Select CRO</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <p class="font-semibold text-zinc-700 dark:text-zinc-300">Commodity Type &amp;
+                                        Maximum Declared Value</p>
+                                    <button type="button" id="cdAddCommodityBtn"
+                                        class="text-xs px-3 py-1.5 rounded-lg border bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                                        Add Commodity</button>
+                                </div>
+                                <div id="cdCommodityEditContainer" class="space-y-3"></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 </x-modal>
 
@@ -297,7 +379,8 @@
     <div class="p-5 border-b flex justify-between items-center">
         <div>
             <p class="text-lg font-semibold">Create Contract</p>
-            <p class="text-xs text-zinc-400">From proposal <span id="ccProposalCode">-</span></p>
+            <p class="text-xs text-zinc-400">From proposal <span id="ccProposalCode">-</span> &middot; <span
+                    id="ccClientName">-</span></p>
         </div>
         <button class="modal-close">✕</button>
     </div>
@@ -332,7 +415,7 @@
                         <th class="text-left py-1 px-2">Container</th>
                         <th class="text-right py-1 px-2">Min Qty</th>
                         <th class="text-right py-1 px-2">Base Rate</th>
-                        <th class="text-right py-1 px-2">Discount</th>
+                        <th class="text-right py-1 px-2">Adjustment</th>
                         <th class="text-right py-1 px-2">Final Rate</th>
                         <th class="py-1 px-2"></th>
                     </tr>
@@ -346,6 +429,30 @@
         <button class="modal-close border px-4 py-2 rounded-lg text-sm">Cancel</button>
         <button id="ccSaveBtn" class="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
             Create Contract
+        </button>
+    </div>
+</x-modal>
+
+{{-- Terminate Contract reason modal - replaces window.prompt() for a styled,
+     app-consistent confirmation flow. --}}
+<x-modal id="terminateContractReasonModal">
+    <div class="p-5 border-b flex justify-between items-center">
+        <p class="text-lg font-semibold">Terminate Contract</p>
+        <button class="modal-close">✕</button>
+    </div>
+
+    <div class="p-5 space-y-2">
+        <label class="text-xs font-medium text-zinc-400 uppercase" for="tcrReasonInput">Reason for
+            Termination</label>
+        <textarea id="tcrReasonInput" rows="3"
+            class="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900"
+            placeholder="Explain why this contract is being terminated..."></textarea>
+    </div>
+
+    <div class="border-t px-5 py-4 flex justify-end gap-2">
+        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Cancel</button>
+        <button id="tcrConfirmBtn" class="px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white">
+            Terminate
         </button>
     </div>
 </x-modal>
@@ -510,6 +617,7 @@
             document.getElementById('countAll').textContent = response.counts.all;
             document.getElementById('countComplete').textContent = response.counts.complete;
             document.getElementById('countIncomplete').textContent = response.counts.incomplete;
+            document.getElementById('countIncompleteStat').textContent = response.counts.incomplete;
         }
 
         document.getElementById('btnNewClient').addEventListener('click', function() {
@@ -519,6 +627,16 @@
                 link: '/page_clientMasterForm'
             });
         });
+
+        // Next-step hint shown on incomplete rows' Stage column - stage4
+        // (Ancillary Services) has no UI anywhere in this file, but is
+        // handled here gracefully in case a record ever reaches it.
+        const CLIENT_NEXT_STAGE_LABEL = {
+            1: 'Company Info',
+            2: 'Contacts',
+            3: 'Finance',
+            4: 'Ancillary Services',
+        };
 
         function renderTable() {
             const thead = [{
@@ -544,7 +662,14 @@
                 {
                     title: 'Stage',
                     key: 'current_stage',
-                    render: (r) => `${r.current_stage} / 4`
+                    render: (r) => {
+                        if (r.is_complete) return '4 / 4';
+                        const nextStep = CLIENT_NEXT_STAGE_LABEL[r.current_stage] ?? '-';
+                        return `
+                            <p>Stage ${r.current_stage} / 4</p>
+                            <p class="text-[11px] text-amber-600 dark:text-amber-400">Next: ${nextStep} &middot; Resume &rarr;</p>
+                        `;
+                    }
                 },
                 {
                     title: 'Status',
@@ -562,9 +687,24 @@
                 url: '/api/clientMasters',
                 tableId: 'tableClientMasters',
                 thead: thead,
+                emptyMessage: () => {
+                    const filter = document.querySelector('.clientStatusBtn.ring-2')?.dataset.status ??
+                        'all';
+                    if (filter === 'all') return 'No clients yet.';
+                    return `No ${filter} clients.`;
+                },
                 afterRenderFunction: (row) => {
+                    const data = JSON.parse(row.dataset.row);
+
+                    // Baseline border so incomplete rows' amber cue doesn't
+                    // shift layout relative to complete rows.
+                    row.classList.add('border-l-2', 'border-transparent');
+                    if (!data.is_complete) {
+                        row.classList.remove('border-transparent');
+                        row.classList.add('border-amber-400', 'dark:border-amber-600');
+                    }
+
                     row.addEventListener('click', function() {
-                        const data = JSON.parse(row.dataset.row);
                         if (data.is_complete) {
                             openClientDetailModal(data.uuid);
                         } else {
@@ -582,8 +722,8 @@
         document.querySelectorAll('.clientStatusBtn').forEach((btn) => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.clientStatusBtn').forEach((c) => c.classList.remove(
-                    'ring-2', 'ring-blue-500'));
-                this.classList.add('ring-2', 'ring-blue-500');
+                    'ring-2', 'ring-orange-500'));
+                this.classList.add('ring-2', 'ring-orange-500');
                 renderTable().setFilter('status', this.dataset.status);
             });
         });
@@ -615,12 +755,22 @@
             }
 
             currentClientData = response.data;
-            renderClientInfoReadView(currentClientData);
-            exitInfoEditMode();
-
             const c = currentClientData;
+
             document.getElementById('cdClientName').textContent = c.company_name ?? '-';
             document.getElementById('cdClientCode').textContent = c.customer_code ?? '-';
+
+            renderClientRail(c);
+            renderCompanyInfoReadView(c);
+            renderContactsReadView(c);
+            renderFinanceReadView(c);
+            exitCompanyInfoEditMode();
+            exitContactsEditMode();
+            exitFinanceEditMode();
+
+            // Proposals/Contracts are the reason this modal usually gets
+            // opened on an already-complete client - default to that tab.
+            switchClientDetailTab('proposals');
 
             loadProposals(uuid, 1);
             loadContracts(uuid);
@@ -638,26 +788,219 @@
                 });
         }
 
-        function renderClientInfoReadView(c) {
-            document.getElementById('cdInfoContainer').innerHTML = `
+        // ================= TAB SWITCHING =================
+        // Tab switching only toggles which pane has the `hidden` class - it
+        // never touches any tab's own edit/read toggle state, so an
+        // in-progress edit on another tab is left alone in the background
+        // rather than silently discarded when the user switches tabs.
+        function switchClientDetailTab(tab) {
+            document.querySelectorAll('.cd-tab-btn').forEach((btn) => {
+                const active = btn.dataset.tab === tab;
+                btn.classList.toggle('border-orange-500', active);
+                btn.classList.toggle('text-orange-600', active);
+                btn.classList.toggle('dark:text-orange-400', active);
+                btn.classList.toggle('border-transparent', !active);
+                btn.classList.toggle('text-zinc-500', !active);
+                btn.classList.toggle('dark:text-zinc-400', !active);
+            });
+            document.querySelectorAll('.cd-tab-pane').forEach((pane) => {
+                pane.classList.toggle('hidden', pane.dataset.tabPane !== tab);
+            });
+        }
+
+        document.querySelectorAll('.cd-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => switchClientDetailTab(btn.dataset.tab));
+        });
+
+        // ================= LEFT RAIL - read-only reference facts =================
+        function railFact(label, value) {
+            return `
+                <div>
+                    <p class="text-[11px] text-zinc-400 uppercase">${label}</p>
+                    <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">${value ?? '-'}</p>
+                </div>`;
+        }
+
+        function renderClientRail(c) {
+            document.getElementById('cdRailCompany').innerHTML = [
+                railFact('Client Mnemonic', c.client_mnemonic),
+                railFact('Client Category', c.client_category),
+                railFact('Client Classification', c.client_classification),
+                railFact('Client Industry', c.industry),
+            ].join('');
+
+            document.getElementById('cdRailOwnership').innerHTML = [
+                railFact('CSR', c.sales_rep?.name),
+                railFact('Account Manager', c.account_manager?.name),
+            ].join('');
+        }
+
+        // ================= TAB: COMPANY INFO & ADDRESSES =================
+        function renderCompanyInfoReadView(c) {
+            document.getElementById('ciCompanyReadContainer').innerHTML = `
+                <p><span class="text-zinc-400">Client Code:</span> ${c.customer_code ?? '-'}</p>
                 <p><span class="text-zinc-400">Client Mnemonic:</span> ${c.client_mnemonic ?? '-'}</p>
+                <p class="md:col-span-2"><span class="text-zinc-400">Client/Business Name:</span> ${c.company_name ?? '-'}</p>
                 <p><span class="text-zinc-400">Client Category:</span> ${c.client_category ?? '-'}</p>
                 <p><span class="text-zinc-400">Client Classification:</span> ${c.client_classification ?? '-'}</p>
                 <p><span class="text-zinc-400">Client Industry:</span> ${c.industry ?? '-'}</p>
-                <p><span class="text-zinc-400">CSR:</span> ${c.sales_rep?.name ?? '-'}</p>
-                <p><span class="text-zinc-400">Account Manager:</span> ${c.account_manager?.name ?? '-'}</p>
             `;
 
-            const addresses = c.addresses ?? [];
-            document.getElementById('cdAddressesReadContainer').innerHTML = addresses.length ?
-                addresses.map((a) => `
-                    <div class="border rounded-lg p-3 text-xs">
-                        <p class="font-semibold mb-1">${a.address_type ?? 'Address'} ${a.is_primary ? '<span class=\"text-orange-500\">(Primary)</span>' : ''}</p>
-                        <p class="text-zinc-500">${[a.address_no, a.address_building, a.address_street, a.address_barangay, a.address_town_city, a.address_province, a.address_country, a.address_postal_code].filter(Boolean).join(', ') || '-'}</p>
-                    </div>
-                `).join('') :
-                `<p class="text-xs text-zinc-400">No addresses on file.</p>`;
+            renderAddressesReadView(c.addresses ?? []);
+        }
 
+        function addressSummaryLine(a) {
+            return [a.address_no, a.address_building, a.address_street, a.address_barangay,
+                a.address_town_city, a.address_province, a.address_country, a.address_postal_code
+            ].filter(Boolean).join(', ') || '-';
+        }
+
+        function setAddressReadExpanded(card, expanded) {
+            if (!card) return;
+            card.querySelector('.address-read-body')?.classList.toggle('hidden', !expanded);
+            card.querySelector('.address-read-chevron')?.classList.toggle('rotate-180', expanded);
+        }
+
+        // Exclusive-expand read display: 1 address stays plain (no collapse
+        // chrome, nothing to scan yet); 2+ collapse to a one-line summary
+        // (type + Primary tag + concatenated address string), matching the
+        // booking-requirement card pattern (VISUALS.md).
+        function renderAddressesReadView(addresses) {
+            const container = document.getElementById('cdAddressesReadContainer');
+
+            if (!addresses.length) {
+                container.innerHTML = `<p class="text-xs text-zinc-400">No addresses on file.</p>`;
+                return;
+            }
+
+            const exclusive = addresses.length > 1;
+            container.innerHTML = addresses.map((a) => {
+                const label =
+                    `${a.address_type ?? 'Address'}${a.is_primary ? ' <span class="text-orange-500">(Primary)</span>' : ''}`;
+                const line = addressSummaryLine(a);
+
+                if (!exclusive) {
+                    return `
+                        <div class="border rounded-lg p-3 text-xs">
+                            <p class="font-semibold mb-1">${label}</p>
+                            <p class="text-zinc-500">${line}</p>
+                        </div>`;
+                }
+
+                return `
+                    <div class="address-read-card border rounded-lg text-xs">
+                        <button type="button" class="address-read-toggle w-full flex items-center justify-between gap-2 p-3 text-left">
+                            <span class="truncate"><span class="font-semibold">${label}</span> <span class="text-zinc-500">&mdash; ${line}</span></span>
+                            <span class="address-read-chevron text-zinc-400 transition-transform duration-200 shrink-0">▼</span>
+                        </button>
+                        <div class="address-read-body hidden px-3 pb-3 text-zinc-500">${line}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        document.getElementById('cdAddressesReadContainer').addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('.address-read-toggle');
+            if (!toggleBtn) return;
+            const card = toggleBtn.closest('.address-read-card');
+            const willExpand = card.querySelector('.address-read-body').classList.contains('hidden');
+            document.querySelectorAll('#cdAddressesReadContainer .address-read-card').forEach((other) => {
+                if (other !== card) setAddressReadExpanded(other, false);
+            });
+            setAddressReadExpanded(card, willExpand);
+        });
+
+        function enterCompanyInfoEditMode() {
+            document.getElementById('ciReadView').classList.add('hidden');
+            document.getElementById('ciEditView').classList.remove('hidden');
+            document.getElementById('ciEditBtn').classList.add('hidden');
+            document.getElementById('ciSaveBtn').classList.remove('hidden');
+            document.getElementById('ciCancelBtn').classList.remove('hidden');
+            hydrateCompanyInfoEditForm(currentClientData);
+        }
+
+        function exitCompanyInfoEditMode() {
+            document.getElementById('ciReadView').classList.remove('hidden');
+            document.getElementById('ciEditView').classList.add('hidden');
+            document.getElementById('ciEditBtn').classList.remove('hidden');
+            document.getElementById('ciSaveBtn').classList.add('hidden');
+            document.getElementById('ciCancelBtn').classList.add('hidden');
+        }
+
+        document.getElementById('ciEditBtn').addEventListener('click', enterCompanyInfoEditMode);
+        document.getElementById('ciCancelBtn').addEventListener('click', () => {
+            renderCompanyInfoReadView(currentClientData);
+            exitCompanyInfoEditMode();
+        });
+
+        function hydrateCompanyInfoEditForm(c) {
+            const stage1Form = document.getElementById('cdStage1Form');
+            stage1Form.reset();
+            Object.entries(c).forEach(([key, val]) => {
+                const el = stage1Form.querySelector(`[name="${key}"]`);
+                if (el) el.value = val ?? '';
+            });
+
+            document.getElementById('cdAddressesEditContainer').innerHTML = '';
+            const addresses = (c.addresses && c.addresses.length) ? c.addresses : [{
+                is_primary: true
+            }];
+            addAddressCardsFrom(addresses);
+        }
+
+        document.getElementById('ciSaveBtn').addEventListener('click', async function() {
+            if (!currentClientUuid) return;
+
+            const addresses = collectAddresses();
+            if (!addresses.length) {
+                showMessage({
+                    status: 'error',
+                    title: 'Add at least one address.'
+                });
+                return;
+            }
+
+            const stage1Form = document.getElementById('cdStage1Form');
+            const stage1Data = Object.fromEntries(new FormData(stage1Form).entries());
+            stage1Data.uuid = currentClientUuid;
+            stage1Data.addresses = addresses;
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: stage1Data,
+                url: '/api/clientMasters/stage1',
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to save company information',
+                    message: response.message ?? ''
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Company information updated'
+            });
+
+            // Merge, don't replace - stage1's response only eager-loads
+            // `addresses`, so a wholesale replace would silently drop
+            // sales_rep/account_manager/contacts/finance already held in
+            // currentClientData from the initial full GET.
+            currentClientData = { ...currentClientData, ...response.data };
+            document.getElementById('cdClientName').textContent = currentClientData.company_name ?? '-';
+            document.getElementById('cdClientCode').textContent = currentClientData.customer_code ?? '-';
+            renderClientRail(currentClientData);
+            renderCompanyInfoReadView(currentClientData);
+            exitCompanyInfoEditMode();
+            renderTable().reload();
+        });
+
+        // ================= TAB: CONTACTS =================
+        function renderContactsReadView(c) {
             const contacts = c.contacts ?? [];
             document.getElementById('cdContactsReadContainer').innerHTML = contacts.length ?
                 contacts.map((ct) => `
@@ -669,7 +1012,80 @@
                     </div>
                 `).join('') :
                 `<p class="text-xs text-zinc-400">No contacts on file.</p>`;
+        }
 
+        function enterContactsEditMode() {
+            document.getElementById('ctReadView').classList.add('hidden');
+            document.getElementById('ctEditView').classList.remove('hidden');
+            document.getElementById('ctEditBtn').classList.add('hidden');
+            document.getElementById('ctSaveBtn').classList.remove('hidden');
+            document.getElementById('ctCancelBtn').classList.remove('hidden');
+            hydrateContactsEditForm(currentClientData);
+        }
+
+        function exitContactsEditMode() {
+            document.getElementById('ctReadView').classList.remove('hidden');
+            document.getElementById('ctEditView').classList.add('hidden');
+            document.getElementById('ctEditBtn').classList.remove('hidden');
+            document.getElementById('ctSaveBtn').classList.add('hidden');
+            document.getElementById('ctCancelBtn').classList.add('hidden');
+        }
+
+        document.getElementById('ctEditBtn').addEventListener('click', enterContactsEditMode);
+        document.getElementById('ctCancelBtn').addEventListener('click', () => {
+            renderContactsReadView(currentClientData);
+            exitContactsEditMode();
+        });
+
+        function hydrateContactsEditForm(c) {
+            document.getElementById('cdContactsEditContainer').innerHTML = '';
+            (c.contacts || []).forEach((contact) => {
+                document.getElementById('cdContactsEditContainer').insertAdjacentHTML('beforeend',
+                    contactRowHtml());
+                const row = document.getElementById('cdContactsEditContainer').lastElementChild;
+                row.querySelectorAll('[data-field]').forEach((input) => input.value = contact[input
+                    .dataset.field] ?? '');
+            });
+        }
+
+        document.getElementById('ctSaveBtn').addEventListener('click', async function() {
+            if (!currentClientUuid) return;
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: {
+                    contacts: collectRows('cdContactsEditContainer', 'contact-row'),
+                },
+                url: `/api/clientMasters/${currentClientUuid}/stage2`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to save contacts / trade references',
+                    message: response.message ?? ''
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Contacts updated'
+            });
+
+            // Merge, don't replace - stage2's response doesn't re-eager-load
+            // addresses/finance/sales_rep/account_manager, only contacts and
+            // trade_references.
+            currentClientData = { ...currentClientData, ...response.data };
+            renderContactsReadView(currentClientData);
+            exitContactsEditMode();
+            renderTable().reload();
+        });
+
+        // ================= TAB: FINANCE & COMMODITY =================
+        function renderFinanceReadView(c) {
             const f = c.finance ?? {};
             document.getElementById('cdFinanceReadContainer').innerHTML = `
                 <p><span class="text-zinc-400">Client Business Name:</span> ${f.client_business_name ?? '-'}</p>
@@ -698,53 +1114,30 @@
                 `<p class="text-xs text-zinc-400">No commodity declared values on file.</p>`;
         }
 
-        // ================= INFO SECTION: EDIT MODE =================
-        function enterInfoEditMode() {
-            document.getElementById('cdInfoReadView').classList.add('hidden');
-            document.getElementById('cdInfoEditView').classList.remove('hidden');
-            document.getElementById('cdEditInfoBtn').classList.add('hidden');
-            document.getElementById('cdSaveInfoBtn').classList.remove('hidden');
-            document.getElementById('cdCancelInfoBtn').classList.remove('hidden');
-            hydrateInfoEditForm(currentClientData);
+        function enterFinanceEditMode() {
+            document.getElementById('fnReadView').classList.add('hidden');
+            document.getElementById('fnEditView').classList.remove('hidden');
+            document.getElementById('fnEditBtn').classList.add('hidden');
+            document.getElementById('fnSaveBtn').classList.remove('hidden');
+            document.getElementById('fnCancelBtn').classList.remove('hidden');
+            hydrateFinanceEditForm(currentClientData);
         }
 
-        function exitInfoEditMode() {
-            document.getElementById('cdInfoReadView').classList.remove('hidden');
-            document.getElementById('cdInfoEditView').classList.add('hidden');
-            document.getElementById('cdEditInfoBtn').classList.remove('hidden');
-            document.getElementById('cdSaveInfoBtn').classList.add('hidden');
-            document.getElementById('cdCancelInfoBtn').classList.add('hidden');
+        function exitFinanceEditMode() {
+            document.getElementById('fnReadView').classList.remove('hidden');
+            document.getElementById('fnEditView').classList.add('hidden');
+            document.getElementById('fnEditBtn').classList.remove('hidden');
+            document.getElementById('fnSaveBtn').classList.add('hidden');
+            document.getElementById('fnCancelBtn').classList.add('hidden');
         }
 
-        document.getElementById('cdEditInfoBtn').addEventListener('click', enterInfoEditMode);
-        document.getElementById('cdCancelInfoBtn').addEventListener('click', () => {
-            renderClientInfoReadView(currentClientData);
-            exitInfoEditMode();
+        document.getElementById('fnEditBtn').addEventListener('click', enterFinanceEditMode);
+        document.getElementById('fnCancelBtn').addEventListener('click', () => {
+            renderFinanceReadView(currentClientData);
+            exitFinanceEditMode();
         });
 
-        function hydrateInfoEditForm(c) {
-            const stage1Form = document.getElementById('cdStage1Form');
-            stage1Form.reset();
-            Object.entries(c).forEach(([key, val]) => {
-                const el = stage1Form.querySelector(`[name="${key}"]`);
-                if (el) el.value = val ?? '';
-            });
-
-            document.getElementById('cdAddressesEditContainer').innerHTML = '';
-            const addresses = (c.addresses && c.addresses.length) ? c.addresses : [{
-                is_primary: true
-            }];
-            addAddressCardsFrom(addresses);
-
-            document.getElementById('cdContactsEditContainer').innerHTML = '';
-            (c.contacts || []).forEach((contact) => {
-                document.getElementById('cdContactsEditContainer').insertAdjacentHTML('beforeend',
-                    contactRowHtml());
-                const row = document.getElementById('cdContactsEditContainer').lastElementChild;
-                row.querySelectorAll('[data-field]').forEach((input) => input.value = contact[input
-                    .dataset.field] ?? '');
-            });
-
+        function hydrateFinanceEditForm(c) {
             const stage3Form = document.getElementById('cdStage3Form');
             stage3Form.reset();
 
@@ -768,6 +1161,42 @@
                 });
             });
         }
+
+        document.getElementById('fnSaveBtn').addEventListener('click', async function() {
+            if (!currentClientUuid) return;
+
+            const stage3Payload = formToNestedPayload(document.getElementById('cdStage3Form'));
+            stage3Payload.commodity_declared_values = collectCdCommodityDeclaredValues();
+
+            const response = await apiCall({
+                mode: 'POST',
+                isJson: true,
+                payload: stage3Payload,
+                url: `/api/clientMasters/${currentClientUuid}/stage3`,
+                button: this,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Unable to save finance',
+                    message: response.message ?? ''
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Finance & commodity updated'
+            });
+
+            // Merge, don't replace - stage3's response doesn't re-eager-load
+            // the plain `addresses` relation (only contacts.addresses).
+            currentClientData = { ...currentClientData, ...response.data };
+            renderFinanceReadView(currentClientData);
+            exitFinanceEditMode();
+            renderTable().reload();
+        });
 
         // -------- Finance: Mode of Payment -> Credit Terms (mirrors clientMasterForm.blade.php) --------
         function applyCdModeOfPaymentVisibility() {
@@ -931,20 +1360,22 @@
         function addressCardHtml(index) {
             return `
     <div class="address-card border rounded-xl p-4 space-y-3" data-index="${index}">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <select data-field="address_type" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900">
-                    ${addressTypeOptionsHtml}
-                </select>
-                <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap">
-                    <input type="radio" name="cd_address_primary_radio" class="primary-radio">
-                    Primary
-                </label>
-            </div>
-            <button type="button" class="remove-address text-red-500 text-xs font-medium">✕ Remove</button>
+        <div class="flex justify-between items-center gap-2">
+            <button type="button" class="address-card-toggle flex items-center gap-2 min-w-0 flex-1 text-left">
+                <span class="address-card-chevron text-xs text-zinc-400 transition-transform duration-200 rotate-180 shrink-0">▼</span>
+                <span class="address-card-summary text-sm font-medium text-zinc-600 dark:text-zinc-300 truncate">New Address</span>
+            </button>
+            <select data-field="address_type" class="w-auto max-w-[10rem] border rounded-lg px-3 py-2 text-sm font-semibold dark:text-zinc-900 shrink-0">
+                ${addressTypeOptionsHtml}
+            </select>
+            <label class="flex items-center gap-1.5 text-xs text-zinc-500 whitespace-nowrap shrink-0">
+                <input type="radio" name="cd_address_primary_radio" class="primary-radio">
+                Primary
+            </label>
+            <button type="button" class="remove-address text-red-500 text-xs font-medium shrink-0">✕ Remove</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="address-card-body grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">No.</label>
                 <input type="text" data-field="address_no" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
@@ -989,16 +1420,94 @@
     </div>`;
         }
 
+        function addressCardSummaryText(card) {
+            const get = (field) => card.querySelector(`[data-field="${field}"]`)?.value || '';
+            const typeSelect = card.querySelector('[data-field="address_type"]');
+            const typeLabel = typeSelect?.options[typeSelect.selectedIndex]?.textContent || 'Address';
+            const isPrimary = card.querySelector('.primary-radio')?.checked;
+            const line = [get('address_no'), get('address_building'), get('address_street'),
+                get('address_barangay'), get('address_town_city'), get('address_province'),
+                get('address_country'), get('address_postal_code')
+            ].filter(Boolean).join(', ') || '-';
+            return `${typeLabel}${isPrimary ? ' (Primary)' : ''} — ${line}`;
+        }
+
+        function updateAddressCardSummary(card) {
+            const summaryEl = card.querySelector('.address-card-summary');
+            if (summaryEl) summaryEl.textContent = addressCardSummaryText(card);
+        }
+
+        function setAddressCardExpanded(card, expanded) {
+            card.querySelector('.address-card-body')?.classList.toggle('hidden', !expanded);
+            card.querySelector('.address-card-chevron')?.classList.toggle('rotate-180', expanded);
+        }
+
+        // 1 address = always expanded, no collapse chrome (nothing to scan
+        // yet); 2+ = collapse chrome becomes active on every card.
+        function applyAddressCardChrome() {
+            const wrap = document.getElementById('cdAddressesEditContainer');
+            const cards = Array.from(wrap.querySelectorAll('.address-card'));
+            const exclusive = cards.length > 1;
+            cards.forEach((card) => {
+                card.querySelector('.address-card-toggle').classList.toggle('pointer-events-none', !
+                    exclusive);
+                card.querySelector('.address-card-chevron').classList.toggle('invisible', !exclusive);
+                if (!exclusive) setAddressCardExpanded(card, true);
+            });
+        }
+
+        document.getElementById('cdAddressesEditContainer').addEventListener('input', (e) => {
+            const card = e.target.closest('.address-card');
+            if (card) updateAddressCardSummary(card);
+        });
+        document.getElementById('cdAddressesEditContainer').addEventListener('change', (e) => {
+            const card = e.target.closest('.address-card');
+            if (!card) return;
+            if (e.target.classList.contains('primary-radio')) {
+                // Changing which card is primary can affect every card's
+                // "(Primary)" tag, not just the one that was clicked.
+                document.querySelectorAll('#cdAddressesEditContainer .address-card').forEach(
+                    updateAddressCardSummary);
+            } else {
+                updateAddressCardSummary(card);
+            }
+        });
+
         async function addAddressCard() {
             const wrap = document.getElementById('cdAddressesEditContainer');
             const index = wrap.children.length;
             wrap.insertAdjacentHTML('beforeend', addressCardHtml(index));
             const card = wrap.lastElementChild;
 
-            card.querySelector('.remove-address').addEventListener('click', () => card.remove());
+            card.querySelector('.remove-address').addEventListener('click', () => {
+                card.remove();
+                applyAddressCardChrome();
+            });
             if (index === 0) card.querySelector('.primary-radio').checked = true;
 
+            card.querySelector('.address-card-toggle').addEventListener('click', () => {
+                if (wrap.querySelectorAll('.address-card').length <= 1) return;
+                const expand = card.querySelector('.address-card-body').classList.contains('hidden');
+                if (expand) {
+                    wrap.querySelectorAll('.address-card').forEach((other) => {
+                        if (other !== card) setAddressCardExpanded(other, false);
+                    });
+                }
+                setAddressCardExpanded(card, expand);
+            });
+
+            // Exclusive expand also applies when a new card is added, not
+            // just on manual toggle clicks - otherwise adding a 2nd/3rd
+            // address leaves every prior card open, recreating the "wall of
+            // fields" the collapse/summary treatment exists to prevent. The
+            // newly-added card keeps its own default-expanded state.
+            wrap.querySelectorAll('.address-card').forEach((other) => {
+                if (other !== card) setAddressCardExpanded(other, false);
+            });
+
             await initializePhilippineAddress(card);
+            updateAddressCardSummary(card);
+            applyAddressCardChrome();
             return card;
         }
 
@@ -1008,7 +1517,15 @@
             for (const address of addresses) {
                 const card = await addAddressCard();
                 await hydrateAddressCard(card, address);
+                updateAddressCardSummary(card);
+                // Existing addresses can look identical until scanned
+                // field-by-field - collapse each to its summary line by
+                // default once hydrated (mirrors the container-card hydrate
+                // pattern in crmLeadForm.blade.php); applyAddressCardChrome()
+                // below re-expands the lone card if there's only one.
+                setAddressCardExpanded(card, false);
             }
+            applyAddressCardChrome();
         }
 
         async function hydrateAddressCard(card, address) {
@@ -1140,103 +1657,23 @@
             return payload;
         }
 
-        // -------- Save: always re-submits all 3 stages together --------
-        document.getElementById('cdSaveInfoBtn').addEventListener('click', async function() {
-            if (!currentClientUuid) return;
-
-            const addresses = collectAddresses();
-            if (!addresses.length) {
-                showMessage({
-                    status: 'error',
-                    title: 'Add at least one address.'
-                });
-                return;
-            }
-
-            const stage1Form = document.getElementById('cdStage1Form');
-            const stage1Data = Object.fromEntries(new FormData(stage1Form).entries());
-            stage1Data.uuid = currentClientUuid;
-            stage1Data.addresses = addresses;
-
-            const stage1Response = await apiCall({
-                mode: 'POST',
-                isJson: true,
-                payload: stage1Data,
-                url: '/api/clientMasters/stage1',
-                button: this,
-            });
-
-            if (!stage1Response.success) {
-                showMessage({
-                    status: 'error',
-                    title: 'Unable to save company information',
-                    message: stage1Response.message ?? ''
-                });
-                return;
-            }
-
-            const stage2Response = await apiCall({
-                mode: 'POST',
-                isJson: true,
-                payload: {
-                    contacts: collectRows('cdContactsEditContainer', 'contact-row'),
-                },
-                url: `/api/clientMasters/${currentClientUuid}/stage2`,
-            });
-
-            if (!stage2Response.success) {
-                showMessage({
-                    status: 'error',
-                    title: 'Unable to save contacts / trade references'
-                });
-                return;
-            }
-
-            const stage3Payload = formToNestedPayload(document.getElementById('cdStage3Form'));
-            stage3Payload.commodity_declared_values = collectCdCommodityDeclaredValues();
-            const stage3Response = await apiCall({
-                mode: 'POST',
-                isJson: true,
-                payload: stage3Payload,
-                url: `/api/clientMasters/${currentClientUuid}/stage3`,
-            });
-
-            if (!stage3Response.success) {
-                showMessage({
-                    status: 'error',
-                    title: 'Unable to save finance'
-                });
-                return;
-            }
-
-            showMessage({
-                status: 'success',
-                title: 'Client information updated'
-            });
-
-            currentClientData = stage3Response.data;
-            renderClientInfoReadView(currentClientData);
-            exitInfoEditMode();
-            renderTable().reload();
-        });
-
         // ================= CONTRACTS LIST =================
         const CONTRACT_STATUS_MAPPING = {
             1: {
                 label: 'Draft',
-                classes: 'bg-zinc-100 text-zinc-600'
+                classes: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'
             },
             2: {
                 label: 'Active',
-                classes: 'bg-emerald-50 text-emerald-700'
+                classes: 'bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
             },
             3: {
                 label: 'Expired',
-                classes: 'bg-amber-50 text-amber-700'
+                classes: 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
             },
             4: {
                 label: 'Terminated',
-                classes: 'bg-red-50 text-red-700'
+                classes: 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'
             },
         };
 
@@ -1277,7 +1714,7 @@
                             </button>
                         ` : ''}
                         ${c.status === 1 && c.can_approve ? `
-                            <button type="button" class="contract-approve-btn shrink-0 text-[11px] px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-900 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40" data-contract-id="${c.id}" title="Approve this contract">
+                            <button type="button" class="contract-approve-btn shrink-0 text-[11px] px-2 py-1 rounded-md border border-green-200 dark:border-green-900 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/40" data-contract-id="${c.id}" title="Approve this contract">
                                 Approve
                             </button>
                         ` : ''}
@@ -1317,14 +1754,32 @@
             document.querySelectorAll('.contract-approve-btn').forEach((btn) => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    approveContractFromCard(Number(this.dataset.contractId), uuid);
+                    approveContractFromCard(Number(this.dataset.contractId), uuid, this);
                 });
             });
         }
 
-        async function terminateContractFromCard(contractId, uuid) {
-            const reason = window.prompt('Reason for terminating this contract:');
-            if (reason === null) return;
+        // Opens the styled terminate-reason modal instead of window.prompt() -
+        // the actual validation + POST now live in the tcrConfirmBtn handler
+        // below, which also gets a button loading-state guard.
+        let terminateContractContext = {
+            contractId: null,
+            uuid: null
+        };
+
+        function terminateContractFromCard(contractId, uuid) {
+            terminateContractContext = {
+                contractId,
+                uuid
+            };
+            document.getElementById('tcrReasonInput').value = '';
+            initModal({
+                modalId: 'terminateContractReasonModal'
+            });
+        }
+
+        document.getElementById('tcrConfirmBtn').addEventListener('click', async function() {
+            const reason = document.getElementById('tcrReasonInput').value;
 
             if (!reason.trim()) {
                 showMessage({
@@ -1335,6 +1790,11 @@
                 return;
             }
 
+            const {
+                contractId,
+                uuid
+            } = terminateContractContext;
+
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
@@ -1342,6 +1802,7 @@
                     reason: reason.trim()
                 },
                 url: `/api/clientContracts/${contractId}/terminate`,
+                button: this,
             });
 
             if (!response.success) {
@@ -1357,15 +1818,17 @@
                 status: 'success',
                 title: 'Contract terminated'
             });
+            closeModal('terminateContractReasonModal');
             loadContracts(uuid);
-        }
+        });
 
-        async function approveContractFromCard(contractId, uuid) {
+        async function approveContractFromCard(contractId, uuid, button) {
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
                 payload: {},
                 url: `/api/clientContracts/${contractId}/approve`,
+                button,
             });
 
             if (!response.success) {
@@ -1461,7 +1924,7 @@
                         <th class="text-left py-1">Container</th>
                         <th class="text-right py-1">Min Qty</th>
                         <th class="text-right py-1">Base Rate</th>
-                        <th class="text-right py-1">Discount</th>
+                        <th class="text-right py-1">Adjustment</th>
                         <th class="text-right py-1">Final Rate</th>
                         <th class="text-right py-1">Action</th>
                     </tr>
@@ -1473,7 +1936,7 @@
                             <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                             <td class="py-1.5 text-right">${r.min_van_qty ?? '-'}</td>
                             <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
-                            <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
+                            <td class="py-1.5 text-right">${adjustmentDisplay(r.discount_type, r.discount_value)}</td>
                             <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
                             <td class="py-1.5 text-right whitespace-nowrap">
                                 ${isPending ? `<button type="button" class="rate-delete-btn text-zinc-400 hover:text-red-600 font-medium" data-rate-id="${r.id}">Delete</button>` : ''}
@@ -1518,7 +1981,7 @@
                     </button>
                 ` : ''}
                 ${p.status === 4 && !hasActiveContract ? `
-                    <button type="button" class="cpm-create-contract-btn text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white" data-proposal-id="${p.id}">
+                    <button type="button" class="cpm-create-contract-btn text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white" data-proposal-id="${p.id}">
                         Create Contract
                     </button>
                 ` : ''}
@@ -1570,19 +2033,23 @@
             });
 
             document.querySelectorAll('.cpm-approve-btn').forEach((btn) => {
-                btn.addEventListener('click', () => proposalDecisionAction(uuid, btn.dataset
-                    .proposalId, 'approve', 'Proposal approved'));
+                btn.addEventListener('click', function() {
+                    proposalDecisionAction(uuid, this.dataset.proposalId, 'approve',
+                        'Proposal approved', this);
+                });
             });
             document.querySelectorAll('.cpm-disapprove-btn').forEach((btn) => {
-                btn.addEventListener('click', () => proposalDecisionAction(uuid, btn.dataset
-                    .proposalId, 'disapprove', 'Proposal disapproved'));
+                btn.addEventListener('click', function() {
+                    proposalDecisionAction(uuid, this.dataset.proposalId, 'disapprove',
+                        'Proposal disapproved', this);
+                });
             });
             document.querySelectorAll('.cpm-reject-btn').forEach((btn) => {
                 btn.addEventListener('click', async function() {
                     const confirmed = await customConfirm(
                         'Reject this proposal? This cannot be undone.');
                     if (confirmed) proposalDecisionAction(uuid, this.dataset.proposalId,
-                        'reject', 'Proposal rejected');
+                        'reject', 'Proposal rejected', this);
                 });
             });
 
@@ -1645,12 +2112,13 @@
             });
         }
 
-        async function proposalDecisionAction(uuid, proposalId, action, successTitle) {
+        async function proposalDecisionAction(uuid, proposalId, action, successTitle, button) {
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
                 payload: {},
                 url: `/api/clientProposals/${proposalId}/${action}`,
+                button,
             });
 
             if (!response.success) {
@@ -1716,6 +2184,11 @@
             ccEditingRateId = null;
 
             document.getElementById('ccProposalCode').textContent = currentProposalForContract.code;
+            // This modal is always opened from within a specific client's own
+            // detail modal, so currentClientData is always available here -
+            // unlike proposals.blade.php, where the client name comes off the
+            // proposal object itself.
+            document.getElementById('ccClientName').textContent = currentClientData?.company_name ?? '-';
             document.getElementById('ccValidFrom').value = '';
             document.getElementById('ccValidTo').value = '';
             document.getElementById('ccSignedDate').value = '';
@@ -1742,11 +2215,41 @@
             } : ccOriginalValues(rate);
         }
 
+        function adjustmentDisplay(type, value) {
+            if (!type) return '-';
+            const labels = {
+                percentage: 'Discount',
+                fixed: 'Discount',
+                increase_percentage: 'Increase',
+                increase_fixed: 'Increase',
+            };
+            const isPercent = type === 'percentage' || type === 'increase_percentage';
+            const amount = isPercent ? `${value}%` : Number(value).toLocaleString();
+            return `${labels[type] ?? type} ${amount}`;
+        }
+
         function ccDiscountDisplay(values) {
-            if (!values.discount_type) return '-';
-            return values.discount_type === 'percentage' ?
-                `${values.discount_value}%` :
-                Number(values.discount_value).toLocaleString();
+            return adjustmentDisplay(values.discount_type, values.discount_value);
+        }
+
+        function describeRateChange(rate) {
+            const original = ccOriginalValues(rate);
+            const current = ccRateOverrides[rate.id];
+            if (!current) return '';
+            const fieldLabels = {
+                min_van_qty: 'Min Qty',
+                base_rate: 'Base Rate',
+                discount_type: 'Adjustment Type',
+                discount_value: 'Adjustment Value',
+                final_rate: 'Final Rate'
+            };
+            const diffs = [];
+            for (const key of Object.keys(fieldLabels)) {
+                if (original[key] !== current[key]) {
+                    diffs.push(`${fieldLabels[key]}: ${original[key] ?? '-'} → ${current[key] ?? '-'}`);
+                }
+            }
+            return diffs.join(', ');
         }
 
         function renderCcRateRow(rate, editing) {
@@ -1758,7 +2261,7 @@
 
             if (!editing) {
                 return `
-                    <tr data-rate-id="${rate.id}">
+                    <tr data-rate-id="${rate.id}" class="border-l-2 border-transparent hover:border-orange-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
                         <td class="py-1.5 px-2">${lane}</td>
                         <td class="py-1.5 px-2">${variant}</td>
                         <td class="py-1.5 px-2 text-right">${values.min_van_qty ?? '-'}</td>
@@ -1766,7 +2269,7 @@
                         <td class="py-1.5 px-2 text-right">${ccDiscountDisplay(values)}</td>
                         <td class="py-1.5 px-2 text-right font-semibold">
                             ${Number(values.final_rate).toLocaleString()}
-                            ${edited ? '<span class="ml-1 text-[10px] font-normal text-amber-600">(edited)</span>' : ''}
+                            ${edited ? `<span class="ml-1 text-[10px] font-normal text-amber-600 cursor-help" title="${describeRateChange(rate).replace(/"/g, '&quot;')}">(edited)</span>` : ''}
                         </td>
                         <td class="py-1.5 px-2 text-right">
                             <button type="button" class="cc-edit-btn text-base leading-none px-1.5 py-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Edit this rate">✎</button>
@@ -1788,8 +2291,10 @@
                         <div class="flex items-center gap-1 justify-end">
                             <select class="cc-input-disctype border rounded px-1 py-1 text-xs dark:text-zinc-900">
                                 <option value="" ${!values.discount_type ? 'selected' : ''}>None</option>
-                                <option value="percentage" ${values.discount_type === 'percentage' ? 'selected' : ''}>%</option>
-                                <option value="fixed" ${values.discount_type === 'fixed' ? 'selected' : ''}>Fixed</option>
+                                <option value="percentage" ${values.discount_type === 'percentage' ? 'selected' : ''}>Discount (%)</option>
+                                <option value="fixed" ${values.discount_type === 'fixed' ? 'selected' : ''}>Discount (Fixed)</option>
+                                <option value="increase_percentage" ${values.discount_type === 'increase_percentage' ? 'selected' : ''}>Increase (%)</option>
+                                <option value="increase_fixed" ${values.discount_type === 'increase_fixed' ? 'selected' : ''}>Increase (Fixed)</option>
                             </select>
                             <input type="text" inputmode="decimal" class="cc-input-discval currency-input w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.discount_value)}">
                         </div>
@@ -1823,8 +2328,10 @@
             const finalInput = row.querySelector('.cc-input-final');
 
             let final = base;
-            if (type === 'percentage') final = base - (base * value / 100);
+            if (type === 'percentage') final = Math.max(0, base - (base * value / 100));
             if (type === 'fixed') final = Math.max(0, base - value);
+            if (type === 'increase_percentage') final = base + (base * value / 100);
+            if (type === 'increase_fixed') final = base + value;
 
             finalInput.value = formatCurrencyDisplay(final.toFixed(2));
         }
@@ -1881,8 +2388,6 @@
                     newValues.final_rate !== original.final_rate;
 
                 if (changed) {
-                    const confirmed = await customConfirm('Apply this rate change?');
-                    if (!confirmed) return;
                     ccRateOverrides[rateId] = newValues;
                 } else {
                     delete ccRateOverrides[rateId];
@@ -2079,15 +2584,17 @@
                         <input type="text" inputmode="decimal" data-field="base_rate" readonly class="base-rate currency-input w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
                     </div>
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Discount Type</label>
+                        <label class="text-[11px] text-zinc-400 uppercase">Adjustment Type</label>
                         <select data-field="discount_type" class="discount-type w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                             <option value="">None</option>
-                            <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Amount</option>
+                            <option value="percentage">Discount (%)</option>
+                            <option value="fixed">Discount (Fixed)</option>
+                            <option value="increase_percentage">Increase (%)</option>
+                            <option value="increase_fixed">Increase (Fixed)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Discount Value</label>
+                        <label class="text-[11px] text-zinc-400 uppercase">Adjustment Value</label>
                         <input type="text" inputmode="decimal" data-field="discount_value" class="discount-value currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
                     </div>
                     <div>
@@ -2222,8 +2729,10 @@
             const finalRateInput = row.querySelector('.final-rate');
 
             let final = base;
-            if (type === 'percentage') final = base - (base * value / 100);
+            if (type === 'percentage') final = Math.max(0, base - (base * value / 100));
             if (type === 'fixed') final = Math.max(0, base - value);
+            if (type === 'increase_percentage') final = base + (base * value / 100);
+            if (type === 'increase_fixed') final = base + value;
 
             finalRateInput.value = formatCurrencyDisplay(final.toFixed(2));
         }

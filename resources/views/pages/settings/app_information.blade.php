@@ -8,7 +8,8 @@
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5 space-y-6">
 
         <div>
-            <label for="appNameInput" class="block text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-1">Application
+            <label for="appNameInput"
+                class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Application
                 Name</label>
             <input type="text" id="appNameInput" name="app_name" maxlength="255"
                 class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -16,7 +17,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-                <h2 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide mb-1">Logo</h2>
+                <h2 class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Logo</h2>
                 <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-3">Shown in the sidebar and on the login page.</p>
                 <div id="appLogoPreview" class="mb-3"></div>
                 <div class="flex items-center gap-2">
@@ -33,7 +34,7 @@
             </div>
 
             <div>
-                <h2 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide mb-1">Icon
+                <h2 class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Icon
                     (Favicon)</h2>
                 <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-3">Shown as the browser tab icon.</p>
                 <div id="appIconPreview" class="mb-3"></div>
@@ -56,7 +57,7 @@
 
     <div class="flex justify-end mt-6">
         <button type="button" id="appInformationSaveBtn"
-            class="inline-flex items-center px-5 py-2.5 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+            class="inline-flex items-center px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
             Save
         </button>
     </div>
@@ -68,11 +69,17 @@
         let pendingLogoFile = null;
         let pendingIconFile = null;
 
+        const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2MB - matches the copy under the fields.
+
         function previewHtml(url, label) {
             if (!url) {
                 return `<div class="h-16 w-16 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 flex items-center justify-center text-[10px] text-zinc-400">${label}</div>`;
             }
             return `<img src="${url}" alt="${label}" class="h-16 w-16 rounded-lg object-contain border border-zinc-200 dark:border-zinc-700 bg-white">`;
+        }
+
+        function tooLargeHtml() {
+            return `<div class="text-xs text-red-600 dark:text-red-400">File is too large - please choose an image under 2MB.</div>`;
         }
 
         function render() {
@@ -102,6 +109,12 @@
         document.getElementById('appLogoInput').addEventListener('change', function() {
             const file = this.files[0];
             if (!file) return;
+            if (file.size > MAX_FILE_BYTES) {
+                pendingLogoFile = null;
+                this.value = '';
+                document.getElementById('appLogoPreview').innerHTML = tooLargeHtml();
+                return;
+            }
             pendingLogoFile = file;
             document.getElementById('appLogoPreview').innerHTML = previewHtml(URL.createObjectURL(file), 'Logo');
             document.getElementById('appLogoRemoveBtn').classList.remove('hidden');
@@ -110,6 +123,12 @@
         document.getElementById('appIconInput').addEventListener('change', function() {
             const file = this.files[0];
             if (!file) return;
+            if (file.size > MAX_FILE_BYTES) {
+                pendingIconFile = null;
+                this.value = '';
+                document.getElementById('appIconPreview').innerHTML = tooLargeHtml();
+                return;
+            }
             pendingIconFile = file;
             document.getElementById('appIconPreview').innerHTML = previewHtml(URL.createObjectURL(file), 'Icon');
             document.getElementById('appIconRemoveBtn').classList.remove('hidden');

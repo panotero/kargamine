@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Laravel 10 (PHP 8.1+) application for document tracking, CRM/lead management, client proposals & contracts, and finance tracking for a logistics/freight business (containers, lanes, ports, trucking tariffs, bookings). Server-rendered Blade views with jQuery/Alpine.js + Tailwind on the frontend, built via Vite.
 
+**Redesigning or building a new UI screen? Read `VISUALS.md` first.** It documents the visual/interaction patterns established across already-redesigned screens (the Lead Info modal, the New Lead form, booking-requirement cards) — color-coding conventions, empty-state treatments, the rail+tabs and wizard patterns, etc. — so new work reads as the same app, not a bolted-on redesign.
+
+**Adding or changing a module, page, or a meaningful mutating action? Read and update `MODULES.md`.** It catalogs every module/submodule in the app (route, controller, actions) and which ones are covered by the `permissions` table / `permission:` middleware, `nav.access:` middleware, or neither. When you add a new module or submodule, add it to `MODULES.md` first (or in the same change). When `MODULES.md` changes, treat that as a prompt to review whether the `permissions` table needs a new row for the new action(s) — see that file's "Keeping this in sync with Roles & Permissions" section for the exact steps (add a `permissions` row, gate the route with `->middleware('permission:the.key')`, grant it to the relevant roles, done — the Roles & Permissions page at `/page_roles_permissions` reads permissions live, no UI code changes needed).
+
 ## Commands
 
 ```bash

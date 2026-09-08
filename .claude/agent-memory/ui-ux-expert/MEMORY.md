@@ -1,0 +1,11 @@
+# Memory Index
+
+- [CRM Lead Info modal redesign](project_crm_lead_info_modal_redesign.md) — full IA/hierarchy redesign in progress, prior review gave 2-pane+tabs recommendation
+- [CRM Lead form redesign](project_crm_lead_form_redesign.md) — New/Edit Lead full-page form redesign, prior review gave 3-step Stage 1 sub-wizard + signatory-mirror-checkbox recommendation, flagged a real premature-navigation bug on Stage 2 save
+- [CRM Leads list page redesign](project_crm_leads_list_redesign.md) — crm.blade.php page shell (header/status cards/filters/table) review; recommended single segmented pipeline bar over 7-card grid, needs-attention filter, table status color pill + row accent
+- [Client Masters page redesign](project_client_masters_redesign.md) — clientMasters.blade.php list+modal review; chip-strip over 3 bar-cards, rail+tabs modal over global-edit, createContractModal drift vs Proposals, empty-state/button-loading/window.prompt bugs
+- [Booking module redesign](project_booking_redesign.md) — booking.blade.php + bookingForm.blade.php review; comprehension-first mandate, wizard+exclusive-expand+route-card+rail-tabs recs, "Save as Draft" contradiction + status-button double-submit + filtered-empty bugs
+- [Settings config pages redesign](project_settings_config_pages_redesign.md) — Theme/Mailer/App-Info/Notif-Test review; mailer plaintext-password echo (security), blue-vs-orange primary-button conflict, theme preview session-leak, mailer raw-fetch/native-POST bypasses apiCall
+- [Container Inventory redesign](project_container_inventory_redesign.md) — containerInventory.blade.php review; grouped-chip (not arrow-strip) status shape, booking-driven read-only states, dropped-reason + orphan-Damaged + terminal-OOS + missing-searchable-select + dark-input bugs
+- [Settings Users + Team Mgmt redesign](project_settings_users_redesign.md) — LIVE users.blade.php is a fake blue mockup on hardcoded arrays; real UserController API sits orphaned in usersmanagement.blade.php; team/leader cascade unexplained
+- [Settings area redesign (App Settings + Menus)](project_settings_area_redesign.md) — settings.blade.php CRUD endpoints (/api/offices,userconfigs,documenttypes,labeltypes) are UNREGISTERED/dead; page non-functional today; menus page is mostly modern

@@ -16,28 +16,28 @@
     <section class="w-full mb-6">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-                <div class="w-full py-1 rounded-full bg-blue-500 mb-3"></div>
-                <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Total Users</p>
-                <p class="text-2xl font-bold text-zinc-800 dark:text-zinc-100" id="countAllUsers">0</p>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm">
+                <div class="w-full py-1 rounded-full bg-blue-500"></div>
+                <p class="text-xs text-zinc-400 font-semibold mt-2">TOTAL USERS</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countAllUsers">0</p>
             </div>
 
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-                <div class="w-full py-1 rounded-full bg-green-500 mb-3"></div>
-                <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Active</p>
-                <p class="text-2xl font-bold text-zinc-800 dark:text-zinc-100" id="countActiveUsers">0</p>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm">
+                <div class="w-full py-1 rounded-full bg-green-500"></div>
+                <p class="text-xs text-zinc-400 font-semibold mt-2">ACTIVE</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countActiveUsers">0</p>
             </div>
 
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-                <div class="w-full py-1 rounded-full bg-zinc-400 mb-3"></div>
-                <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Inactive</p>
-                <p class="text-2xl font-bold text-zinc-800 dark:text-zinc-100" id="countInactiveUsers">0</p>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm">
+                <div class="w-full py-1 rounded-full bg-zinc-400"></div>
+                <p class="text-xs text-zinc-400 font-semibold mt-2">INACTIVE</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countInactiveUsers">0</p>
             </div>
 
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-                <div class="w-full py-1 rounded-full bg-purple-500 mb-3"></div>
-                <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Roles</p>
-                <p class="text-2xl font-bold text-zinc-800 dark:text-zinc-100" id="countRoles">0</p>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm">
+                <div class="w-full py-1 rounded-full bg-purple-500"></div>
+                <p class="text-xs text-zinc-400 font-semibold mt-2">ROLES</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countRoles">0</p>
             </div>
 
         </div>

@@ -16,6 +16,7 @@ class CrmLeadContainer extends Model
         'declared_value_per_unit',
         'frequency',
         'general_cargo_description',
+        'cargo_type',
         'container_class_id',
         'container_size_id',
         'minimum_temperature',

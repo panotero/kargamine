@@ -11,6 +11,7 @@ use App\Http\Controllers\CrmLeadController;
 use App\Http\Controllers\CrmNoteController;
 use App\Http\Controllers\CrmStatusController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeviceContainerAssignmentController;
 use App\Http\Controllers\ListOfValueController;
 use App\Http\Controllers\LovController;
 use App\Http\Controllers\MailerController;
@@ -45,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [ProfileController::class, 'show']);
         Route::put('/', [ProfileController::class, 'update']);
         Route::put('/password', [ProfileController::class, 'updatePassword']);
+        Route::put('/layout', [ProfileController::class, 'updateLayout']);
         Route::post('/photo', [ProfileController::class, 'uploadPhoto']);
         Route::delete('/photo', [ProfileController::class, 'deletePhoto']);
     });
@@ -83,13 +85,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('teams')->group(function () {
         Route::get('/', [TeamController::class, 'index']);
         Route::get('/users', [TeamController::class, 'availableUsers']);
-        Route::post('/', [TeamController::class, 'store'])->middleware('can:isSuperAdmin');
-        Route::put('/{id}', [TeamController::class, 'update'])->middleware('can:isSuperAdmin');
-        Route::delete('/{id}', [TeamController::class, 'destroy'])->middleware('can:isSuperAdmin');
+        Route::post('/', [TeamController::class, 'store'])->middleware('nav.access:/page_team_management');
+        Route::put('/{id}', [TeamController::class, 'update'])->middleware('nav.access:/page_team_management');
+        Route::delete('/{id}', [TeamController::class, 'destroy'])->middleware('nav.access:/page_team_management');
         Route::get('/{id}/members', [TeamController::class, 'members']);
-        Route::post('/{id}/members', [TeamController::class, 'addMember'])->middleware('can:isSuperAdmin');
-        Route::patch('/{id}/members/{userId}', [TeamController::class, 'updateMember'])->middleware('can:isSuperAdmin');
-        Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])->middleware('can:isSuperAdmin');
+        Route::post('/{id}/members', [TeamController::class, 'addMember'])->middleware('nav.access:/page_team_management');
+        Route::patch('/{id}/members/{userId}', [TeamController::class, 'updateMember'])->middleware('nav.access:/page_team_management');
+        Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])->middleware('nav.access:/page_team_management');
     });
 
     Route::prefix('app-theme')->group(function () {
@@ -139,6 +141,7 @@ Route::middleware(['auth'])->group(function () {
         // LEADS (create full lead package)
         Route::post('/leads', [CrmLeadController::class, 'store']);
         Route::get('/leads', [CrmLeadController::class, 'index']);
+        Route::get('/leads/assignable-users', [CrmLeadController::class, 'assignableUsers']);
         Route::get('/leads/{uuid}', [CrmLeadController::class, 'show']);
         Route::put('/leads/{uuid}', [CrmLeadController::class, 'update']);
         Route::delete('/leads/{uuid}', [CrmLeadController::class, 'destroy']);
@@ -174,6 +177,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/typeofbusiness', [LovController::class, 'typeOfBusiness']);
         Route::get('/addresstype', [LovController::class, 'addressType']);
         Route::get('/leadsource', [LovController::class, 'leadSource']);
+        Route::get('/cargotype', [LovController::class, 'cargoType']);
         Route::get('/industry', [LovController::class, 'industry']);
         Route::get('/organizationtype', [LovController::class, 'organizationType']);
         Route::get('/clientcategory', [LovController::class, 'clientCategory']);
@@ -246,4 +250,17 @@ Route::middleware(['auth'])->group(function () {
     });
 
     require __DIR__ . '/api_maintenance.php';
+});
+
+// -----------------------------------------------------------------
+// Device integrations - dormant endpoint meant for an external QR
+// scanner device, not the browser SPA. Deliberately OUTSIDE the
+// session-based `auth` group above: token auth via Sanctum, gated by a
+// token ability (`container.assign`) rather than a user role, and
+// exempted from CSRF (see VerifyCsrfToken::$except) since there's no
+// browser session/cookie involved. Not called by anything yet - see
+// MODULES.md and `php artisan device:make-token`.
+// -----------------------------------------------------------------
+Route::prefix('device/v1')->middleware(['auth:sanctum', 'abilities:container.assign'])->group(function () {
+    Route::post('/container-assignments', [DeviceContainerAssignmentController::class, 'assign']);
 });

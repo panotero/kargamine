@@ -15,7 +15,29 @@
     <x-table id="tableCargoBuildUp" />
 </div>
 
-{{-- Assign Vessel Voyage modal (SOP Step 11) --}}
+{{-- Booking Details modal - shown for Live/Confirmed bookings instead of
+     navigating away, since there's nothing left to edit on the booking
+     form itself at that point; Tentative bookings still route to the
+     Booking form (see isLive() below). --}}
+<x-modal id="bookingDetailsModal">
+    <div class="p-5 border-b flex justify-between items-center">
+        <div>
+            <p class="text-lg font-semibold" id="bdTitle">Booking Details</p>
+            <p class="text-xs text-zinc-400 mt-0.5" id="bdSubtitle"></p>
+        </div>
+        <button class="modal-close">✕</button>
+    </div>
+    <div class="max-h-[70vh] overflow-y-auto p-5 text-sm text-zinc-700 dark:text-zinc-300">
+        <p class="text-xs font-medium text-zinc-500 mb-2">Containers on This Booking</p>
+        <div id="bdContainersList"></div>
+    </div>
+    <div class="border-t px-5 py-4 flex justify-end">
+        <button class="modal-close border px-4 py-2 rounded-lg text-sm">Close</button>
+    </div>
+</x-modal>
+
+{{-- Assign Vessel Voyage modal (SOP Step 11) - opened on top of
+     bookingDetailsModal, voyage options scoped to the unit's own route. --}}
 <x-modal id="voyageAssignModal">
     <div class="p-5 border-b flex justify-between items-center">
         <p class="text-lg font-semibold">Assign Vessel Voyage</p>
@@ -128,64 +150,127 @@
             return sameRoute ? label : `${label} +${lines.length - 1} more`;
         }
 
-        function transactionDetailBadge(r) {
+        // Mirrors Booking::scopeLive() - Draft is Tentative, Confirmed (or
+        // further along the lifecycle) is Live. Status 1 = Draft.
+        function isLive(r) {
             const lines = r.lines ?? [];
-            const complete = lines.length > 0 && lines.every((l) => l.consignee_name && l.cargo_type && l.declared_value !== null && l.delivery_date);
-            return complete
+            return lines.length > 0 && Number(r.status) !== 1;
+        }
+
+        function transactionDetailBadge(r) {
+            return isLive(r)
                 ? '<span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">Live</span>'
                 : '<span class="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">Tentative</span>';
         }
 
         // -----------------------------------------------------------------
-        // Vessel Voyage assignment / Shut Out - SOP Steps 10-11. The
-        // backend is the source of truth for whether a unit is actually
-        // eligible (In Yard) - these buttons always show, and a
+        // Booking Details modal (containers + Assign Voyage / Shut Out /
+        // Load-Unload List per unit) - opened for Live or Confirmed
+        // bookings instead of navigating to the Booking form. SOP Steps
+        // 10-11. The backend is the source of truth for whether a unit is
+        // actually eligible (In Yard) - these buttons always show, and a
         // not-ready click just surfaces the server's error message.
         // -----------------------------------------------------------------
         let voyageUnitTarget = null;
-        let voyageOptionsLoaded = false;
+        let currentBookingUuid = null;
         let portOptionsLoaded = false;
 
-        function voyageColumn(r) {
-            const units = r.container_units ?? [];
-            if (!units.length) return '-';
+        function containerRowHtml(u) {
+            const containerNo = u.container_asset?.container_no ?? `Unit #${u.id}`;
+            const type = u.booking_line
+                ? `${u.booking_line.container?.name ?? '-'} / ${u.booking_line.container_class?.class ?? '-'} / ${u.booking_line.container_size?.size ?? '-'}`
+                : '-';
+            const originLabel = u.origin_port ? `${u.origin_port.location?.name ?? '-'} - ${u.origin_port.name}` : '-';
+            const destLabel = u.destination_port ? `${u.destination_port.location?.name ?? '-'} - ${u.destination_port.name}` : '-';
 
-            return units.map((u) => {
-                const containerNo = u.container_asset?.container_no ?? `Unit #${u.id}`;
+            let voyageCell;
+            if (u.shut_out_at) {
+                voyageCell = `<span class="inline-flex items-center rounded-full bg-red-50 text-red-700 px-2 py-0.5 text-xs font-medium">Shut Out</span>
+                    <button type="button" class="voyage-assign-btn text-blue-600 text-xs underline ml-1" data-unit-id="${u.id}" data-origin="${u.origin_port_id ?? ''}" data-destination="${u.destination_port_id ?? ''}">Reassign</button>`;
+            } else if (u.vessel_voyage) {
+                voyageCell = `<span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">${u.vessel_voyage.voyage_mnemonic}</span>
+                    <button type="button" class="voyage-shutout-btn text-red-600 text-xs underline ml-1" data-unit-id="${u.id}">Shut Out</button>`;
+            } else {
+                voyageCell = `<span class="text-zinc-400 text-xs">Unassigned</span>
+                    <button type="button" class="voyage-assign-btn text-orange-600 text-xs underline ml-1" data-unit-id="${u.id}" data-origin="${u.origin_port_id ?? ''}" data-destination="${u.destination_port_id ?? ''}">Assign Voyage</button>`;
+            }
 
-                if (u.shut_out_at) {
-                    return `<div class="mb-1 whitespace-nowrap">
-                        <span class="inline-flex items-center rounded-full bg-red-50 text-red-700 px-2 py-0.5 text-xs font-medium">Shut Out</span>
-                        ${containerNo}
-                        <button type="button" class="voyage-assign-btn text-blue-600 text-xs underline ml-1" data-unit-id="${u.id}">Reassign</button>
-                    </div>`;
-                }
+            const loadlistBtn = u.vessel_voyage
+                ? `<a href="/api/vesselVoyages/${u.vessel_voyage.id}/loadlist" target="_blank" class="text-blue-600 hover:text-blue-700 text-xs font-medium">Load/Unload List</a>`
+                : `<span class="text-zinc-300 text-xs">&mdash;</span>`;
 
-                if (u.vessel_voyage) {
-                    return `<div class="mb-1 whitespace-nowrap">
-                        <span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">${u.vessel_voyage.voyage_mnemonic}</span>
-                        ${containerNo}
-                        <button type="button" class="voyage-shutout-btn text-red-600 text-xs underline ml-1" data-unit-id="${u.id}">Shut Out</button>
-                    </div>`;
-                }
-
-                return `<div class="mb-1 whitespace-nowrap">
-                    ${containerNo}
-                    <button type="button" class="voyage-assign-btn text-orange-600 text-xs underline ml-1" data-unit-id="${u.id}">Assign Voyage</button>
-                </div>`;
-            }).join('');
+            return `
+                <tr class="border-t border-zinc-100 dark:border-zinc-800">
+                    <td class="px-2 py-1.5">${containerNo}</td>
+                    <td class="px-2 py-1.5">${type}</td>
+                    <td class="px-2 py-1.5 whitespace-nowrap">${originLabel} &rarr; ${destLabel}</td>
+                    <td class="px-2 py-1.5 whitespace-nowrap">${voyageCell}</td>
+                    <td class="px-2 py-1.5">${loadlistBtn}</td>
+                </tr>
+            `;
         }
 
-        async function loadVoyageOptions() {
-            if (voyageOptionsLoaded) return;
-            const response = await apiCall({ mode: 'GET', url: '/api/vesselVoyages?per_page=200' });
-            if (!response.success) return;
+        function renderBookingDetails(booking) {
+            currentBookingUuid = booking.uuid;
+            document.getElementById('bdTitle').textContent = booking.code ?? 'Booking Details';
+            const routeText = routeSummary(booking).replace(/&rarr;/g, '→');
+            document.getElementById('bdSubtitle').textContent = `${booking.client?.company_name ?? '-'} • ${routeText}`;
 
-            document.getElementById('vaVoyage').innerHTML = '<option value="">Select Voyage</option>' +
-                (response.data.data ?? []).map(v =>
+            const units = booking.container_units ?? [];
+            const rows = units.length
+                ? units.map(containerRowHtml).join('')
+                : `<tr><td colspan="5" class="text-center text-zinc-400 italic py-3">No container units on this booking yet.</td></tr>`;
+
+            document.getElementById('bdContainersList').innerHTML = `
+                <table class="w-full text-xs border border-zinc-200 dark:border-zinc-700">
+                    <thead class="bg-zinc-50 dark:bg-zinc-800">
+                        <tr>
+                            <th class="px-2 py-1.5 text-left">Container No.</th>
+                            <th class="px-2 py-1.5 text-left">Type</th>
+                            <th class="px-2 py-1.5 text-left">Route</th>
+                            <th class="px-2 py-1.5 text-left">Voyage</th>
+                            <th class="px-2 py-1.5 text-left">Load/Unload List</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function openBookingDetailsModal(booking) {
+            renderBookingDetails(booking);
+            initModal({ modalId: 'bookingDetailsModal' });
+        }
+
+        async function refreshBookingDetails() {
+            if (!currentBookingUuid) return;
+            const response = await apiCall({ mode: 'GET', url: `/api/cargo-build-up/bookings/${currentBookingUuid}` });
+            if (response.success) renderBookingDetails(response.data);
+        }
+
+        // Voyage options are re-fetched per click, scoped to that unit's
+        // own origin/destination - "assignment of voyage is based on the
+        // route of the booking" rather than picking from every voyage.
+        async function loadVoyageOptions(originPortId, destinationPortId) {
+            const select = document.getElementById('vaVoyage');
+            select.innerHTML = '<option value="">Loading...</option>';
+
+            let url = '/api/vesselVoyages?per_page=200';
+            if (originPortId) url += `&origin_port_id=${originPortId}`;
+            if (destinationPortId) url += `&destination_port_id=${destinationPortId}`;
+
+            const response = await apiCall({ mode: 'GET', url });
+            const rows = response.success ? (response.data.data ?? []) : [];
+
+            if (!rows.length) {
+                select.innerHTML = '<option value="">No voyages found for this route yet</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">Select Voyage</option>' +
+                rows.map(v =>
                     `<option value="${v.id}">${v.voyage_mnemonic} (${v.origin_port ? (v.origin_port.location?.name ?? '?') + ' - ' + v.origin_port.name : '?'} &rarr; ${v.destination_port ? (v.destination_port.location?.name ?? '?') + ' - ' + v.destination_port.name : '?'})</option>`
                 ).join('');
-            voyageOptionsLoaded = true;
         }
 
         async function loadPortOptions() {
@@ -214,7 +299,10 @@
                 document.getElementById('vaVoyage').value = '';
                 document.getElementById('vaEquivalentTeu').value = '';
                 document.getElementById('vaRelayPort').value = '';
-                await Promise.all([loadVoyageOptions(), loadPortOptions()]);
+                await Promise.all([
+                    loadVoyageOptions(assignBtn.dataset.origin, assignBtn.dataset.destination),
+                    loadPortOptions(),
+                ]);
                 initModal({ modalId: 'voyageAssignModal' });
                 return;
             }
@@ -235,6 +323,7 @@
                 showMessage({ status: 'success', title: 'Tagged Shut Out' });
                 table.reload();
                 loadBuckets();
+                refreshBookingDetails();
             }
         }, true);
 
@@ -260,6 +349,7 @@
             document.querySelector('#voyageAssignModal .modal-close').click();
             table.reload();
             loadBuckets();
+            refreshBookingDetails();
         });
 
         function renderTable() {
@@ -289,11 +379,6 @@
                     render: transactionDetailBadge
                 },
                 {
-                    title: 'Voyage',
-                    key: 'container_units',
-                    render: voyageColumn
-                },
-                {
                     title: 'Booking Date',
                     key: 'booking_date'
                 },
@@ -315,11 +400,17 @@
         function handleRowClick(row) {
             row.addEventListener('click', function() {
                 const data = JSON.parse(row.dataset.row);
-                window.bookingFormUuid = data.uuid;
-                loadPage({
-                    title: 'Edit Booking',
-                    link: '/page_bookingForm'
-                });
+
+                if (!isLive(data)) {
+                    window.bookingFormUuid = data.uuid;
+                    loadPage({
+                        title: 'Edit Booking',
+                        link: '/page_bookingForm'
+                    });
+                    return;
+                }
+
+                openBookingDetailsModal(data);
             });
         }
 

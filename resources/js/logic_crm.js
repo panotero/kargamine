@@ -6,6 +6,12 @@ window.initCrmLogic = function initCrmLogic() {
   let leadUUID = "";
   let leadInfo = {};
   let currentLeadProposalsPage = 1;
+  // Cached so the Activity-tab "Call"/"Email" timeline submit can resend the
+  // lead's unchanged status - CrmActivityController::store always does
+  // $lead->update(['status' => $request->status]), so omitting it would
+  // silently blank out the lead's real status.
+  let currentLeadStatus = "";
+  let timelineActiveType = "Note";
 
   // ============================================================
   // CONSTANTS
@@ -27,6 +33,38 @@ window.initCrmLogic = function initCrmLogic() {
     RF: "Reefer Van",
     LC: "Loose Cargo",
     RC: "Rolling Cargo",
+  };
+
+  // Accent color per container type for the booking-requirement info card
+  // (renderContainers) - a quick visual cue distinguishing types in a
+  // scrolled list, independent of the app's orange primary-action color.
+  const CONTAINER_TYPE_ACCENT = {
+    CV: { text: "text-orange-600 dark:text-orange-400", dot: "bg-orange-500" },
+    FR: { text: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
+    RF: { text: "text-cyan-600 dark:text-cyan-400", dot: "bg-cyan-500" },
+    LC: { text: "text-purple-600 dark:text-purple-400", dot: "bg-purple-500" },
+    RC: { text: "text-blue-600 dark:text-blue-400", dot: "bg-blue-500" },
+  };
+
+  // Rows whose status opens LeadInfoModal on click vs. navigates to the
+  // full-page lead form - also drives the row-click affordance icon
+  // rendered in the Status column (see ROW_CLICK_ICON below).
+  const OPEN_MODAL_STATUSES = ["OPPORTUNITY", "NEGOTIATION", "WIN", "LOST"];
+
+  // Dot color for the merged Activity timeline (renderTimeline) - keyed by
+  // display type ("Note" for notes, activity.type for activities).
+  const TIMELINE_DOT_COLOR = {
+    Note: "bg-zinc-400",
+    "Status Change": "bg-amber-500",
+    DEFAULT: "bg-blue-500",
+  };
+
+  // LeadInfoModal right-pane tab ids - drives setActiveTab().
+  const LEAD_INFO_TABS = ["Proposals", "Requirements", "Activity"];
+
+  const ROW_CLICK_ICON = {
+    edit: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>`,
+    view: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
   };
 
   // Mirrors ClientProposal::STATUS_* / STATUS_LABELS (app/Models/ClientProposal.php)
@@ -58,22 +96,24 @@ window.initCrmLogic = function initCrmLogic() {
   // DOM REFS
   // ============================================================
 
-  const leadAddActivityBtn = document.getElementById("leadAddActivityBtn");
-  const leadActivityDropdown = document.getElementById("leadActivityDropdown");
-  const activityDescInput = document.getElementById("activityDescriptionInput");
-  const activityAttachmentInput = document.getElementById(
-    "activityAttachmentInput",
-  );
-  const activityTypeInput = document.getElementById("activityTypeInput");
-  const activityStatusInput = document.getElementById("activityStatusInput");
-  const saveActivityBtn = document.getElementById("saveActivityBtn");
-  const cancelActivityBtn = document.getElementById("cancelActivityBtn");
+  const changeStageBtn = document.getElementById("changeStageBtn");
+  const changeStageDropdown = document.getElementById("changeStageDropdown");
+  const leadStageSelect = document.getElementById("leadStageSelect");
+  const saveStageBtn = document.getElementById("saveStageBtn");
+  const cancelStageBtn = document.getElementById("cancelStageBtn");
 
-  const leadAddNoteBtn = document.getElementById("leadAddNoteBtn");
-  const leadNoteDropdown = document.getElementById("leadNoteDropdown");
-  const noteInput = document.getElementById("noteInput");
-  const saveNoteBtn = document.getElementById("saveNoteBtn");
-  const cancelNoteBtn = document.getElementById("cancelNoteBtn");
+  const timelineTypeBtns = document.querySelectorAll(".timeline-type-btn");
+  const timelineEntryInput = document.getElementById("timelineEntryInput");
+  const timelineAttachmentToggleBtn = document.getElementById(
+    "timelineAttachmentToggleBtn",
+  );
+  const timelineAttachmentRow = document.getElementById(
+    "timelineAttachmentRow",
+  );
+  const timelineAttachmentInput = document.getElementById(
+    "timelineAttachmentInput",
+  );
+  const timelineAddBtn = document.getElementById("timelineAddBtn");
 
   const editContactBtn = document.getElementById("editContactBtn");
   const editContactInfoDropdown = document.getElementById(
@@ -92,10 +132,16 @@ window.initCrmLogic = function initCrmLogic() {
 
   function openDropdown(dropdown) {
     dropdown.classList.remove("hidden");
+    document
+      .querySelector(`[aria-controls="${dropdown.id}"]`)
+      ?.setAttribute("aria-expanded", "true");
   }
 
   function closeDropdown(dropdown) {
     dropdown.classList.add("hidden");
+    document
+      .querySelector(`[aria-controls="${dropdown.id}"]`)
+      ?.setAttribute("aria-expanded", "false");
   }
 
   function emptyState(message) {
@@ -103,6 +149,49 @@ window.initCrmLogic = function initCrmLogic() {
         <div class="w-full py-3 rounded-md text-center">
             <p class="text-xs font-medium text-zinc-400">${message}</p>
         </div>`;
+  }
+
+  // Distinct "prompting" empty state for the Proposals tab (dashed orange
+  // block) - reuses the same #leadAddProposalBtn click handler via a
+  // delegated click listener instead of duplicating its logic.
+  function proposalEmptyState() {
+    return `
+        <div class="border-2 border-dashed border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20 rounded-xl p-6 flex flex-col items-center text-center gap-2">
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400">⚠ Action Needed</span>
+            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">No proposal yet for this stage</p>
+            <button type="button" id="leadProposalEmptyAddBtn"
+                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                + New Proposal
+            </button>
+        </div>`;
+  }
+
+  function setActiveTab(tab) {
+    LEAD_INFO_TABS.forEach((t) => {
+      const btn = document.getElementById(`tabBtn${t}`);
+      const pane = document.getElementById(`tabPane${t}`);
+      if (!btn || !pane) return;
+      const active = t === tab;
+      btn.classList.toggle("border-orange-500", active);
+      btn.classList.toggle("text-orange-600", active);
+      btn.classList.toggle("border-transparent", !active);
+      btn.classList.toggle("text-zinc-500", !active);
+      pane.classList.toggle("hidden", !active);
+    });
+  }
+
+  function setTimelineActiveType(type) {
+    timelineActiveType = type;
+    timelineTypeBtns.forEach((btn) => {
+      const active = btn.dataset.type === type;
+      btn.classList.toggle("bg-white", active);
+      btn.classList.toggle("dark:bg-zinc-700", active);
+      btn.classList.toggle("text-orange-600", active);
+      btn.classList.toggle("dark:text-orange-400", active);
+      btn.classList.toggle("shadow-sm", active);
+      btn.classList.toggle("text-zinc-500", !active);
+      btn.classList.toggle("dark:text-zinc-400", !active);
+    });
   }
 
   function formatAddress(address) {
@@ -154,31 +243,141 @@ window.initCrmLogic = function initCrmLogic() {
   // RENDER — TABLE
   // ============================================================
 
+  // Staleness tiers for "Last Activity" - shared by the table cell's dot and
+  // the row-level left-border accent so the two thresholds never drift apart.
+  // null (no activity yet) is treated the same as the 14+ day tier.
+  function getStalenessTier(lastActivityAt) {
+    if (!lastActivityAt) return "red";
+
+    const daysAgo =
+      (Date.now() - new Date(lastActivityAt).getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    if (daysAgo >= 14) return "red";
+    if (daysAgo >= 7) return "amber";
+    return null;
+  }
+
+  // Whether any leads-list filter is currently active - drives which empty
+  // state (quiet "no leads yet" vs. prompting "no leads match these filters")
+  // renderTable()'s emptyMessage shows.
+  function crmFiltersActive() {
+    const search = document
+      .querySelector("#tableCrm .table-search-input")
+      ?.value.trim();
+    const status = document.querySelector(".statusBtn.ring-2")?.dataset
+      .status;
+    const assignedTo = document.getElementById("crmAssignedToFilter")?.value;
+    const needsAttention =
+      document.getElementById("crmNeedsAttentionToggle")?.dataset.active ===
+      "true";
+
+    return Boolean(
+      search || (status && status !== "ALL") || assignedTo || needsAttention,
+    );
+  }
+
+  function crmEmptyState() {
+    if (!crmFiltersActive()) {
+      return `
+        <div class="border-2 border-dashed border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20 rounded-xl p-6 flex flex-col items-center text-center gap-2">
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400">No leads yet</span>
+            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Once you add your first lead, it'll show up here.</p>
+            <button type="button" id="crmEmptyNewLeadBtn"
+                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                + New Lead
+            </button>
+        </div>`;
+    }
+
+    return `
+        <div class="border-2 border-dashed border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20 rounded-xl p-6 flex flex-col items-center text-center gap-2">
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400">No leads match these filters</span>
+            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Try widening your search or clearing the active filters.</p>
+            <button type="button" id="crmEmptyClearFiltersBtn"
+                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                Clear Filters
+            </button>
+        </div>`;
+  }
+
+  // Delegated - both empty-state buttons are (re)rendered inside the table
+  // body's innerHTML, so they can't be bound once via getElementById.
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("#crmEmptyNewLeadBtn")) {
+      document.getElementById("btnNewLead")?.click();
+    }
+    if (e.target.closest("#crmEmptyClearFiltersBtn")) {
+      clearCrmFilters();
+    }
+  });
+
+  function clearCrmFilters() {
+    const searchInput = document.querySelector("#tableCrm .table-search-input");
+    if (searchInput) searchInput.value = "";
+
+    document
+      .querySelectorAll(".statusBtn")
+      .forEach((btn) => btn.classList.remove("ring-2", "ring-orange-500"));
+    document
+      .querySelector('.statusBtn[data-status="ALL"]')
+      ?.classList.add("ring-2", "ring-orange-500");
+
+    const assignedToFilter = document.getElementById("crmAssignedToFilter");
+    if (assignedToFilter) assignedToFilter.value = "";
+
+    setNeedsAttentionActive(false);
+
+    const table = renderTable();
+    table.setFilters({
+      status: "",
+      assigned_to: "",
+      needs_attention: "",
+    });
+    table.search("");
+  }
+
+  function setNeedsAttentionActive(active) {
+    const toggle = document.getElementById("crmNeedsAttentionToggle");
+    if (!toggle) return;
+
+    toggle.dataset.active = active ? "true" : "false";
+    toggle.classList.toggle("bg-red-50", active);
+    toggle.classList.toggle("dark:bg-red-950/20", active);
+    toggle.classList.toggle("border-red-300", active);
+    toggle.classList.toggle("dark:border-red-800", active);
+    toggle.classList.toggle("text-red-600", active);
+    toggle.classList.toggle("dark:text-red-400", active);
+    // The base zinc border/text classes must come out while active, not just
+    // have the red ones added alongside them - two utility classes for the
+    // same property have equal specificity, so whichever is later in the
+    // compiled stylesheet silently wins regardless of which was added last.
+    toggle.classList.toggle("border-zinc-300", !active);
+    toggle.classList.toggle("dark:border-zinc-700", !active);
+    toggle.classList.toggle("text-zinc-500", !active);
+    toggle.classList.toggle("dark:text-zinc-400", !active);
+  }
+
   function renderTable() {
     const thead = [
       {
         title: "Contact",
         key: "contact_name",
-      },
-      {
-        title: "Company",
-        key: "company.company_name",
-      },
-      {
-        title: "Email",
-        key: "email",
-      },
-      {
-        title: "Mobile",
-        key: "mobile",
+        render: (row) => renderContactCell(row),
       },
       {
         title: "Status",
         key: "crm_status.status",
+        render: (row) => renderStatusCell(row),
       },
       {
         title: "Assigned To",
         key: "user.name",
+      },
+      {
+        title: "Last Activity",
+        key: "last_activity_at",
+        render: (row) => renderLastActivityCell(row.last_activity_at),
       },
       {
         title: "Created",
@@ -191,13 +390,69 @@ window.initCrmLogic = function initCrmLogic() {
       tableId: "tableCrm",
       afterRenderFunction: handleClick,
       thead: thead,
+      emptyMessage: crmEmptyState,
     });
 
-    const OPEN_MODAL_STATUSES = ["OPPORTUNITY", "NEGOTIATION", "WIN", "LOST"];
+    function renderContactCell(row) {
+      const company = row.company?.company_name ?? "-";
+
+      return `
+        <div class="flex flex-col">
+            <span class="font-medium text-zinc-800 dark:text-zinc-100">${row.contact_name ?? "-"}</span>
+            <span class="text-xs text-zinc-400">${company} · ${row.email ?? "-"} · ${row.mobile ?? "-"}</span>
+        </div>`;
+    }
+
+    function renderStatusCell(row) {
+      const status = row.crm_status?.status;
+      const willOpenModal = OPEN_MODAL_STATUSES.includes(status);
+      const icon = willOpenModal ? ROW_CLICK_ICON.view : ROW_CLICK_ICON.edit;
+      const tooltip = willOpenModal ? "View" : "Edit";
+      const badgeClass = getStatusBadgeClass(status);
+
+      return `
+        <span class="inline-flex items-center gap-1.5">
+            <span title="${tooltip}" class="text-zinc-400" aria-label="${tooltip}">${icon}</span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}">${status ?? "-"}</span>
+        </span>`;
+    }
+
+    function renderLastActivityCell(lastActivityAt) {
+      if (!lastActivityAt) {
+        return `<span class="text-zinc-400">No activity</span>`;
+      }
+
+      const tier = getStalenessTier(lastActivityAt);
+      const dotClass =
+        tier === "red"
+          ? "bg-red-500"
+          : tier === "amber"
+            ? "bg-amber-500"
+            : "bg-zinc-300";
+
+      return `
+        <span class="inline-flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full inline-block ${dotClass}"></span>
+            <span>${formatDateTime(lastActivityAt)}</span>
+        </span>`;
+    }
 
     function handleClick(row) {
+      const data = JSON.parse(row.dataset.row);
+      const tier = getStalenessTier(data.last_activity_at);
+
+      row.classList.remove(
+        "border-l-[3px]",
+        "border-l-red-500",
+        "border-l-amber-500",
+      );
+      if (tier === "red") {
+        row.classList.add("border-l-[3px]", "border-l-red-500");
+      } else if (tier === "amber") {
+        row.classList.add("border-l-[3px]", "border-l-amber-500");
+      }
+
       row.addEventListener("click", function () {
-        const data = JSON.parse(row.dataset.row);
         const status = data.crm_status?.status;
 
         if (OPEN_MODAL_STATUSES.includes(status)) {
@@ -229,13 +484,29 @@ window.initCrmLogic = function initCrmLogic() {
     });
   });
 
+  document
+    .getElementById("crmNeedsAttentionToggle")
+    ?.addEventListener("click", function () {
+      const nextActive = this.dataset.active !== "true";
+      setNeedsAttentionActive(nextActive);
+      renderTable().setFilter("needs_attention", nextActive ? "1" : "");
+    });
+
   // ============================================================
   // RENDER — COUNTS
   // ============================================================
 
+  // Stages shown as segments in the pipeline bar / chip row, in display order.
+  const PIPELINE_STAGES = [
+    "LEAD",
+    "QUALIFIED",
+    "OPPORTUNITY",
+    "NEGOTIATION",
+  ];
+
   async function renderCounts() {
     const lead = await getleadcount();
-    const counts = lead.status_counts;
+    const counts = lead.status_counts ?? {};
 
     const COUNT_MAP = {
       ALL: "countALL",
@@ -251,6 +522,65 @@ window.initCrmLogic = function initCrmLogic() {
       const el = document.getElementById(elementId);
       if (el) el.innerText = counts[key] ?? 0;
     });
+
+    const totalEl = document.getElementById("crmTotalStat");
+    if (totalEl) totalEl.innerText = counts.ALL ?? 0;
+
+    const attentionEl = document.getElementById("crmAttentionStat");
+    if (attentionEl) attentionEl.innerText = lead.needs_attention_count ?? 0;
+
+    // Segment widths are real percentages of the 4 active-pipeline stages -
+    // a flat empty track (all 0%) when there's nothing to show yet, never a
+    // divide-by-zero.
+    const activeTotal = PIPELINE_STAGES.reduce(
+      (sum, stage) => sum + (counts[stage] ?? 0),
+      0,
+    );
+
+    PIPELINE_STAGES.forEach((stage) => {
+      const segment = document.querySelector(
+        `#crmPipelineBar [data-status="${stage}"]`,
+      );
+      if (!segment) return;
+
+      const pct = activeTotal > 0 ? ((counts[stage] ?? 0) / activeTotal) * 100 : 0;
+      segment.style.width = `${pct}%`;
+    });
+  }
+
+  // ============================================================
+  // RENDER — ASSIGNABLE USERS (scope indicator + assigned-rep filter)
+  // ============================================================
+
+  async function loadAssignableUsersFilter() {
+    const response = await apiCall({
+      mode: "GET",
+      url: "/api/crm/leads/assignable-users",
+    });
+
+    if (!response.success) return;
+
+    const users = response.data ?? [];
+
+    const scopeIndicator = document.getElementById("crmScopeIndicator");
+    if (scopeIndicator) {
+      scopeIndicator.classList.toggle("hidden", users.length <= 1);
+      if (users.length > 1) {
+        scopeIndicator.textContent = `· Showing leads for ${users.length} team members`;
+      }
+    }
+
+    const assignedToFilter = document.getElementById("crmAssignedToFilter");
+    if (assignedToFilter) {
+      assignedToFilter.innerHTML = [
+        `<option value="">All Reps</option>`,
+        ...users.map((u) => `<option value="${u.id}">${u.name}</option>`),
+      ].join("");
+
+      assignedToFilter.addEventListener("change", function () {
+        renderTable().setFilter("assigned_to", this.value);
+      });
+    }
   }
 
   // ============================================================
@@ -279,14 +609,14 @@ window.initCrmLogic = function initCrmLogic() {
       "#leadEstimatedValue",
       "#leadCreatedAt",
       "#leadExpectedCloseDate",
-      "#leadNoteContainer",
-      "#leadActivityContainer",
+      "#leadTimelineContainer",
       "#leadContainerListContainer",
       "#leadAddressListContainer",
     ].forEach((id) => $(id).html(loader));
     document.getElementById("leadProposalContainer").innerHTML = loader;
     leadUUID = uuid;
     window.currentLeadUuid = uuid;
+    setActiveTab("Proposals");
 
     const response = await apiCall({
       mode: "GET",
@@ -398,10 +728,11 @@ window.initCrmLogic = function initCrmLogic() {
     $("#contactName").val(lead.contact_name ?? "");
     $("#contactEmail").val(lead.email ?? "");
     $("#contactMobile").val(lead.mobile ?? "");
-    $("#activityStatusInput").val(lead.status ?? "");
 
-    renderActivity(lead.activities);
-    renderNotes(lead.notes);
+    currentLeadStatus = lead.status ?? "";
+    $("#leadStageSelect").val(currentLeadStatus);
+
+    renderTimeline(lead.activities, lead.notes);
     renderContainers(lead.containers);
     renderAddresses(lead.addresses);
     loadLeadProposals(uuid, 1);
@@ -431,10 +762,12 @@ window.initCrmLogic = function initCrmLogic() {
     const meta = response.data;
     const proposals = meta.data ?? [];
 
+    document
+      .getElementById("tabBadgeProposals")
+      ?.classList.toggle("hidden", proposals.length > 0);
+
     if (!proposals.length) {
-      container.innerHTML = emptyState(
-        "There's no proposal yet. Create one now!",
-      );
+      container.innerHTML = proposalEmptyState();
       renderLeadProposalsPagination(null);
       return;
     }
@@ -443,6 +776,17 @@ window.initCrmLogic = function initCrmLogic() {
     renderLeadProposalsPagination(meta);
   }
   window.loadLeadProposals = loadLeadProposals;
+
+  // The empty-state "+ New Proposal" button is (re)rendered inside
+  // #leadProposalContainer's innerHTML, so it's wired via delegation rather
+  // than a one-time getElementById binding - it just forwards the click to
+  // the existing #leadAddProposalBtn handler (defined in crm.blade.php's
+  // proposal-modal script) instead of duplicating that logic.
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("#leadProposalEmptyAddBtn")) {
+      document.getElementById("leadAddProposalBtn")?.click();
+    }
+  });
 
   function renderProposalCard(proposal) {
     const statusClass =
@@ -566,6 +910,9 @@ window.initCrmLogic = function initCrmLogic() {
   function renderContainers(containers) {
     const container = document.getElementById("leadContainerListContainer");
 
+    const badge = document.getElementById("tabBadgeRequirements");
+    if (badge) badge.textContent = containers?.length ?? 0;
+
     if (!containers || !containers.length) {
       container.innerHTML = emptyState("No container requirements added yet.");
       return;
@@ -573,52 +920,48 @@ window.initCrmLogic = function initCrmLogic() {
 
     container.innerHTML = containers
       .map((c) => {
-        const origin = c.origin_port ? (c.origin_port.location?.name ?? "-") + " - " + c.origin_port.name : "-";
-        const destination = c.destination_port ? (c.destination_port.location?.name ?? "-") + " - " + c.destination_port.name : "-";
         const typeLabel =
           CONTAINER_TYPE_LABELS[c.container_type] ?? c.container_type;
+        const accent =
+          CONTAINER_TYPE_ACCENT[c.container_type] ?? CONTAINER_TYPE_ACCENT.CV;
 
-        const summary = [
-          c.container_class?.class,
-          c.container_size?.size,
-          c.quantity ? `Qty: ${c.quantity}` : null,
-          c.booking_unit_type,
-          c.dangerous_cargo ? "DG" : null,
-        ]
-          .filter(Boolean)
-          .join(" · ");
+        const originCity = c.origin_port?.location?.name ?? "-";
+        const originPort = c.origin_port?.name ?? null;
+        const destCity = c.destination_port?.location?.name ?? "-";
+        const destPort = c.destination_port?.name ?? null;
 
-        const details = [
-          c.frequency ? ["Frequency", c.frequency] : null,
-          c.service_mode ? ["Service Mode", c.service_mode] : null,
-          c.service_mode_origin
-            ? ["Origin Handling", c.service_mode_origin]
-            : null,
-          c.service_mode_destination
-            ? ["Destination Handling", c.service_mode_destination]
-            : null,
-          c.estimated_cbm ? ["Est. CBM", c.estimated_cbm] : null,
-          c.estimated_ton ? ["Est. Tonnage", c.estimated_ton] : null,
+        const containerInfo =
+          [c.container_class?.class, c.container_size?.size]
+            .filter(Boolean)
+            .join(" · ") ||
+          [
+            c.estimated_cbm ? `${c.estimated_cbm} CBM` : null,
+            c.estimated_ton ? `${c.estimated_ton} MT` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") ||
+          (c.minimum_temperature != null
+            ? `${c.minimum_temperature}°C`
+            : null) ||
+          "-";
+
+        const footNotes = [
           c.declared_value_per_unit
-            ? [
-                "Declared Value/Unit",
-                `₱${Number(c.declared_value_per_unit).toLocaleString()}`,
-              ]
-            : null,
-          c.general_cargo_description
-            ? ["Cargo Description", c.general_cargo_description]
+            ? `<span><b>₱${Number(c.declared_value_per_unit).toLocaleString()}</b> declared value/unit</span>`
             : null,
           c.special_requirements
-            ? ["Special Requirements", c.special_requirements]
+            ? `<span><b>Special Requirements:</b> ${c.special_requirements}</span>`
             : null,
-          c.special_notes ? ["Special Notes", c.special_notes] : null,
+          c.special_notes
+            ? `<span><b>Special Notes:</b> ${c.special_notes}</span>`
+            : null,
         ].filter(Boolean);
 
         const dgDownload =
           c.dangerous_cargo && c.dg_documentary_requirement
             ? `<a href="${c.dg_documentary_requirement}" target="_blank"
-                class="inline-flex items-center gap-1 text-[11px] font-medium text-orange-600 hover:text-orange-700 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 hover:underline">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 10.5l4.5 4.5m0 0l4.5-4.5m-4.5 4.5V3" />
                 </svg>
                 Download DG Doc
@@ -626,25 +969,76 @@ window.initCrmLogic = function initCrmLogic() {
             : "";
 
         return `
-                <div class="p-3 border border-zinc-200 dark:border-zinc-700 rounded-md  w-full flex flex-col gap-1">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-semibold text-zinc-800 dark:text-zinc-100">${typeLabel}</span>
-                        <span class="text-[11px] text-zinc-400">${origin} &rarr; ${destination}</span>
+                <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden w-full shrink-0">
+                    <div class="flex items-center justify-between px-3 pt-3 pb-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold ${accent.text}">
+                            <span class="w-2 h-2 rounded-full ${accent.dot}"></span>
+                            ${typeLabel}
+                        </span>
+                        ${c.quantity ? `<span class="font-mono text-[11px] font-bold bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full px-2 py-0.5 text-zinc-600 dark:text-zinc-300">&times;${c.quantity}</span>` : ""}
                     </div>
-                    ${summary ? `<p class="text-[11px] text-zinc-500">${summary}</p>` : ""}
+
+                    <div class="flex items-start gap-2 px-3 pt-2 pb-2.5">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">${originCity}</p>
+                            ${originPort ? `<p class="text-[11px] text-zinc-400 truncate">${originPort}</p>` : ""}
+                            ${c.service_mode_origin ? `<p class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 mt-1">${c.service_mode_origin}</p>` : ""}
+                        </div>
+                        <div class="shrink-0 w-8 flex justify-center pt-1 text-zinc-300 dark:text-zinc-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </div>
+                        <div class="flex-1 min-w-0 text-right">
+                            <p class="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">${destCity}</p>
+                            ${destPort ? `<p class="text-[11px] text-zinc-400 truncate">${destPort}</p>` : ""}
+                            ${c.service_mode_destination ? `<p class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 mt-1">${c.service_mode_destination}</p>` : ""}
+                        </div>
+                    </div>
+
+                    <div class="flex border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60">
+                        <div class="flex-1 px-3 py-2 border-r border-zinc-100 dark:border-zinc-800">
+                            <p class="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Container Info</p>
+                            <p class="text-xs font-semibold text-zinc-700 dark:text-zinc-200">${containerInfo}</p>
+                        </div>
+                        <div class="flex-1 px-3 py-2">
+                            <p class="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Frequency</p>
+                            <p class="text-xs font-semibold text-zinc-700 dark:text-zinc-200">${c.frequency ?? "-"}</p>
+                        </div>
+                    </div>
+
                     ${
-                      details.length
-                        ? `<div class="grid grid-cols-1 gap-y-0.5 mt-0.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
-                            ${details
-                              .map(
-                                ([label, value]) =>
-                                  `<p class="text-[11px] text-zinc-500"><span class="text-zinc-400">${label}:</span> ${value}</p>`,
-                              )
-                              .join("")}
+                      c.cargo_type
+                        ? `<div class="px-3 py-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <p class="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Cargo Type</p>
+                            <p class="text-xs font-semibold text-zinc-700 dark:text-zinc-200">${c.cargo_type}</p>
                         </div>`
                         : ""
                     }
-                    ${dgDownload}
+
+                    ${
+                      c.general_cargo_description
+                        ? `<div class="px-3 py-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <p class="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Cargo Description</p>
+                            <p class="text-xs text-zinc-600 dark:text-zinc-300">${c.general_cargo_description}</p>
+                        </div>`
+                        : ""
+                    }
+
+                    ${
+                      footNotes.length
+                        ? `<div class="flex flex-wrap gap-x-4 gap-y-0.5 px-3 pb-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                            ${footNotes.join("")}
+                        </div>`
+                        : ""
+                    }
+
+                    ${
+                      c.dangerous_cargo
+                        ? `<div class="flex items-center justify-between gap-2 px-3 py-1.5 border-t border-zinc-100 dark:border-zinc-800 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">
+                            <span class="text-[11px] font-semibold">&#9888; Dangerous Cargo declared</span>
+                            ${dgDownload}
+                        </div>`
+                        : ""
+                    }
                 </div>`;
       })
       .join("");
@@ -679,188 +1073,173 @@ window.initCrmLogic = function initCrmLogic() {
   }
 
   // ============================================================
-  // RENDER — ACTIVITIES
+  // RENDER — ACTIVITY TIMELINE (merged activities + notes)
   // ============================================================
 
-  function renderActivity(activities) {
-    const container = document.getElementById("leadActivityContainer");
+  function renderTimeline(activities, notes) {
+    const container = document.getElementById("leadTimelineContainer");
 
-    if (!activities || !activities.length) {
-      container.innerHTML = emptyState("No activities found");
+    const merged = [
+      ...(activities ?? []).map((activity) => ({
+        typeTag: activity.type,
+        text: activity.description,
+        created_at: activity.created_at,
+        user: activity.user,
+        attachment: activity.attachment,
+      })),
+      ...(notes ?? []).map((note) => ({
+        typeTag: "Note",
+        text: note.note,
+        created_at: note.created_at,
+        user: note.user,
+        attachment: null,
+      })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const badge = document.getElementById("tabBadgeActivity");
+    if (badge) badge.textContent = merged.length;
+
+    if (!merged.length) {
+      container.innerHTML = emptyState("No activity yet.");
       return;
     }
 
-    container.innerHTML = activities
-      .map(
-        (activity) => `
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg px-2.5 py-2 w-full">
+    container.innerHTML = merged
+      .map((entry, index) => {
+        const dotClass =
+          TIMELINE_DOT_COLOR[entry.typeTag] ?? TIMELINE_DOT_COLOR.DEFAULT;
+        const isLast = index === merged.length - 1;
+
+        return `
+            <div class="relative pl-6 ${isLast ? "" : "pb-4"}">
+                ${isLast ? "" : `<span class="absolute left-[5px] top-3 bottom-0 w-px bg-zinc-200 dark:bg-zinc-700"></span>`}
+                <span class="absolute left-[2px] top-1 w-2.5 h-2.5 rounded-full ring-2 ring-zinc-50 dark:ring-zinc-900 ${dotClass}"></span>
                 <div class="flex justify-between items-baseline gap-2">
-                    <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wide truncate">${activity.type}</p>
-                    <p class="text-[10px] text-zinc-400 shrink-0">${formatDateTime(activity.created_at)}</p>
+                    <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wide truncate">${entry.typeTag}</p>
+                    <p class="text-[10px] text-zinc-400 shrink-0">${formatDateTime(entry.created_at)}</p>
                 </div>
-                <p class="text-xs text-zinc-800 dark:text-zinc-100 mt-0.5 leading-snug">${activity.description}</p>
+                <p class="text-xs text-zinc-800 dark:text-zinc-100 mt-0.5 leading-snug">${entry.text ?? "-"}</p>
                 <div class="flex justify-between items-center mt-0.5">
-                    <p class="text-[10px] text-zinc-400">${activity.user.name}</p>
-                    ${activity.attachment ? `<a href="${activity.attachment}" target="_blank" class="text-[10px] font-medium text-blue-600 hover:underline">Attachment</a>` : ""}
+                    <p class="text-[10px] text-zinc-400">${entry.user?.name ?? "-"}</p>
+                    ${entry.attachment ? `<a href="${entry.attachment}" target="_blank" class="text-[10px] font-medium text-blue-600 hover:underline">Attachment</a>` : ""}
                 </div>
-            </div>`,
-      )
+            </div>`;
+      })
       .join("");
   }
 
   // ============================================================
-  // RENDER — NOTES
+  // TAB EVENTS
   // ============================================================
 
-  function renderNotes(notes) {
-    const container = document.getElementById("leadNoteContainer");
-
-    if (!notes || !notes.length) {
-      container.innerHTML = emptyState("No notes found");
-      return;
-    }
-
-    container.innerHTML = notes
-      .map(
-        (note) => `
-            <div class="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg px-2.5 py-2 w-full">
-                <div class="flex justify-between items-baseline gap-2">
-                    <p class="text-[10px] font-semibold text-zinc-500 truncate">${note.user.name}</p>
-                    <p class="text-[10px] text-zinc-400 shrink-0">${formatDateTime(note.created_at)}</p>
-                </div>
-                <p class="text-xs text-zinc-700 dark:text-zinc-300 mt-0.5 leading-snug">${note.note}</p>
-            </div>`,
-      )
-      .join("");
-  }
-
-  // ============================================================
-  // NEW LEAD FORM (side modal)
-  // ============================================================
-
-  $("#saveLeadBtn").on("click", async function (e) {
-    e.preventDefault();
-
-    const form = $("#leadForm")[0];
-    const estValue = form.elements["est_value"].value.replace(/,/g, "");
-    const formData = new FormData();
-
-    formData.append("contact_name", form.contact_name.value);
-    formData.append("mobile", form.mobile.value);
-    formData.append("email", form.email.value);
-    formData.append("company_name", form.company_name.value);
-    formData.append("position", form.position.value);
-    formData.append("status", form.status.value);
-    formData.append("est_value", estValue);
-    formData.append("source", form.source.value);
-    formData.append("notes", form.notes.value);
-
-    const response = await apiCall({
-      mode: "POST",
-      isJson: false,
-      payload: formData,
-      url: "/api/crm/leads",
-      button: document.getElementById("saveLeadBtn"),
-    });
-
-    if (!response.success) {
-      showMessage({
-        status: "error",
-        title: "Error Saving Lead",
-        message:
-          "There is an error saving your information. Please contact the system administrator.",
-      });
-      return;
-    }
-
-    showMessage({ status: "success", title: "Lead saved successfully!" });
-
-    renderTable().load(1);
-    renderCounts();
-    clearInputs();
-    closeSideModal("LeadDetailsSideModal");
+  LEAD_INFO_TABS.forEach((t) => {
+    document
+      .getElementById(`tabBtn${t}`)
+      ?.addEventListener("click", () => setActiveTab(t));
   });
 
   // ============================================================
-  // ACTIVITY EVENTS
+  // CHANGE STAGE EVENTS
   // ============================================================
 
-  leadAddActivityBtn.addEventListener("click", () =>
-    openDropdown(leadActivityDropdown),
+  changeStageBtn.addEventListener("click", () =>
+    openDropdown(changeStageDropdown),
   );
 
-  cancelActivityBtn.addEventListener("click", () => {
-    activityStatusInput.value = "";
-    activityTypeInput.value = "";
-    activityDescInput.value = "";
-    activityAttachmentInput.value = "";
-    closeDropdown(leadActivityDropdown);
+  cancelStageBtn.addEventListener("click", () => {
+    leadStageSelect.value = currentLeadStatus;
+    closeDropdown(changeStageDropdown);
   });
 
-  saveActivityBtn.addEventListener("click", async function () {
-    const formData = new FormData();
+  saveStageBtn.addEventListener("click", async function () {
+    const selectedOption =
+      leadStageSelect.options[leadStageSelect.selectedIndex];
+    const statusLabel = selectedOption ? selectedOption.textContent : "";
 
-    formData.append("leadUUId", leadUUID);
-    formData.append("status", activityStatusInput.value);
-    formData.append("type", activityTypeInput.value);
-    formData.append("activity", activityDescInput.value);
-
-    if (activityAttachmentInput.files.length > 0) {
-      formData.append("attachment", activityAttachmentInput.files[0]);
-    }
     const response = await apiCall({
       mode: "POST",
-      isJson: false,
-      payload: formData,
+      isJson: true,
+      payload: {
+        leadUUId: leadUUID,
+        status: leadStageSelect.value,
+        type: "Status Change",
+        activity: "Status changed to " + statusLabel,
+      },
       url: "/api/crm/activity",
-      button: saveActivityBtn,
+      button: saveStageBtn,
     });
 
     if (!response.success) {
-      showMessage({ status: "error", title: "Error Saving Activity" });
+      showMessage({ status: "error", title: "Error Changing Stage" });
       return;
     }
 
-    showMessage({ status: "success", title: "Activity Saved!" });
-    activityStatusInput.value = "";
-    activityTypeInput.value = "";
-    activityDescInput.value = "";
-    activityAttachmentInput.value = "";
-    closeDropdown(leadActivityDropdown);
+    showMessage({ status: "success", title: "Stage Updated!" });
+    closeDropdown(changeStageDropdown);
     reloadCrmData();
   });
 
   // ============================================================
-  // NOTE EVENTS
+  // TIMELINE (ACTIVITY TAB) EVENTS
   // ============================================================
 
-  leadAddNoteBtn.addEventListener("click", () =>
-    openDropdown(leadNoteDropdown),
-  );
-
-  cancelNoteBtn.addEventListener("click", () => {
-    noteInput.value = "";
-    closeDropdown(leadNoteDropdown);
+  timelineTypeBtns.forEach((btn) => {
+    btn.addEventListener("click", () =>
+      setTimelineActiveType(btn.dataset.type),
+    );
   });
 
-  saveNoteBtn.addEventListener("click", async function () {
-    const response = await apiCall({
-      mode: "POST",
-      isJson: true,
-      payload: { leadUUId: leadUUID, note: noteInput.value },
-      url: "/api/crm/note",
-      button: saveNoteBtn,
-    });
+  timelineAttachmentToggleBtn.addEventListener("click", () => {
+    timelineAttachmentRow.classList.toggle("hidden");
+  });
+
+  timelineAddBtn.addEventListener("click", async function () {
+    const text = timelineEntryInput.value.trim();
+    if (!text) return;
+
+    let response;
+
+    if (timelineActiveType === "Note") {
+      response = await apiCall({
+        mode: "POST",
+        isJson: true,
+        payload: { leadUUId: leadUUID, note: text },
+        url: "/api/crm/note",
+        button: timelineAddBtn,
+      });
+    } else {
+      const formData = new FormData();
+      formData.append("leadUUId", leadUUID);
+      // Resend the lead's current status unchanged - see currentLeadStatus
+      // declaration for why this must never be blank.
+      formData.append("status", currentLeadStatus);
+      formData.append("type", timelineActiveType);
+      formData.append("activity", text);
+
+      if (timelineAttachmentInput.files.length > 0) {
+        formData.append("attachment", timelineAttachmentInput.files[0]);
+      }
+
+      response = await apiCall({
+        mode: "POST",
+        isJson: false,
+        payload: formData,
+        url: "/api/crm/activity",
+        button: timelineAddBtn,
+      });
+    }
 
     if (!response.success) {
-      showMessage({ status: "error", title: "Error Saving Note" });
+      showMessage({ status: "error", title: "Error Saving Entry" });
       return;
     }
 
-    showMessage({ status: "success", title: "Note saved!" });
-    noteInput.value = "";
-    closeDropdown(leadNoteDropdown);
-    loadLeadInfo(leadUUID);
+    showMessage({ status: "success", title: "Entry Added!" });
+    timelineEntryInput.value = "";
+    timelineAttachmentInput.value = "";
+    timelineAttachmentRow.classList.add("hidden");
+    setTimelineActiveType("Note");
+    reloadCrmData();
   });
 
   // ============================================================
@@ -910,16 +1289,10 @@ window.initCrmLogic = function initCrmLogic() {
 
   window.addEventListener("click", (e) => {
     if (
-      !leadAddActivityBtn.contains(e.target) &&
-      !leadActivityDropdown.contains(e.target)
+      !changeStageBtn.contains(e.target) &&
+      !changeStageDropdown.contains(e.target)
     )
-      closeDropdown(leadActivityDropdown);
-
-    if (
-      !leadAddNoteBtn.contains(e.target) &&
-      !leadNoteDropdown.contains(e.target)
-    )
-      closeDropdown(leadNoteDropdown);
+      closeDropdown(changeStageDropdown);
 
     if (
       !editContactBtn.contains(e.target) &&
@@ -949,6 +1322,7 @@ window.initCrmLogic = function initCrmLogic() {
   async function initializePage() {
     updateLeadDetails();
     getStatuses();
+    loadAssignableUsersFilter();
 
     document
       .getElementById("btnNewLead")

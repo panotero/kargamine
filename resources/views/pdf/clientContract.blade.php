@@ -176,7 +176,7 @@
                     <th width="15%">Destination</th>
                     <th width="20%">Container</th>
                     <th width="12%">Base Rate</th>
-                    <th width="16%">Discount</th>
+                    <th width="16%">Adjustment</th>
                     <th width="17%">Final Rate</th>
                 </tr>
             </thead>
@@ -191,9 +191,13 @@
                         <td>₱{{ number_format($rate->base_rate, 2) }}</td>
                         <td>
                             @if ($rate->discount_type === 'percentage')
-                                {{ number_format($rate->discount_value, 2) }}%
+                                Discount {{ number_format($rate->discount_value, 2) }}%
                             @elseif ($rate->discount_type === 'fixed')
-                                ₱{{ number_format($rate->discount_value, 2) }}
+                                Discount ₱{{ number_format($rate->discount_value, 2) }}
+                            @elseif ($rate->discount_type === 'increase_percentage')
+                                Increase {{ number_format($rate->discount_value, 2) }}%
+                            @elseif ($rate->discount_type === 'increase_fixed')
+                                Increase ₱{{ number_format($rate->discount_value, 2) }}
                             @else
                                 -
                             @endif

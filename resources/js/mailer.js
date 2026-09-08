@@ -1,89 +1,89 @@
-document.addEventListener("click", async function (event) {
-  if (event.target && event.target.id === "triggerApiBtn") {
-    const status = document.getElementById("apiStatus");
+// Mailer settings page. All three actions (save config, send test mail, trigger
+// test API) go through apiCall + showMessage - matching every other settings form.
+// Uses document-level delegation so it survives SPA page swaps without re-binding.
 
-    status.style.display = "block";
-    status.style.background = "#eee";
-    status.style.color = "#000";
-    status.textContent = "Sending...";
+// --- Save SMTP configuration -------------------------------------------------
+document.addEventListener("submit", async function (e) {
+  const form = e.target;
+  if (form.id !== "mailerConfigForm") return;
 
-    try {
-      const response = await fetch(`api/test-api`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-            .content,
-        },
-        body: JSON.stringify({ extraData: "test" }),
-      });
+  e.preventDefault();
 
-      const result = await response.json();
+  const payload = {
+    mail_mailer: form.querySelector('[name="mail_mailer"]').value,
+    mail_host: form.querySelector('[name="mail_host"]').value,
+    mail_port: form.querySelector('[name="mail_port"]').value,
+    mail_username: form.querySelector('[name="mail_username"]').value,
+    // Blank means "keep the current password" - the controller preserves it.
+    mail_password: form.querySelector('[name="mail_password"]').value,
+    mail_encryption: form.querySelector('[name="mail_encryption"]').value,
+    mail_from_address: form.querySelector('[name="mail_from_address"]').value,
+    mail_from_name: form.querySelector('[name="mail_from_name"]').value,
+  };
 
-      if (response.ok && result.success) {
-        status.style.background = "#d4edda";
-        status.style.color = "#155724";
-        status.textContent = result.message;
-      } else {
-        status.style.background = "#f8d7da";
-        status.style.color = "#721c24";
-        status.textContent = result.message || "Failed";
-      }
-    } catch (err) {
-      status.style.background = "#f8d7da";
-      status.style.color = "#721c24";
-      status.textContent = "rror: " + err.message;
-    }
+  const response = await window.apiCall({
+    mode: "POST",
+    isJson: true,
+    payload,
+    url: "/mailer_save",
+    button: form.querySelector('button[type="submit"], button:not([type])'),
+  });
+
+  showMessage({
+    status: response.success ? "success" : "error",
+    message: response.message || (response.success ? "Saved." : "Failed to save."),
+  });
+
+  if (response.success) {
+    // Clear the password field again so it stays blank after a save.
+    form.querySelector('[name="mail_password"]').value = "";
   }
 });
 
+// --- Send test mail ----------------------------------------------------------
 document.addEventListener("submit", async function (e) {
   const form = e.target;
-
   if (form.id !== "testMailForm") return;
 
   e.preventDefault();
 
-  const statusBox = document.getElementById("mailStatus");
-
-  const formData = {
+  const payload = {
     to: form.querySelector('input[name="to"]').value,
     subject: form.querySelector('input[name="subject"]').value,
     title: form.querySelector('input[name="title"]').value,
     body: form.querySelector('textarea[name="body"]').value,
   };
 
-  statusBox.className = "p-2 rounded mb-3 bg-gray-100 text-gray-700";
-  statusBox.textContent = "Sending...";
-  statusBox.classList.remove("hidden");
+  const response = await window.apiCall({
+    mode: "POST",
+    isJson: true,
+    payload,
+    url: "/api/send-mail",
+    button: form.querySelector('button[type="submit"]'),
+  });
 
-  try {
-    const response = await fetch(`api/send-mail`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-          .content,
-      },
-      body: JSON.stringify(formData),
-    });
+  showMessage({
+    status: response.success ? "success" : "error",
+    message: response.message || (response.success ? "Mail sent." : "Failed to send mail."),
+  });
 
-    const result = await response.json();
+  if (response.success) form.reset();
+});
 
-    if (response.ok && result.success) {
-      statusBox.className = "p-2 rounded mb-3 bg-green-100 text-green-700";
-      statusBox.textContent = result.message;
-      form.reset();
-    } else {
-      statusBox.className = "p-2 rounded mb-3 bg-red-100 text-red-700";
-      statusBox.textContent = result.message || "Failed to send mail.";
-    }
-  } catch (err) {
-    statusBox.className = "p-2 rounded mb-3 bg-red-100 text-red-700";
-    statusBox.textContent = "Error: " + err.message;
-  }
+// --- Trigger test API --------------------------------------------------------
+document.addEventListener("click", async function (event) {
+  if (!event.target || event.target.id !== "triggerApiBtn") return;
 
-  setTimeout(() => statusBox.classList.add("hidden"), 5000);
+  const response = await window.apiCall({
+    mode: "POST",
+    isJson: true,
+    payload: { extraData: "test" },
+    url: "/api/test-api",
+    button: event.target,
+  });
+
+  showMessage({
+    status: response.success ? "success" : "error",
+    message: response.message || (response.success ? "API triggered." : "Failed."),
+  });
 });

@@ -3,7 +3,8 @@
 ])
 <div id="{{ $id }}">
 
-    <div class="flex gap-2 mb-4">
+    <div class="flex gap-2 mb-4 flex-wrap items-center{{ isset($toolbar) ? ' border border-zinc-200 dark:border-zinc-700 rounded-lg p-2' : '' }}">
+        {{ $toolbar ?? '' }}
         <input type="text" placeholder="Search"
             class="table-search-input w-full max-w-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
         <button type="button"

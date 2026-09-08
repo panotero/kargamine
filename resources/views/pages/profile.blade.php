@@ -47,6 +47,41 @@
 
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5 space-y-6 mt-6">
         <div>
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Navigation Layout</h2>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Choose how the main navigation is displayed.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <button type="button" id="navLayoutSideBtn"
+                class="nav-layout-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
+                <div class="nav-layout-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
+                <div class="w-full h-16 flex bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden">
+                    <div class="w-4 h-full bg-zinc-400 dark:bg-zinc-500"></div>
+                    <div class="flex-1 p-1.5 space-y-1">
+                        <div class="h-1.5 w-3/4 bg-zinc-300 dark:bg-zinc-600 rounded"></div>
+                        <div class="h-1.5 w-1/2 bg-zinc-300 dark:bg-zinc-600 rounded"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Side Navigation</span>
+            </button>
+
+            <button type="button" id="navLayoutTopBtn"
+                class="nav-layout-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
+                <div class="nav-layout-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
+                <div class="w-full h-16 flex flex-col bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden">
+                    <div class="w-full h-4 bg-zinc-400 dark:bg-zinc-500"></div>
+                    <div class="flex-1 p-1.5 space-y-1">
+                        <div class="h-1.5 w-3/4 bg-zinc-300 dark:bg-zinc-600 rounded"></div>
+                        <div class="h-1.5 w-1/2 bg-zinc-300 dark:bg-zinc-600 rounded"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Top Navigation</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5 space-y-6 mt-6">
+        <div>
             <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Change Password</h2>
             <p class="text-sm text-zinc-500 dark:text-zinc-400">Ensure your account is using a long, random password to stay secure.</p>
         </div>
@@ -154,7 +189,67 @@
             document.getElementById('profileNameInput').value = currentUser.name ?? '';
             document.getElementById('profileEmailInput').value = currentUser.email ?? '';
             renderPreview();
+            setActiveNavLayoutOption(currentUser.nav_layout ?? 'side');
         }
+
+        const NAV_LAYOUT_ACTIVE_CLASSES = ['border-orange-500', 'ring-2', 'ring-orange-500'];
+        const NAV_LAYOUT_INACTIVE_CLASSES = ['border-zinc-200', 'dark:border-zinc-700'];
+        const navLayoutButtons = {
+            side: document.getElementById('navLayoutSideBtn'),
+            top: document.getElementById('navLayoutTopBtn'),
+        };
+
+        function setActiveNavLayoutOption(navLayout) {
+            Object.entries(navLayoutButtons).forEach(([layout, btn]) => {
+                if (!btn) return;
+                const isActive = layout === navLayout;
+                NAV_LAYOUT_ACTIVE_CLASSES.forEach((cls) => btn.classList.toggle(cls, isActive));
+                NAV_LAYOUT_INACTIVE_CLASSES.forEach((cls) => btn.classList.toggle(cls, !isActive));
+            });
+        }
+
+        function setNavLayoutButtonsDisabled(disabled) {
+            Object.values(navLayoutButtons).forEach((btn) => {
+                if (btn) btn.disabled = disabled;
+            });
+        }
+
+        Object.entries(navLayoutButtons).forEach(([layout, btn]) => {
+            if (!btn) return;
+            btn.addEventListener('click', async () => {
+                // Already the active layout - nothing to save.
+                if (currentUser && (currentUser.nav_layout ?? 'side') === layout) return;
+
+                // Guard against overlapping requests if the user clicks the
+                // other option before this one resolves.
+                if (btn.disabled) return;
+
+                const spinner = btn.querySelector('.nav-layout-spinner');
+                setNavLayoutButtonsDisabled(true);
+                if (spinner) spinner.classList.remove('hidden');
+
+                try {
+                    const response = await apiCall({
+                        mode: 'PUT',
+                        isJson: true,
+                        payload: { nav_layout: layout },
+                        url: '/api/profile/layout',
+                    });
+
+                    if (response.success) {
+                        currentUser = response.data;
+                        setActiveNavLayoutOption(currentUser.nav_layout ?? layout);
+                        showMessage({ status: 'success', message: 'Navigation layout updated. Reloading...' });
+                        setTimeout(() => window.location.reload(), 700);
+                    } else {
+                        showMessage({ status: 'error', message: response.message ?? 'Unable to update layout.' });
+                    }
+                } finally {
+                    setNavLayoutButtonsDisabled(false);
+                    if (spinner) spinner.classList.add('hidden');
+                }
+            });
+        });
 
         document.getElementById('profileSaveBtn').addEventListener('click', async (e) => {
             const name = document.getElementById('profileNameInput').value.trim();

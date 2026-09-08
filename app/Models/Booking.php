@@ -87,6 +87,20 @@ class Booking extends Model
         return $this->belongsTo(ClientMaster::class, 'client_id');
     }
 
+    /**
+     * Team-scoped visibility, same rule as CRM leads/Proposals/Clients/Contracts.
+     * A booking always has a client, so this just delegates to
+     * ClientMaster::scopeVisibleTo() via that relation.
+     */
+    public function scopeVisibleTo($query, ?array $userIds)
+    {
+        if ($userIds === null) {
+            return $query;
+        }
+
+        return $query->whereHas('client', fn ($q) => $q->visibleTo($userIds));
+    }
+
     public function clientContract(): BelongsTo
     {
         return $this->belongsTo(ClientContract::class, 'client_contract_id');
@@ -160,16 +174,43 @@ class Booking extends Model
             ->orWhereNull('delivery_date');
     }
 
-    /** Bookings with at least one line still missing transaction details. */
+    /** Bookings still in Draft - not yet confirmed. */
     public function scopeTentative($query)
     {
-        return $query->whereHas('lines', fn ($q) => self::missingTransactionDetails($q));
+        return $query->has('lines')->where('status', self::STATUS_DRAFT);
     }
 
-    /** Bookings with lines, all of which have transaction details filled in. */
+    /**
+     * Bookings that have been confirmed (or moved further along their
+     * lifecycle past Confirmed) - the point at which pricing/container
+     * reservation is locked in and the SOP Step 3+ pipeline (ATW/CAN, gate
+     * scans, EIR, vessel loading - all built on ->live() below) kicks in.
+     * Cancelled bookings drop out of the board entirely.
+     */
     public function scopeLive($query)
     {
-        return $query->has('lines')->whereDoesntHave('lines', fn ($q) => self::missingTransactionDetails($q));
+        return $query->has('lines')
+            ->where('status', '!=', self::STATUS_DRAFT)
+            ->where('status', '!=', self::STATUS_CANCELLED);
+    }
+
+    /**
+     * Draft bookings with at least one BookingContainerUnit slot still
+     * unassigned - what confirm() blocks on. Backs the Container
+     * Assignment page's "Needs Assignment" bucket.
+     */
+    public function scopeNeedsContainerAssignment($query)
+    {
+        return $query->where('status', self::STATUS_DRAFT)
+            ->whereHas('containerUnits', fn ($q) => $q->whereNull('container_asset_id'));
+    }
+
+    /** Draft bookings with cargo units where every slot already has a container assigned. */
+    public function scopeFullyContainerAssigned($query)
+    {
+        return $query->where('status', self::STATUS_DRAFT)
+            ->has('containerUnits')
+            ->whereDoesntHave('containerUnits', fn ($q) => $q->whereNull('container_asset_id'));
     }
 
     /**

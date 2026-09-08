@@ -1,1 +1,4 @@
 - [Client Master rebuild (2026-08-03)](project_client_master_rebuild.md) — new mnemonic/account_manager/finance/contacts/ancillary shapes, CRO role, and pre-existing convention inconsistencies to not re-introduce/re-fix.
+- [Broken sqlite test suite](project_broken_test_suite_sqlite.md) — every RefreshDatabase Feature test fails on a MySQL-only migration statement; not your change's fault, verify via real MySQL DB instead.
+- [nav.access:/page_settings has no nav_menus row](project_nav_access_settings_gap.md) — settings-gated routes 403 for everyone incl. superadmin until that row is seeded; no code bug.
+- [userconfig_table has no migration](project_userconfig_table_missing.md) — UserConfig model/controller are correct PHP but the table doesn't exist in any environment yet.

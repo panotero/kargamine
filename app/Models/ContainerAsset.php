@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ContainerAsset extends Model
 {
@@ -59,6 +60,19 @@ class ContainerAsset extends Model
     public function locationHistory(): HasMany
     {
         return $this->hasMany(ContainerAssetLocationHistory::class)->orderByDesc('recorded_at');
+    }
+
+    /**
+     * The booking_container_units row currently holding this asset, if any.
+     * ContainerAssignmentController always nulls out container_asset_id on
+     * unassign/reassign before releasing the old asset (see assignContainer()/
+     * unassignContainer()), so at most one row ever points at a given asset
+     * at a time - this is what lets the inventory page explain a Booked/In
+     * Transit container's locked state by naming the booking that holds it.
+     */
+    public function activeBookingUnit(): HasOne
+    {
+        return $this->hasOne(BookingContainerUnit::class, 'container_asset_id');
     }
 
     /**

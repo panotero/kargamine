@@ -112,7 +112,7 @@
             </tr>
             <tr>
                 <td><strong>Vessel</strong></td>
-                <td>{{ $voyage->vessel_name }} - Leg {{ $voyage->voyage_leg }}</td>
+                <td>{{ $voyage->vessel?->name }} - Leg {{ $voyage->voyage_leg }}</td>
             </tr>
             <tr>
                 <td><strong>Port of Origin</strong></td>
@@ -134,19 +134,19 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Containers Assigned to This Voyage</div>
+        <div class="section-title">Load List &bull; To Be Loaded at
+            {{ $voyage->originPort->location->name ?? '-' }} - {{ $voyage->originPort->name ?? '-' }}</div>
         <table class="cargo-table">
             <thead>
                 <tr>
                     <th width="4%">#</th>
                     <th width="10%">Booking</th>
-                    <th width="14%">Client</th>
-                    <th width="11%">Container No.</th>
-                    <th width="14%">Container Type</th>
-                    <th width="8%">Equiv. TEU</th>
-                    <th width="9%">Relay Port</th>
-                    <th width="14%">Consignee</th>
-                    <th width="10%">BOL No.</th>
+                    <th width="15%">Client</th>
+                    <th width="12%">Container No.</th>
+                    <th width="16%">Container Type</th>
+                    <th width="9%">Equiv. TEU</th>
+                    <th width="16%">Consignee</th>
+                    <th width="11%">BOL No.</th>
                 </tr>
             </thead>
             <tbody>
@@ -160,19 +160,63 @@
                             {{ $unit->bookingLine->containerClass->class ?? '-' }} /
                             {{ $unit->bookingLine->containerSize->size ?? '-' }}</td>
                         <td>{{ $unit->equivalent_teu !== null ? number_format($unit->equivalent_teu, 2) : '-' }}</td>
-                        <td>{{ $unit->relayPort ? ($unit->relayPort->location->name ?? '-') . ' - ' . $unit->relayPort->name : '-' }}</td>
                         <td>{{ $unit->bookingLine->consignee_name ?? '-' }}</td>
                         <td>{{ $unit->booking->billOfLading->bol_number ?? 'Not yet issued' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" style="text-align:center;">No containers assigned to this voyage yet.</td>
+                        <td colspan="8" style="text-align:center;">No containers to load on this leg.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Unload List &bull; To Be Unloaded at
+            {{ $voyage->destinationPort->location->name ?? '-' }} - {{ $voyage->destinationPort->name ?? '-' }}</div>
+        <table class="cargo-table">
+            <thead>
+                <tr>
+                    <th width="4%">#</th>
+                    <th width="10%">Booking</th>
+                    <th width="14%">Client</th>
+                    <th width="11%">Container No.</th>
+                    <th width="14%">Container Type</th>
+                    <th width="8%">Equiv. TEU</th>
+                    <th width="9%">Status</th>
+                    <th width="12%">Consignee</th>
+                    <th width="9%">BOL No.</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($units as $unit)
+                    @php
+                        $isRelay = $unit->relay_port_id && $unit->relay_port_id === $voyage->destination_port_id;
+                    @endphp
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $unit->booking->code ?? '-' }}</td>
+                        <td>{{ $unit->booking->client->company_name ?? '-' }}</td>
+                        <td>{{ $unit->containerAsset->container_no ?? 'Not yet assigned' }}</td>
+                        <td>{{ $unit->bookingLine->container->name ?? '-' }} /
+                            {{ $unit->bookingLine->containerClass->class ?? '-' }} /
+                            {{ $unit->bookingLine->containerSize->size ?? '-' }}</td>
+                        <td>{{ $unit->equivalent_teu !== null ? number_format($unit->equivalent_teu, 2) : '-' }}</td>
+                        <td>{{ $isRelay ? 'Relay / Transfer' : 'Final Discharge' }}</td>
+                        <td>{{ $unit->bookingLine->consignee_name ?? '-' }}</td>
+                        <td>{{ $unit->booking->billOfLading->bol_number ?? 'Not yet issued' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="9" style="text-align:center;">No containers to unload on this leg.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
         <p class="footnote">Equivalent TEU applies to Flat Rack, Rolling Cargo, and Loose Cargo only, per the SOP -
-            standard container sizes are shown under Container Type instead.</p>
+            standard container sizes are shown under Container Type instead. "Relay / Transfer" means the
+            container is being set down here to continue on a later leg, not for final delivery.</p>
     </div>
 
     <div class="section">

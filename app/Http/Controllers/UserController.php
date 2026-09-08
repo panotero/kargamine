@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Office;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -72,8 +71,31 @@ class UserController extends Controller
         }
     }
 
-    public function deactivate($id)
+    public function deactivate(Request $request, $id)
     {
+        if ((int) $id === (int) $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => "You can't deactivate your own account.",
+            ], 422);
+        }
+
+        $target = User::find($id);
+
+        if ($target && \App\Support\RoleHelper::hasAnyRole($target, ['superadmin'])) {
+            $otherActiveSuperadmins = User::where('id', '!=', $id)
+                ->where('status', User::STATUS_ACTIVE)
+                ->whereHas('role', fn ($q) => $q->whereRaw('LOWER(role_name) = ?', ['superadmin']))
+                ->exists();
+
+            if (! $otherActiveSuperadmins) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This is the last active superadmin - deactivating them would lock everyone out of admin access.',
+                ], 422);
+            }
+        }
+
         try {
             $user = User::findOrFail($id);
             $user->status = 1;

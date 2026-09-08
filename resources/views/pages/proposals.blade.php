@@ -6,18 +6,50 @@
             <h1 class="text-2xl font-bold">Proposals</h1>
             <p class="text-zinc-500">Review, approve, and track client proposals</p>
         </div>
+        <div class="text-right">
+            <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400">Awaiting Your Decision</p>
+            <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countAwaitingDecision">0</p>
+        </div>
     </div>
 
-    {{-- Status filter tabs --}}
-    <div class="flex gap-2 flex-wrap px-2 mb-3">
-        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border ring-2 ring-orange-500"
-            data-status="all">All</button>
-        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="1">Pending</button>
-        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="2">Approved</button>
-        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="3">Disapproved</button>
-        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="4">Accepted</button>
-        <button class="proposalStatusBtn px-3 py-1.5 text-sm rounded-lg border" data-status="5">Rejected</button>
-    </div>
+    {{-- Status workflow strip --}}
+    <section class="w-full my-5">
+        <div class="flex items-center flex-wrap gap-2">
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border-dashed border-zinc-300 text-zinc-500 dark:border-zinc-600 dark:text-zinc-400"
+                data-status="all">
+                <span>All</span>
+                <span id="countAll">0</span>
+            </div>
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700"
+                data-status="1">
+                <span>Pending</span>
+                <span id="countPending">0</span>
+            </div>
+            <span class="text-zinc-300 dark:text-zinc-600">→</span>
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 text-green-600 border-green-300 dark:text-green-400 dark:border-green-700"
+                data-status="2">
+                <span>Approved</span>
+                <span id="countApproved">0</span>
+            </div>
+            <span class="text-zinc-300 dark:text-zinc-600">→</span>
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700"
+                data-status="4">
+                <span>Accepted</span>
+                <span id="countAccepted">0</span>
+            </div>
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border-dashed text-red-600 border-red-300 dark:text-red-400 dark:border-red-700"
+                data-status="3">
+                <span>Disapproved</span>
+                <span id="countDisapproved">0</span>
+            </div>
+            <div class="w-px h-6 bg-zinc-200 dark:bg-zinc-700"></div>
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border-dashed text-zinc-500 border-zinc-300 dark:text-zinc-400 dark:border-zinc-600"
+                data-status="5">
+                <span>Rejected</span>
+                <span id="countRejected">0</span>
+            </div>
+        </div>
+    </section>
 
     <x-table id="tableClientProposals" />
 </div>
@@ -41,7 +73,13 @@
 
         {{-- Basic lead information --}}
         <div id="cpmLeadInfo" class="border rounded-lg p-3 hidden">
-            <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Lead Information</p>
+            <div class="flex items-center gap-2 mb-2">
+                <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">Lead Information</p>
+                <span id="cpmLeadInfoTag"
+                    class="hidden text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                    Lead-Scoped &middot; No Client Master Yet
+                </span>
+            </div>
             <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                 <div><span class="text-zinc-400">Contact:</span> <span id="cpmLeadContact" class="font-medium">-</span></div>
                 <div><span class="text-zinc-400">Company:</span> <span id="cpmLeadCompany" class="font-medium">-</span></div>
@@ -59,7 +97,7 @@
                     <th class="text-left py-1">Container</th>
                     <th class="text-right py-1">Min Qty</th>
                     <th class="text-right py-1">Base Rate</th>
-                    <th class="text-right py-1">Discount</th>
+                    <th class="text-right py-1">Adjustment</th>
                     <th class="text-right py-1">Final Rate</th>
                 </tr>
             </thead>
@@ -83,27 +121,28 @@
     <div class="border-t px-5 py-4 flex justify-between items-center gap-2">
         <div class="flex gap-2">
             <a href="#" id="cpmDownloadLink" target="_blank"
-                class="hidden px-4 py-2 text-sm rounded-lg border hover:bg-zinc-50">Download</a>
+                class="hidden px-4 py-2 text-sm rounded-lg border hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 dark:text-zinc-300">Download</a>
             <button id="cpmCreateContractBtn"
-                class="hidden px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                class="hidden px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
                 Create Contract
             </button>
             <button id="cpmViewContractBtn"
-                class="hidden px-4 py-2 text-sm rounded-lg border hover:bg-zinc-50">
+                class="hidden px-4 py-2 text-sm rounded-lg border hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 dark:text-zinc-300">
                 View Contract
             </button>
             <button id="cpmCreateClientMasterBtn"
-                class="hidden px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                class="hidden px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
                 Create Client Master
             </button>
         </div>
-        <div class="flex gap-2">
-            <button id="cpmRejectBtn"
-                class="hidden px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white">Reject</button>
+        <div class="flex items-center gap-2">
             <button id="cpmDisapproveBtn"
-                class="hidden px-4 py-2 text-sm rounded-lg bg-amber-500 hover:bg-amber-600 text-white">Disapprove</button>
+                class="hidden px-4 py-2 text-sm rounded-lg border border-amber-400 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/30">Disapprove</button>
             <button id="cpmApproveBtn"
                 class="hidden px-4 py-2 text-sm rounded-lg bg-green-600 hover:bg-green-700 text-white">Approve</button>
+            <div class="w-px h-6 bg-zinc-200 dark:bg-zinc-700"></div>
+            <button id="cpmRejectBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50">Reject</button>
         </div>
     </div>
 </x-modal>
@@ -144,7 +183,7 @@
                         <th class="text-left py-1 px-2">Container</th>
                         <th class="text-right py-1 px-2">Min Qty</th>
                         <th class="text-right py-1 px-2">Base Rate</th>
-                        <th class="text-right py-1 px-2">Discount</th>
+                        <th class="text-right py-1 px-2">Adjustment</th>
                         <th class="text-right py-1 px-2">Final Rate</th>
                         <th class="py-1 px-2"></th>
                     </tr>
@@ -188,7 +227,29 @@
         let rateOverrides = {};
         let editingRateId = null;
 
-        renderTable().load(1);
+        loadProposals();
+
+        async function loadProposals() {
+            const response = await apiCall({
+                mode: 'GET',
+                url: '/api/clientProposals',
+            });
+
+            if (!response.success) return;
+
+            updateProposalCounts(response.status_counts);
+            renderTable().load(1);
+        }
+
+        function updateProposalCounts(counts) {
+            document.getElementById('countAll').textContent = counts.all;
+            document.getElementById('countPending').textContent = counts.pending;
+            document.getElementById('countApproved').textContent = counts.approved;
+            document.getElementById('countDisapproved').textContent = counts.disapproved;
+            document.getElementById('countAccepted').textContent = counts.accepted;
+            document.getElementById('countRejected').textContent = counts.rejected;
+            document.getElementById('countAwaitingDecision').textContent = counts.awaiting_decision ?? 0;
+        }
 
         function statusPill(status) {
             return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[status] ?? 'bg-zinc-100 text-zinc-500'}">${STATUS_LABEL[status] ?? 'Unknown'}</span>`;
@@ -233,6 +294,11 @@
                     openProposalModal(JSON.parse(row.dataset.row).id);
                 }),
                 thead: thead,
+                emptyMessage: () => {
+                    if (activeStatusFilter === 'all') return 'No proposals yet.';
+                    const label = (STATUS_LABEL[activeStatusFilter] ?? '').toLowerCase();
+                    return `No ${label} proposals.`;
+                },
             });
 
             return table;
@@ -289,6 +355,7 @@
                 document.getElementById('cpmLeadEmail').textContent = leadInfo.email ?? '-';
                 document.getElementById('cpmLeadSource').textContent = leadInfo.source ?? '-';
                 document.getElementById('cpmLeadAssignedTo').textContent = leadInfo.user?.name ?? '-';
+                document.getElementById('cpmLeadInfoTag').classList.toggle('hidden', Boolean(p.client_id));
                 leadInfoEl.classList.remove('hidden');
             } else {
                 leadInfoEl.classList.add('hidden');
@@ -309,7 +376,7 @@
                     <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                     <td class="py-1.5 text-right">${r.min_van_qty ?? '-'}</td>
                     <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
-                    <td class="py-1.5 text-right">${r.discount_type ? (r.discount_type === 'percentage' ? r.discount_value + '%' : Number(r.discount_value).toLocaleString()) : '-'}</td>
+                    <td class="py-1.5 text-right">${adjustmentDisplay(r.discount_type, r.discount_value)}</td>
                     <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
                 </tr>
             `).join('');
@@ -342,12 +409,13 @@
             document.getElementById(id).classList.toggle('hidden', !visible);
         }
 
-        async function decisionAction(action, successMessage) {
+        async function decisionAction(action, successMessage, button) {
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
                 payload: {},
                 url: `/api/clientProposals/${currentProposalId}/${action}`,
+                button,
             });
 
             if (!response.success) {
@@ -367,13 +435,15 @@
             renderTable().reload();
         }
 
-        document.getElementById('cpmApproveBtn').addEventListener('click', () => decisionAction('approve',
-            'Proposal approved'));
-        document.getElementById('cpmDisapproveBtn').addEventListener('click', () => decisionAction('disapprove',
-            'Proposal disapproved'));
-        document.getElementById('cpmRejectBtn').addEventListener('click', async () => {
+        document.getElementById('cpmApproveBtn').addEventListener('click', function() {
+            decisionAction('approve', 'Proposal approved', this);
+        });
+        document.getElementById('cpmDisapproveBtn').addEventListener('click', function() {
+            decisionAction('disapprove', 'Proposal disapproved', this);
+        });
+        document.getElementById('cpmRejectBtn').addEventListener('click', async function() {
             const confirmed = await customConfirm('Reject this proposal? This cannot be undone.');
-            if (confirmed) decisionAction('reject', 'Proposal rejected');
+            if (confirmed) decisionAction('reject', 'Proposal rejected', this);
         });
 
         document.getElementById('cpmUploadSignedBtn').addEventListener('click', async function() {
@@ -452,11 +522,35 @@
             return rateOverrides[rate.id] ? { ...rateOverrides[rate.id] } : ccOriginalValues(rate);
         }
 
+        function adjustmentDisplay(type, value) {
+            if (!type) return '-';
+            const labels = {
+                percentage: 'Discount',
+                fixed: 'Discount',
+                increase_percentage: 'Increase',
+                increase_fixed: 'Increase',
+            };
+            const isPercent = type === 'percentage' || type === 'increase_percentage';
+            const amount = isPercent ? `${value}%` : Number(value).toLocaleString();
+            return `${labels[type] ?? type} ${amount}`;
+        }
+
         function ccDiscountDisplay(values) {
-            if (!values.discount_type) return '-';
-            return values.discount_type === 'percentage' ?
-                `${values.discount_value}%` :
-                Number(values.discount_value).toLocaleString();
+            return adjustmentDisplay(values.discount_type, values.discount_value);
+        }
+
+        function describeRateChange(rate) {
+            const original = ccOriginalValues(rate);
+            const current = rateOverrides[rate.id];
+            if (!current) return '';
+            const fieldLabels = { min_van_qty: 'Min Qty', base_rate: 'Base Rate', discount_type: 'Adjustment Type', discount_value: 'Adjustment Value', final_rate: 'Final Rate' };
+            const diffs = [];
+            for (const key of Object.keys(fieldLabels)) {
+                if (original[key] !== current[key]) {
+                    diffs.push(`${fieldLabels[key]}: ${original[key] ?? '-'} → ${current[key] ?? '-'}`);
+                }
+            }
+            return diffs.join(', ');
         }
 
         function renderRateRow(rate, editing) {
@@ -467,7 +561,7 @@
 
             if (!editing) {
                 return `
-                    <tr data-rate-id="${rate.id}">
+                    <tr data-rate-id="${rate.id}" class="border-l-2 border-transparent hover:border-orange-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
                         <td class="py-1.5 px-2">${lane}</td>
                         <td class="py-1.5 px-2">${variant}</td>
                         <td class="py-1.5 px-2 text-right">${values.min_van_qty ?? '-'}</td>
@@ -475,10 +569,10 @@
                         <td class="py-1.5 px-2 text-right">${ccDiscountDisplay(values)}</td>
                         <td class="py-1.5 px-2 text-right font-semibold">
                             ${Number(values.final_rate).toLocaleString()}
-                            ${edited ? '<span class="ml-1 text-[10px] font-normal text-amber-600">(edited)</span>' : ''}
+                            ${edited ? `<span class="ml-1 text-[10px] font-normal text-amber-600 cursor-help" title="${describeRateChange(rate).replace(/"/g, '&quot;')}">(edited)</span>` : ''}
                         </td>
                         <td class="py-1.5 px-2 text-right">
-                            <button type="button" class="cc-edit-btn text-zinc-400 hover:text-zinc-700" title="Edit this rate">✎</button>
+                            <button type="button" class="cc-edit-btn text-base leading-none px-1.5 py-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Edit this rate">✎</button>
                         </td>
                     </tr>`;
             }
@@ -497,8 +591,10 @@
                         <div class="flex items-center gap-1 justify-end">
                             <select class="cc-input-disctype border rounded px-1 py-1 text-xs dark:text-zinc-900">
                                 <option value="" ${!values.discount_type ? 'selected' : ''}>None</option>
-                                <option value="percentage" ${values.discount_type === 'percentage' ? 'selected' : ''}>%</option>
-                                <option value="fixed" ${values.discount_type === 'fixed' ? 'selected' : ''}>Fixed</option>
+                                <option value="percentage" ${values.discount_type === 'percentage' ? 'selected' : ''}>Discount (%)</option>
+                                <option value="fixed" ${values.discount_type === 'fixed' ? 'selected' : ''}>Discount (Fixed)</option>
+                                <option value="increase_percentage" ${values.discount_type === 'increase_percentage' ? 'selected' : ''}>Increase (%)</option>
+                                <option value="increase_fixed" ${values.discount_type === 'increase_fixed' ? 'selected' : ''}>Increase (Fixed)</option>
                             </select>
                             <input type="text" inputmode="decimal" class="cc-input-discval currency-input w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.discount_value)}">
                         </div>
@@ -507,8 +603,10 @@
                         <input type="text" inputmode="decimal" class="cc-input-final currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.final_rate)}">
                     </td>
                     <td class="py-1.5 px-2 text-right whitespace-nowrap">
-                        <button type="button" class="cc-apply-btn text-green-600 hover:text-green-700" title="Apply">✓</button>
-                        <button type="button" class="cc-cancel-btn text-zinc-400 hover:text-zinc-700" title="Cancel">✕</button>
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button type="button" class="cc-apply-btn text-base leading-none px-1.5 py-1 rounded text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/40" title="Apply">✓</button>
+                            <button type="button" class="cc-cancel-btn text-base leading-none px-1.5 py-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Cancel">✕</button>
+                        </div>
                     </td>
                 </tr>`;
         }
@@ -530,8 +628,10 @@
             const finalInput = row.querySelector('.cc-input-final');
 
             let final = base;
-            if (type === 'percentage') final = base - (base * value / 100);
+            if (type === 'percentage') final = Math.max(0, base - (base * value / 100));
             if (type === 'fixed') final = Math.max(0, base - value);
+            if (type === 'increase_percentage') final = base + (base * value / 100);
+            if (type === 'increase_fixed') final = base + value;
 
             finalInput.value = formatCurrencyDisplay(final.toFixed(2));
         }
@@ -585,8 +685,6 @@
                     newValues.final_rate !== original.final_rate;
 
                 if (changed) {
-                    const confirmed = await customConfirm('Apply this rate change?');
-                    if (!confirmed) return;
                     rateOverrides[rateId] = newValues;
                 } else {
                     delete rateOverrides[rateId];

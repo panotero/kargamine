@@ -1,20 +1,43 @@
 <div class="max-w-4xl mx-auto p-5">
     <h1 class="text-2xl font-semibold mb-1 text-zinc-900 dark:text-zinc-100">App Theme</h1>
     <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-        Pick a color for each role below. Changes preview instantly across the app - click Save to make them
-        permanent for everyone.
+        Pick a color for each role below. The sample panel updates as you choose - click Save to apply the
+        new colors across the app for everyone.
     </p>
+
+    {{-- Contained sample preview - scoped inline styles only, never the app's :root vars --}}
+    <div class="border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-xl p-5 mb-6">
+        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">Sample
+            Preview</p>
+        <div class="flex flex-wrap items-center gap-4">
+            <button type="button" id="themeSampleBtn"
+                class="px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm cursor-default">
+                Primary Button
+            </button>
+            <div id="themeSampleTab" class="text-sm font-medium pb-1 border-b-2">
+                Active Tab
+            </div>
+            <span id="themeSampleBadge"
+                class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full">
+                Status Badge
+            </span>
+        </div>
+    </div>
 
     <div id="themeSwatchGroups" class="space-y-6"></div>
 
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5 mt-6">
-        <h2 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide mb-3">Dark Mode</h2>
+        <h2 class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">Dark Mode
+        </h2>
         <div id="darkModeOptions" class="flex flex-wrap gap-2"></div>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-3">
+            Dark mode currently follows your browser/OS setting; this preference is saved but not yet applied in-app.
+        </p>
     </div>
 
     <div class="flex justify-end mt-6">
         <button type="button" id="themeSaveBtn"
-            class="inline-flex items-center px-5 py-2.5 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+            class="inline-flex items-center px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg shadow-sm transition">
             Save Theme
         </button>
     </div>
@@ -70,26 +93,30 @@
             { value: 'system', label: 'System' },
         ];
 
-        function hexToRgbTriple(hex) {
-            const n = parseInt(hex.slice(1), 16);
-            return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+        function shade(hue, index) {
+            return (PALETTE_SHADES[hue] || PALETTE_SHADES.gray)[index];
         }
 
-        function previewSlot(varPrefix, hue) {
-            const shades = PALETTE_SHADES[hue] || PALETTE_SHADES.gray;
-            SHADES.forEach((shade, i) => {
-                document.documentElement.style.setProperty(`--tw-color-${varPrefix}-${shade}`, hexToRgbTriple(shades[i]));
-            });
-        }
+        // Contained preview: mutate only the sample panel's inline styles, never
+        // the page's :root theme vars (which would repaint the whole app session
+        // with no revert). The real app repaints only after a successful Save.
+        function updateSamplePreview() {
+            if (!state) return;
 
-        function previewDarkMode(mode) {
-            const root = document.documentElement;
-            if (mode === 'dark') {
-                root.classList.add('dark');
-            } else if (mode === 'light') {
-                root.classList.remove('dark');
-            } else {
-                root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
+            const btn = document.getElementById('themeSampleBtn');
+            const tab = document.getElementById('themeSampleTab');
+            const badge = document.getElementById('themeSampleBadge');
+
+            if (btn) btn.style.backgroundColor = PALETTE[state.main_color] || PALETTE.gray;
+
+            if (tab) {
+                tab.style.color = shade(state.accent_color, 6);
+                tab.style.borderBottomColor = PALETTE[state.accent_color] || PALETTE.gray;
+            }
+
+            if (badge) {
+                badge.style.backgroundColor = shade(state.button_danger_color, 1);
+                badge.style.color = shade(state.button_danger_color, 7);
             }
         }
 
@@ -99,11 +126,12 @@
             const container = document.getElementById('themeSwatchGroups');
             container.innerHTML = SLOTS.map(slot => `
                 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5">
-                    <h2 class="text-sm font-semibold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide">${slot.label}</h2>
+                    <h2 class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">${slot.label}</h2>
                     <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-3">${slot.hint}</p>
                     <div class="flex flex-wrap gap-2" data-slot="${slot.key}">
                         ${Object.keys(PALETTE).map(hue => `
-                            <button type="button" data-hue="${hue}" title="${hue}"
+                            <button type="button" data-hue="${hue}" title="${hue}" aria-label="${hue}"
+                                aria-pressed="${state[slot.key] === hue ? 'true' : 'false'}"
                                 class="w-8 h-8 rounded-full border-2 transition ${state[slot.key] === hue ? 'border-zinc-900 dark:border-white scale-110' : 'border-transparent hover:scale-105'}"
                                 style="background-color:${PALETTE[hue]}">
                             </button>
@@ -114,11 +142,10 @@
 
             container.querySelectorAll('[data-slot]').forEach(group => {
                 const slotKey = group.dataset.slot;
-                const slot = SLOTS.find(s => s.key === slotKey);
                 group.querySelectorAll('[data-hue]').forEach(btn => {
                     btn.addEventListener('click', () => {
                         state[slotKey] = btn.dataset.hue;
-                        previewSlot(slot.varPrefix, btn.dataset.hue);
+                        updateSamplePreview();
                         renderSwatchGroups();
                     });
                 });
@@ -129,15 +156,17 @@
             const container = document.getElementById('darkModeOptions');
             container.innerHTML = DARK_MODE_OPTIONS.map(opt => `
                 <button type="button" data-mode="${opt.value}"
-                    class="px-4 py-2 rounded-lg text-sm font-medium border transition ${state.dark_mode === opt.value ? 'bg-orange-600 border-orange-600 text-white' : 'border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}">
+                    class="px-4 py-2 rounded-lg text-sm font-medium border transition ${state.dark_mode === opt.value ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}">
                     ${opt.label}
                 </button>
             `).join('');
 
             container.querySelectorAll('[data-mode]').forEach(btn => {
                 btn.addEventListener('click', () => {
+                    // Only track the saved selection - do NOT toggle a .dark class on
+                    // <html>. Tailwind runs on the `media` strategy here, so .dark has
+                    // no effect; toggling it would fake a preview that never happens.
                     state.dark_mode = btn.dataset.mode;
-                    previewDarkMode(btn.dataset.mode);
                     renderDarkModeOptions();
                 });
             });
@@ -157,6 +186,7 @@
 
             renderSwatchGroups();
             renderDarkModeOptions();
+            updateSamplePreview();
         }
 
         document.getElementById('themeSaveBtn').addEventListener('click', async (e) => {

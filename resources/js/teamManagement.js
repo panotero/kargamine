@@ -6,9 +6,7 @@ window.initTeamManagementPage = function initTeamManagementPage() {
   const tableBody = document.getElementById("teamsTbody");
   if (!tableBody) return;
 
-  const modal = document.getElementById("teamModal");
   const modalTitle = document.getElementById("teamModalTitle");
-  const cancelBtn = document.getElementById("cancelTeamModalBtn");
   const form = document.getElementById("teamForm");
   const saveBtn = document.getElementById("saveTeamBtn");
 
@@ -20,9 +18,7 @@ window.initTeamManagementPage = function initTeamManagementPage() {
     active: document.getElementById("teamActive"),
   };
 
-  const membersModal = document.getElementById("membersModal");
   const membersModalTitle = document.getElementById("membersModalTitle");
-  const closeMembersModalBtn = document.getElementById("closeMembersModalBtn");
   const teamMembersList = document.getElementById("teamMembersList");
   const addMemberSelect = document.getElementById("addMemberSelect");
   const addMemberBtn = document.getElementById("addMemberBtn");
@@ -30,11 +26,16 @@ window.initTeamManagementPage = function initTeamManagementPage() {
   let teamsData = [];
   let currentMembersTeam = null;
 
-  const csrfHeaders = () => ({
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content,
-  });
+  // Turn a native <select> into the app's type-to-search combobox, or refresh
+  // its option list if it was already converted (must run after any innerHTML
+  // rebuild or programmatic .value assignment - see searchableSelect.js).
+  function refreshSearchable(el) {
+    if (!el) return;
+    if (el._searchableSelect) el._searchableSelect.refresh();
+    else if (typeof window.makeSearchableSelect === "function") {
+      window.makeSearchableSelect(el);
+    }
+  }
 
   // All descendant ids of teamId (including itself), computed from the already-loaded flat list.
   function getDescendantIds(teamId) {
@@ -63,6 +64,7 @@ window.initTeamManagementPage = function initTeamManagementPage() {
         opt.textContent = t.name;
         fields.parent.appendChild(opt);
       });
+    refreshSearchable(fields.parent);
   }
 
   function openModal(mode = "Add", team = null) {
@@ -84,23 +86,20 @@ window.initTeamManagementPage = function initTeamManagementPage() {
       fields.parent.value = "";
       fields.active.checked = true;
     }
+    refreshSearchable(fields.parent);
 
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
+    initModal({ modalId: "teamModal" });
   }
-
-  function closeModal() {
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
-  }
-
-  cancelBtn.addEventListener("click", () => closeModal());
 
   async function loadTeams() {
-    teamsData = await fetchWithRetry(`api/teams`, {
-      headers: { Accept: "application/json" },
-    });
+    teamsData = await apiCall({ mode: "GET", url: "/api/teams" });
+    if (!Array.isArray(teamsData)) teamsData = [];
     tableBody.innerHTML = "";
+
+    if (!teamsData.length) {
+      tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-10 text-center text-sm text-zinc-400 dark:text-zinc-500">No teams yet. Create your first team with the “Add New Team” button.</td></tr>`;
+      return;
+    }
 
     function renderTeamRows(parentId = null, level = 0) {
       const children = teamsData
@@ -167,22 +166,26 @@ window.initTeamManagementPage = function initTeamManagementPage() {
     if (!team) return;
 
     if (btn.classList.contains("edit-button")) openModal("Modify", team);
-    else if (btn.classList.contains("delete-button")) await deleteTeam(team);
+    else if (btn.classList.contains("delete-button")) await deleteTeam(team, btn);
     else if (btn.classList.contains("members-button")) await openMembersModal(team);
   });
 
-  async function deleteTeam(team) {
+  async function deleteTeam(team, button) {
     const confirmed = await customConfirm(`Delete team "${team.name}"?`);
     if (!confirmed) return;
 
-    const res = await fetchWithRetry(`api/teams/${team.id}`, {
-      method: "DELETE",
-      headers: csrfHeaders(),
+    const res = await apiCall({
+      mode: "DELETE",
+      url: `/api/teams/${team.id}`,
+      button,
     });
 
     if (res && res.success === false) {
-      const message = res.response?.message || res.message || "Failed to delete team.";
-      showMessage({ status: "error", title: "Cannot delete team", message });
+      showMessage({
+        status: "error",
+        title: "Cannot delete team",
+        message: res.message || "Failed to delete team.",
+      });
       return;
     }
 
@@ -199,32 +202,32 @@ window.initTeamManagementPage = function initTeamManagementPage() {
       is_active: fields.active.checked,
     };
 
-    let url = `api/teams`;
-    let method = "POST";
+    const isUpdate = Boolean(fields.id.value);
 
-    if (fields.id.value) {
-      url = `api/teams/${fields.id.value}`;
-      method = "PUT";
-    }
-
-    const res = await fetchWithRetry(url, {
-      method,
-      headers: csrfHeaders(),
-      body: JSON.stringify(payload),
+    const res = await apiCall({
+      mode: isUpdate ? "PUT" : "POST",
+      isJson: true,
+      payload,
+      url: isUpdate ? `/api/teams/${fields.id.value}` : "/api/teams",
+      button: saveBtn,
     });
 
-    if (res && res.success === false) {
-      const message = res.response?.message || res.message || "Failed to save team.";
-      showMessage({ status: "error", title: "Cannot save team", message });
+    if (!res || res.success === false) {
+      showMessage({
+        status: "error",
+        title: "Cannot save team",
+        message: res?.invalid_fields
+          ? Object.values(res.invalid_fields).flat().join(" ")
+          : res?.message || "Failed to save team.",
+      });
       return;
     }
 
-    closeModal();
+    closeModal("teamModal");
     await loadTeams();
   });
 
-  const addBtn = document.getElementById("addTeamBtn");
-  addBtn.addEventListener("click", () => openModal("Add"));
+  document.getElementById("addTeamBtn").addEventListener("click", () => openModal("Add"));
 
   // --- Members modal ---
 
@@ -234,29 +237,22 @@ window.initTeamManagementPage = function initTeamManagementPage() {
 
     await refreshMembers();
 
-    membersModal.classList.remove("hidden");
-    membersModal.classList.add("flex");
+    initModal({ modalId: "membersModal" });
   }
-
-  closeMembersModalBtn.addEventListener("click", () => {
-    membersModal.classList.add("hidden");
-    membersModal.classList.remove("flex");
-  });
 
   async function refreshMembers() {
     if (!currentMembersTeam) return;
 
     const [members, allUsers] = await Promise.all([
-      fetchWithRetry(`api/teams/${currentMembersTeam.id}/members`, {
-        headers: { Accept: "application/json" },
-      }),
-      fetchWithRetry(`api/teams/users`, {
-        headers: { Accept: "application/json" },
-      }),
+      apiCall({ mode: "GET", url: `/api/teams/${currentMembersTeam.id}/members` }),
+      apiCall({ mode: "GET", url: `/api/teams/users` }),
     ]);
 
-    renderMembersList(members || []);
-    renderAddMemberSelect(allUsers || [], members || []);
+    renderMembersList(Array.isArray(members) ? members : []);
+    renderAddMemberSelect(
+      Array.isArray(allUsers) ? allUsers : [],
+      Array.isArray(members) ? members : [],
+    );
   }
 
   function renderMembersList(members) {
@@ -270,40 +266,79 @@ window.initTeamManagementPage = function initTeamManagementPage() {
     members.forEach((member) => {
       const row = document.createElement("div");
       row.className =
-        "flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800";
+        "flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 transition-colors";
 
       row.innerHTML = `
-        <span class="text-sm text-zinc-800 dark:text-zinc-100">${member.name}</span>
-        <div class="flex items-center gap-3">
-          <label class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-            <input type="checkbox" class="leader-checkbox cursor-pointer" data-id="${member.id}" ${member.is_team_leader ? "checked" : ""}>
-            Leader
-          </label>
-          <button class="remove-member-button text-zinc-400 hover:text-red-600 transition" data-id="${member.id}" title="Remove">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <span class="text-sm text-zinc-800 dark:text-zinc-100 flex-1 min-w-0 truncate">${member.name}</span>
+        <label class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer">
+          <input type="checkbox" class="leader-checkbox cursor-pointer" data-id="${member.id}" ${member.is_team_leader ? "checked" : ""}>
+          Leader
+        </label>
+        <button type="button" class="remove-member-btn p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition shrink-0" title="Remove from team">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       `;
 
-      row.querySelector(".leader-checkbox").addEventListener("change", async (e) => {
-        await fetchWithRetry(`api/teams/${currentMembersTeam.id}/members/${member.id}`, {
-          method: "PATCH",
-          headers: csrfHeaders(),
-          body: JSON.stringify({ is_team_leader: e.target.checked }),
+      // Granting leadership is a real permission grant (visibility cascades
+      // down the whole sub-team tree - TeamService::accessibleTeamIds), so
+      // confirm before turning it ON. Turning it OFF (reducing access) is a
+      // direct action.
+      const checkbox = row.querySelector(".leader-checkbox");
+      checkbox.addEventListener("change", async (e) => {
+        const granting = e.target.checked;
+
+        if (granting) {
+          const confirmed = await customConfirm(
+            `Make ${member.name} a leader of ${currentMembersTeam.name}? This gives them visibility into every record this team and its sub-teams own.`,
+          );
+          if (!confirmed) {
+            e.target.checked = false;
+            return;
+          }
+        }
+
+        const res = await apiCall({
+          mode: "PATCH",
+          isJson: true,
+          payload: { is_team_leader: granting },
+          url: `/api/teams/${currentMembersTeam.id}/members/${member.id}`,
+          button: e.target,
         });
+
+        if (!res || res.success === false) {
+          e.target.checked = !granting;
+          showMessage({
+            status: "error",
+            title: "Error",
+            message: res?.message || "Failed to update leader status.",
+          });
+          return;
+        }
+
         await loadTeams();
       });
 
-      row.querySelector(".remove-member-button").addEventListener("click", async () => {
+      row.querySelector(".remove-member-btn").addEventListener("click", async (e) => {
         const confirmed = await customConfirm(`Remove ${member.name} from this team?`);
         if (!confirmed) return;
 
-        await fetchWithRetry(`api/teams/${currentMembersTeam.id}/members/${member.id}`, {
-          method: "DELETE",
-          headers: csrfHeaders(),
+        const res = await apiCall({
+          mode: "DELETE",
+          url: `/api/teams/${currentMembersTeam.id}/members/${member.id}`,
+          button: e.currentTarget,
         });
+
+        if (res && res.success === false) {
+          showMessage({
+            status: "error",
+            title: "Error",
+            message: res.message || "Failed to remove member.",
+          });
+          return;
+        }
+
         await refreshMembers();
         await loadTeams();
       });
@@ -326,6 +361,8 @@ window.initTeamManagementPage = function initTeamManagementPage() {
         opt.textContent = u.team ? `${u.name} (currently in ${u.team.name})` : u.name;
         addMemberSelect.appendChild(opt);
       });
+
+    refreshSearchable(addMemberSelect);
   }
 
   addMemberBtn.addEventListener("click", async () => {
@@ -341,11 +378,22 @@ window.initTeamManagementPage = function initTeamManagementPage() {
       if (!confirmed) return;
     }
 
-    await fetchWithRetry(`api/teams/${currentMembersTeam.id}/members`, {
-      method: "POST",
-      headers: csrfHeaders(),
-      body: JSON.stringify({ user_id: selected.value }),
+    const res = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload: { user_id: selected.value },
+      url: `/api/teams/${currentMembersTeam.id}/members`,
+      button: addMemberBtn,
     });
+
+    if (!res || res.success === false) {
+      showMessage({
+        status: "error",
+        title: "Error",
+        message: res?.message || "Failed to add member.",
+      });
+      return;
+    }
 
     await refreshMembers();
     await loadTeams();

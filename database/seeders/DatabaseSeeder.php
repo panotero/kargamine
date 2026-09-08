@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             userstatusSeeder::class,
             AddressTypeSeeder::class,
             LeadSourceSeeder::class,
+            CargoTypeSeeder::class,
             BusinessTypeSeeder::class,
             IndustrySeeder::class,
             OrganizationTypeSeeder::class,

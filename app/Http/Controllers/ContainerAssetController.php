@@ -24,19 +24,41 @@ class ContainerAssetController extends Controller
         ]);
     }
 
-    public function index(Request $request)
+    /**
+     * Shared by index()'s list query and its status_counts sibling below -
+     * every filter except status itself, so switching status chips doesn't
+     * reset the other filters and each chip's count reflects them.
+     */
+    protected function scopedQuery(Request $request)
     {
-        $assets = $this->withDisplayRelations(ContainerAsset::query())
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+        return ContainerAsset::query()
             ->when($request->filled('container_variant_id'), fn ($q) => $q->where('container_variant_id', $request->container_variant_id))
             ->when($request->filled('current_port_id'), fn ($q) => $q->where('current_port_id', $request->current_port_id))
-            ->when($request->filled('search'), fn ($q) => $q->where('container_no', 'like', "%{$request->search}%"))
+            ->when($request->filled('search'), fn ($q) => $q->where('container_no', 'like', "%{$request->search}%"));
+    }
+
+    public function index(Request $request)
+    {
+        $assets = $this->withDisplayRelations($this->scopedQuery($request))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->latest('id')
             ->paginate($request->get('per_page', 25));
+
+        $statusCounts = $this->scopedQuery($request)
+            ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
         return response()->json([
             'success' => true,
             'data' => $assets,
+            'status_counts' => [
+                'all' => $statusCounts->sum(),
+                'available' => $statusCounts->get(ContainerAsset::STATUS_AVAILABLE, 0),
+                'booked' => $statusCounts->get(ContainerAsset::STATUS_BOOKED, 0),
+                'in_transit' => $statusCounts->get(ContainerAsset::STATUS_IN_TRANSIT, 0),
+                'under_repair' => $statusCounts->get(ContainerAsset::STATUS_UNDER_REPAIR, 0),
+                'damaged' => $statusCounts->get(ContainerAsset::STATUS_DAMAGED, 0),
+                'out_of_service' => $statusCounts->get(ContainerAsset::STATUS_OUT_OF_SERVICE, 0),
+            ],
         ]);
     }
 
@@ -48,6 +70,10 @@ class ContainerAssetController extends Controller
             'containerVariant.containerSize',
             'currentPort.location',
             'locationHistory' => fn ($q) => $q->with(['port.location', 'recordedBy'])->limit(20),
+            // Only meaningful while Booked/In Transit - lets the UI name and
+            // link the booking currently holding this container instead of
+            // just hiding every action with no explanation.
+            'activeBookingUnit.booking:booking_id,code',
         ]);
 
         return response()->json([
@@ -155,10 +181,10 @@ class ContainerAssetController extends Controller
 
     public function markAvailable(Request $request, ContainerAsset $containerAsset)
     {
-        if ($containerAsset->status !== ContainerAsset::STATUS_UNDER_REPAIR) {
+        if (! in_array($containerAsset->status, [ContainerAsset::STATUS_UNDER_REPAIR, ContainerAsset::STATUS_DAMAGED], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only a container currently Under Repair can be marked Available this way.',
+                'message' => 'Only a container currently Under Repair or Damaged can be marked Available this way.',
             ], 422);
         }
 
@@ -189,6 +215,42 @@ class ContainerAssetController extends Controller
 
         $containerAsset->applyChange(
             ['status' => ContainerAsset::STATUS_OUT_OF_SERVICE],
+            ContainerAssetLocationHistory::SOURCE_MANUAL_RELOCATION,
+            $request->user()?->id
+        );
+
+        if (! empty($validated['reason'])) {
+            $containerAsset->update(['condition_notes' => $validated['reason']]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $containerAsset->fresh(),
+        ]);
+    }
+
+    public function markDamaged(Request $request, ContainerAsset $containerAsset)
+    {
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if (in_array($containerAsset->status, [ContainerAsset::STATUS_BOOKED, ContainerAsset::STATUS_IN_TRANSIT], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This container is booked or in transit - release it from its booking before marking it damaged.',
+            ], 422);
+        }
+
+        if ($containerAsset->status === ContainerAsset::STATUS_DAMAGED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This container is already marked damaged.',
+            ], 422);
+        }
+
+        $containerAsset->applyChange(
+            ['status' => ContainerAsset::STATUS_DAMAGED],
             ContainerAssetLocationHistory::SOURCE_MANUAL_RELOCATION,
             $request->user()?->id
         );

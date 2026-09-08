@@ -16,7 +16,7 @@
 
 /* Required-field marker - red asterisk */
 .req-asterisk {
-  color: rgb(239 68 68); /* red-500 */
+  color: rgb(var(--tw-color-danger-500)); /* follows the theme picker's danger color */
   font-size: 1.25rem; /* 20px */
 }
 

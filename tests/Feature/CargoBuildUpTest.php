@@ -120,11 +120,21 @@ class CargoBuildUpTest extends TestCase
             'quantity' => 1,
             'auto_assign' => true,
             'container_asset_ids' => [],
+            'consignee_name' => 'Juan Dela Cruz',
+            'consignee_address' => '123 Rizal St, Cebu City',
+            'consignee_contact_person' => 'Juan Dela Cruz',
+            'consignee_contact_number' => '09171234567',
+            'cargo_type' => 'General Merchandise',
+            'declared_value' => 50000,
+            'delivery_date' => now()->addDays(5)->toDateString(),
+            'delivery_date_notes' => 'Call ahead',
+            'first_delivery_date' => now()->addDays(5)->toDateString(),
+            'last_delivery_date' => now()->addDays(6)->toDateString(),
         ];
     }
 
     /** @test */
-    public function a_booking_with_no_transaction_details_lands_in_the_tentative_bucket()
+    public function a_draft_booking_lands_in_the_tentative_bucket()
     {
         $response = $this->postJson('/api/bookings', [
             'client_id' => $this->client->id,
@@ -148,24 +158,18 @@ class CargoBuildUpTest extends TestCase
     }
 
     /** @test */
-    public function a_booking_with_every_line_fully_detailed_lands_in_the_live_bucket()
+    public function confirming_a_booking_moves_it_from_tentative_to_the_live_bucket()
     {
-        $line = array_merge($this->lineTemplate(), [
-            'consignee_name' => 'Juan Dela Cruz',
-            'consignee_address' => '123 Rizal St, Cebu City',
-            'consignee_contact_person' => 'Juan Dela Cruz',
-            'consignee_contact_number' => '09171234567',
-            'cargo_type' => 'General Merchandise',
-            'declared_value' => 50000,
-            'delivery_date' => now()->addDays(5)->toDateString(),
-        ]);
-
         $response = $this->postJson('/api/bookings', [
             'client_id' => $this->client->id,
-            'lines' => [$line],
+            'lines' => [$this->lineTemplate()],
         ]);
 
         $response->assertCreated();
+        $uuid = $response->json('data.uuid');
+
+        $confirm = $this->postJson("/api/bookings/{$uuid}/confirm");
+        $confirm->assertOk();
 
         $counts = collect($this->getJson('/api/cargo-build-up')->json('data'))->keyBy('key');
 

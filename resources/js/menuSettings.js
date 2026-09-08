@@ -31,6 +31,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   let menusData = [];
   let iconsData = [];
   let iconsById = {};
+  let rolesById = {};
 
   cancelBtn.addEventListener("click", () => closeModal());
 
@@ -135,6 +136,9 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
       headers: { Accept: "application/json" },
     });
     const roles = Array.isArray(response) ? response : (response?.data ?? []);
+
+    rolesById = {};
+    roles.forEach(({ id, role_name }) => (rolesById[String(id)] = role_name));
 
     const container = fields.rolesContainer;
     if (!container) return;
@@ -294,7 +298,10 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
 
         const moveUpHidden = index === 0 ? "hidden" : "";
         const moveDownHidden = index === siblings.length - 1 ? "hidden" : "";
-        const roles = JSON.parse(menu.allowed_roles).join(", ");
+        const roleIds = JSON.parse(menu.allowed_roles || "[]");
+        const roles = roleIds
+          .map((rid) => rolesById[String(rid)] || rid)
+          .join(", ");
         const targetpage = menu.link.replace(/^\//, "");
 
         const indent =
@@ -501,7 +508,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
 
   (async function init() {
     await loadIcons();
-    loadRoles();
-    loadMenus();
+    await loadRoles();
+    await loadMenus();
   })();
 };

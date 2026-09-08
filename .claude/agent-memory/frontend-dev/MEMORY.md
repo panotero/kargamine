@@ -1,0 +1,1 @@
+- [CRM scope discipline](feedback_crm_scope_discipline.md) — crm.blade.php/logic_crm.js: never touch the proposal-row builder or completed LeadInfoModal relayout unless named

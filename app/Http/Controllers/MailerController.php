@@ -90,9 +90,17 @@ class MailerController extends Controller
                 'mail_from_name' => 'required|string',
             ]);
 
+            // The settings form ships this field blank on load (never echoes the stored
+            // password back to the client) and only includes it when the admin actually
+            // types a new one - so an empty/missing value here means "keep the current
+            // password," not "clear it."
+            if (blank($validated['mail_password'] ?? null)) {
+                unset($validated['mail_password']);
+            }
+
             MailerSetting::updateOrCreate([], $validated);
 
-            return back()->with('success', 'Mailer configuration saved successfully!');
+            return response()->json(['success' => true, 'message' => 'Mailer configuration saved successfully!']);
         }
 
         //enable this for log debuging
@@ -101,9 +109,9 @@ class MailerController extends Controller
         //     throw $e;
         // }
         catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->validator)->withInput();
+            return response()->json(['success' => false, 'message' => 'Invalid input detected.', 'invalid_fields' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Something went wrong: ' . $e->getMessage()], 500);
         }
     }
 

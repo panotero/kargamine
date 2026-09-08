@@ -1,8 +1,9 @@
 <div class="container mx-auto px-4 py-6">
 
     <div class="flex items-center justify-between mb-6">
+
         <div>
-            <h1 class="text-xl font-semibold text-zinc-900">Contracts</h1>
+            <h1 class="text-2xl font-bold">Contracts</h1>
             <p class="text-sm text-zinc-500 mt-1">Signed client contracts created from approved proposals. New
                 contracts are created from the Clients page.</p>
         </div>
@@ -12,39 +13,39 @@
     <section class="w-full my-5">
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
 
-            <div class="contractStatusBtn max-md:col-span-2 bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer ring-2 ring-blue-500"
+            <div class="contractStatusBtn max-md:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm cursor-pointer"
                 data-status="all">
                 <div class="w-full py-1 rounded-full bg-blue-500"></div>
                 <p class="text-xs text-zinc-400 font-semibold mt-2">ALL</p>
-                <p class="text-2xl font-bold text-black" id="countAll">0</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countAll">0</p>
             </div>
 
-            <div class="contractStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
+            <div class="contractStatusBtn bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm cursor-pointer"
                 data-status="active">
                 <div class="w-full py-1 rounded-full bg-green-500"></div>
                 <p class="text-xs text-zinc-400 font-semibold mt-2">ACTIVE</p>
-                <p class="text-2xl font-bold text-black" id="countActive">0</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countActive">0</p>
             </div>
 
-            <div class="contractStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
+            <div class="contractStatusBtn bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm cursor-pointer"
                 data-status="expiring">
                 <div class="w-full py-1 rounded-full bg-amber-500"></div>
                 <p class="text-xs text-zinc-400 font-semibold mt-2">EXPIRING</p>
-                <p class="text-2xl font-bold text-black" id="countExpiring">0</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countExpiring">0</p>
             </div>
 
-            <div class="contractStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
+            <div class="contractStatusBtn bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm cursor-pointer"
                 data-status="expired">
                 <div class="w-full py-1 rounded-full bg-red-500"></div>
                 <p class="text-xs text-zinc-400 font-semibold mt-2">EXPIRED</p>
-                <p class="text-2xl font-bold text-black" id="countExpired">0</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countExpired">0</p>
             </div>
 
-            <div class="contractStatusBtn bg-white border border-zinc-200 rounded-xl p-4 shadow-sm cursor-pointer"
+            <div class="contractStatusBtn bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 shadow-sm cursor-pointer"
                 data-status="terminated">
                 <div class="w-full py-1 rounded-full bg-zinc-500"></div>
                 <p class="text-xs text-zinc-400 font-semibold mt-2">TERMINATED</p>
-                <p class="text-2xl font-bold text-black" id="countTerminated">0</p>
+                <p class="text-2xl font-bold text-zinc-900 dark:text-zinc-100" id="countTerminated">0</p>
             </div>
 
         </div>
@@ -116,7 +117,8 @@
                 <button type="button" id="vcTerminateConfirmBtn"
                     class="px-3 py-1.5 text-xs rounded-lg bg-red-600 hover:bg-red-700 text-white">Confirm
                     Termination</button>
-                <button type="button" id="vcTerminateDismissBtn" class="px-3 py-1.5 text-xs rounded-lg border">Nevermind</button>
+                <button type="button" id="vcTerminateDismissBtn"
+                    class="px-3 py-1.5 text-xs rounded-lg border">Nevermind</button>
             </div>
         </div>
     </div>
@@ -306,7 +308,8 @@
             }
 
             document.getElementById('vcTerminateBtn').classList.toggle('hidden', contract.status !== 2);
-            document.getElementById('vcApproveBtn').classList.toggle('hidden', !(contract.status === 1 && contract.can_approve));
+            document.getElementById('vcApproveBtn').classList.toggle('hidden', !(contract.status === 1 &&
+                contract.can_approve));
             document.getElementById('vcTerminateReasonPanel').classList.add('hidden');
             document.getElementById('vcTerminateReasonInput').value = '';
 
@@ -336,7 +339,9 @@
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
-                payload: { reason },
+                payload: {
+                    reason
+                },
                 url: `/api/clientContracts/${currentContractId}/terminate`,
                 button: this,
             });
@@ -350,7 +355,10 @@
                 return;
             }
 
-            showMessage({ status: 'success', title: 'Contract terminated' });
+            showMessage({
+                status: 'success',
+                title: 'Contract terminated'
+            });
             await openViewContract(currentContractId);
             renderTable().reload();
         });
@@ -373,7 +381,10 @@
                 return;
             }
 
-            showMessage({ status: 'success', title: 'Contract approved' });
+            showMessage({
+                status: 'success',
+                title: 'Contract approved'
+            });
             await openViewContract(currentContractId);
             renderTable().reload();
         });

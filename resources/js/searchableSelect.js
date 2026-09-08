@@ -33,6 +33,8 @@
     return kept.join(" ");
   }
 
+  let searchableSelectUid = 0;
+
   window.makeSearchableSelect = function makeSearchableSelect(selectEl) {
     try {
       if (!selectEl || selectEl.tagName !== "SELECT") return null;
@@ -51,6 +53,18 @@
       const menu = document.createElement("div");
       menu.className =
         "searchable-select-menu absolute z-50 mt-1 w-full max-h-56 overflow-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg hidden";
+
+      const menuId = selectEl.id
+        ? `${selectEl.id}-searchable-menu`
+        : `searchable-select-menu-${++searchableSelectUid}`;
+      menu.id = menuId;
+      menu.setAttribute("role", "listbox");
+
+      input.setAttribute("role", "combobox");
+      input.setAttribute("aria-autocomplete", "list");
+      input.setAttribute("aria-haspopup", "listbox");
+      input.setAttribute("aria-expanded", "false");
+      input.setAttribute("aria-controls", menuId);
 
       wrapper.appendChild(input);
       wrapper.appendChild(menu);
@@ -88,6 +102,7 @@
         if (!filtered.length) {
           menu.innerHTML =
             '<div class="px-2 py-1.5 text-sm text-zinc-400">No matches</div>';
+          input.removeAttribute("aria-activedescendant");
           return;
         }
 
@@ -95,7 +110,7 @@
           .map((opt, idx) => {
             const highlightClass =
               idx === highlightIndex ? " bg-orange-500 text-white" : "";
-            return `<div role="option" data-value="${escapeHtml(opt.value)}" data-index="${idx}" class="px-2 py-1.5 text-sm cursor-pointer text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700${highlightClass}">${escapeHtml(opt.label)}</div>`;
+            return `<div role="option" id="${menuId}-option-${idx}" data-value="${escapeHtml(opt.value)}" data-index="${idx}" class="px-2 py-1.5 text-sm cursor-pointer text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700${highlightClass}">${escapeHtml(opt.label)}</div>`;
           })
           .join("");
 
@@ -106,6 +121,12 @@
           if (highlighted && highlighted.scrollIntoView) {
             highlighted.scrollIntoView({ block: "nearest" });
           }
+          input.setAttribute(
+            "aria-activedescendant",
+            `${menuId}-option-${highlightIndex}`,
+          );
+        } else {
+          input.removeAttribute("aria-activedescendant");
         }
       }
 
@@ -119,10 +140,13 @@
         highlightIndex = -1;
         renderMenu();
         menu.classList.remove("hidden");
+        input.setAttribute("aria-expanded", "true");
       }
 
       function closeMenu() {
         menu.classList.add("hidden");
+        input.setAttribute("aria-expanded", "false");
+        input.removeAttribute("aria-activedescendant");
       }
 
       function applyFilter(term) {

@@ -33,4 +33,6 @@ import "./logic_crm";
 import "./remoteTable";
 import "./searchableSelect";
 import "./containerAssetMap";
+import "./containerAssetQr";
 import "./pierCheckin";
+import "./containerAssignment";

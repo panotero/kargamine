@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\BookingContainerUnit;
 use App\Models\ContainerAsset;
 use App\Models\ContainerAssetLocationHistory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
@@ -67,6 +69,40 @@ class ContainerReservationService
         ));
 
         return ContainerAsset::whereIn('id', $assetIds)->get();
+    }
+
+    /**
+     * Resolve one specific container onto one specific booking slot -
+     * shared by the browser-session assignment endpoint
+     * (ContainerAssignmentController::assign) and the dormant device
+     * scanner endpoint (DeviceContainerAssignmentController), so both
+     * enforce the same reassign-releases-first + type-match rules
+     * through one code path instead of two copies drifting apart.
+     *
+     * @throws RuntimeException if the asset is no longer Available, or
+     *         isn't the same container type/class/size as the line calls for
+     */
+    public function assignToUnit(BookingContainerUnit $unit, ContainerAsset $asset, ?int $recordedBy): BookingContainerUnit
+    {
+        return DB::transaction(function () use ($unit, $asset, $recordedBy) {
+            if ($unit->container_asset_id && $unit->container_asset_id !== $asset->id) {
+                $this->release([$unit->container_asset_id], $recordedBy);
+            }
+
+            $reserved = $this->reserveExplicit([$asset->id], $recordedBy)->first();
+
+            if ($reserved->container_variant_id !== $unit->bookingLine->container_variant_id) {
+                throw new RuntimeException('That container is not the same type/class/size as this cargo line calls for.');
+            }
+
+            $unit->update(['container_asset_id' => $reserved->id]);
+
+            return $unit->fresh()->load(
+                'containerAsset.containerVariant.container',
+                'containerAsset.containerVariant.containerClass',
+                'containerAsset.containerVariant.containerSize',
+            );
+        });
     }
 
     /**

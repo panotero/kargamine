@@ -72,9 +72,9 @@ class PageController extends Controller
         return view('pages.featuredHome');
     }
 
-    public function page_settings()
+    public function page_RolesPermissions()
     {
-        return view('pages.settings.settings');
+        return view('pages.settings.roles_permissions');
     }
 
     public function page_documents()
@@ -179,6 +179,21 @@ class PageController extends Controller
     public function page_PierCheckin()
     {
         return view('pages.pierCheckin');
+    }
+
+    public function page_ContainerAssignment()
+    {
+        return view('pages.containerAssignment');
+    }
+
+    public function page_VesselManagement()
+    {
+        return view('pages.vesselManagement');
+    }
+
+    public function page_VoyageSchedule()
+    {
+        return view('pages.voyageSchedule');
     }
 
     public function page_Help()

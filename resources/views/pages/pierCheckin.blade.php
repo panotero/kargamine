@@ -55,3 +55,6 @@
         </div>
     </div>
 </div>
+<script>
+    if (window.initPierCheckinPage) window.initPierCheckinPage();
+</script>

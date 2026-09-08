@@ -69,6 +69,13 @@ class LovController extends Controller
         return $option ? $option->values : collect();
     }
 
+    public function cargoType()
+    {
+        $option = Option::where('option_name', 'Cargo Type')->first();
+
+        return $option ? $option->values : collect();
+    }
+
     public function industry()
     {
         $option = Option::where('option_name', 'Industry')->first();

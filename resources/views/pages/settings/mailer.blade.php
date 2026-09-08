@@ -6,34 +6,6 @@
         <p class="text-zinc-500">Configure the outgoing SMTP connection and test mail delivery</p>
     </div>
 
-    {{--  Success Message --}}
-    @if (session('success'))
-        <div id="alert-success"
-            class="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900 rounded-lg p-3 mb-4 text-sm transition-opacity duration-500">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    {{--  Error Message --}}
-    @if (session('error'))
-        <div id="alert-error"
-            class="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-lg p-3 mb-4 text-sm transition-opacity duration-500">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    {{--  Validation Errors --}}
-    @if ($errors->any())
-        <div id="alert-validation"
-            class="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-lg p-3 mb-4 text-sm transition-opacity duration-500">
-            <ul class="list-disc pl-5 space-y-0.5">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {{-- MAILER CONFIGURATION --}}
@@ -44,8 +16,7 @@
                 <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100 mt-0.5">SMTP Configuration</p>
             </div>
 
-            <form method="POST" action="{{ route('mailer_save') }}" class="p-5 space-y-4">
-                @csrf
+            <form id="mailerConfigForm" class="p-5 space-y-4">
                 <div class="flex flex-col gap-1">
                     <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Mail Mailer</label>
                     <input name="mail_mailer" required
@@ -92,10 +63,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </button>
-                            <input type="password" name="mail_password" id="mail_password"
-                                class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 pr-12 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition"
-                                value="{{ old('mail_password', $config->mail_password ?? '') }}">
+                            <input type="password" name="mail_password" id="mail_password" autocomplete="new-password"
+                                placeholder="Leave blank to keep the current password"
+                                class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 pr-12 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
                         </div>
+                        @if (!empty($config->mail_password))
+                            <p class="text-xs text-zinc-400 dark:text-zinc-500">A password is already saved.</p>
+                        @endif
                     </div>
                 </div>
 
@@ -145,12 +119,8 @@
                 </div>
 
                 <div class="p-5">
-                    {{-- Status box for success/error --}}
-                    <div id="mailStatus" class="hidden p-2 rounded-lg mb-3 text-sm"></div>
-
                     <form id="testMailForm" class="space-y-4">
                         @csrf
-                        <input type="hidden" name="_token" value="some-long-token-here">
                         <div class="flex flex-col gap-1">
                             <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Recipient
                                 Email</label>
@@ -197,8 +167,6 @@
                 </div>
 
                 <div class="p-5">
-                    <div id="apiStatus" class="hidden p-2 rounded-lg mb-3 text-sm"></div>
-
                     <button id="triggerApiBtn"
                         class="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
                         Trigger API

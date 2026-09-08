@@ -55,8 +55,14 @@ class CrmLeadController extends Controller
                 'crmStatus:id,status',
                 'user:id,name',
             ])
+            ->withMax('activities as last_activity_at', 'created_at')
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
                 $q->whereIn('assigned_to', $visibleUserIds);
+            })
+
+            // Assigned To filter
+            ->when($request->filled('assigned_to'), function ($q) use ($request) {
+                $q->where('assigned_to', $request->assigned_to);
             })
 
             // Search
@@ -87,11 +93,19 @@ class CrmLeadController extends Controller
                 }
             )
 
+            // Needs Attention filter - no activity ever, or none in the last
+            // 14+ days, matching the red-dot threshold in
+            // logic_crm.js's renderLastActivityCell().
+            ->when($request->boolean('needs_attention'), function ($q) {
+                $q->havingRaw('last_activity_at IS NULL OR last_activity_at < ?', [now()->subDays(14)]);
+            })
+
             ->orderByDesc('updated_at')
             ->paginate($request->get('per_page', 25))
             ->appends($request->query());
 
         $allLeads = CrmLead::with('crmStatus')
+            ->withMax('activities as last_activity_at', 'created_at')
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
                 $q->whereIn('assigned_to', $visibleUserIds);
             })
@@ -100,6 +114,10 @@ class CrmLeadController extends Controller
         $statusCounts = $allLeads
             ->groupBy(fn($lead) => optional($lead->crmStatus)->status)
             ->map(fn($group) => $group->count());
+
+        $needsAttentionCount = $allLeads
+            ->filter(fn($lead) => is_null($lead->last_activity_at) || $lead->last_activity_at < now()->subDays(14))
+            ->count();
 
         return response()->json([
             'success' => true,
@@ -113,7 +131,23 @@ class CrmLeadController extends Controller
                 'WIN' => $statusCounts->get('WIN', 0),
                 'LOST' => $statusCounts->get('LOST', 0),
             ],
+            'needs_attention_count' => $needsAttentionCount,
         ]);
+    }
+
+    public function assignableUsers(Request $request)
+    {
+        $userIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+            ? null
+            : TeamService::accessibleUserIds($request->user());
+
+        $users = \App\Models\User::query()
+            ->select('id', 'name')
+            ->when($userIds !== null, fn($q) => $q->whereIn('id', $userIds))
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $users]);
     }
 
     public function saveStage1(Request $request)
@@ -281,6 +315,7 @@ class CrmLeadController extends Controller
             'containers.*.declared_value_per_unit' => ['nullable', 'numeric', 'min:0'],
             'containers.*.frequency' => ['nullable', 'string', 'max:255'],
             'containers.*.general_cargo_description' => ['nullable', 'string'],
+            'containers.*.cargo_type' => ['nullable', 'string'],
             'containers.*.service_mode_origin' => ['nullable', 'in:PIER,DOOR'],
             'containers.*.service_mode_destination' => ['nullable', 'in:PIER,DOOR'],
             'containers.*.service_mode' => ['nullable', 'in:PIER,DOOR'],
@@ -351,6 +386,7 @@ class CrmLeadController extends Controller
             'declared_value_per_unit' => ['nullable', 'numeric', 'min:0'],
             'frequency' => ['nullable', 'string', 'max:255'],
             'general_cargo_description' => ['nullable', 'string'],
+            'cargo_type' => ['nullable', 'string'],
             'service_mode_origin' => ['nullable', 'in:PIER,DOOR'],
             'service_mode_destination' => ['nullable', 'in:PIER,DOOR'],
             'service_mode' => ['nullable', 'in:PIER,DOOR'],
@@ -406,11 +442,11 @@ class CrmLeadController extends Controller
         // and every type now splits Service Mode into origin/destination,
         // Loose Cargo and Rolling Cargo included.
         $typeFlags = [
-            'CV' => ['class' => true, 'size' => true, 'temp' => false, 'split' => true],
-            'FR' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
-            'RF' => ['class' => false, 'size' => false, 'temp' => true, 'split' => true],
-            'LC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
-            'RC' => ['class' => false, 'size' => false, 'temp' => false, 'split' => true],
+            'CV' => ['size' => true, 'temp' => false, 'split' => true],
+            'FR' => ['size' => false, 'temp' => false, 'split' => true],
+            'RF' => ['size' => false, 'temp' => true, 'split' => true],
+            'LC' => ['size' => false, 'temp' => false, 'split' => true],
+            'RC' => ['size' => false, 'temp' => false, 'split' => true],
         ];
 
         $errors = [];
@@ -438,9 +474,6 @@ class CrmLeadController extends Controller
         // }
         if (empty($c['general_cargo_description'])) {
             $errors[] = "Booking requirement #{$index}: cargo description is required.";
-        }
-        if ($flags['class'] && empty($c['container_class_id'])) {
-            $errors[] = "Booking requirement #{$index}: ConVan class is required.";
         }
         if ($flags['size'] && empty($c['container_size_id'])) {
             $errors[] = "Booking requirement #{$index}: ConVan size is required.";

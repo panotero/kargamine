@@ -1,5 +1,6 @@
 <x-app-layout>
-    <div class="flex h-screen bg-zinc-100 dark:bg-zinc-950">
+    @php $navLayout = Auth::user()->nav_layout ?? 'side'; @endphp
+    <div class="flex h-screen bg-zinc-100 dark:bg-zinc-950" id="appShell" data-nav-layout="{{ $navLayout }}">
         <aside id="sidebar-wrapper"
             class="bg-white dark:bg-zinc-900 shadow-lg w-64
            fixed lg:static inset-y-0 left-0
@@ -7,7 +8,8 @@
            transform -translate-x-full lg:translate-x-0
            transition-[width,transform] duration-300 ease-in-out
            overflow-hidden
-           z-40">
+           z-40
+           {{ $navLayout === 'top' ? 'lg:hidden' : '' }}">
             <div class="w-full p-5 text-zinc-900 dark:text-white flex items-center justify-between gap-2">
                 @php $__appInfo = \App\Models\AppInformationSetting::current(); @endphp
                 <div id="sidebar-brand" class="min-w-0 overflow-hidden whitespace-nowrap transition-opacity duration-150">
@@ -83,6 +85,17 @@
                     </x-dropdown>
                 </div>
             </header>
+            <nav id="topnav-bar"
+                class="{{ $navLayout === 'top' ? 'hidden lg:flex' : 'hidden' }} items-center gap-1 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2">
+                <div class="flex items-center gap-2 pr-4 mr-2 border-r border-zinc-200 dark:border-zinc-800 shrink-0">
+                    @if ($__appInfo->logo_path)
+                        <img src="{{ $__appInfo->logo_path }}" alt="{{ $__appInfo->app_name }}" class="h-8 max-w-full object-contain">
+                    @else
+                        <h1 class="font-semibold text-sm text-zinc-900 dark:text-white whitespace-nowrap">{{ $__appInfo->app_name }}</h1>
+                    @endif
+                </div>
+                <div id="topnav-menu" class="flex items-center gap-1 overflow-x-auto min-w-0"></div>
+            </nav>
             <main id="content"
                 class="flex-1 w-full overflow-y-auto bg-zinc-100 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200">
             </main>

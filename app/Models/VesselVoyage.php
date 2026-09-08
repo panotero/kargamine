@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class VesselVoyage extends Model
 {
     protected $fillable = [
-        'vessel_name',
+        'vessel_id',
         'voyage_mnemonic',
         'voyage_leg',
         'origin_port_id',
@@ -24,6 +24,11 @@ class VesselVoyage extends Model
         'estimated_departure_at' => 'datetime:M d, Y, h:i A',
         'estimated_arrival_at' => 'datetime:M d, Y, h:i A',
     ];
+
+    public function vessel(): BelongsTo
+    {
+        return $this->belongsTo(Vessel::class);
+    }
 
     public function originPort(): BelongsTo
     {

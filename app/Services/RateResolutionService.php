@@ -238,8 +238,12 @@ class RateResolutionService
             return $frt;
         }
 
-        return $discountType === 'percentage'
-            ? $frt - ($frt * $discountValue / 100)
-            : max(0, $frt - $discountValue);
+        return match ($discountType) {
+            'percentage' => max(0, $frt - ($frt * $discountValue / 100)),
+            'fixed' => max(0, $frt - $discountValue),
+            'increase_percentage' => $frt + ($frt * $discountValue / 100),
+            'increase_fixed' => $frt + $discountValue,
+            default => $frt,
+        };
     }
 }

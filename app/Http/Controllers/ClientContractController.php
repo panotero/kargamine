@@ -174,7 +174,7 @@ class ClientContractController extends Controller
             'rates.*.container_variant_id' => ['required', 'integer', 'exists:container_variants,id'],
             'rates.*.min_van_qty' => ['nullable', 'integer', 'min:1'],
             'rates.*.base_rate' => ['required', 'numeric', 'min:0'],
-            'rates.*.discount_type' => ['nullable', 'in:percentage,fixed'],
+            'rates.*.discount_type' => ['nullable', 'in:percentage,fixed,increase_percentage,increase_fixed'],
             'rates.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'rates.*.final_rate' => ['required', 'numeric', 'min:0'],
         ]);
@@ -267,7 +267,7 @@ class ClientContractController extends Controller
             'rate_overrides' => ['sometimes', 'array'],
             'rate_overrides.*.min_van_qty' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'rate_overrides.*.base_rate' => ['sometimes', 'numeric', 'min:0'],
-            'rate_overrides.*.discount_type' => ['sometimes', 'nullable', 'in:percentage,fixed'],
+            'rate_overrides.*.discount_type' => ['sometimes', 'nullable', 'in:percentage,fixed,increase_percentage,increase_fixed'],
             'rate_overrides.*.discount_value' => ['sometimes', 'numeric', 'min:0'],
             'rate_overrides.*.final_rate' => ['sometimes', 'numeric', 'min:0'],
         ]);

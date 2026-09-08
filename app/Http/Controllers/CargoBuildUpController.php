@@ -33,11 +33,11 @@ class CargoBuildUpController extends Controller
         ],
         'tentative' => [
             'label' => 'Tentative Bookings',
-            'description' => 'Bookings with no transaction details yet.',
+            'description' => 'Bookings still in Draft, not yet confirmed.',
         ],
         'live' => [
             'label' => 'Live Bookings',
-            'description' => 'Bookings with transaction details.',
+            'description' => 'Bookings that have been confirmed.',
         ],
         'for_atw' => [
             'label' => 'For ATW',
@@ -124,10 +124,7 @@ class CargoBuildUpController extends Controller
             ], 422);
         }
 
-        $query = Booking::query()->with([
-            'client', 'lines.originPort.location', 'lines.destinationPort.location', 'lines.deliveryType', 'lines.dispatchDocument',
-            'containerUnits.eirOut', 'containerUnits.eirIn', 'containerUnits.vesselVoyage', 'containerUnits.relayPort',
-        ]);
+        $query = Booking::query()->with($this->containerDisplayRelations());
 
         match ($bucket) {
             'tentative' => $query->tentative(),
@@ -142,11 +139,36 @@ class CargoBuildUpController extends Controller
             'in_yard' => $query->inYard(),
             'for_vessel_loading' => $query->forVesselLoading(),
             'shut_out' => $query->shutOut(),
-            default => $query->has('lines'), // cargo_build_up
+            default => $query->has('lines')->where('status', '!=', Booking::STATUS_CANCELLED), // cargo_build_up
         };
 
         $bookings = $query->latest('booking_id')->paginate($request->get('per_page', 15));
 
         return response()->json(['success' => true, 'data' => $bookings]);
+    }
+
+    /**
+     * Single booking, same shape as bookings() rows - used to refresh the
+     * Booking Details modal in place after an Assign Voyage / Shut Out
+     * action without re-fetching (and re-rendering) the whole table page.
+     */
+    public function booking(Booking $booking)
+    {
+        $booking->load($this->containerDisplayRelations());
+
+        return response()->json(['success' => true, 'data' => $booking]);
+    }
+
+    protected function containerDisplayRelations(): array
+    {
+        return [
+            'client', 'lines.originPort.location', 'lines.destinationPort.location', 'lines.deliveryType', 'lines.dispatchDocument',
+            'containerUnits.containerAsset',
+            'containerUnits.bookingLine.container', 'containerUnits.bookingLine.containerClass', 'containerUnits.bookingLine.containerSize',
+            'containerUnits.originPort.location', 'containerUnits.destinationPort.location',
+            'containerUnits.eirOut', 'containerUnits.eirIn',
+            'containerUnits.vesselVoyage.originPort.location', 'containerUnits.vesselVoyage.destinationPort.location',
+            'containerUnits.relayPort.location',
+        ];
     }
 }

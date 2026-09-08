@@ -11,8 +11,10 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array<int, string>
      */
-    // protected $except = [
-    //     'api/documents/*',
-    //     //
-    // ];
+    protected $except = [
+        // Token-authenticated (Sanctum) device integration endpoints -
+        // no browser session/cookie involved, so there's no CSRF token to
+        // check. See routes/api.php's `device/v1` group.
+        'api/device/*',
+    ];
 }

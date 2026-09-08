@@ -8,7 +8,24 @@ document.addEventListener("DOMContentLoaded", function () {
   const sidebarBrand = document.getElementById("sidebar-brand");
   const collapseToggle = document.getElementById("sidebar-collapse-toggle");
   const collapseIcon = document.getElementById("sidebar-collapse-icon");
+  const topnavMenu = document.getElementById("topnav-menu");
+  const navLayout = document.getElementById("appShell")?.dataset.navLayout || "side";
   if (!sidebarMenu) return;
+
+  // A plain vertical mouse wheel does nothing on an overflow-x-auto row -
+  // let hovering the top-nav menu scroll it horizontally instead, only
+  // when it actually has overflow to scroll.
+  if (topnavMenu) {
+    topnavMenu.addEventListener(
+      "wheel",
+      (e) => {
+        if (topnavMenu.scrollWidth <= topnavMenu.clientWidth) return;
+        e.preventDefault();
+        topnavMenu.scrollLeft += e.deltaY;
+      },
+      { passive: false },
+    );
+  }
 
   const FALLBACK_ICON_SVG =
     '<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75h6.5v6.5h-6.5v-6.5zM13.75 3.75h6.5v6.5h-6.5v-6.5zM3.75 13.75h6.5v6.5h-6.5v-6.5zM13.75 13.75h6.5v6.5h-6.5v-6.5z" />';
@@ -314,6 +331,129 @@ document.addEventListener("DOMContentLoaded", function () {
     return wrapper;
   }
 
+  // -----------------------------------------------------------------
+  // Top-nav dropdown - parallel to the collapsed-rail flyout above, but
+  // anchored below the button instead of beside it, used for a top-level
+  // top-nav item's children when the horizontal layout is active.
+  // -----------------------------------------------------------------
+  const topnavFlyoutEl = document.createElement("div");
+  topnavFlyoutEl.className =
+    "hidden fixed w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg dark:shadow-black/40 py-1.5 z-50";
+  document.body.appendChild(topnavFlyoutEl);
+
+  let topnavFlyoutHideTimer = null;
+
+  function showTopnavFlyout(anchorEl, menu) {
+    clearTimeout(topnavFlyoutHideTimer);
+    const rect = anchorEl.getBoundingClientRect();
+    const margin = 8;
+    // w-48 = 12rem; measuring via offsetWidth would need the panel visible
+    // first, so use its declared width to keep this a single-pass calc.
+    const panelWidth = topnavFlyoutEl.offsetWidth || 192;
+    const left = Math.min(rect.left, window.innerWidth - panelWidth - margin);
+
+    topnavFlyoutEl.style.top = `${rect.bottom + 4}px`;
+    topnavFlyoutEl.style.left = `${Math.max(margin, left)}px`;
+
+    topnavFlyoutEl.innerHTML = "";
+
+    (menu.children || []).forEach((child) => {
+      const childBtn = document.createElement("button");
+      childBtn.type = "button";
+      childBtn.className =
+        "w-full text-left px-3 py-2 rounded text-zinc-700 dark:text-zinc-200 hover:bg-orange-50 dark:hover:bg-orange-950/40 flex items-center gap-2 menu child-menu";
+      childBtn.innerHTML = `${iconSvg(child.icon)}<span class="truncate">${child.title || ""}</span>`;
+      childBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        loadPage(child);
+        hideTopnavFlyout();
+      });
+      topnavFlyoutEl.appendChild(childBtn);
+    });
+
+    topnavFlyoutEl.classList.remove("hidden");
+  }
+
+  function hideTopnavFlyout() {
+    clearTimeout(topnavFlyoutHideTimer);
+    topnavFlyoutEl.classList.add("hidden");
+  }
+
+  function hideTopnavFlyoutDelayed() {
+    clearTimeout(topnavFlyoutHideTimer);
+    topnavFlyoutHideTimer = setTimeout(() => topnavFlyoutEl.classList.add("hidden"), 150);
+  }
+
+  // Keeps the dropdown open while the pointer travels from the button
+  // down into the dropdown itself (there's a gap between them).
+  topnavFlyoutEl.addEventListener("mouseenter", () => clearTimeout(topnavFlyoutHideTimer));
+  topnavFlyoutEl.addEventListener("mouseleave", hideTopnavFlyoutDelayed);
+
+  // -----------------------------------------------------------------
+  // Dismissal for non-hover/keyboard users - both flyouts above only
+  // closed via a hover-out delay or by clicking a child link, leaving no
+  // way to dismiss one that was opened by click (touch, or a hover-less
+  // input). One shared click-outside + Escape handler covers both.
+  // -----------------------------------------------------------------
+  function hideAllFlyouts() {
+    hideFlyout();
+    hideTopnavFlyout();
+  }
+
+  document.addEventListener("click", (e) => {
+    if (
+      !flyoutEl.classList.contains("hidden") &&
+      !flyoutEl.contains(e.target) &&
+      !sidebarMenu.contains(e.target)
+    ) {
+      hideFlyout();
+    }
+
+    if (
+      !topnavFlyoutEl.classList.contains("hidden") &&
+      !topnavFlyoutEl.contains(e.target) &&
+      !(topnavMenu && topnavMenu.contains(e.target))
+    ) {
+      hideTopnavFlyout();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") hideAllFlyouts();
+  });
+
+  //creates a horizontal top-nav item (parent and leaf), for #topnav-menu
+  function createTopNavItem(menu) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "relative shrink-0";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className =
+      "px-3 py-2 rounded text-sm text-zinc-700 dark:text-zinc-200 hover:bg-orange-50 dark:hover:bg-orange-950/40 flex items-center gap-2 menu";
+    btn.innerHTML = `${iconSvg(menu.icon)}<span class="truncate">${menu.title || ""}</span>`;
+
+    if (menu.children && menu.children.length) {
+      const arrow = document.createElement("span");
+      arrow.innerHTML = "▼";
+      arrow.className = "text-xs shrink-0";
+      btn.appendChild(arrow);
+
+      wrapper.addEventListener("mouseenter", () => showTopnavFlyout(wrapper, menu));
+      wrapper.addEventListener("mouseleave", hideTopnavFlyoutDelayed);
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        showTopnavFlyout(wrapper, menu);
+      });
+    } else {
+      btn.addEventListener("click", () => loadPage(menu));
+    }
+
+    wrapper.appendChild(btn);
+    return wrapper;
+  }
+
   //loads page to the content area
   window.loadPage = async function loadPage(menu) {
     window.pageLoaded = false;
@@ -452,12 +592,18 @@ document.addEventListener("DOMContentLoaded", function () {
     let menus = "children" in menuData[0] ? menuData : buildTree(menuData);
     sidebarMenu.innerHTML = "";
 
+    if (topnavMenu && navLayout === "top") topnavMenu.innerHTML = "";
+
     let firstMenu = null;
     menus.forEach((menu) => {
       const node = createMenuItem(menu);
       sidebarMenu.appendChild(node);
       if (!firstMenu && menu.title?.toLowerCase() === "dashboard")
         firstMenu = menu;
+
+      if (topnavMenu && navLayout === "top") {
+        topnavMenu.appendChild(createTopNavItem(menu));
+      }
     });
 
     if (collapseToggle && localStorage.getItem("sidebarCollapsed") === "1") {

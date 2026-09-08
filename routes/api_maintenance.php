@@ -9,6 +9,7 @@ use App\Http\Controllers\CargoBuildUpController;
 use App\Http\Controllers\CargoYardController;
 use App\Http\Controllers\ChargeTypeController;
 use App\Http\Controllers\ContainerAssetController;
+use App\Http\Controllers\ContainerAssignmentController;
 use App\Http\Controllers\ContainerController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DeliveryTypeController;
@@ -22,7 +23,9 @@ use App\Http\Controllers\PortController;
 use App\Http\Controllers\ServiceableAreaController;
 use App\Http\Controllers\SpecialChargeController;
 use App\Http\Controllers\TruckingTariffController;
+use App\Http\Controllers\UserConfigController;
 use App\Http\Controllers\VatRateController;
+use App\Http\Controllers\VesselController;
 use App\Http\Controllers\VesselVoyageController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,15 +55,31 @@ Route::prefix('locations')->group(function () {
     Route::delete('/{location}', [LocationController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
+// Vessel Management - fleet master data, status tagging, maintenance log
+Route::prefix('vessels')->group(function () {
+    Route::get('/', [VesselController::class, 'index']);
+    Route::get('/{vessel}', [VesselController::class, 'show']);
+    Route::post('/', [VesselController::class, 'store'])->middleware('nav.access:/page_vessel_management');
+    Route::put('/{vessel}', [VesselController::class, 'update'])->middleware('nav.access:/page_vessel_management');
+    Route::delete('/{vessel}', [VesselController::class, 'destroy'])->middleware('nav.access:/page_vessel_management');
+    Route::post('/{vessel}/status', [VesselController::class, 'changeStatus'])->middleware('nav.access:/page_vessel_management');
+    Route::post('/{vessel}/maintenance-records', [VesselController::class, 'storeMaintenanceRecord'])->middleware('nav.access:/page_vessel_management');
+    Route::delete('/{vessel}/maintenance-records/{maintenanceRecord}', [VesselController::class, 'destroyMaintenanceRecord'])->middleware('nav.access:/page_vessel_management');
+});
+
 // SOP Step 10 (Voyage Plan) - master data
 Route::prefix('vesselVoyages')->group(function () {
     Route::get('/', [VesselVoyageController::class, 'index']);
+    // Must stay above /{vesselVoyage} - literal 'vessel' segment, not a voyage id.
+    Route::get('/vessel/{vessel}/manifest', [VesselVoyageController::class, 'manifest'])
+        ->middleware('permission:booking.generate-loadlist');
+    Route::get('/vessel/{vessel}/containers', [VesselVoyageController::class, 'containersForVessel']);
     Route::get('/{vesselVoyage}/loadlist', [VesselVoyageController::class, 'loadlist']) // must stay above /{vesselVoyage}
         ->middleware('permission:booking.generate-loadlist');
     Route::get('/{vesselVoyage}', [VesselVoyageController::class, 'show']);
-    Route::post('/', [VesselVoyageController::class, 'store'])->middleware('nav.access:/page_maintenance');
-    Route::put('/{vesselVoyage}', [VesselVoyageController::class, 'update'])->middleware('nav.access:/page_maintenance');
-    Route::delete('/{vesselVoyage}', [VesselVoyageController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
+    Route::post('/', [VesselVoyageController::class, 'store'])->middleware('nav.access:/page_voyage_schedule');
+    Route::put('/{vesselVoyage}', [VesselVoyageController::class, 'update'])->middleware('nav.access:/page_voyage_schedule');
+    Route::delete('/{vesselVoyage}', [VesselVoyageController::class, 'destroy'])->middleware('nav.access:/page_voyage_schedule');
 });
 
 Route::prefix('chargeTypes')->group(function () {
@@ -173,9 +192,11 @@ Route::prefix('vatRates')->group(function () {
 Route::prefix('bookings')->group(function () {
     Route::get('/', [BookingController::class, 'index']);
     Route::post('/quote', [BookingController::class, 'quote']); // live rate preview, no save - must stay above /{booking}
+    Route::post('/hazmat-upload', [BookingController::class, 'uploadHazmatDocument']); // must stay above /{booking}
     Route::get('/{booking}', [BookingController::class, 'show']);
     Route::post('/', [BookingController::class, 'store'])->middleware('permission:booking.create');
     Route::put('/{booking}', [BookingController::class, 'update'])->middleware('permission:booking.create');
+    Route::put('/{booking}/lines/{line}', [BookingController::class, 'updateLineDetails'])->middleware('permission:booking.create');
     Route::post('/{booking}/confirm', [BookingController::class, 'confirm'])->middleware('permission:booking.confirm');
     Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->middleware('permission:booking.cancel');
     Route::post('/{booking}/mark-in-transit', [BookingController::class, 'markInTransit'])->middleware('permission:booking.advance-status');
@@ -191,6 +212,19 @@ Route::prefix('bookings')->group(function () {
 Route::prefix('cargo-build-up')->group(function () {
     Route::get('/', [CargoBuildUpController::class, 'index']);
     Route::get('/bookings', [CargoBuildUpController::class, 'bookings']); // ?bucket= - must stay above nothing else needs it
+    Route::get('/bookings/{booking}', [CargoBuildUpController::class, 'booking']);
+});
+
+// Container Assignment (cargo yard) - claiming a specific ContainerAsset
+// per BookingContainerUnit slot before Booking::confirm() will allow the
+// Draft -> Confirmed transition. Deliberately ungated beyond auth - open
+// to every role, same as the Cargo Build-Up board above.
+Route::prefix('container-assignment')->group(function () {
+    Route::get('/', [ContainerAssignmentController::class, 'index']);
+    Route::post('/bookings/{booking}/auto-assign', [ContainerAssignmentController::class, 'autoAssignBooking']);
+    Route::get('/units/{bookingContainerUnit}/lookup', [ContainerAssignmentController::class, 'lookup']);
+    Route::post('/units/{bookingContainerUnit}/assign', [ContainerAssignmentController::class, 'assign']);
+    Route::post('/units/{bookingContainerUnit}/unassign', [ContainerAssignmentController::class, 'unassign']);
 });
 
 // Phase 3: ATW/CAN issuance + CV assignment (SOP Steps 3-4)
@@ -273,8 +307,21 @@ Route::prefix('container-assets')->group(function () {
         ->middleware('nav.access:/page_container_inventory');
     Route::post('/{containerAsset}/mark-out-of-service', [ContainerAssetController::class, 'markOutOfService'])
         ->middleware('nav.access:/page_container_inventory');
+    Route::post('/{containerAsset}/mark-damaged', [ContainerAssetController::class, 'markDamaged'])
+        ->middleware('nav.access:/page_container_inventory');
     Route::post('/{containerAsset}/relocate', [ContainerAssetController::class, 'relocate'])
         ->middleware('nav.access:/page_container_inventory');
+});
+
+// -----------------------------------------------------------------
+// Roles & Permissions (approval-role designations, reached via a button
+// on the Users settings page rather than its own nav entry - gated
+// against /page_users, the page that surfaces access to it).
+// -----------------------------------------------------------------
+Route::prefix('userconfigs')->group(function () {
+    Route::get('/', [UserConfigController::class, 'index']);
+    Route::post('/', [UserConfigController::class, 'store'])->middleware('nav.access:/page_users');
+    Route::delete('/{id}', [UserConfigController::class, 'destroy'])->middleware('nav.access:/page_users');
 });
 
 // Simple lookups used by the Container form's dropdowns

@@ -13,7 +13,10 @@ use App\Models\ClientContract;
 use App\Models\ClientMaster;
 use App\Models\ContainerVariant;
 use App\Services\ContainerReservationService;
+use App\Services\FileUploadService;
 use App\Services\RateResolutionService;
+use App\Services\TeamService;
+use App\Support\RoleHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,8 +26,21 @@ class BookingController extends Controller
 {
     public function __construct(
         protected RateResolutionService $rateResolver,
-        protected ContainerReservationService $reservationService
+        protected ContainerReservationService $reservationService,
+        protected FileUploadService $fileUploadService
     ) {}
+
+    /** Supporting document for a cargo line flagged hazardous/dangerous goods. */
+    public function uploadHazmatDocument(Request $request)
+    {
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240'],
+        ]);
+
+        $paths = $this->fileUploadService->uploadFile([$validated['file']], 'uploads/booking/hazmat');
+
+        return response()->json(['success' => true, 'data' => ['path' => $paths[0] ?? null]]);
+    }
 
     protected function withDisplayRelations($query)
     {
@@ -57,8 +73,16 @@ class BookingController extends Controller
 
     public function index(Request $request)
     {
+        // Team-scoped visibility, same rule as CRM leads/Proposals/Clients/Contracts:
+        // a member only sees their own clients' bookings, a team leader sees their
+        // subtree, superadmin sees everything.
+        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+            ? null
+            : TeamService::accessibleUserIds($request->user())->all();
+
         $bookings = Booking::query()
             ->with(['client', 'lines.originPort.location', 'lines.destinationPort.location', 'lines.deliveryType'])
+            ->visibleTo($visibleUserIds)
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('client_id'), fn($q) => $q->where('client_id', $request->client_id))
             ->when($request->filled('date_from'), fn($q) => $q->whereDate('booking_date', '>=', $request->date_from))
@@ -68,7 +92,7 @@ class BookingController extends Controller
 
         // Grouped COUNT, not Booking::all() - the earlier code review flagged
         // the load-everything-then-count-in-PHP pattern used elsewhere.
-        $statusCounts = Booking::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $statusCounts = Booking::query()->visibleTo($visibleUserIds)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
         return response()->json([
             'success' => true,
@@ -99,7 +123,7 @@ class BookingController extends Controller
      */
     public function quote(Request $request)
     {
-        $validated = $this->validatePayload($request, forQuote: true);
+        $validated = $this->validatePayload($request);
         $client = ClientMaster::findOrFail($validated['client_id']);
         $activeContract = $this->activeContractFor($client);
 
@@ -215,9 +239,53 @@ class BookingController extends Controller
     }
 
     /**
-     * Locks final pricing (re-resolved, in case rates moved since Draft),
-     * requires every cargo unit to already have a container assigned, and
-     * transitions Draft -> Confirmed.
+     * Cargo/transaction detail fields (consignee, cargo type, declared
+     * value, delivery dates, etc.) don't feed pricing or container
+     * reservation, so - unlike update() above - this is allowed on a
+     * booking in any status except Cancelled. Lets a line move Tentative
+     * -> Live (Cargo Build-Up board) even after the booking's been
+     * Confirmed, instead of being locked out with the rest of the form.
+     */
+    public function updateLineDetails(Request $request, Booking $booking, BookingLine $line)
+    {
+        if ($line->booking_id !== $booking->booking_id) {
+            abort(404);
+        }
+
+        if ($booking->status === Booking::STATUS_CANCELLED) {
+            return response()->json(['success' => false, 'message' => 'Cancelled bookings cannot be edited.'], 422);
+        }
+
+        $validated = $request->validate([
+            'description' => ['nullable', 'string', 'max:255'],
+            'weight_kg' => ['nullable', 'numeric', 'min:0'],
+            'volume_cbm' => ['nullable', 'numeric', 'min:0'],
+            'consignee_name' => ['nullable', 'string', 'max:255'],
+            'consignee_address' => ['nullable', 'string', 'max:255'],
+            'consignee_contact_person' => ['nullable', 'string', 'max:255'],
+            'consignee_contact_number' => ['nullable', 'string', 'max:50'],
+            'cargo_type' => ['nullable', 'string', 'max:255'],
+            'other_cargo_details' => ['nullable', 'string'],
+            'declared_value' => ['nullable', 'numeric', 'min:0'],
+            'delivery_date' => ['nullable', 'date'],
+            'delivery_date_notes' => ['nullable', 'string', 'max:255'],
+            'first_delivery_date' => ['nullable', 'date'],
+            'last_delivery_date' => ['nullable', 'date', 'after_or_equal:first_delivery_date'],
+        ]);
+
+        $line->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->withDisplayRelations(Booking::query())->findOrFail($booking->booking_id),
+        ]);
+    }
+
+    /**
+     * Locks final pricing (re-resolved, in case rates moved since Draft) and
+     * transitions Draft -> Confirmed. Container units stay unassigned at
+     * this point on purpose - a specific ContainerAsset only gets attached
+     * later at the cargo yard (see rebuildLinesUnitsAndCharges below).
      */
     public function confirm(Request $request, Booking $booking)
     {
@@ -225,18 +293,39 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Only Draft bookings can be confirmed.'], 422);
         }
 
-        $unassignedCount = BookingContainerUnit::where('booking_id', $booking->booking_id)
-            ->whereNull('container_asset_id')
-            ->count();
+        $lines = BookingLine::with(['deliveryType', 'originPort', 'destinationPort'])->where('booking_id', $booking->booking_id)->get();
 
-        if ($unassignedCount > 0) {
-            return response()->json([
-                'success' => false,
-                'message' => "{$unassignedCount} container(s) still need to be assigned before this booking can be confirmed.",
-            ], 422);
+        $requiredFields = [
+            'consignee_name' => 'Consignee Name',
+            'consignee_address' => 'Consignee Address',
+            'consignee_contact_person' => 'Consignee Contact Person',
+            'consignee_contact_number' => 'Consignee Contact Number',
+            'delivery_date' => 'Delivery Date',
+            'delivery_date_notes' => 'Delivery Date Notes',
+            'first_delivery_date' => 'First Delivery Date',
+            'last_delivery_date' => 'Last Delivery Date',
+        ];
+
+        $incompleteMessages = [];
+        foreach ($lines as $index => $line) {
+            $missing = [];
+            foreach ($requiredFields as $field => $label) {
+                if (blank($line->{$field})) {
+                    $missing[] = $label;
+                }
+            }
+            if ($missing) {
+                $lineNumber = $index + 1;
+                $incompleteMessages[] = "Line {$lineNumber} ({$line->originPort?->name} → {$line->destinationPort?->name}) is missing: " . implode(', ', $missing) . '.';
+            }
         }
 
-        $lines = BookingLine::with('deliveryType')->where('booking_id', $booking->booking_id)->get();
+        if ($incompleteMessages) {
+            return response()->json([
+                'success' => false,
+                'message' => "This booking can't be confirmed yet — delivery details are missing.\n" . implode("\n", $incompleteMessages),
+            ], 422);
+        }
 
         [$header, $resolverLines] = $this->buildResolverInputFromBooking($booking, $lines);
 
@@ -428,7 +517,7 @@ class BookingController extends Controller
             ->first();
     }
 
-    protected function validatePayload(Request $request, bool $forQuote = false): array
+    protected function validatePayload(Request $request): array
     {
         $validated = $request->validate([
             'client_id' => ['required', 'integer', 'exists:client_masters,id'],
@@ -440,6 +529,11 @@ class BookingController extends Controller
             'lines.*.destination_area_id' => ['required', 'integer', 'exists:serviceable_areas,area_id'],
             'lines.*.origin_mode' => ['required', 'in:door,pier'],
             'lines.*.destination_mode' => ['required', 'in:door,pier'],
+            // Only meaningful (and only shown on the form) when the matching
+            // side's mode is Pier - origin only ever offers stuffing/van_out,
+            // destination only ever offers stripping/van_out.
+            'lines.*.origin_pier_handling' => ['nullable', 'in:stuffing,van_out'],
+            'lines.*.destination_pier_handling' => ['nullable', 'in:stripping,van_out'],
             'lines.*.container_variant_id' => ['required', 'integer', 'exists:container_variants,id'],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
             'lines.*.description' => ['nullable', 'string', 'max:255'],
@@ -447,11 +541,15 @@ class BookingController extends Controller
             'lines.*.volume_cbm' => ['nullable', 'numeric', 'min:0'],
             'lines.*.is_hazardous' => ['boolean'],
             'lines.*.is_fragile' => ['boolean'],
+            'lines.*.hazardous_document_path' => ['nullable', 'string', 'max:2048'],
+            'lines.*.minimum_temperature' => ['nullable', 'numeric'],
 
-            // SOP Step 2 "transaction details" - optional at booking time
-            // (a booking can be lodged as Tentative with just quantities),
-            // but every one of these must be filled in before the Cargo
-            // Build-Up dashboard counts this line's booking as Live.
+            // Route & Delivery "transaction details" are optional at Draft
+            // save time - a booking can be saved with just a client and
+            // route filled in. They become required before Confirm (see
+            // confirm()'s completeness guard below). Container-side fields
+            // (cargo_type, declared_value, description, weight/volume,
+            // etc.) stay nullable/untouched.
             'lines.*.consignee_name' => ['nullable', 'string', 'max:255'],
             'lines.*.consignee_address' => ['nullable', 'string', 'max:255'],
             'lines.*.consignee_contact_person' => ['nullable', 'string', 'max:255'],
@@ -463,10 +561,6 @@ class BookingController extends Controller
             'lines.*.delivery_date_notes' => ['nullable', 'string', 'max:255'],
             'lines.*.first_delivery_date' => ['nullable', 'date'],
             'lines.*.last_delivery_date' => ['nullable', 'date', 'after_or_equal:lines.*.first_delivery_date'],
-            // Container assignment isn't relevant for a pure price quote.
-            'lines.*.auto_assign' => [$forQuote ? 'sometimes' : 'required_without:lines.*.container_asset_ids', 'boolean'],
-            'lines.*.container_asset_ids' => ['array'],
-            'lines.*.container_asset_ids.*' => ['integer', 'exists:container_assets,id'],
         ]);
 
         foreach ($validated['lines'] as $index => $line) {
@@ -565,6 +659,8 @@ class BookingController extends Controller
                 'origin_area_id' => $lineBreakdown['origin_area_id'],
                 'destination_area_id' => $lineBreakdown['destination_area_id'],
                 'delivery_type_id' => $lineBreakdown['delivery_type_id'],
+                'origin_pier_handling' => $inputLine['origin_pier_handling'] ?? null,
+                'destination_pier_handling' => $inputLine['destination_pier_handling'] ?? null,
                 'lane_id' => $lineBreakdown['lane_id'],
                 'tariff_rate_id' => $lineBreakdown['tariff_rate_id'],
                 'container_id' => $lineBreakdown['container_id'],
@@ -577,6 +673,8 @@ class BookingController extends Controller
                 'volume_cbm' => $inputLine['volume_cbm'] ?? null,
                 'is_hazardous' => $inputLine['is_hazardous'] ?? false,
                 'is_fragile' => $inputLine['is_fragile'] ?? false,
+                'hazardous_document_path' => $inputLine['hazardous_document_path'] ?? null,
+                'minimum_temperature' => $inputLine['minimum_temperature'] ?? null,
                 'consignee_name' => $inputLine['consignee_name'] ?? null,
                 'consignee_address' => $inputLine['consignee_address'] ?? null,
                 'consignee_contact_person' => $inputLine['consignee_contact_person'] ?? null,
@@ -596,9 +694,12 @@ class BookingController extends Controller
                 'trucking_snapshot' => $lineBreakdown['trucking']['total'],
             ]);
 
-            $reservedAssets = $this->reserveContainersForLine($bookingLine, $inputLine, $lineBreakdown, $request);
-
-            foreach ($reservedAssets->values() as $unitOffset => $asset) {
+            // Containers are no longer reserved here - a specific
+            // ContainerAsset gets assigned later at the cargo yard, which is
+            // what actually flips that asset's status to booked. Each unit
+            // starts unassigned (container_asset_id null) so cargo yard
+            // staff have exactly `quantity` slots to fill in per line.
+            for ($unitOffset = 0; $unitOffset < $bookingLine->quantity; $unitOffset++) {
                 $globalUnitSeq++;
 
                 BookingContainerUnit::create([
@@ -606,7 +707,7 @@ class BookingController extends Controller
                     'booking_id' => $booking->booking_id,
                     'unit_index' => $unitOffset + 1,
                     'gate_pass_code' => sprintf('GP-%s-%02d', $booking->code, $globalUnitSeq),
-                    'container_asset_id' => $asset->id,
+                    'container_asset_id' => null,
                     'status' => BookingContainerUnit::STATUS_PENDING,
                     'origin_port_id' => $lineBreakdown['origin_port_id'],
                     'destination_port_id' => $lineBreakdown['destination_port_id'],
@@ -635,34 +736,5 @@ class BookingController extends Controller
                 ]);
             }
         }
-    }
-
-    /**
-     * @throws RuntimeException on a bad manual selection count or a
-     *                           reservation race (bubbles up to roll back
-     *                           the whole booking transaction)
-     */
-    protected function reserveContainersForLine(BookingLine $line, array $inputLine, array $lineBreakdown, Request $request)
-    {
-        $quantity = $line->quantity;
-
-        if ($inputLine['auto_assign'] ?? false) {
-            return $this->reservationService->reserveAuto(
-                $line->container_variant_id,
-                $lineBreakdown['origin_port_id'],
-                $quantity,
-                $request->user()?->id
-            );
-        }
-
-        $assetIds = $inputLine['container_asset_ids'] ?? [];
-
-        if (count($assetIds) !== $quantity) {
-            throw new RuntimeException(
-                "The line for container variant #{$line->container_variant_id} needs exactly {$quantity} container(s) selected, got " . count($assetIds) . '.'
-            );
-        }
-
-        return $this->reservationService->reserveExplicit($assetIds, $request->user()?->id);
     }
 }

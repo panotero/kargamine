@@ -43,9 +43,6 @@
                 data-tab="vatRates">VAT Rates</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="vesselVoyages">Vessel Voyages</button>
-            <button type="button"
-                class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="specialCharges">Special Charges</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
@@ -69,7 +66,6 @@
         'handlingFees' => 'Handling Fees',
         'truckingTariffs' => 'Trucking Tariffs',
         'vatRates' => 'VAT Rates',
-        'vesselVoyages' => 'Vessel Voyages',
         'specialCharges' => 'Special Charges',
         'cargoYards' => 'Cargo Yard (CY)',
     ] as $key => $label)
@@ -1109,96 +1105,6 @@
                 ],
             },
 
-            // SOP Step 10 (Voyage Plan) - one row per vessel leg, matching
-            // the SOP's own example data ("Lady Callista 84-A/B/C/D").
-            vesselVoyages: {
-                label: 'Vessel Voyage',
-                pk: 'id',
-                listUrl: '/api/vesselVoyages',
-                createUrl: '/api/vesselVoyages',
-                updateUrl: (id) => `/api/vesselVoyages/${id}`,
-                deleteUrl: (id) => `/api/vesselVoyages/${id}`,
-                columns: [{
-                        key: 'voyage_mnemonic',
-                        label: 'Voyage Mnemonic'
-                    },
-                    {
-                        key: 'vessel_name',
-                        label: 'Vessel'
-                    },
-                    {
-                        key: 'voyage_leg',
-                        label: 'Leg'
-                    },
-                    {
-                        key: 'origin',
-                        label: 'Origin',
-                        render: (row) => row.origin_port ? `${row.origin_port.location?.name ?? '-'} - ${row.origin_port.name}` : '-'
-                    },
-                    {
-                        key: 'destination',
-                        label: 'Destination',
-                        render: (row) => row.destination_port ? `${row.destination_port.location?.name ?? '-'} - ${row.destination_port.name}` : '-'
-                    },
-                    {
-                        key: 'estimated_departure_at',
-                        label: 'Est. Departure',
-                        render: (row) => formatDate(row.estimated_departure_at)
-                    },
-                    {
-                        key: 'estimated_arrival_at',
-                        label: 'Est. Arrival',
-                        render: (row) => formatDate(row.estimated_arrival_at)
-                    },
-                ],
-                fields: [{
-                        name: 'vessel_name',
-                        label: 'Vessel Name',
-                        type: 'text',
-                        required: true,
-                        placeholder: 'e.g. Callista 84'
-                    },
-                    {
-                        name: 'voyage_mnemonic',
-                        label: 'Voyage Mnemonic',
-                        type: 'text',
-                        required: true,
-                        placeholder: 'e.g. Lady Callista 84-A'
-                    },
-                    {
-                        name: 'voyage_leg',
-                        label: 'Voyage Leg',
-                        type: 'text',
-                        required: true,
-                        placeholder: 'e.g. A'
-                    },
-                    {
-                        name: 'origin_port_id',
-                        label: 'Port of Origin',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'ports'
-                    },
-                    {
-                        name: 'destination_port_id',
-                        label: 'Port of Destination',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'ports'
-                    },
-                    {
-                        name: 'estimated_departure_at',
-                        label: 'Estimated Date of Departure',
-                        type: 'date'
-                    },
-                    {
-                        name: 'estimated_arrival_at',
-                        label: 'Estimated Date of Arrival',
-                        type: 'date'
-                    },
-                ],
-            },
-
             specialCharges: {
                 label: 'Special Charge',
                 pk: 'special_charge_id',
@@ -1394,19 +1300,15 @@
 
             const id = row[config.pk];
 
-            // SOP Step 11: "Admin generates load list" - only the Vessel
-            // Voyages tab has a document to generate per row, so this stays
-            // a one-off rather than a generic config option used nowhere else.
-            const loadlistLink = key === 'vesselVoyages' ?
-                `<a href="/api/vesselVoyages/${id}/loadlist" target="_blank" class="text-blue-600 hover:text-blue-700 text-sm font-medium mr-3">Loadlist</a>` :
-                '';
-
             return `
             <tr class="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800" data-row-id="${id}">
                 ${cells}
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">
-                    ${loadlistLink}
-                    <button type="button" class="text-zinc-400 hover:text-red-600 text-sm font-medium" data-delete-id="${id}">Delete</button>
+                    <button type="button" class="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition" data-delete-id="${id}" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5a1 1 0 0 1-1 .5H8a1 1 0 0 1-1-.5L5 9zm5 2v8h2v-8H10zm4 0v8h2v-8h-2zM9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1h5v2H4V4h5z"/>
+                        </svg>
+                    </button>
                 </td>
             </tr>
         `;
@@ -2288,8 +2190,12 @@
                 <td class="px-4 py-2.5 text-black dark:text-white">${lov.lov_name}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${lov.lov_description ?? '-'}</td>
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">
-                    <button type="button" class="delete-btn text-zinc-400 hover:text-red-600 dark:hover:text-red-400 text-sm font-medium"
-                        data-option-id="${lov.lov_optionId}" data-lov-id="${lov.lov_id}">Delete</button>
+                    <button type="button" class="delete-btn p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition"
+                        data-option-id="${lov.lov_optionId}" data-lov-id="${lov.lov_id}" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5a1 1 0 0 1-1 .5H8a1 1 0 0 1-1-.5L5 9zm5 2v8h2v-8H10zm4 0v8h2v-8h-2zM9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1h5v2H4V4h5z"/>
+                        </svg>
+                    </button>
                 </td>
             </tr>`;
         }

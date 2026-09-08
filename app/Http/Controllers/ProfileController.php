@@ -42,6 +42,21 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function updateLayout(Request $request)
+    {
+        $validated = $request->validate([
+            'nav_layout' => ['required', 'string', 'in:side,top'],
+        ]);
+
+        Auth::user()->update(['nav_layout' => $validated['nav_layout']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Navigation layout updated.',
+            'data' => Auth::user(),
+        ]);
+    }
+
     public function updatePassword(Request $request)
     {
         $validated = $request->validate([

@@ -138,6 +138,14 @@ class BookingTest extends TestCase
                 'quantity' => $quantity,
                 'auto_assign' => $autoAssign,
                 'container_asset_ids' => $assetIds,
+                'consignee_name' => 'Juan Dela Cruz',
+                'consignee_address' => '123 Rizal St',
+                'consignee_contact_person' => 'Juan Dela Cruz',
+                'consignee_contact_number' => '09171234567',
+                'delivery_date' => now()->addDays(5)->toDateString(),
+                'delivery_date_notes' => 'Call ahead',
+                'first_delivery_date' => now()->addDays(5)->toDateString(),
+                'last_delivery_date' => now()->addDays(6)->toDateString(),
             ]],
         ];
     }
@@ -198,6 +206,14 @@ class BookingTest extends TestCase
             'container_variant_id' => $variant->id,
             'quantity' => 1,
             'auto_assign' => true,
+            'consignee_name' => 'Juan Dela Cruz',
+            'consignee_address' => '123 Rizal St',
+            'consignee_contact_person' => 'Juan Dela Cruz',
+            'consignee_contact_number' => '09171234567',
+            'delivery_date' => now()->addDays(5)->toDateString(),
+            'delivery_date_notes' => 'Call ahead',
+            'first_delivery_date' => now()->addDays(5)->toDateString(),
+            'last_delivery_date' => now()->addDays(6)->toDateString(),
         ];
 
         $response = $this->postJson('/api/bookings', $payload);

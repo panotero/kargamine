@@ -40,6 +40,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Token auth for the dormant device-integration endpoints (see
+        // routes/api.php's `device/v1` group and
+        // DeviceContainerAssignmentController) - not used by the browser
+        // SPA, which stays on the session-based `web` guard above.
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
     ],
 
     /*

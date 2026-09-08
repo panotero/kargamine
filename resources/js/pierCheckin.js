@@ -1,7 +1,14 @@
 import jsQR from "jsqr";
 import QRCode from "qrcode";
 
-(function () {
+// Bootstrapped by a one-line inline <script> in pierCheckin.blade.php, since
+// pages are injected into #content via AJAX (see navmenu.js loadPage()) and
+// this module is bundled globally rather than fetched with the page
+// fragment - a plain top-level IIFE only ever runs once, at initial app
+// boot, before #pierCheckinPage exists in the DOM. See
+// resources/js/menuSettings.js for the established pattern this now
+// matches.
+window.initPierCheckinPage = function initPierCheckinPage() {
   const page = document.getElementById("pierCheckinPage");
   if (!page) return;
 
@@ -215,4 +222,4 @@ import QRCode from "qrcode";
   printBtn.addEventListener("click", printList);
 
   loadPending();
-})();
+};

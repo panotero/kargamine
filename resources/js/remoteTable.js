@@ -93,12 +93,16 @@ function createRemoteTable(options) {
     const body = tableBodySelector;
     if (!body) return;
 
+    body.innerHTML = `<tr><td colspan="${colspan}" class="px-4 py-10 text-center text-sm text-zinc-400 dark:text-zinc-500">Loading...</td></tr>`;
+
     const response = await apiCall({
       mode: "GET",
       url: buildUrl(page),
     });
 
     if (!response.success) {
+      body.innerHTML = `<tr><td colspan="${colspan}" class="px-4 py-10 text-center text-sm text-red-500">Unable to load data.</td></tr>`;
+
       if (onError) {
         onError(response);
       } else {
@@ -116,7 +120,18 @@ function createRemoteTable(options) {
     const rows = paginated ? (meta.data ?? []) : (response.data ?? []);
 
     if (!rows.length) {
-      body.innerHTML = `<tr><td colspan="${colspan}" class="px-4 py-10 text-center text-sm text-zinc-400 dark:text-zinc-500">${emptyMessage}</td></tr>`;
+      // emptyMessage may be a plain string (default for every existing
+      // caller - rendered exactly as before) or a function returning custom
+      // markup (e.g. the VISUALS.md "prompting" empty state, which needs its
+      // own border/background/button and shouldn't be forced into the
+      // default quiet-gray-text styling).
+      const isEmptyMessageFn = typeof emptyMessage === "function";
+      const emptyContent = isEmptyMessageFn ? emptyMessage() : emptyMessage;
+      const emptyTdClass = isEmptyMessageFn
+        ? "px-4 py-10 text-center"
+        : "px-4 py-10 text-center text-sm text-zinc-400 dark:text-zinc-500";
+
+      body.innerHTML = `<tr><td colspan="${colspan}" class="${emptyTdClass}">${emptyContent}</td></tr>`;
       renderPagination(null);
       return;
     }
@@ -272,28 +287,59 @@ function createRemoteTable(options) {
     const input = searchInputSelector;
     const button = searchButtonSelector;
 
+    // createRemoteTable() can be called more than once against the same
+    // physical <input>/<button> nodes (e.g. a caller re-invoking it on
+    // every filter click instead of reusing the returned handle). Without
+    // removing the previous listener set first, each call stacks another
+    // closure - each closed over its own stale filter state - on the same
+    // element, so a single keystroke/click fires N parallel requests.
+    // Store the bound handlers on the element itself so the *next* call
+    // can find and remove them before attaching its own.
     if (input) {
-      input.addEventListener("input", () => {
+      if (input._remoteTableInputHandler) {
+        input.removeEventListener("input", input._remoteTableInputHandler);
+      }
+      if (input._remoteTableKeydownHandler) {
+        input.removeEventListener(
+          "keydown",
+          input._remoteTableKeydownHandler,
+        );
+      }
+
+      const inputHandler = () => {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(() => {
           search(input.value.trim());
         }, SEARCH_DEBOUNCE_MS);
-      });
+      };
 
-      input.addEventListener("keydown", (e) => {
+      const keydownHandler = (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
           clearTimeout(searchDebounceTimer);
           search(input.value.trim());
         }
-      });
+      };
+
+      input.addEventListener("input", inputHandler);
+      input.addEventListener("keydown", keydownHandler);
+
+      input._remoteTableInputHandler = inputHandler;
+      input._remoteTableKeydownHandler = keydownHandler;
     }
 
     if (button) {
-      button.addEventListener("click", () => {
+      if (button._remoteTableClickHandler) {
+        button.removeEventListener("click", button._remoteTableClickHandler);
+      }
+
+      const clickHandler = () => {
         clearTimeout(searchDebounceTimer);
         search(input.value.trim());
-      });
+      };
+
+      button.addEventListener("click", clickHandler);
+      button._remoteTableClickHandler = clickHandler;
     }
   }
 
@@ -310,7 +356,13 @@ function createRemoteTable(options) {
 window.createRemoteTable = createRemoteTable;
 
 window.renderRemoteTable = function renderRemoteTable(payload) {
-  const { url, tableId, afterRenderFunction, thead } = payload;
+  const {
+    url,
+    tableId,
+    afterRenderFunction,
+    thead,
+    emptyMessage = `No records yet.`,
+  } = payload;
   const table = document.getElementById(tableId);
   const tableSearchInput = table.querySelector(".table-search-input");
   const tableSearchButton = table.querySelector(".table-search-button");
@@ -333,7 +385,7 @@ window.renderRemoteTable = function renderRemoteTable(payload) {
     paginationSelector: tablePagination,
     searchInputSelector: tableSearchInput,
     searchButtonSelector: tableSearchButton,
-    emptyMessage: `No records yet.`,
+    emptyMessage: emptyMessage,
     colspan: header.length,
     rowTemplate: (row) => buildRow(header, row),
     afterRender: () => {

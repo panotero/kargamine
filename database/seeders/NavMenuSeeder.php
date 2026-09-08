@@ -103,9 +103,41 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '9',
             ],
             [
+                // Cargo-yard step between Draft booking and confirm() - open
+                // to every role, not just container-inventory managers.
+                'title' => 'Container Assignment',
+                'icon' => 'cube',
+                'link' => '/page_container_assignment',
+                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
+                'parent_title' => null,
+                'menu_order' => '8',
+            ],
+            [
+                // Fleet master data - specs, status tagging, maintenance log.
+                'title' => 'Vessel Management',
+                'icon' => 'truck',
+                'link' => '/page_vessel_management',
+                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
+                'parent_title' => null,
+                'menu_order' => '13',
+            ],
+            [
+                // SOP Step 10 (Voyage Plan) - scoped to active vessels.
+                'title' => 'Voyage Schedule',
+                'icon' => 'map-pin',
+                'link' => '/page_voyage_schedule',
+                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
+                'parent_title' => null,
+                'menu_order' => '14',
+            ],
+            [
+                // Points at the redesigned pages.settings.users view (real
+                // API-backed, rebuilt from usersmanagement.blade.php's logic)
+                // rather than /page_usermanagement, which still serves the
+                // superseded pre-redesign page and is now unreferenced.
                 'title' => 'Users',
                 'icon' => 'users',
-                'link' => '/page_usermanagement',
+                'link' => '/page_users',
                 'allowed_roles' => ['4', '1'],
                 'parent_title' => null,
                 'menu_order' => '10',

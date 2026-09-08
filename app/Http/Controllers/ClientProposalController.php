@@ -72,18 +72,22 @@ class ClientProposalController extends Controller
             ? null
             : TeamService::accessibleUserIds($request->user());
 
+        $visibilityScope = function ($q) use ($visibleUserIds) {
+            $q->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
+                $q->where(function ($q) use ($visibleUserIds) {
+                    $q->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
+                        ->orWhereHas('client.lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
+                });
+            });
+        };
+
         $proposals = ClientProposal::with([
             'client:id,uuid,company_name,customer_code,sales_rep_id',
             'creator:id,name',
             'decidedBy:id,name',
             'lead.user:id,name,team_id',
         ])
-            ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
-                $q->where(function ($q) use ($visibleUserIds) {
-                    $q->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
-                        ->orWhereHas('client.lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
-                });
-            })
+            ->tap($visibilityScope)
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
@@ -94,7 +98,28 @@ class ClientProposalController extends Controller
             ->paginate($request->get('per_page', 15))
             ->appends($request->query());
 
-        return response()->json(['success' => true, 'data' => $proposals]);
+        $statusCounts = ClientProposal::tap($visibilityScope)->get()->groupBy('status')->map(fn($group) => $group->count());
+
+        $pendingAwaitingDecision = ClientProposal::tap($visibilityScope)
+            ->where('status', ClientProposal::STATUS_PENDING)
+            ->with(['lead.user:id,team_id', 'client.lead.user:id,team_id'])
+            ->get()
+            ->filter(fn($p) => $p->canBeApprovedBy($request->user()))
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => $proposals,
+            'status_counts' => [
+                'all' => $statusCounts->sum(),
+                'awaiting_decision' => $pendingAwaitingDecision,
+                'pending' => $statusCounts->get(ClientProposal::STATUS_PENDING, 0),
+                'approved' => $statusCounts->get(ClientProposal::STATUS_APPROVED, 0),
+                'disapproved' => $statusCounts->get(ClientProposal::STATUS_DISAPPROVED, 0),
+                'accepted' => $statusCounts->get(ClientProposal::STATUS_ACCEPTED, 0),
+                'rejected' => $statusCounts->get(ClientProposal::STATUS_REJECTED, 0),
+            ],
+        ]);
     }
 
     public function show(ClientProposal $proposal)
@@ -349,7 +374,7 @@ class ClientProposalController extends Controller
             'rates.*.container_variant_id' => ['required', 'integer', 'exists:container_variants,id'],
             'rates.*.min_van_qty' => ['nullable', 'integer', 'min:1'],
             'rates.*.base_rate' => ['required', 'numeric', 'min:0'],
-            'rates.*.discount_type' => ['nullable', 'in:percentage,fixed'],
+            'rates.*.discount_type' => ['nullable', 'in:percentage,fixed,increase_percentage,increase_fixed'],
             'rates.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'rates.*.final_rate' => ['required', 'numeric', 'min:0'],
         ];

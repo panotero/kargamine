@@ -4,548 +4,439 @@
 
         <div>
             <h1 class="text-2xl font-bold">CRM Leads</h1>
-            <p class="text-zinc-500">Manage leads and sales opportunities</p>
+            <p class="text-zinc-500">
+                Manage leads and sales opportunities
+                <span id="crmScopeIndicator" class="hidden"></span>
+            </p>
         </div>
 
-        <button id="btnNewLead" class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded-lg">
-            + New Lead
-        </button>
+        <div class="flex items-center gap-6">
+            <div class="text-right">
+                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400">Total</p>
+                <p class="text-xl font-bold text-zinc-800 dark:text-zinc-100" id="crmTotalStat">0</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[11px] font-medium uppercase tracking-widest text-red-500 dark:text-red-400">Need
+                    Attention</p>
+                <p class="text-xl font-bold text-red-600 dark:text-red-400" id="crmAttentionStat">0</p>
+            </div>
+
+            <button id="btnNewLead" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg">
+                + New Lead
+            </button>
+        </div>
 
     </div>
-    <!-- CRM Status Count Cards -->
+
+    <!-- Segmented Pipeline Bar -->
     <section class="w-full my-5">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
-            <div class="statusBtn max-md:col-span-2 bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-mono text-[11px] uppercase tracking-widest text-zinc-400">Active Pipeline</span>
+            <div class="flex items-center gap-2">
+                <button type="button" class="statusBtn px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:opacity-80 transition"
+                    data-status="WIN">
+                    Won <span id="countWin">0</span>
+                </button>
+                <button type="button" class="statusBtn px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:opacity-80 transition"
+                    data-status="LOST">
+                    Lost <span id="countLose">0</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="crmPipelineBar" class="h-2 rounded-full overflow-hidden flex bg-zinc-100 dark:bg-zinc-800">
+            <div class="pipeline-segment bg-gray-400" data-status="LEAD" style="width: 0%"></div>
+            <div class="pipeline-segment bg-indigo-500" data-status="QUALIFIED" style="width: 0%"></div>
+            <div class="pipeline-segment bg-purple-500" data-status="OPPORTUNITY" style="width: 0%"></div>
+            <div class="pipeline-segment bg-amber-500" data-status="NEGOTIATION" style="width: 0%"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mt-3">
+            <button type="button"
+                class="statusBtn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-zinc-300 dark:border-zinc-600 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                 data-status="ALL">
-
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-blue-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">ALL</p>
-                <p class="text-2xl font-bold text-black" id="countALL">0</p>
-            </div>
-
-            <div class="statusBtn bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
+                All <span id="countALL">0</span>
+            </button>
+            <button type="button"
+                class="statusBtn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                 data-status="LEAD">
-
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-gray-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">LEAD</p>
-                <p class="text-2xl font-bold text-black" id="countLead">0</p>
-            </div>
-
-            <div class="statusBtn  bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
+                <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                LEAD <span id="countLead">0</span>
+            </button>
+            <button type="button"
+                class="statusBtn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                 data-status="QUALIFIED">
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-indigo-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">QUALIFIED</p>
-                <p class="text-2xl font-bold text-black" id="countQualified">0</p>
-            </div>
-
-            <div class="statusBtn bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                QUALIFIED <span id="countQualified">0</span>
+            </button>
+            <button type="button"
+                class="statusBtn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                 data-status="OPPORTUNITY">
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-purple-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">OPPORTUNITY</p>
-                <p class="text-2xl font-bold text-black" id="countOpportunity">0</p>
-            </div>
-
-            <div class="statusBtn bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                OPPORTUNITY <span id="countOpportunity">0</span>
+            </button>
+            <button type="button"
+                class="statusBtn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                 data-status="NEGOTIATION">
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-amber-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">NEGOTIATION</p>
-                <p class="text-2xl font-bold text-black" id="countNegotiation">0</p>
-            </div>
-
-            <div class="statusBtn bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
-                data-status="WIN">
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-green-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">WIN</p>
-                <p class="text-2xl font-bold text-black" id="countWin">0</p>
-            </div>
-
-            <div class="statusBtn bg-white border border-gray-200 rounded-xl p-4 shadow-sm  cursor-pointer"
-                data-status="LOST">
-                <div class="w-full flex-1 items-center">
-                    <div class="w-full py-1  rounded-full bg-red-500">
-                    </div>
-                </div>
-                <p class="text-xs text-zinc-400 font-semibold">LOST</p>
-                <p class="text-2xl font-bold text-black" id="countLose">0</p>
-            </div>
-
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                NEGOTIATION <span id="countNegotiation">0</span>
+            </button>
         </div>
     </section>
 
-    <x-table id="tableCrm" />
+    <x-table id="tableCrm">
+        <x-slot:toolbar>
+            <div class="flex items-center gap-2">
+                <label for="crmAssignedToFilter"
+                    class="text-[11px] font-medium uppercase tracking-widest text-zinc-500">Assigned
+                    Rep</label>
+                <select id="crmAssignedToFilter"
+                    class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    <option value="">All Reps</option>
+                </select>
+            </div>
+            <button type="button" id="crmNeedsAttentionToggle" data-active="false"
+                class="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+                <span aria-hidden="true">⚠</span> Needs Attention
+            </button>
+        </x-slot:toolbar>
+    </x-table>
 
 </div>
 
 
 
 
-<x-side-modal id="LeadDetailsSideModal">
-
-    <div class="p-5 border-b flex justify-between sticky top-0 bg-white dark:bg-zinc-800 z-10">
-
-
-
-
-        <p class="text-xl font-semibold dark:text-white">
-            New CRM Lead
-        </p>
-
-        <button class="modal-close">
-            ✕
-        </button>
-
-    </div>
-
-    <div class="p-5">
-
-
-        <div class="p-5">
-            <form id="leadForm">
-                <div class="grid grid-cols-2 gap-3">
-
-                    <!-- Contact Name -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Contact
-                            Name</label>
-                        <input type="text" name="contact_name"
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Mobile -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Mobile</label>
-                        <input type="text" name="mobile" required
-                            class="format-mobile w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Email -->
-                    <div class="flex flex-col gap-1 col-span-2">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Email</label>
-                        <input type="email" name="email" required
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Company Name -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Company
-                            Name</label>
-                        <input type="text" name="company_name" required
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Position -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Position /
-                            Role</label>
-                        <input type="text" name="position" required
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Status -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Status</label>
-                        <select name="status" required
-                            class="statusDropDown w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                        </select>
-                    </div>
-
-                    <!-- Source -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Source</label>
-                        <input type="text" name="source" required
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Estimated Value -->
-                    <div class="flex flex-col gap-1 col-span-2">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Estimated
-                            Value</label>
-                        <input type="text" name="est_value"
-                            class="format-currency w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
-                    </div>
-
-                    <!-- Notes -->
-                    <div class="flex flex-col gap-1 col-span-2">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Notes</label>
-                        <textarea name="notes" id="notes" rows="5"
-                            class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition resize-none"></textarea>
-                    </div>
-
-                </div>
-            </form>
-        </div>
-
-        <!-- Footer -->
-        <div class="border-t border-zinc-100 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2">
-            <button type="button"
-                class="modal-close px-4 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
-                Cancel
-            </button>
-            <button type="submit" id="saveLeadBtn"
-                class="px-4 py-1.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition">
-                Save Lead
-            </button>
-        </div>
-    </div>
-
-</x-side-modal><x-modal id="LeadInfoModal">
+<x-modal id="LeadInfoModal" max-width="lg:max-w-[1100px]">
 
     {{-- Header --}}
-    <div
-        class="p-5 border-b border-zinc-200 dark:border-zinc-700 flex justify-between items-center bg-zinc-50 dark:bg-zinc-800 rounded-t-2xl">
-        <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-                <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100" id="leadCompanyName">Company Name
-                </p>
-                <div id="leadStatus"></div>
-                <div id="leadCustomerCode"></div>
-            </div>
-            <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                Lead created <span id="leadCreatedAt">-</span>
-            </p>
-        </div>
-        <div class="flex items-center gap-2">
-            <button id="createClientMasterBtn" class="p-2 bg-orange-600 rounded-lg text-white text-sm hidden">
-                <b class="font-black">+</b> Record
-            </button>
-            <button
-                class="modal-close text-zinc-400 hover:text-zinc-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
-                ✕
-            </button>
-        </div>
-    </div>
-
-    <div class="max-h-[75vh] overflow-auto p-5 space-y-5 bg-zinc-50 dark:bg-zinc-900">
-
-        {{-- ============== LEAD & COMPANY INFORMATION ============== --}}
-        <div class="relative bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-
-            <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Lead &
-                    Company Information</p>
-                <button id="editContactBtn"
-                    class="text-zinc-400 hover:text-zinc-600 p-1 rounded-md hover:bg-zinc-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                    </svg>
-                </button>
-            </div>
-
-            {{-- Edit contact info dropdown --}}
-            <div id="editContactInfoDropdown"
-                class="modaldropdown hidden absolute right-4 top-12 w-80 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 z-50 shadow-xl shadow-black/10 dark:shadow-black/40">
-
-                <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4">Edit
-                    Contact Information
-                </p>
-
-                <div class="flex flex-col gap-3">
-                    <div class="flex flex-col gap-1">
-                        <label for="contactName"
-                            class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
-                            Name</label>
-                        <input type="text" name="contactName" id="contactName"
-                            class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label for="contactEmail"
-                            class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
-                            Email</label>
-                        <input type="email" name="contactEmail" id="contactEmail"
-                            class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label for="contactMobile"
-                            class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
-                            Mobile</label>
-                        <input type="text" name="contactMobile" id="contactMobile"
-                            class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700">
-                    <button id="cancelContactInfoBtn"
-                        class="px-4 py-1.5 text-sm font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition">
-                        Cancel
-                    </button>
-                    <button id="saveContactInfoBtn"
-                        class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-                        Save
-                    </button>
-                </div>
-            </div>
-
-            {{-- Contact & Company field grid --}}
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 text-sm">
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Client Type</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadClientType">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Contact Name</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadContactName">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Position</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadPosition">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Email
+    <div class="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 rounded-t-2xl">
+        <div class="p-5 flex justify-between items-center">
+            <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                    <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100" id="leadCompanyName">Company Name
                     </p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadEmail">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Mobile</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadMobile">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Landline</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadLandline">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Source</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadSource">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Assigned To</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadAssignedTo">-</p>
-                </div>
+                    <div id="leadStatus"></div>
+                    <div id="leadCustomerCode"></div>
 
-                <div class="col-span-2 md:col-span-3 border-t border-zinc-100 dark:border-zinc-700 pt-3">
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Company Name</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadCompanyNameFull">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Type
-                        of Business</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadTypeOfBusiness">-</p>
-                </div>
-                <div class="col-span-2 md:col-span-2">
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Industry Description
-                    </p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadIndustryDescription">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Authorized Signatory</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadAuthorizedSignatoryName">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Signatory Position</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadAuthorizedSignatoryPosition">-
-                    </p>
-                </div>
+                    {{-- Change Stage --}}
+                    <div class="relative">
+                        <button id="changeStageBtn" type="button" aria-haspopup="true" aria-expanded="false"
+                            aria-controls="changeStageDropdown"
+                            class="text-[11px] font-medium uppercase tracking-widest px-2 py-1 rounded-md border border-zinc-300 dark:border-zinc-600 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
+                            Change Stage
+                        </button>
 
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Estimated Value</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadEstimatedValue">-</p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Expected Close Date</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadExpectedCloseDate">-</p>
-                </div>
-            </div>
-        </div>
-
-        {{-- ============== ADDRESSES ============== --}}
-        <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-3">Addresses
-            </p>
-            <div id="leadAddressListContainer"
-                class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-auto p-0.5">
-            </div>
-        </div>
-
-        {{-- ============== BOOKING REQUIREMENTS ============== --}}
-        <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Booking
-                    Requirements</p>
-                <button id="leadAddContainerBtn"
-                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
-                    + Add Booking Requirement
-                </button>
-            </div>
-            <div id="leadContainerListContainer"
-                class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-auto p-0.5">
-            </div>
-        </div>
-
-        {{-- ============== PROPOSALS ============== --}}
-        <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
-            <div class="flex justify-between items-center mb-3">
-                <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Proposals
-                </p>
-                <button id="leadAddProposalBtn"
-                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2
-                        rounded-lg text-sm">
-                    + New Proposal
-                </button>
-            </div>
-            <div id="leadProposalContainer"
-                class="border border-zinc-300 dark:border-zinc-600 rounded-lg flex flex-col max-h-72 overflow-auto p-1 gap-1">
-            </div>
-            <div id="leadProposalsPagination"></div>
-        </div>
-
-        {{-- ============== ACTIVITIES + NOTES ============== --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            {{-- Activities --}}
-            <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 relative">
-                <div class="flex justify-between items-center mb-3">
-                    <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Activity</p>
-                    <button id="leadAddActivityBtn"
-                        class="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100 hover:bg-zinc-200 text-sm font-semibold text-zinc-600">
-                        +
-                    </button>
-                </div>
-
-                <div id="leadActivityDropdown"
-                    class="modaldropdown hidden absolute right-2 bottom-9 w-72 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 z-50 flex flex-col gap-3 shadow-xl shadow-black/10 dark:shadow-black/40">
-
-                    <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Add New
-                        Activity</p>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="flex flex-col gap-1">
-                            <label for="activityStatusInput"
-                                class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Status</label>
-                            <select name="status" id="activityStatusInput" required
+                        <div id="changeStageDropdown"
+                            class="modaldropdown hidden absolute left-0 top-9 w-64 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 z-50 shadow-xl shadow-black/10 dark:shadow-black/40">
+                            <p
+                                class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-3">
+                                Change Stage</p>
+                            <select id="leadStageSelect"
                                 class="statusDropDown w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                                 <option value="">Select status</option>
                             </select>
+                            <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-700">
+                                <button id="cancelStageBtn" type="button"
+                                    class="px-3 py-1.5 text-xs font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition">
+                                    Cancel
+                                </button>
+                                <button id="saveStageBtn" type="button"
+                                    class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+                                    Save
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex flex-col gap-1">
-                            <label for="activityTypeInput"
-                                class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Activity</label>
-                            <input type="text" name="type" id="activityTypeInput"
-                                class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-1">
-                        <label for="activityDescriptionInput"
-                            class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Description</label>
-                        <textarea name="activityDescriptionInput" id="activityDescriptionInput" rows="3" placeholder="Add activity..."
-                            class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"></textarea>
-                    </div>
-
-                    <div class="flex flex-col gap-1">
-                        <label for="activityAttachmentInput"
-                            class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                            Attachment
-                        </label>
-                        <input type="file" name="attachment" id="activityAttachmentInput"
-                            class="block w-full text-xs text-zinc-700 dark:text-zinc-300
-               file:mr-2 file:py-1.5 file:px-3
-               file:rounded-lg file:border-0
-               file:text-xs file:font-medium
-               file:bg-blue-50 file:text-blue-700
-               hover:file:bg-blue-100
-               cursor-pointer
-               bg-zinc-50 dark:bg-zinc-900
-               border border-zinc-200 dark:border-zinc-700
-               rounded-lg p-1.5
-               focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                    </div>
-
-                    <div class="flex justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-700">
-                        <button id="cancelActivityBtn"
-                            class="px-3 py-1.5 text-xs font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition">
-                            Cancel
-                        </button>
-                        <button id="saveActivityBtn"
-                            class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-                            Save
-                        </button>
                     </div>
                 </div>
+                <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                    Lead created <span id="leadCreatedAt">-</span>
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="createClientMasterBtn" class="p-2 bg-orange-600 rounded-lg text-white text-sm hidden">
+                    <b class="font-black">+</b> Record
+                </button>
+                <button
+                    class="modal-close text-zinc-400 hover:text-zinc-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100">
+                    ✕
+                </button>
+            </div>
+        </div>
 
-                <div class="flex flex-col gap-1.5 max-h-72 overflow-auto pr-0.5" id="leadActivityContainer">
-                    <div class="w-full p-2 rounded-md text-center">
-                        <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500">No activities found</p>
-                    </div>
+        {{-- Stat strip --}}
+        <div
+            class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-zinc-200 dark:divide-zinc-700 border-t border-zinc-200 dark:border-zinc-700">
+            <div class="px-5 py-3">
+                <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Deal
+                    Value</p>
+                <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100" id="leadEstimatedValue">-</p>
+            </div>
+            <div class="px-5 py-3">
+                <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Assigned
+                    Rep</p>
+                <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100" id="leadAssignedTo">-</p>
+            </div>
+            <div class="px-5 py-3">
+                <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Primary
+                    Contact</p>
+                <div class="flex items-baseline gap-1.5">
+                    <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100" id="leadContactName">-</p>
+                    <p class="text-[11px] text-zinc-400 dark:text-zinc-500" id="leadMobile">-</p>
                 </div>
             </div>
+            <div class="px-5 py-3">
+                <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Expected
+                    Close</p>
+                <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100" id="leadExpectedCloseDate">-</p>
+            </div>
+        </div>
+    </div>
 
-            {{-- Notes --}}
-            <div class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 relative">
+    <div class="flex gap-5 p-5 bg-zinc-50 dark:bg-zinc-900 max-h-[75vh]">
+
+        {{-- ============== RAIL ============== --}}
+        <div class="w-[19rem] shrink-0 overflow-y-auto flex flex-col gap-4 pr-1">
+
+            {{-- Contact (always visible) --}}
+            <div class="relative bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
                 <div class="flex justify-between items-center mb-3">
-                    <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Notes
-                    </p>
-                    <button id="leadAddNoteBtn"
-                        class="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100 hover:bg-zinc-200 text-sm font-semibold text-zinc-600">
-                        +
+                    <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                        Contact</p>
+                    <button id="editContactBtn" aria-haspopup="true" aria-expanded="false"
+                        aria-controls="editContactInfoDropdown"
+                        class="text-zinc-400 hover:text-zinc-600 p-1 rounded-md hover:bg-zinc-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                        </svg>
                     </button>
                 </div>
 
-                <div id="leadNoteDropdown"
-                    class="modaldropdown hidden absolute right-2 bottom-9 w-72 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 z-50 flex flex-col gap-3 shadow-xl shadow-black/10 dark:shadow-black/40">
+                {{-- Edit contact info dropdown --}}
+                <div id="editContactInfoDropdown"
+                    class="modaldropdown hidden absolute right-0 top-11 w-60 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 z-50 shadow-xl shadow-black/10 dark:shadow-black/40">
 
-                    <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Add New
-                        Note</p>
+                    <p class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4">Edit
+                        Contact Information
+                    </p>
 
-                    <div class="flex flex-col gap-1">
-                        <label for="noteInput"
-                            class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Note</label>
-                        <textarea name="noteInput" id="noteInput" rows="3" placeholder="Add note..."
-                            class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"></textarea>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label for="contactName"
+                                class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
+                                Name</label>
+                            <input type="text" name="contactName" id="contactName"
+                                class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label for="contactEmail"
+                                class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
+                                Email</label>
+                            <input type="email" name="contactEmail" id="contactEmail"
+                                class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label for="contactMobile"
+                                class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
+                                Mobile</label>
+                            <input type="text" name="contactMobile" id="contactMobile"
+                                class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        </div>
                     </div>
 
-                    <div class="flex justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-700">
-                        <button id="cancelNoteBtn"
-                            class="px-3 py-1.5 text-xs font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition">
+                    <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700">
+                        <button id="cancelContactInfoBtn"
+                            class="px-4 py-1.5 text-sm font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition">
                             Cancel
                         </button>
-                        <button id="saveNoteBtn"
-                            class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
+                        <button id="saveContactInfoBtn"
+                            class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
                             Save
                         </button>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-1.5 max-h-72 overflow-auto pr-0.5" id="leadNoteContainer">
-                    <div class="w-full p-2 rounded-md text-center">
-                        <p class="text-xs font-semibold text-zinc-400 dark:text-zinc-500">No notes found</p>
+                <div class="flex flex-col gap-3 text-sm">
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Client Type</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadClientType">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Position</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadPosition">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Email</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadEmail">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Landline</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadLandline">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Source</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadSource">-</p>
                     </div>
                 </div>
             </div>
 
+            {{-- Company (expanded by default) --}}
+            <details open class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
+                <summary
+                    class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest cursor-pointer select-none">
+                    Company</summary>
+                <div class="flex flex-col gap-3 text-sm mt-3">
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Company Name</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadCompanyNameFull">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Type of Business</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadTypeOfBusiness">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Industry Description</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadIndustryDescription">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Authorized Signatory</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadAuthorizedSignatoryName">-</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Signatory Position</p>
+                        <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadAuthorizedSignatoryPosition">-
+                        </p>
+                    </div>
+                </div>
+            </details>
+
+            {{-- Addresses (collapsed by default) --}}
+            <details class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
+                <summary
+                    class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest cursor-pointer select-none">
+                    Addresses</summary>
+                <div id="leadAddressListContainer" class="flex flex-col gap-2 max-h-72 overflow-auto p-0.5 mt-3">
+                </div>
+            </details>
+        </div>
+
+        {{-- ============== TABBED PANE ============== --}}
+        <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
+
+            {{-- Tab bar --}}
+            <div class="flex border-b border-zinc-200 dark:border-zinc-700 mb-4 shrink-0">
+                <button type="button" id="tabBtnProposals"
+                    class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition flex items-center gap-1.5 border-orange-500 text-orange-600">
+                    Proposals
+                    <span id="tabBadgeProposals" class="hidden w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                </button>
+                <button type="button" id="tabBtnRequirements"
+                    class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition flex items-center gap-1.5 border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+                    Requirements
+                    <span id="tabBadgeRequirements"
+                        class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 text-[10px] font-semibold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">0</span>
+                </button>
+                <button type="button" id="tabBtnActivity"
+                    class="tab-btn px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition flex items-center gap-1.5 border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+                    Activity
+                    <span id="tabBadgeActivity"
+                        class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 text-[10px] font-semibold rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">0</span>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-0.5">
+
+                {{-- ============== TAB: PROPOSALS ============== --}}
+                <div id="tabPaneProposals" class="tabcontent">
+                    <div class="flex justify-end mb-3">
+                        <button id="leadAddProposalBtn"
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                            + New Proposal
+                        </button>
+                    </div>
+                    <div id="leadProposalContainer"
+                        class="border border-zinc-300 dark:border-zinc-600 rounded-lg flex flex-col h-full overflow-auto p-1 gap-1">
+                    </div>
+                    <div id="leadProposalsPagination"></div>
+                </div>
+
+                {{-- ============== TAB: REQUIREMENTS ============== --}}
+                <div id="tabPaneRequirements" class="tabcontent hidden">
+                    <div class="flex justify-end mb-3">
+                        <button id="leadAddContainerBtn"
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                            + Add Booking Requirement
+                        </button>
+                    </div>
+                    <div id="leadContainerListContainer" class="flex flex-col gap-2 max-h-[60vh] overflow-auto p-0.5">
+                    </div>
+                </div>
+
+                {{-- ============== TAB: ACTIVITY (merged timeline) ============== --}}
+                <div id="tabPaneActivity" class="tabcontent hidden">
+                    <div
+                        class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 flex items-center gap-2 mb-3">
+                        <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg p-1 shrink-0">
+                            <button type="button" data-type="Note"
+                                class="timeline-type-btn active px-3 py-1.5 text-xs font-semibold rounded-md bg-white dark:bg-zinc-700 text-orange-600 dark:text-orange-400 shadow-sm">
+                                Note</button>
+                            <button type="button" data-type="Call"
+                                class="timeline-type-btn px-3 py-1.5 text-xs font-semibold rounded-md text-zinc-500 dark:text-zinc-400">
+                                Call</button>
+                            <button type="button" data-type="Email"
+                                class="timeline-type-btn px-3 py-1.5 text-xs font-semibold rounded-md text-zinc-500 dark:text-zinc-400">
+                                Email</button>
+                        </div>
+                        <input type="text" id="timelineEntryInput" placeholder="Log an update on this lead…"
+                            class="flex-1 min-w-0 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500 transition">
+                        <button type="button" id="timelineAttachmentToggleBtn" title="Attach file"
+                            class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-700 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                                </path>
+                            </svg>
+                        </button>
+                        <button type="button" id="timelineAddBtn"
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm shrink-0">
+                            Add
+                        </button>
+                    </div>
+
+                    <div id="timelineAttachmentRow" class="hidden mb-3">
+                        <input type="file" id="timelineAttachmentInput" name="attachment"
+                            class="block w-full text-xs text-zinc-700 dark:text-zinc-300
+                                file:mr-2 file:py-1.5 file:px-3
+                                file:rounded-lg file:border-0
+                                file:text-xs file:font-medium
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100
+                                cursor-pointer
+                                bg-zinc-50 dark:bg-zinc-900
+                                border border-zinc-200 dark:border-zinc-700
+                                rounded-lg p-1.5
+                                focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </div>
+
+                    <div id="leadTimelineContainer" class="flex flex-col max-h-[26rem] overflow-y-auto pr-1"></div>
+                </div>
+
+            </div>
         </div>
 
     </div>
@@ -933,13 +824,15 @@
             [originSel, destSel].forEach((sel) => sel.addEventListener('change', () => lookupRate(row)));
 
             originLocationSel.addEventListener('change', () => {
-                originSel.innerHTML = `<option value="">Select</option>${portOptionsForLocation(originLocationSel.value)}`;
+                originSel.innerHTML =
+                    `<option value="">Select</option>${portOptionsForLocation(originLocationSel.value)}`;
                 originSel.disabled = !originLocationSel.value;
                 refreshSearchable(originSel);
                 lookupRate(row);
             });
             destLocationSel.addEventListener('change', () => {
-                destSel.innerHTML = `<option value="">Select</option>${portOptionsForLocation(destLocationSel.value)}`;
+                destSel.innerHTML =
+                    `<option value="">Select</option>${portOptionsForLocation(destLocationSel.value)}`;
                 destSel.disabled = !destLocationSel.value;
                 refreshSearchable(destSel);
                 lookupRate(row);
@@ -1160,6 +1053,10 @@
         // values (CV/RF/FR/LC/RC) - not global lookups anymore.
         let leadContainerCatalogByCode = {};
         let leadContainerLookupsLoaded = false;
+        // Cargo Type is LOV-backed (Option "Cargo Type"), same fetch-once /
+        // cache-as-html-string pattern as leadPortsOptionsHtml/leadLocationsOptionsHtml
+        // above, since this card is (re)rendered fresh each time the modal opens.
+        let leadCargoTypeOptionsHtml = '<option value="">Select Cargo Type</option>';
 
         function leadPortOptionsForLocation(locationId) {
             const ports = locationId ?
@@ -1176,7 +1073,7 @@
         async function loadLeadContainerLookups() {
             if (leadContainerLookupsLoaded) return;
 
-            const [portsRes, locationsRes, containersRes] = await Promise.all([
+            const [portsRes, locationsRes, containersRes, cargoTypeRes] = await Promise.all([
                 apiCall({
                     mode: 'GET',
                     url: '/api/ports?per_page=200'
@@ -1188,6 +1085,10 @@
                 apiCall({
                     mode: 'GET',
                     url: '/api/containers?per_page=200'
+                }),
+                apiCall({
+                    mode: 'GET',
+                    url: '/api/listofval/cargotype'
                 }),
             ]);
 
@@ -1211,6 +1112,12 @@
                     };
                 });
             }
+            if (Array.isArray(cargoTypeRes)) {
+                leadCargoTypeOptionsHtml = '<option value="">Select Cargo Type</option>' +
+                    cargoTypeRes.map((lov) => `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(
+                        '');
+            }
+
             leadContainerLookupsLoaded = true;
         }
 
@@ -1224,10 +1131,6 @@
             card.querySelector('[data-field="container_size_id"]').innerHTML =
                 '<option value="">Select Size</option>' +
                 catalog.sizes.map((s) => `<option value="${s.id}">${s.size}</option>`).join('');
-
-            card.querySelector('[data-field="container_class_id"]').innerHTML =
-                '<option value="">Select Class</option>' +
-                catalog.classes.map((c) => `<option value="${c.id}">${c.class}</option>`).join('');
         }
 
         const serviceModeOptionsHtml = (placeholder) =>
@@ -1237,6 +1140,11 @@
         function leadContainerCardHtml() {
             return `
     <div class="lead-container-card space-y-3">
+        <button type="button" class="card-toggle flex items-center gap-2 w-full text-left">
+            <span class="card-toggle-chevron text-xs text-zinc-400 dark:text-zinc-500 transition-transform duration-200 rotate-180">▼</span>
+            <span class="card-summary text-sm font-medium text-zinc-600 dark:text-zinc-300 truncate">New Booking Requirement</span>
+        </button>
+
         <div>
             <label class="text-[11px] text-zinc-400 uppercase">Container Type</label>
             <select data-field="container_type" class="type-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm font-semibold">
@@ -1246,7 +1154,46 @@
 
         <input type="hidden" data-field="booking_unit_type">
 
+        <div class="card-body">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="md:col-span-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Container & Quantity</p>
+            </div>
+            <div class="field-convan-size hidden">
+                <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
+                <select data-field="container_size_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">Select Size</option>
+                </select>
+            </div>
+            <div class="field-temperature hidden">
+                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (&deg;C) <span class="req-asterisk">*</span></label>
+                <input type="number" step="0.1" data-field="minimum_temperature" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div class="field-cbm-ton hidden">
+                <label class="text-[11px] text-zinc-400 uppercase">Estimated CBM/s</label>
+                <input type="number" step="0.01" data-field="estimated_cbm" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div class="field-cbm-ton hidden">
+                <label class="text-[11px] text-zinc-400 uppercase">Estimated Ton/s</label>
+                <input type="number" step="0.01" data-field="estimated_ton" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Quantity <span class="req-asterisk">*</span></label>
+                <input type="number" data-field="quantity" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Frequency <span class="req-asterisk">*</span></label>
+                <select data-field="frequency" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    <option value="">-</option>
+                    <option value="daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-2 pt-2 border-t border-zinc-100 dark:border-zinc-700">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Route</p>
+            </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Origin Location <span class="req-asterisk">*</span></label>
                 <select class="origin-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
@@ -1271,57 +1218,6 @@
                     <option value="">Select Port</option>${leadPortsOptionsHtml}
                 </select>
             </div>
-
-            <div class="field-convan-class hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Class <span class="req-asterisk">*</span></label>
-                <select data-field="container_class_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    <option value="">Select Class</option>
-                </select>
-            </div>
-            <div class="field-convan-size hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">ConVan Size <span class="req-asterisk">*</span></label>
-                <select data-field="container_size_id" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    <option value="">Select Size</option>
-                </select>
-            </div>
-            <div class="field-temperature hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (&deg;C) <span class="req-asterisk">*</span></label>
-                <input type="number" step="0.1" data-field="minimum_temperature" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-            </div>
-
-            <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Quantity <span class="req-asterisk">*</span></label>
-                <input type="number" data-field="quantity" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-            </div>
-
-            <div class="field-cbm-ton hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Estimated CBM/s</label>
-                <input type="number" step="0.01" data-field="estimated_cbm" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-            </div>
-            <div class="field-cbm-ton hidden">
-                <label class="text-[11px] text-zinc-400 uppercase">Estimated Ton/s</label>
-                <input type="number" step="0.01" data-field="estimated_ton" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-            </div>
-
-            <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Declared Value per Unit</label>
-                <input type="text" inputmode="decimal" data-field="declared_value_per_unit" class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-            </div>
-            <div>
-                <label class="text-[11px] text-zinc-400 uppercase">Frequency <span class="req-asterisk">*</span></label>
-                <select data-field="frequency" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    <option value="">-</option>
-                    <option value="daily">Daily</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Monthly">Monthly</option>
-                </select>
-            </div>
-
-            <div class="md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description <span class="req-asterisk">*</span></label>
-                <textarea data-field="general_cargo_description" required rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-            </div>
-
             <div class="field-split-service hidden">
                 <label class="text-[11px] text-zinc-400 uppercase">Service Mode - Origin <span class="req-asterisk">*</span></label>
                 <select data-field="service_mode_origin" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
@@ -1341,6 +1237,31 @@
                 </select>
             </div>
 
+            <div class="md:col-span-2 pt-2 border-t border-zinc-100 dark:border-zinc-700">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Cargo Details</p>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[11px] text-zinc-400 uppercase">Cargo Type</label>
+                <select data-field="cargo_type" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    ${leadCargoTypeOptionsHtml}
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[11px] text-zinc-400 uppercase">General Cargo Description <span class="req-asterisk">*</span></label>
+                <textarea data-field="general_cargo_description" required rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
+            </div>
+            <div>
+                <label class="text-[11px] text-zinc-400 uppercase">Declared Value per Unit</label>
+                <input type="text" inputmode="decimal" data-field="declared_value_per_unit" class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[11px] text-zinc-400 uppercase">Special Requirements</label>
+                <textarea data-field="special_requirements" rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[11px] text-zinc-400 uppercase">Special Notes</label>
+                <textarea data-field="special_notes" rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
+            </div>
             <div class="md:col-span-2">
                 <label class="flex items-center gap-2">
                     <input type="checkbox" data-field="dangerous_cargo">
@@ -1357,23 +1278,44 @@
                 <p class="dg-file-status text-xs text-zinc-500 mt-1"></p>
                 <input type="hidden" data-field="dg_documentary_requirement">
             </div>
-            <div class="md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">Special Requirements</label>
-                <textarea data-field="special_requirements" rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-            </div>
-            <div class="md:col-span-2">
-                <label class="text-[11px] text-zinc-400 uppercase">Special Notes</label>
-                <textarea data-field="special_notes" rows="2" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-            </div>
+        </div>
         </div>
     </div>`;
+        }
+
+        function setLeadContainerCardExpanded(card, expanded) {
+            const body = card.querySelector('.card-body');
+            const chevron = card.querySelector('.card-toggle-chevron');
+            body?.classList.toggle('hidden', !expanded);
+            chevron?.classList.toggle('rotate-180', expanded);
+        }
+
+        function updateLeadContainerCardSummary(card) {
+            const typeSelect = card.querySelector('.type-select');
+            const typeLabel = typeSelect?.options[typeSelect.selectedIndex]?.textContent ?? '';
+
+            const selectedLabel = (select) => (select && select.value) ?
+                (select.options[select.selectedIndex]?.textContent ?? '—') : '—';
+
+            const originPortLabel = selectedLabel(card.querySelector('.origin-port-select'));
+            const originLabel = originPortLabel !== '—' ? originPortLabel :
+                selectedLabel(card.querySelector('.origin-location-select'));
+
+            const destinationPortLabel = selectedLabel(card.querySelector('.destination-port-select'));
+            const destinationLabel = destinationPortLabel !== '—' ? destinationPortLabel :
+                selectedLabel(card.querySelector('.destination-location-select'));
+
+            const quantity = card.querySelector('[data-field="quantity"]')?.value || '—';
+
+            const summaryEl = card.querySelector('.card-summary');
+            if (summaryEl) summaryEl.textContent =
+                `${typeLabel} · ${originLabel} → ${destinationLabel} · Qty: ${quantity}`;
         }
 
         function applyLeadContainerTypeVisibility(card) {
             const type = card.querySelector('.type-select').value;
             const flags = TYPE_FIELD_VISIBILITY[type];
 
-            card.querySelector('.field-convan-class').classList.toggle('hidden', !flags.convanClass);
             card.querySelector('.field-convan-size').classList.toggle('hidden', !flags.convanSize);
             card.querySelector('.field-temperature').classList.toggle('hidden', !flags.temperature);
             card.querySelectorAll('.field-cbm-ton').forEach(el => el.classList.toggle('hidden', !flags.cbmTon));
@@ -1416,27 +1358,45 @@
             wrap.innerHTML = leadContainerCardHtml();
             const card = wrap.firstElementChild;
 
-            ['.origin-location-select', '.origin-port-select', '.destination-location-select', '.destination-port-select']
-                .forEach((sel) => makeSearchableSelect(card.querySelector(sel)));
+            ['.origin-location-select', '.origin-port-select', '.destination-location-select',
+                '.destination-port-select'
+            ]
+            .forEach((sel) => makeSearchableSelect(card.querySelector(sel)));
+
+            card.querySelector('.card-toggle').addEventListener('click', () => {
+                const expand = card.querySelector('.card-body').classList.contains('hidden');
+                setLeadContainerCardExpanded(card, expand);
+            });
 
             card.querySelector('.type-select').addEventListener('change', () => {
                 applyLeadContainerTypeVisibility(card);
                 syncLeadContainerBookingUnitType(card);
                 populateLeadSizeClassOptions(card);
+                updateLeadContainerCardSummary(card);
             });
 
             card.querySelector('.origin-location-select').addEventListener('change', function() {
                 const portSelect = card.querySelector('.origin-port-select');
-                portSelect.innerHTML = `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
+                portSelect.innerHTML =
+                    `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
                 portSelect.disabled = !this.value;
                 refreshSearchable(portSelect);
+                updateLeadContainerCardSummary(card);
             });
             card.querySelector('.destination-location-select').addEventListener('change', function() {
                 const portSelect = card.querySelector('.destination-port-select');
-                portSelect.innerHTML = `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
+                portSelect.innerHTML =
+                    `<option value="">Select Port</option>${leadPortOptionsForLocation(this.value)}`;
                 portSelect.disabled = !this.value;
                 refreshSearchable(portSelect);
+                updateLeadContainerCardSummary(card);
             });
+            card.querySelector('.origin-port-select').addEventListener('change', () =>
+                updateLeadContainerCardSummary(card));
+            card.querySelector('.destination-port-select').addEventListener('change', () =>
+                updateLeadContainerCardSummary(card));
+            card.querySelector('[data-field="quantity"]').addEventListener('input', () =>
+                updateLeadContainerCardSummary(card));
 
             card.querySelector('.dg-file-input').addEventListener('change', async function() {
                 const file = this.files[0];
@@ -1461,6 +1421,7 @@
             applyLeadContainerTypeVisibility(card);
             syncLeadContainerBookingUnitType(card);
             populateLeadSizeClassOptions(card);
+            updateLeadContainerCardSummary(card);
         }
 
         document.getElementById('leadAddContainerBtn').addEventListener('click', async function() {
