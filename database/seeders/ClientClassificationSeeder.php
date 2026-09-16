@@ -13,11 +13,9 @@ class ClientClassificationSeeder extends Seeder
     {
         $option = \App\Models\Option::firstOrCreate(['option_name' => 'Client Classification']);
         foreach ([
-            'Regular',
-            'Key Account',
-            'VIP',
-            'Strategic Partner',
-            'New Client',
+            'Shipper',
+            'Consignee',
+            'Shipper/Consignee (both)',
         ] as $name) {
             \App\Models\ListOfValue::firstOrCreate([
                 'lov_optionId' => $option->option_id,

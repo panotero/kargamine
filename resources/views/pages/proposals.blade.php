@@ -48,6 +48,11 @@
                 <span>Rejected</span>
                 <span id="countRejected">0</span>
             </div>
+            <div class="proposalStatusBtn cursor-pointer border rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border-dashed text-zinc-500 border-zinc-300 dark:text-zinc-400 dark:border-zinc-600"
+                data-status="6">
+                <span>Cancelled</span>
+                <span id="countCancelled">0</span>
+            </div>
         </div>
     </section>
 
@@ -104,6 +109,12 @@
             <tbody id="cpmRatesBody"></tbody>
         </table>
 
+        {{-- Additional Charges - proposal-wide opt-ins, hidden entirely when none apply --}}
+        <div id="cpmAdditionalCharges" class="hidden">
+            <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Additional Charges</p>
+            <div class="flex flex-wrap gap-1.5"></div>
+        </div>
+
         {{-- Attach signed document - only shown when APPROVED --}}
         <div id="cpmSignedSection" class="hidden border-t pt-4">
             <p class="font-semibold text-sm text-zinc-700 mb-2">Attach Signed Proposal</p>
@@ -136,6 +147,8 @@
             </button>
         </div>
         <div class="flex items-center gap-2">
+            <button id="cpmCancelBtn"
+                class="hidden px-4 py-2 text-sm rounded-lg border border-zinc-300 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800">Cancel Proposal</button>
             <button id="cpmDisapproveBtn"
                 class="hidden px-4 py-2 text-sm rounded-lg border border-amber-400 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/30">Disapprove</button>
             <button id="cpmApproveBtn"
@@ -208,7 +221,8 @@
             2: 'Approved',
             3: 'Disapproved',
             4: 'Accepted',
-            5: 'Rejected'
+            5: 'Rejected',
+            6: 'Cancelled'
         };
         const STATUS_BADGE = {
             1: 'bg-amber-100 text-amber-600',
@@ -216,6 +230,7 @@
             3: 'bg-red-100 text-red-600',
             4: 'bg-blue-100 text-blue-700',
             5: 'bg-zinc-200 text-zinc-600',
+            6: 'bg-zinc-200 text-zinc-600',
         };
 
         let currentProposalId = null;
@@ -248,6 +263,7 @@
             document.getElementById('countDisapproved').textContent = counts.disapproved;
             document.getElementById('countAccepted').textContent = counts.accepted;
             document.getElementById('countRejected').textContent = counts.rejected;
+            document.getElementById('countCancelled').textContent = counts.cancelled ?? 0;
             document.getElementById('countAwaitingDecision').textContent = counts.awaiting_decision ?? 0;
         }
 
@@ -370,15 +386,40 @@
                 decisionInfo.classList.add('hidden');
             }
 
-            document.getElementById('cpmRatesBody').innerHTML = p.rates.map((r) => `
+            document.getElementById('cpmRatesBody').innerHTML = p.rates.map((r) => {
+                const ancillary = r.ancillary_services ?? [];
+                const ancillaryRow = ancillary.length ? `
+                    <tr class="border-t">
+                        <td colspan="6" class="py-1 text-[11px] text-zinc-500">
+                            <span class="font-semibold">Ancillary Services:</span>
+                            ${ancillary.map((s) => `${s.required_service ?? '-'}${s.quantity ? ' x' + s.quantity : ''}${s.unit ? ' ' + s.unit : ''}${s.location ? ' (' + s.location + ')' : ''}`).join('; ')}
+                        </td>
+                    </tr>` : '';
+
+                return `
                 <tr class="border-t">
-                    <td class="py-1.5">${r.origin_port ? (r.origin_port.location?.name ?? '-') + ' - ' + r.origin_port.name : '-'} → ${r.destination_port ? (r.destination_port.location?.name ?? '-') + ' - ' + r.destination_port.name : '-'}</td>
+                    <td class="py-1.5">
+                        ${r.origin_port ? (r.origin_port.location?.name ?? '-') + ' - ' + r.origin_port.name : '-'}${r.origin_pickup_area ? ` <span class="text-zinc-400">(Pickup: ${r.origin_pickup_area.area_name})</span>` : ''}
+                        → ${r.destination_port ? (r.destination_port.location?.name ?? '-') + ' - ' + r.destination_port.name : '-'}${r.destination_pickup_area ? ` <span class="text-zinc-400">(Drop-off: ${r.destination_pickup_area.area_name})</span>` : ''}
+                    </td>
                     <td class="py-1.5">${r.container?.name ?? '-'} / ${r.container_class?.class ?? '-'} / ${r.container_size?.size ?? '-'}</td>
                     <td class="py-1.5 text-right">${r.min_van_qty ?? '-'}</td>
                     <td class="py-1.5 text-right">${Number(r.base_rate).toLocaleString()}</td>
                     <td class="py-1.5 text-right">${adjustmentDisplay(r.discount_type, r.discount_value)}</td>
                     <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
-                </tr>
+                </tr>${ancillaryRow}`;
+            }).join('');
+
+            const additionalCharges = [
+                ['include_special_charges', 'Special Charges'],
+                ['include_port_charges', 'Port Charges'],
+                ['include_handling_fee', 'Handling Fee'],
+                ['include_general_charges', 'General Charges'],
+            ].filter(([field]) => p[field]);
+            const chargesEl = document.getElementById('cpmAdditionalCharges');
+            chargesEl.classList.toggle('hidden', additionalCharges.length === 0);
+            chargesEl.querySelector('div').innerHTML = additionalCharges.map(([, label]) => `
+                <span class="text-[11px] font-semibold px-2 py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">${label}</span>
             `).join('');
 
             // Buttons are permission-gated server-side (p.can_approve / p.can_reject)
@@ -387,6 +428,7 @@
             toggle('cpmApproveBtn', p.status === 1 && p.can_approve);
             toggle('cpmDisapproveBtn', p.status === 1 && p.can_approve);
             toggle('cpmRejectBtn', [1, 2].includes(p.status) && p.can_reject);
+            toggle('cpmCancelBtn', p.status === 1 && p.can_cancel);
             toggle('cpmSignedSection', p.status === 2 && p.can_upload_signed);
             toggle('cpmDownloadLink', [2, 4].includes(p.status));
             // A lead-scoped accepted proposal (no client yet) has nowhere to
@@ -444,6 +486,10 @@
         document.getElementById('cpmRejectBtn').addEventListener('click', async function() {
             const confirmed = await customConfirm('Reject this proposal? This cannot be undone.');
             if (confirmed) decisionAction('reject', 'Proposal rejected', this);
+        });
+        document.getElementById('cpmCancelBtn').addEventListener('click', async function() {
+            const confirmed = await customConfirm('Cancel this pending proposal? This cannot be undone.');
+            if (confirmed) decisionAction('cancel', 'Proposal cancelled', this);
         });
 
         document.getElementById('cpmUploadSignedBtn').addEventListener('click', async function() {

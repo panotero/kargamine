@@ -11,14 +11,20 @@ class VatRateSeeder extends Seeder
      * Fixed effective dates (rather than now()/now()->subDay()) so re-seeding
      * on a different calendar day - e.g. production - reproduces the exact
      * same rows as this environment instead of drifting into new ones.
+     *
+     * Tax status list is fixed (not versioned per calendar date the way the
+     * old "General" rows were) - VAT-LS/VAT-LG are the only 12% statuses,
+     * everything else is 0%.
      */
     private const RATES = [
-        ['tax_type' => 'General', 'effective_date' => '2026-07-02', 'rate_percent' => 20.00],
-        ['tax_type' => 'General', 'effective_date' => '2026-07-27', 'rate_percent' => 12.00],
-        ['tax_type' => 'General', 'effective_date' => '2026-08-05', 'rate_percent' => 12.00],
-        ['tax_type' => 'VAT Inclusive', 'effective_date' => '2026-08-06', 'rate_percent' => 12.00],
-        ['tax_type' => 'VAT Exempt', 'effective_date' => '2026-08-06', 'rate_percent' => 0.00],
-        ['tax_type' => 'Non-VAT', 'effective_date' => '2026-08-06', 'rate_percent' => 3.00],
+        ['tax_type' => 'VAT-ZERO-LS', 'effective_date' => '2026-09-08', 'rate_percent' => 0.00],
+        ['tax_type' => 'VAT-ZERO-LG', 'effective_date' => '2026-09-08', 'rate_percent' => 0.00],
+        ['tax_type' => 'VAT-LS', 'effective_date' => '2026-09-08', 'rate_percent' => 12.00],
+        ['tax_type' => 'VAT-LG', 'effective_date' => '2026-09-08', 'rate_percent' => 12.00],
+        ['tax_type' => 'VAT-EXEMPT-LS', 'effective_date' => '2026-09-08', 'rate_percent' => 0.00],
+        ['tax_type' => 'VAT-EXEMPT-LB', 'effective_date' => '2026-09-08', 'rate_percent' => 0.00],
+        ['tax_type' => 'NON-VAT-LS', 'effective_date' => '2026-09-08', 'rate_percent' => 0.00],
+        ['tax_type' => 'NON-VAT-LG', 'effective_date' => '2026-09-08', 'rate_percent' => 0.00],
     ];
 
     public function run(): void

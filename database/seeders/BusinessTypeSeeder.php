@@ -13,7 +13,30 @@ class BusinessTypeSeeder extends Seeder
     public function run(): void
     {
         $option = \App\Models\Option::firstOrCreate(['option_name' => 'Type of Business']);
-        foreach (['Importer', 'Exporter', 'Manufacturer', 'Trading', 'Retail', 'Distributor', 'Others'] as $name) {
+        foreach ([
+            'Accommodation and Food Service Activities',
+            'Activities of Extraterritorial Organizations and Bodies',
+            'Activities of Households as Employers; Undifferentiated Goods- and Services-Producing Activities of Households for own use',
+            'Administrative and Support Service Activities',
+            'Agriculture, Forestry and Fishing',
+            'Arts, Sports and Recreation',
+            'Construction',
+            'Education',
+            'Electricity, Gas, Steam and Air Conditioning Supply',
+            'Financial and Insurance Activities',
+            'Human Health and Social Work Activities',
+            'Manufacturing',
+            'Mining and Quarrying',
+            'Other Service Activities',
+            'Professional, Scientific, and Technical Activities',
+            'Public Administration and Defense; Compulsory Social Security',
+            'Publishing, Broadcasting, and Content Production and Distribution Activities',
+            'Real Estate Activities',
+            'Telecommunications, Computer Programming, Consultancy, Computing Infrastructure, and Other Information Service Activities',
+            'Transportation and Storage',
+            'Water Supply; Sewerage, Waste Management and Remediation',
+            'Wholesale and Retail Trade',
+        ] as $name) {
             \App\Models\ListOfValue::firstOrCreate([
                 'lov_optionId' => $option->option_id,
                 'lov_name' => $name,

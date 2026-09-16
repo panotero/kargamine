@@ -11,7 +11,7 @@ class CrmLead extends Model
 
     public const CONTAINER_TYPES = ['CV', 'FR', 'RF', 'LC', 'RC'];
 
-    public const GENDERS = ['Male', 'Female', 'Rather not say'];
+    public const GENDERS = ['Male', 'Female'];
 
     protected $table = 'crm_leads';
 
@@ -36,6 +36,7 @@ class CrmLead extends Model
         'estimated_value',
         'expected_close_date',
         'status_updated_at',
+        'requires_proposal',
     ];
 
     protected $appends = ['contact_name'];
@@ -43,6 +44,7 @@ class CrmLead extends Model
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
+        'requires_proposal' => 'boolean',
     ];
 
     public function containers()
@@ -291,6 +293,16 @@ class CrmLead extends Model
     public function hasAcceptedProposal(): bool
     {
         return $this->clientProposals()->where('status', ClientProposal::STATUS_ACCEPTED)->exists();
+    }
+
+    /**
+     * Gate for the "Create Client Master" action - leads flagged
+     * requires_proposal need an accepted Proposal first; leads that don't
+     * require one (requires_proposal = false) can convert straight away.
+     */
+    public function canConvertToClient(): bool
+    {
+        return ! $this->requires_proposal || $this->hasAcceptedProposal();
     }
 
     public function formattedPrimaryAddress(): string

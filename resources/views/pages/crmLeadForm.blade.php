@@ -95,6 +95,22 @@
                                 </select>
                                 <input type="text" name="source_other" id="source_other" placeholder="Specify source"
                                     class="hidden w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-2">
+                                <input type="text" name="source_referral_name" id="source_referral_name"
+                                    placeholder="Name of referral"
+                                    class="hidden w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-2">
+                                <input type="text" name="source_social_media_platform" id="source_social_media_platform"
+                                    placeholder="Specify social media platform"
+                                    class="hidden w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-2">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" name="requires_proposal" id="requires_proposal" checked>
+                                    <span class="text-sm dark:text-zinc-200">Require Proposal</span>
+                                </label>
+                                <p class="text-xs text-zinc-400 mt-1">
+                                    When checked, this lead can only be converted to a Client once it has an
+                                    accepted Proposal. Uncheck for opportunities that don't need one.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -108,6 +124,30 @@
                             <p class="text-xs text-orange-600/80 dark:text-orange-400/80 mb-3">If nothing else gets
                                 filled in today, this is what lets you follow up.</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="title" class="text-xs font-medium text-zinc-400 uppercase">Title
+                                        <span id="titleReqAsterisk" class="req-asterisk hidden">*</span></label>
+                                    <select id="title" name="title"
+                                        class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                                        <option value="">Select Title</option>
+                                        <option value="Atty.">Atty.</option>
+                                        <option value="Dr.">Dr.</option>
+                                        <option value="Engr.">Engr.</option>
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                        <option value="Ms.">Ms.</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="gender" class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
+                                    <select id="gender" name="gender"
+                                        class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                                        <option value="">Select Gender</option>
+                                        @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
+                                            <option value="{{ $genderOption }}">{{ $genderOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                                     <label for="first_name" class="text-xs font-medium text-zinc-400 uppercase">First
                                         Name <span class="req-asterisk">*</span></label>
@@ -119,6 +159,12 @@
                                         Name
                                         <span class="req-asterisk">*</span></label>
                                     <input type="text" id="last_name" name="last_name" required
+                                        class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="middle_name" class="text-xs font-medium text-zinc-400 uppercase">Middle
+                                        Name</label>
+                                    <input type="text" id="middle_name" name="middle_name"
                                         class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
                                 </div>
                                 <div class="md:col-span-2 border-l-2 border-orange-400 dark:border-orange-600 pl-3">
@@ -146,39 +192,9 @@
                                 class="text-xs font-normal normal-case text-zinc-400">— optional</span></p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="title" class="text-xs font-medium text-zinc-400 uppercase">Title</label>
-                                <select id="title" name="title"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                                    <option value="">Select Title</option>
-                                    <option value="Mr.">Mr.</option>
-                                    <option value="Mrs.">Mrs.</option>
-                                    <option value="Ms.">Ms.</option>
-                                    <option value="Miss">Miss</option>
-                                    <option value="Dr.">Dr.</option>
-                                    <option value="Engr.">Engr.</option>
-                                    <option value="Atty.">Atty.</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="gender" class="text-xs font-medium text-zinc-400 uppercase">Gender</label>
-                                <select id="gender" name="gender"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                                    <option value="">Select Gender</option>
-                                    @foreach (\App\Models\CrmLead::GENDERS as $genderOption)
-                                        <option value="{{ $genderOption }}">{{ $genderOption }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="middle_name" class="text-xs font-medium text-zinc-400 uppercase">Middle
-                                    Name</label>
-                                <input type="text" id="middle_name" name="middle_name"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                            </div>
-                            <div>
                                 <label for="position"
-                                    class="text-xs font-medium text-zinc-400 uppercase">Position</label>
+                                    class="text-xs font-medium text-zinc-400 uppercase">Position
+                                    <span id="positionReqAsterisk" class="req-asterisk hidden">*</span></label>
                                 <input type="text" id="position" name="position"
                                     class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
                             </div>
@@ -198,7 +214,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="email" class="text-xs font-medium text-zinc-400 uppercase">Email</label>
+                                <label for="email" class="text-xs font-medium text-zinc-400 uppercase">Email
+                                    <span id="emailReqAsterisk" class="req-asterisk hidden">*</span></label>
                                 <div class="flex gap-2 mt-1">
                                     <input type="email" id="email" name="email"
                                         class="flex-1 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
@@ -245,11 +262,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                 <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                                     <label for="type_of_business"
-                                        class="text-xs font-medium text-zinc-400 uppercase">Type of Business <span
+                                        class="text-xs font-medium text-zinc-400 uppercase">Business Type <span
                                             class="req-asterisk">*</span></label>
                                     <select id="type_of_business" name="type_of_business" required
                                         class="typeOfBusinessDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                                        <option value="">Select Type of Business</option>
+                                        <option value="">Select Business Type</option>
                                     </select>
                                 </div>
                                 <div class="md:col-span-2">
@@ -269,6 +286,10 @@
                                     <input type="checkbox" id="signatoryMirrorCheck" checked>
                                     Same as contact person above
                                 </label>
+                                <p class="text-xs text-zinc-400 mb-3">
+                                    While checked, the contact's Title, Position, and Email above are
+                                    also required - they'll be used as the authorized signatory's.
+                                </p>
 
                                 <p id="signatoryMirrorSummary"
                                     class="text-sm text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 mb-3">
@@ -284,13 +305,12 @@
                                                 required
                                                 class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
                                                 <option value="">Select Title</option>
+                                                <option value="Atty.">Atty.</option>
+                                                <option value="Dr.">Dr.</option>
+                                                <option value="Engr.">Engr.</option>
                                                 <option value="Mr.">Mr.</option>
                                                 <option value="Mrs.">Mrs.</option>
                                                 <option value="Ms.">Ms.</option>
-                                                <option value="Miss">Miss</option>
-                                                <option value="Dr.">Dr.</option>
-                                                <option value="Engr.">Engr.</option>
-                                                <option value="Atty.">Atty.</option>
                                             </select>
                                         </div>
                                         <div>
@@ -738,6 +758,8 @@
             const nameLabel = document.getElementById('companyNameLabel');
             if (nameLabel) nameLabel.innerHTML = (isIndividual ? 'Account Name ' : 'Company Name ') +
                 '<span class="req-asterisk">*</span>';
+
+            applyContactFieldsRequiredForSignatoryMirror();
         }
 
         document.querySelectorAll('.client-type-radio').forEach(radio => {
@@ -796,6 +818,33 @@
             document.getElementById('signatoryMirrorSummary')?.classList.toggle('hidden', !checked);
             document.getElementById('signatoryMirrorFields')?.classList.toggle('hidden', checked);
             if (checked) syncSignatoryMirror();
+            applyContactFieldsRequiredForSignatoryMirror();
+        }
+
+        // The Authorized Signatory's own fields require Title, Position, and
+        // Email (see #signatoryMirrorFields above) - while the mirror is on,
+        // those same Contact fields feed the signatory directly, so they must
+        // become required too. Otherwise a Contact left with a blank Title/
+        // Position/Email silently mirrors into an incomplete signatory with
+        // no visible required-field indicator, since the real signatory
+        // fields are hidden while mirroring - see the "requirement input
+        // field on authorized signatory" bug this closes.
+        function applyContactFieldsRequiredForSignatoryMirror() {
+            const clientType = document.querySelector('input[name="client_type"]:checked')?.value ?? 'corporate';
+            const mirrorChecked = document.getElementById('signatoryMirrorCheck')?.checked ?? true;
+            const needed = clientType === 'corporate' && mirrorChecked;
+            const stage1Form = document.getElementById('stage1Form');
+
+            [
+                ['title', 'titleReqAsterisk'],
+                ['position', 'positionReqAsterisk'],
+                ['email', 'emailReqAsterisk'],
+                ['email_type', null],
+            ].forEach(([field, asteriskId]) => {
+                const el = stage1Form.querySelector(`[name="${field}"]`);
+                if (el) el.required = needed;
+                if (asteriskId) document.getElementById(asteriskId)?.classList.toggle('hidden', !needed);
+            });
         }
 
         document.getElementById('signatoryMirrorCheck')?.addEventListener('change', applySignatoryMirrorVisibility);
@@ -838,12 +887,27 @@
             });
         }
 
+        // Lead Source reveals a follow-up input for a few specific values -
+        // "Other" needs the actual source typed out, "Referral" needs who
+        // referred them, "Social Media" needs which platform. Only one of
+        // the three is ever relevant at a time, so switching between them
+        // hides+clears whichever one(s) no longer apply.
+        const SOURCE_FOLLOWUP_INPUTS = {
+            'Other': 'source_other',
+            'Referral': 'source_referral_name',
+            'Social Media': 'source_social_media_platform',
+        };
+
         document.querySelector('.leadSourceDropdown').addEventListener('change', function() {
-            const otherInput = document.querySelector('[name="source_other"]');
-            const isOther = this.value === 'Other';
-            otherInput.classList.toggle('hidden', !isOther);
-            otherInput.required = isOther;
-            if (!isOther) otherInput.value = '';
+            const activeField = SOURCE_FOLLOWUP_INPUTS[this.value];
+
+            Object.values(SOURCE_FOLLOWUP_INPUTS).forEach((name) => {
+                const input = document.querySelector(`[name="${name}"]`);
+                const isActive = name === activeField;
+                input.classList.toggle('hidden', !isActive);
+                input.required = isActive;
+                if (!isActive) input.value = '';
+            });
         });
 
         // -------------------- STAGE 1 --------------------
@@ -858,15 +922,88 @@
             });
         }
 
+        // A blank type next to a filled-in value is ambiguous (personal or
+        // business number?) - checked against the flat `data` object built
+        // from FormData just before save, for both Contact and (whether
+        // manually entered or mirrored) Authorized Signatory fields.
+        const VALUE_TYPE_PAIRS = [
+            ['mobile', 'mobile_type', 'Mobile Number'],
+            ['landline_number', 'landline_type', 'Landline Number'],
+            ['email', 'email_type', 'Email'],
+            ['authorized_signatory_mobile', 'authorized_signatory_mobile_type', "Authorized Signatory's Mobile Number"],
+            ['authorized_signatory_landline', 'authorized_signatory_landline_type', "Authorized Signatory's Landline Number"],
+            ['authorized_signatory_email', 'authorized_signatory_email_type', "Authorized Signatory's Email"],
+        ];
+
+        function findMissingTypeFields(data, pairs) {
+            return pairs
+                .filter(([valueField, typeField]) => data[valueField] && !data[typeField])
+                .map(([, , label]) => label);
+        }
+
         document.getElementById('saveStage1Btn').addEventListener('click', async function() {
             const form = document.getElementById('stage1Form');
             const data = Object.fromEntries(new FormData(form).entries());
 
-            // "Other" reveals a text input - whatever was typed becomes the actual source.
-            data.source = data.source_select === 'Other' ? (data.source_other || '') : (data
-                .source_select || '');
+            // "Other" reveals a text input whose value REPLACES the source entirely;
+            // "Referral"/"Social Media" instead APPEND detail after the category,
+            // so the base category stays identifiable in the stored string.
+            if (data.source_select === 'Other') {
+                data.source = data.source_other || '';
+            } else if (data.source_select === 'Referral' && data.source_referral_name) {
+                data.source = `Referral - ${data.source_referral_name}`;
+            } else if (data.source_select === 'Social Media' && data.source_social_media_platform) {
+                data.source = `Social Media - ${data.source_social_media_platform}`;
+            } else {
+                data.source = data.source_select || '';
+            }
             delete data.source_select;
             delete data.source_other;
+            delete data.source_referral_name;
+            delete data.source_social_media_platform;
+
+            data.requires_proposal = document.getElementById('requires_proposal').checked;
+
+            // A phone/email number without a Personal/Business type is
+            // ambiguous data - block the save rather than let it through
+            // silently with a blank type.
+            const missingTypeFields = findMissingTypeFields(data, VALUE_TYPE_PAIRS);
+            if (missingTypeFields.length) {
+                showMessage({
+                    status: 'error',
+                    title: 'Select a type for each filled-in field',
+                    message: `Choose a type for: ${missingTypeFields.join(', ')}.`,
+                });
+                return;
+            }
+
+            // Submission here is fetch-driven, not a native form submit, so the
+            // `required` attribute set by applyContactFieldsRequiredForSignatoryMirror()
+            // is purely visual and never actually blocks anything on its own -
+            // this is the actual gate. Without it, a Corporate lead with the
+            // mirror checked but Contact's Title/Position/Email left blank
+            // saves "successfully" here, only to later fail the Authorized
+            // Signatory completeness check with no clear indication why.
+            if (
+                document.querySelector('input[name="client_type"]:checked')?.value !== 'individual' &&
+                document.getElementById('signatoryMirrorCheck')?.checked
+            ) {
+                const missingMirrorFields = [];
+                if (!data.title) missingMirrorFields.push('Title');
+                if (!data.position) missingMirrorFields.push('Position');
+                if (!data.email) missingMirrorFields.push('Email');
+                if (missingMirrorFields.length) {
+                    showMessage({
+                        status: 'error',
+                        title: 'Authorized Signatory needs more info',
+                        message: `Since "Same as contact person above" is checked, the contact's ` +
+                            `${missingMirrorFields.join(', ')} ${missingMirrorFields.length > 1 ? 'are' : 'is'} ` +
+                            `also required. Fill ${missingMirrorFields.length > 1 ? 'them' : 'it'} in, or ` +
+                            `uncheck the box to enter the signatory's details separately.`,
+                    });
+                    return;
+                }
+            }
 
             const addresses = collectAddresses();
             if (!addresses.length) {
@@ -949,7 +1086,7 @@
                 <input type="number" step="0.01" id="container_${index}_estimated_ton" data-field="estimated_ton" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
             <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                <label for="container_${index}_quantity" class="text-[11px] text-zinc-400 uppercase">Quantity unit/s<span class="req-asterisk">*</span></label>
+                <label for="container_${index}_quantity" class="text-[11px] text-zinc-400 uppercase">Quantity<span class="req-asterisk">*</span></label>
                 <input type="number" id="container_${index}_quantity" data-field="quantity" required class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
             <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
@@ -1132,6 +1269,61 @@
         }
 
 
+        // -------------------- Duplicate booking-requirement detection --------------------
+        // Same container type + route + size as an existing card almost always means the
+        // rep re-entered a requirement instead of bumping its quantity - point them back at
+        // the existing card (collapsed + highlighted) rather than silently allowing a duplicate.
+        function containerCardSignature(card) {
+            return {
+                type: card.querySelector('.type-select')?.value || '',
+                originPortId: card.querySelector('[data-field="origin_port_id"]')?.value || '',
+                destinationPortId: card.querySelector('[data-field="destination_port_id"]')?.value || '',
+                sizeId: card.querySelector('[data-field="container_size_id"]')?.value || '',
+            };
+        }
+
+        function findDuplicateContainerCard(card) {
+            const sig = containerCardSignature(card);
+            if (!sig.type || !sig.originPortId || !sig.destinationPortId) return null;
+
+            return Array.from(document.querySelectorAll('.container-card')).find(other => {
+                if (other === card) return false;
+                const otherSig = containerCardSignature(other);
+                return otherSig.type === sig.type &&
+                    otherSig.originPortId === sig.originPortId &&
+                    otherSig.destinationPortId === sig.destinationPortId &&
+                    otherSig.sizeId === sig.sizeId;
+            }) || null;
+        }
+
+        function clearDuplicateHighlight(card) {
+            card.classList.remove('border-2', 'border-orange-500', 'dark:border-orange-500');
+            card.removeAttribute('title');
+            card.removeAttribute('aria-label');
+        }
+
+        function flagDuplicateContainerCard(duplicateCard) {
+            setContainerCardExpanded(duplicateCard, false);
+            duplicateCard.classList.add('border-2', 'border-orange-500', 'dark:border-orange-500');
+            const tooltip = 'Edit this if you want to add more quantity';
+            duplicateCard.title = tooltip;
+            duplicateCard.setAttribute('aria-label', tooltip);
+        }
+
+        function checkContainerCardDuplicate(card) {
+            document.querySelectorAll('.container-card').forEach(clearDuplicateHighlight);
+
+            const duplicate = findDuplicateContainerCard(card);
+            if (!duplicate) return;
+
+            showMessage({
+                status: 'warning',
+                title: 'Already on the list',
+                message: 'A booking requirement with the same container type, route, and size is already on the list.',
+            });
+            flagDuplicateContainerCard(duplicate);
+        }
+
         async function uploadDgFile(file) {
             const formData = new FormData();
             formData.append('dg_document', file);
@@ -1182,7 +1374,10 @@
                 syncBookingUnitType(card);
                 populateSizeClassOptions(card);
                 updateContainerCardSummary(card);
+                checkContainerCardDuplicate(card);
             });
+            card.querySelector('[data-field="container_size_id"]').addEventListener('change', () =>
+                checkContainerCardDuplicate(card));
             card.querySelector('.remove-container').addEventListener('click', () => card.remove());
 
             card.querySelector('.card-toggle').addEventListener('click', () => {
@@ -1216,10 +1411,14 @@
                 refreshSearchable(portSelect);
                 updateContainerCardSummary(card);
             });
-            card.querySelector('.origin-port-select').addEventListener('change', () =>
-                updateContainerCardSummary(card));
-            card.querySelector('.destination-port-select').addEventListener('change', () =>
-                updateContainerCardSummary(card));
+            card.querySelector('.origin-port-select').addEventListener('change', () => {
+                updateContainerCardSummary(card);
+                checkContainerCardDuplicate(card);
+            });
+            card.querySelector('.destination-port-select').addEventListener('change', () => {
+                updateContainerCardSummary(card);
+                checkContainerCardDuplicate(card);
+            });
             card.querySelector('[data-field="quantity"]').addEventListener('input', () =>
                 updateContainerCardSummary(card));
 
@@ -1366,6 +1565,8 @@
             if (clientTypeRadio) clientTypeRadio.checked = true;
             applyClientTypeVisibility();
 
+            document.getElementById('requires_proposal').checked = lead.requires_proposal !== false;
+
             ['company_name', 'type_of_business', 'industry_description'].forEach(key => {
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = company[key] ?? '';
@@ -1390,19 +1591,35 @@
             // authorized_signatory_* values just set above from saved data.
             updateSignatoryMirrorSummary();
 
-            // Lead source - select the matching option, or fall back to "Other" + the
-            // free-text input when the saved value isn't one of the known options.
+            // Lead source - select the matching option; reconstruct the
+            // Referral/Social Media category + detail from the stored
+            // "Category - detail" string, or fall back to "Other" + the
+            // free-text input when the saved value isn't one of the known
+            // options at all.
             const sourceSelect = document.querySelector('.leadSourceDropdown');
-            const sourceOtherInput = stage1Form.querySelector('[name="source_other"]');
             const knownSource = Array.from(sourceSelect.options).some(o => o.value === lead
                 .source);
+            const referralMatch = lead.source?.match(/^Referral - (.*)$/);
+            const socialMediaMatch = lead.source?.match(/^Social Media - (.*)$/);
+
             if (lead.source && knownSource) {
                 sourceSelect.value = lead.source;
+            } else if (referralMatch) {
+                sourceSelect.value = 'Referral';
+            } else if (socialMediaMatch) {
+                sourceSelect.value = 'Social Media';
             } else if (lead.source) {
                 sourceSelect.value = 'Other';
-                sourceOtherInput.value = lead.source;
             }
             sourceSelect.dispatchEvent(new Event('change'));
+
+            if (referralMatch) {
+                stage1Form.querySelector('[name="source_referral_name"]').value = referralMatch[1];
+            } else if (socialMediaMatch) {
+                stage1Form.querySelector('[name="source_social_media_platform"]').value = socialMediaMatch[1];
+            } else if (lead.source && !knownSource) {
+                stage1Form.querySelector('[name="source_other"]').value = lead.source;
+            }
 
             document.getElementById('addressesContainer').innerHTML = '';
             const addresses = (lead.addresses && lead.addresses.length) ? lead.addresses : [{
@@ -1531,6 +1748,10 @@
                 option.textContent = name;
 
                 option.dataset.code = item.code;
+                // Only cities/municipalities carry a zip_code from the PSGC API -
+                // PH postal codes are assigned per city/municipality, not per
+                // barangay, so this is blank for province/barangay options.
+                if (item.zip_code) option.dataset.zip = item.zip_code;
 
                 select.appendChild(option);
 
@@ -1735,6 +1956,14 @@
             city.addEventListener("change", function() {
                 const cityCode = this.selectedOptions[0]?.dataset.code;
                 loadBarangaysForCity(cityCode);
+
+                // Postal codes in the Philippines are assigned per city/
+                // municipality, not per barangay - auto-fill from the PSGC
+                // API's zip_code field the moment the city is picked, rather
+                // than waiting on/tying it to barangay selection.
+                const postalInput = container.querySelector('[data-field="address_postal_code"]');
+                const zip = this.selectedOptions[0]?.dataset.zip;
+                if (postalInput && zip) postalInput.value = zip;
             });
 
             // Exposed so hydrateAddressCard() can cascade a saved province/city

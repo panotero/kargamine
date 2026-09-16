@@ -43,10 +43,7 @@
 </div>
 
 {{-- Complete-client detail modal - left rail (read-only reference facts) +
-     right pane with a tab bar. Proposals/Contracts are ordered first since
-     this modal is usually opened on an already-complete client specifically
-     to work a proposal or contract, matching how the CRM Lead Info modal
-     orders its own tabs. --}}
+     right pane with a tab bar. Company Info & Addresses is the initial tab. --}}
 <x-modal id="ClientDetailModal" maxWidth="lg:max-w-[78vw]">
     <div class="p-5 border-b flex justify-between items-center">
         <div>
@@ -59,11 +56,11 @@
     <div class="flex" style="max-height: 75vh;">
 
         {{-- ================= LEFT RAIL - read-only reference data ================= --}}
+        {{-- Company section (Mnemonic/Category/Classification/Industry) removed -
+             it duplicated the editable Company Info & Addresses tab, which is now
+             the modal's initial tab. Ownership (CSR/Account Manager) stays - it's
+             not shown anywhere else in this modal. --}}
         <div class="w-64 shrink-0 border-r border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4 space-y-6 overflow-y-auto">
-            <div>
-                <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Company</p>
-                <div id="cdRailCompany" class="space-y-3"></div>
-            </div>
             <div>
                 <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Ownership</p>
                 <div id="cdRailOwnership" class="space-y-3"></div>
@@ -73,13 +70,13 @@
         {{-- ================= RIGHT PANE - tab bar + panes ================= --}}
         <div class="flex-1 min-w-0 flex flex-col">
             <div class="flex gap-1 border-b border-zinc-200 dark:border-zinc-700 px-3 pt-2 shrink-0">
+                <button type="button" data-tab="company"
+                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Company
+                    Info &amp; Addresses</button>
                 <button type="button" data-tab="proposals"
                     class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Proposals</button>
                 <button type="button" data-tab="contracts"
                     class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Contracts</button>
-                <button type="button" data-tab="company"
-                    class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Company
-                    Info &amp; Addresses</button>
                 <button type="button" data-tab="contacts"
                     class="cd-tab-btn px-3 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">Contacts</button>
                 <button type="button" data-tab="finance"
@@ -90,7 +87,7 @@
             <div class="flex-1 overflow-y-auto p-5">
 
                 {{-- ================= TAB: PROPOSALS ================= --}}
-                <div class="cd-tab-pane" data-tab-pane="proposals">
+                <div class="cd-tab-pane hidden" data-tab-pane="proposals">
                     <div class="flex justify-between items-center mb-3">
                         <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Proposals</p>
                         <button id="cdAddProposalBtn"
@@ -113,7 +110,7 @@
                 </div>
 
                 {{-- ================= TAB: COMPANY INFO & ADDRESSES ================= --}}
-                <div class="cd-tab-pane hidden" data-tab-pane="company">
+                <div class="cd-tab-pane" data-tab-pane="company">
                     <div class="flex justify-between items-center mb-3">
                         <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Company Info &amp;
                             Addresses</p>
@@ -181,6 +178,14 @@
                                     <select name="industry"
                                         class="cdIndustrySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900">
                                         <option value="">Select Industry</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-400 uppercase">Industry
+                                        Sub-Category</label>
+                                    <select name="industry_subcategory" disabled
+                                        class="cdIndustrySubcategorySelect w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:text-zinc-900 disabled:opacity-50 disabled:bg-zinc-100">
+                                        <option value="">Select Industry First</option>
                                     </select>
                                 </div>
                             </form>
@@ -547,13 +552,18 @@
         fillCdStage1Lovs();
 
         // Same hardcoded lists as clientMasterForm.blade.php - keep in sync.
-        const CD_MODE_OF_PAYMENT_OPTIONS = ['Cash', 'Credit'];
-        const CD_CREDIT_TERMS_OPTIONS = ['COD', '7 Days', '15 Days', '30 Days', '45 Days', '60 Days', '90 Days'];
-        const CD_CRO_OPTIONS = ['Manual', 'Automatic'];
+        const CD_MODE_OF_PAYMENT_OPTIONS = ['Advance Payment', 'Payment Prior to Release', 'Credit Account'];
+        const CD_CREDIT_TERMS_OPTIONS = ['Net 7', 'Net 15', 'Net 30', 'Net 45', 'Net 60', 'Net 90'];
+        const CD_CRO_OPTIONS = ['Auto Approval', 'Manual Approval'];
 
         // { tax_type: rate_percent } lookup built from the active vatRates rows,
         // used to auto-fill Tax Percent when Registered Tax Type changes.
         let cdTaxTypeRatesMap = {};
+
+        // Populated with the full lov_id-carrying list (not just lov_name) so
+        // the Industry Sub-Category select can cascade off whichever
+        // Industry row is picked - see populateIndustrySubcategoryOptions().
+        let cdIndustryData = [];
 
         async function fillCdStage1Lovs() {
             const fill = (selector, list) => {
@@ -563,10 +573,12 @@
                         `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
                 }
             };
-            fill('.cdIndustrySelect', await apiCall({
+            const industryList = await apiCall({
                 mode: 'GET',
                 url: '/api/listofval/industry'
-            }));
+            });
+            cdIndustryData = Array.isArray(industryList) ? industryList : [];
+            fill('.cdIndustrySelect', cdIndustryData);
             fill('.cdClientCategorySelect', await apiCall({
                 mode: 'GET',
                 url: '/api/listofval/clientcategory'
@@ -601,6 +613,33 @@
                 fillPlain('.cdRegisteredTaxTypeSelect', Object.keys(cdTaxTypeRatesMap));
             }
         }
+
+        // Cascades off whichever Industry row is selected, same shape as the
+        // origin-location -> origin-port cascade elsewhere in the app.
+        async function populateIndustrySubcategoryOptions(select, parentLovId, selected) {
+            if (!select) return;
+            select.innerHTML = '<option value="">Select Sub-Category</option>';
+            select.disabled = !parentLovId;
+            if (!parentLovId) return;
+
+            const list = await apiCall({
+                mode: 'GET',
+                url: `/api/listofval/industrysubcategory?parent_lov_id=${parentLovId}`
+            });
+            if (Array.isArray(list)) {
+                select.insertAdjacentHTML('beforeend', list.map((lov) =>
+                    `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join(''));
+            }
+            if (selected) select.value = selected;
+        }
+
+        document.querySelector('.cdIndustrySelect').addEventListener('change', function() {
+            const industry = cdIndustryData.find((lov) => lov.lov_name === this.value);
+            populateIndustrySubcategoryOptions(
+                document.querySelector('.cdIndustrySubcategorySelect'),
+                industry?.lov_id ?? null
+            );
+        });
 
         function statusBadge(isComplete) {
             return isComplete ?
@@ -768,9 +807,7 @@
             exitContactsEditMode();
             exitFinanceEditMode();
 
-            // Proposals/Contracts are the reason this modal usually gets
-            // opened on an already-complete client - default to that tab.
-            switchClientDetailTab('proposals');
+            switchClientDetailTab('company');
 
             loadProposals(uuid, 1);
             loadContracts(uuid);
@@ -822,13 +859,6 @@
         }
 
         function renderClientRail(c) {
-            document.getElementById('cdRailCompany').innerHTML = [
-                railFact('Client Mnemonic', c.client_mnemonic),
-                railFact('Client Category', c.client_category),
-                railFact('Client Classification', c.client_classification),
-                railFact('Client Industry', c.industry),
-            ].join('');
-
             document.getElementById('cdRailOwnership').innerHTML = [
                 railFact('CSR', c.sales_rep?.name),
                 railFact('Account Manager', c.account_manager?.name),
@@ -844,6 +874,7 @@
                 <p><span class="text-zinc-400">Client Category:</span> ${c.client_category ?? '-'}</p>
                 <p><span class="text-zinc-400">Client Classification:</span> ${c.client_classification ?? '-'}</p>
                 <p><span class="text-zinc-400">Client Industry:</span> ${c.industry ?? '-'}</p>
+                <p><span class="text-zinc-400">Industry Sub-Category:</span> ${c.industry_subcategory ?? '-'}</p>
             `;
 
             renderAddressesReadView(c.addresses ?? []);
@@ -939,6 +970,13 @@
                 const el = stage1Form.querySelector(`[name="${key}"]`);
                 if (el) el.value = val ?? '';
             });
+
+            const industry = cdIndustryData.find((lov) => lov.lov_name === c.industry);
+            populateIndustrySubcategoryOptions(
+                document.querySelector('.cdIndustrySubcategorySelect'),
+                industry?.lov_id ?? null,
+                c.industry_subcategory
+            );
 
             document.getElementById('cdAddressesEditContainer').innerHTML = '';
             const addresses = (c.addresses && c.addresses.length) ? c.addresses : [{
@@ -1048,14 +1086,41 @@
             });
         }
 
+        // A blank type next to a filled-in value is ambiguous (mobile or
+        // landline? business or personal?) - checked per row just before save.
+        const CONTACT_ROW_VALUE_TYPE_PAIRS = [
+            ['contact_number', 'contact_number_type', 'Contact Number'],
+            ['contact_email', 'contact_email_type', 'Email'],
+        ];
+
+        function findMissingTypeFields(data, pairs) {
+            return pairs
+                .filter(([valueField, typeField]) => data[valueField] && !data[typeField])
+                .map(([, , label]) => label);
+        }
+
         document.getElementById('ctSaveBtn').addEventListener('click', async function() {
             if (!currentClientUuid) return;
+
+            const contacts = collectRows('cdContactsEditContainer', 'contact-row');
+            for (let i = 0; i < contacts.length; i++) {
+                const missingTypeFields = findMissingTypeFields(contacts[i], CONTACT_ROW_VALUE_TYPE_PAIRS);
+                if (missingTypeFields.length) {
+                    const name = contacts[i].contact_name || `Contact #${i + 1}`;
+                    showMessage({
+                        status: 'error',
+                        title: 'Select a type for each filled-in field',
+                        message: `${name}: choose a type for ${missingTypeFields.join(', ')}.`,
+                    });
+                    return;
+                }
+            }
 
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
                 payload: {
-                    contacts: collectRows('cdContactsEditContainer', 'contact-row'),
+                    contacts,
                 },
                 url: `/api/clientMasters/${currentClientUuid}/stage2`,
                 button: this,
@@ -1099,7 +1164,7 @@
                 <p><span class="text-zinc-400">Tax Percent:</span> ${f.tax_percent ?? '-'}</p>
                 <p><span class="text-zinc-400">Withholding Tax Percent:</span> ${f.withholding_tax_percent ?? '-'}</p>
                 <p><span class="text-zinc-400">Mode of Payment:</span> ${f.mode_of_payment ?? '-'}</p>
-                ${f.mode_of_payment === 'Credit' ? `<p><span class="text-zinc-400">Credit Terms:</span> ${f.credit_terms ?? '-'}</p>` : ''}
+                ${f.mode_of_payment === 'Credit Account' ? `<p><span class="text-zinc-400">Credit Terms:</span> ${f.credit_terms ?? '-'}</p>` : ''}
                 <p><span class="text-zinc-400">Cargo Release Order (CRO):</span> ${f.cro ?? '-'}</p>
             `;
 
@@ -1201,7 +1266,7 @@
         // -------- Finance: Mode of Payment -> Credit Terms (mirrors clientMasterForm.blade.php) --------
         function applyCdModeOfPaymentVisibility() {
             const mode = document.querySelector('#cdStage3Form [name="finance[mode_of_payment]"]')?.value;
-            document.getElementById('cdCreditTermsField').classList.toggle('hidden', mode !== 'Credit');
+            document.getElementById('cdCreditTermsField').classList.toggle('hidden', mode !== 'Credit Account');
         }
 
         document.querySelector('#cdStage3Form [name="finance[mode_of_payment]"]')
@@ -1260,9 +1325,9 @@
                 <div class="flex gap-1">
                     <input type="email" data-field="contact_email" placeholder="Email" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
                     <select data-field="contact_email_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
-                        <option value="">Type</option>
-                        <option value="personal">Personal</option>
-                        <option value="business">Business</option>
+                        <option value="">-</option>
+                        <option value="Business">Business</option>
+                        <option value="Personal">Personal</option>
                     </select>
                 </div>
                 <input type="text" data-field="role" placeholder="Role" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">

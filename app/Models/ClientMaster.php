@@ -17,6 +17,7 @@ class ClientMaster extends Model
         'client_category',
         'client_classification',
         'industry',
+        'industry_subcategory',
         'sales_rep_id',
         'account_manager_id',
         'current_stage',

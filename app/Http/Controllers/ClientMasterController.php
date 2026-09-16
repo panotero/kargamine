@@ -101,6 +101,7 @@ class ClientMasterController extends Controller
                 Rule::unique('client_masters', 'client_mnemonic')->ignore($request->input('uuid'), 'uuid'),
             ],
             'industry' => ['nullable', 'string', 'max:255'],
+            'industry_subcategory' => ['nullable', 'string', 'max:255'],
             'client_category' => ['nullable', 'string', 'max:255'],
             'client_classification' => ['nullable', 'string', 'max:255'],
 
@@ -233,11 +234,11 @@ class ClientMasterController extends Controller
             'contacts.*.gender' => ['nullable', 'string', 'max:255'],
             'contacts.*.position' => ['nullable', 'string', 'max:255'],
             'contacts.*.landline_number' => ['nullable', 'string', 'max:255'],
-            'contacts.*.landline_type' => ['nullable', 'in:personal,business'],
+            'contacts.*.landline_type' => ['nullable', 'in:Business,Personal'],
             'contacts.*.mobile' => ['nullable', 'string', 'max:255'],
-            'contacts.*.mobile_type' => ['nullable', 'in:personal,business'],
+            'contacts.*.mobile_type' => ['nullable', 'in:Business,Personal'],
             'contacts.*.email' => ['nullable', 'email', 'max:255'],
-            'contacts.*.email_type' => ['nullable', 'in:personal,business'],
+            'contacts.*.email_type' => ['nullable', 'in:Business,Personal'],
 
             'contacts.*.addresses' => ['nullable', 'array'],
             'contacts.*.addresses.*.address_type' => ['nullable', 'string', 'max:255'],
@@ -310,11 +311,11 @@ class ClientMasterController extends Controller
             'finance.line_of_business' => ['nullable', 'string', 'max:255'],
             'finance.tax_percent' => ['nullable', 'numeric'],
             'finance.withholding_tax_percent' => ['nullable', 'numeric'],
-            'finance.credit_terms' => ['nullable', 'string', 'max:255'],
-            'finance.mode_of_payment' => ['nullable', 'in:Cash,Credit'],
-            // Cargo Release Order - Manual or Automatic. Not a user
+            'finance.credit_terms' => ['nullable', 'in:Net 7,Net 15,Net 30,Net 45,Net 60,Net 90'],
+            'finance.mode_of_payment' => ['nullable', 'in:Advance Payment,Payment Prior to Release,Credit Account'],
+            // Cargo Release Order - Auto or Manual Approval. Not a user
             // reference despite the "CRO" name.
-            'finance.cro' => ['nullable', 'in:Manual,Automatic'],
+            'finance.cro' => ['nullable', 'in:Auto Approval,Manual Approval'],
 
             'commodity_declared_values' => ['nullable', 'array'],
             'commodity_declared_values.*.commodity_type' => ['nullable', 'string', 'max:255'],

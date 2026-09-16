@@ -301,7 +301,7 @@
                     </div>
                     <div>
                         <p class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                            Type of Business</p>
+                            Business Type</p>
                         <p class="font-medium text-zinc-800 dark:text-zinc-200" id="leadTypeOfBusiness">-</p>
                     </div>
                     <div>
@@ -468,14 +468,68 @@
                 Add Container</button>
         </div>
         <div id="leadProposalRatesContainer" class="space-y-3"></div>
+
+        {{-- Additional Charges - proposal-wide opt-ins, not per container line. Only
+             meaningful when creating a brand new proposal - hidden while appending
+             containers to an existing one (see proposalModalContext.mode). --}}
+        <div id="leadProposalChargesSection" class="mt-4 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
+            <div class="flex items-center justify-between gap-3 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                <div>
+                    <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Additional Charges</p>
+                    <p class="text-xs text-zinc-400">Optional — applies once to the whole proposal, not per container line</p>
+                </div>
+                <label
+                    class="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded-full px-3 py-1.5 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 shrink-0">
+                    <input type="checkbox" id="chargesSelectAll" class="accent-orange-500">
+                    Check all
+                </label>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
+                <label class="charge-option flex items-start gap-2 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500">
+                    <input type="checkbox" class="charge-item accent-orange-500 mt-0.5" data-field="include_special_charges">
+                    <span>
+                        <span class="block text-sm font-semibold text-zinc-700 dark:text-zinc-200">Special Charges</span>
+                        <span class="block text-[11px] text-zinc-400">Extra fees beyond standard freight</span>
+                    </span>
+                </label>
+                <label class="charge-option flex items-start gap-2 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500">
+                    <input type="checkbox" class="charge-item accent-orange-500 mt-0.5" data-field="include_port_charges">
+                    <span>
+                        <span class="block text-sm font-semibold text-zinc-700 dark:text-zinc-200">Port Charges</span>
+                        <span class="block text-[11px] text-zinc-400">Terminal handling &amp; port fees</span>
+                    </span>
+                </label>
+                <label class="charge-option flex items-start gap-2 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500">
+                    <input type="checkbox" class="charge-item accent-orange-500 mt-0.5" data-field="include_handling_fee">
+                    <span>
+                        <span class="block text-sm font-semibold text-zinc-700 dark:text-zinc-200">Handling Fee</span>
+                        <span class="block text-[11px] text-zinc-400">Loading / unloading labor</span>
+                    </span>
+                </label>
+                <label class="charge-option flex items-start gap-2 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500">
+                    <input type="checkbox" class="charge-item accent-orange-500 mt-0.5" data-field="include_general_charges">
+                    <span>
+                        <span class="block text-sm font-semibold text-zinc-700 dark:text-zinc-200">General Charges</span>
+                        <span class="block text-[11px] text-zinc-400">Miscellaneous administrative fees</span>
+                    </span>
+                </label>
+            </div>
+        </div>
     </div>
 
     <div
-        class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 sticky bottom-0 bg-white dark:bg-zinc-900">
-        <button type="button"
-            class="modal-close px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">Cancel</button>
-        <button type="button" id="leadProposalSaveBtn"
-            class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save Proposal</button>
+        class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-between items-center gap-2 sticky bottom-0 bg-white dark:bg-zinc-900">
+        <div>
+            <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">Proposal Total</p>
+            <p class="text-lg font-bold text-zinc-800 dark:text-zinc-100" id="leadProposalTotalDisplay">₱0.00</p>
+            <p class="text-xs text-zinc-400" id="leadProposalLineCount">0 container lines</p>
+        </div>
+        <div class="flex gap-2">
+            <button type="button"
+                class="modal-close px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">Cancel</button>
+            <button type="button" id="leadProposalSaveBtn"
+                class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">Save Proposal</button>
+        </div>
     </div>
 </x-side-modal>
 
@@ -520,6 +574,8 @@
             document.getElementById('leadProposalRatesContainer').innerHTML = '';
             await loadContainerLookups();
             await prefillFromLeadContainers();
+            resetChargesCheckboxes();
+            applyChargesSectionVisibility();
             initSideModal({
                 modalId: 'LeadAddProposalModal'
             });
@@ -547,6 +603,17 @@
                 const rows = document.querySelectorAll('#leadProposalRatesContainer [data-row]');
                 applyRowDefaults(rows[rows.length - 1], def);
             });
+            collapseAllProposalLinesIfMultiple();
+        }
+
+        // A single freshly-added line stays expanded so the rep can fill it
+        // in immediately; 2+ pre-filled lines (lead defaults, duplicate)
+        // collapse to their summary rows instead - otherwise the modal opens
+        // as a wall of fields nobody can scan, same reasoning as the
+        // booking-requirement cards on the New Lead form.
+        function collapseAllProposalLinesIfMultiple() {
+            const rows = Array.from(document.querySelectorAll('#leadProposalRatesContainer [data-row]'));
+            if (rows.length > 1) rows.forEach((row) => setProposalLineExpanded(row, false));
         }
 
         function applyRowDefaults(row, def) {
@@ -571,6 +638,23 @@
                 if (destPort) row.querySelector('.destination-location-select').value = destPort.location_id ?? '';
             }
 
+            const originLocationId = row.querySelector('.origin-location-select').value;
+            if (originLocationId) {
+                const originPickupSel = row.querySelector('[data-field="origin_pickup_area_id"]');
+                originPickupSel.innerHTML =
+                    `<option value="">No pickup area</option>${pickupAreaOptionsForLocation(originLocationId)}`;
+                originPickupSel.disabled = false;
+                if (def.origin_pickup_area_id) originPickupSel.value = def.origin_pickup_area_id;
+            }
+            const destLocationId = row.querySelector('.destination-location-select').value;
+            if (destLocationId) {
+                const destPickupSel = row.querySelector('[data-field="destination_pickup_area_id"]');
+                destPickupSel.innerHTML =
+                    `<option value="">No drop-off area</option>${pickupAreaOptionsForLocation(destLocationId)}`;
+                destPickupSel.disabled = false;
+                if (def.destination_pickup_area_id) destPickupSel.value = def.destination_pickup_area_id;
+            }
+
             if (def.container_id) {
                 containerSel.value = def.container_id;
                 containerSel.dispatchEvent(new Event('change'));
@@ -585,15 +669,77 @@
             if (def.container_variant_id) sizeSel.value = def.container_variant_id;
             if (def.container_variant_id) variantInput.value = def.container_variant_id;
             if (def.base_rate) baseRateInput.value = Number(def.base_rate).toFixed(2);
+            if (def.min_van_qty != null) row.querySelector('[data-field="min_van_qty"]').value = def.min_van_qty;
+            if (def.discount_type) row.querySelector('.discount-type').value = def.discount_type;
+            if (def.discount_value != null) row.querySelector('.discount-value').value = Number(def.discount_value)
+                .toFixed(2);
+
+            (def.ancillary_services ?? []).forEach((service) => {
+                const ancillaryRow = addProposalAncillaryRow(row);
+                ['required_service', 'location', 'unit', 'quantity'].forEach((field) => {
+                    const el = ancillaryRow.querySelector(`[data-field="${field}"]`);
+                    if (el && service[field] != null) el.value = service[field];
+                });
+            });
 
             recomputeFinalRate(row);
+            updateLineSummary(row);
 
             [
                 row.querySelector('.origin-location-select'),
                 row.querySelector('.destination-location-select'),
                 originSel,
                 destSel,
+                row.querySelector('.origin-pickup-area-select'),
+                row.querySelector('.destination-pickup-area-select'),
             ].forEach(refreshSearchable);
+        }
+
+        // ================= ADDITIONAL CHARGES (proposal-wide, optional) =================
+        const chargesSelectAllEl = document.getElementById('chargesSelectAll');
+        const chargeItemEls = () => Array.from(document.querySelectorAll('.charge-item'));
+
+        function syncChargesSelectAll() {
+            const items = chargeItemEls();
+            chargesSelectAllEl.checked = items.length > 0 && items.every((i) => i.checked);
+            chargesSelectAllEl.indeterminate = !chargesSelectAllEl.checked && items.some((i) => i.checked);
+        }
+
+        chargeItemEls().forEach((item) => {
+            item.addEventListener('change', () => {
+                item.closest('.charge-option')?.classList.toggle('ring-2', item.checked);
+                item.closest('.charge-option')?.classList.toggle('ring-orange-400', item.checked);
+                item.closest('.charge-option')?.classList.toggle('bg-orange-50', item.checked);
+                item.closest('.charge-option')?.classList.toggle('dark:bg-orange-950/20', item.checked);
+                syncChargesSelectAll();
+            });
+        });
+
+        chargesSelectAllEl.addEventListener('change', () => {
+            // Capture the target state once - each item's own 'change' handler
+            // calls syncChargesSelectAll(), which would otherwise overwrite
+            // chargesSelectAllEl.checked mid-loop (e.g. to indeterminate after
+            // only the first item is checked), corrupting every later iteration
+            // that reads it fresh.
+            const shouldCheck = chargesSelectAllEl.checked;
+            chargeItemEls().forEach((item) => {
+                item.checked = shouldCheck;
+                item.dispatchEvent(new Event('change'));
+            });
+        });
+
+        // Only meaningful when creating a brand new proposal - appending
+        // containers to an existing one never touches these proposal-wide flags.
+        function applyChargesSectionVisibility() {
+            document.getElementById('leadProposalChargesSection')
+                ?.classList.toggle('hidden', proposalModalContext.mode !== 'create');
+        }
+
+        function resetChargesCheckboxes(values = {}) {
+            chargeItemEls().forEach((item) => {
+                item.checked = Boolean(values[item.dataset.field]);
+                item.dispatchEvent(new Event('change'));
+            });
         }
 
         window.openLeadAddContainerModal = function(proposalId) {
@@ -603,6 +749,52 @@
             };
             document.getElementById('leadProposalRatesContainer').innerHTML = '';
             loadContainerLookups().then(() => addProposalRow());
+            applyChargesSectionVisibility();
+            initSideModal({
+                modalId: 'LeadAddProposalModal'
+            });
+        };
+
+        // "Duplicate" - opens the same New Proposal form (always in 'create'
+        // mode, never 'append') pre-filled with the source proposal's rate
+        // rows so the rep can tweak them before saving as a brand new
+        // ClientProposal, rather than mutating the original.
+        window.openDuplicateProposalModal = async function(proposalId) {
+            const response = await apiCall({
+                mode: 'GET',
+                url: `/api/clientProposals/${proposalId}`
+            });
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Unable to load this proposal.'
+                });
+                return;
+            }
+
+            proposalModalContext = {
+                mode: 'create',
+                proposalId: null
+            };
+            document.getElementById('leadProposalRatesContainer').innerHTML = '';
+            await loadContainerLookups();
+
+            const rates = response.data.rates ?? [];
+            if (!rates.length) {
+                addProposalRow();
+            } else {
+                rates.forEach((rate) => {
+                    addProposalRow();
+                    const rows = document.querySelectorAll('#leadProposalRatesContainer [data-row]');
+                    applyRowDefaults(rows[rows.length - 1], rate);
+                });
+                collapseAllProposalLinesIfMultiple();
+            }
+
+            resetChargesCheckboxes(response.data);
+            applyChargesSectionVisibility();
+
             initSideModal({
                 modalId: 'LeadAddProposalModal'
             });
@@ -613,22 +805,51 @@
         let locationsOptionsHtml = '';
         let portsData = [];
         let containerVariantsData = [];
+        // Same "Special Charge / CY / Unit" lists as clientMasterForm.blade.php's
+        // Ancillary Services stage - re-fetched here since that page's script
+        // scope isn't shared with this one.
+        let specialChargeOptionsHtml = '';
+        let cargoYardOptionsHtml = '';
+        let unitOptionsHtml = '';
+        // Pickup/drop-off area per container line - reuses the Serviceable
+        // Area catalog (scoped to Location, same as origin/destination
+        // Location -> Port cascade above), not a new port-level concept.
+        let serviceableAreasData = [];
 
         async function loadContainerLookups() {
-            const [portsRes, locationsRes, variantsRes] = await Promise.all([
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/ports?per_page=200'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/locations?per_page=200'
-                }),
-                apiCall({
-                    mode: 'GET',
-                    url: '/api/containers/variants'
-                }),
-            ]);
+            const [portsRes, locationsRes, variantsRes, specialChargesRes, cargoYardsRes, unitsRes,
+                serviceableAreasRes
+            ] = await Promise
+                .all([
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/ports?per_page=200'
+                    }),
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/locations?per_page=200'
+                    }),
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/containers/variants'
+                    }),
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/specialCharges?per_page=1000'
+                    }),
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/cargoYards?per_page=1000'
+                    }),
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/listofval/unit'
+                    }),
+                    apiCall({
+                        mode: 'GET',
+                        url: '/api/serviceableAreas?per_page=1000'
+                    }),
+                ]);
 
             if (portsRes.success) {
                 portsData = portsRes.data.data;
@@ -644,6 +865,21 @@
             if (variantsRes.success) {
                 containerVariantsData = variantsRes.data;
             }
+            if (specialChargesRes.success && Array.isArray(specialChargesRes.data?.data)) {
+                specialChargeOptionsHtml = specialChargesRes.data.data
+                    .map((sc) => `<option value="${sc.name}">${sc.name}</option>`).join('');
+            }
+            if (cargoYardsRes.success && Array.isArray(cargoYardsRes.data?.data)) {
+                cargoYardOptionsHtml = cargoYardsRes.data.data
+                    .map((cy) => `<option value="${cy.name}">${cy.name}</option>`).join('');
+            }
+            if (Array.isArray(unitsRes)) {
+                unitOptionsHtml = unitsRes.map((lov) =>
+                    `<option value="${lov.lov_name}">${lov.lov_name}</option>`).join('');
+            }
+            if (serviceableAreasRes.success && Array.isArray(serviceableAreasRes.data?.data)) {
+                serviceableAreasData = serviceableAreasRes.data.data.filter((a) => a.is_active);
+            }
         }
 
         function portOptionsForLocation(locationId) {
@@ -651,6 +887,14 @@
                 portsData.filter((p) => String(p.location_id) === String(locationId)) :
                 portsData;
             return ports.map((p) => `<option value="${p.port_id}">${p.name}</option>`).join('');
+        }
+
+        function pickupAreaOptionsForLocation(locationId) {
+            if (!locationId) return '';
+            return serviceableAreasData
+                .filter((a) => String(a.location_id) === String(locationId))
+                .map((a) => `<option value="${a.area_id}">${a.area_name}</option>`)
+                .join('');
         }
 
         function refreshSearchable(el) {
@@ -681,93 +925,235 @@
 
         function addProposalRow() {
             const wrap = document.getElementById('leadProposalRatesContainer');
+            const index = wrap.children.length;
             const div = document.createElement('div');
-            div.className = 'border rounded-lg p-3 space-y-2';
+            div.className =
+                'border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-800/40';
             div.dataset.row = '';
             div.innerHTML = `
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Origin Location</label>
-                        <select class="origin-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">All Locations</option>${locationsOptionsHtml}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Origin Port</label>
-                        <select data-field="origin_port_id" disabled class="origin-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
-                            <option value="">Select</option>${portsOptionsHtml}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Destination Location</label>
-                        <select class="destination-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">All Locations</option>${locationsOptionsHtml}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Destination Port</label>
-                        <select data-field="destination_port_id" disabled class="destination-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
-                            <option value="">Select</option>${portsOptionsHtml}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Container</label>
-                        <select data-field="container_id" class="container-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select</option>${uniqueContainerOptions()}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Class</label>
-                        <select data-field="container_class_id" class="class-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select container first</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Size</label>
-                        <select data-field="container_size_id" class="size-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">Select class first</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Min Qty (for discount)</label>
-                        <input type="number" min="1" step="1" data-field="min_van_qty" placeholder="No minimum" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
-                        <input type="text" inputmode="decimal" data-field="base_rate" readonly class="base-rate currency-input w-full border border-zinc-300 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100" value="0.00">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Discount Type</label>
-                        <select data-field="discount_type" class="discount-type w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            <option value="">None</option>
-                            <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Amount</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Discount Value</label>
-                        <input type="text" inputmode="decimal" data-field="discount_value" class="discount-value currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
-                    </div>
-                    <div>
-                        <label class="text-[11px] text-zinc-400 uppercase">Final Rate</label>
-                        <input type="text" inputmode="decimal" data-field="final_rate" readonly class="final-rate currency-input w-full border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/40 text-zinc-900 dark:text-blue-100 font-semibold" value="0.00">
-                    </div>
+                <div class="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+                    <button type="button" class="line-toggle flex items-center gap-3 min-w-0 flex-1 text-left">
+                        <span class="line-toggle-chevron shrink-0 text-xs text-zinc-400 dark:text-zinc-500 transition-transform duration-200 rotate-180">▼</span>
+                        <span class="line-index-badge shrink-0 w-6 h-6 rounded-md bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 text-[11px] font-bold flex items-center justify-center">${index + 1}</span>
+                        <span class="line-summary flex-1 min-w-0 truncate text-sm font-medium text-zinc-600 dark:text-zinc-300">New container line</span>
+                    </button>
+                    <p class="line-final-display shrink-0 text-sm font-bold text-orange-600 dark:text-orange-400">₱0.00</p>
+                    <button type="button" class="remove-row shrink-0 text-red-500 hover:text-red-600 text-xs font-medium">✕ Remove</button>
                 </div>
-                <div class="flex justify-end">
-                    <button type="button" class="remove-row text-red-500 text-xs">✕ Remove container</button>
+
+                <div class="line-body p-4 space-y-4">
+                    <div>
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Route &amp; Pickup</p>
+                        <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-start">
+                            <div class="border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-lg p-3 space-y-2">
+                                <p class="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Origin</p>
+                                <div>
+                                    <label class="text-[11px] text-zinc-400 uppercase">Location</label>
+                                    <select class="origin-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                                        <option value="">All Locations</option>${locationsOptionsHtml}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[11px] text-zinc-400 uppercase">Port</label>
+                                    <select data-field="origin_port_id" disabled class="origin-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                                        <option value="">Select</option>${portsOptionsHtml}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[11px] text-zinc-400 uppercase">Pickup Area</label>
+                                    <select data-field="origin_pickup_area_id" disabled class="origin-pickup-area-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                                        <option value="">Select origin location first</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="hidden md:flex items-center justify-center text-zinc-300 dark:text-zinc-600 text-lg pt-10">→</div>
+                            <div class="border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-lg p-3 space-y-2">
+                                <p class="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Destination</p>
+                                <div>
+                                    <label class="text-[11px] text-zinc-400 uppercase">Location</label>
+                                    <select class="destination-location-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                                        <option value="">All Locations</option>${locationsOptionsHtml}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[11px] text-zinc-400 uppercase">Port</label>
+                                    <select data-field="destination_port_id" disabled class="destination-port-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                                        <option value="">Select</option>${portsOptionsHtml}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[11px] text-zinc-400 uppercase">Drop-off Area</label>
+                                    <select data-field="destination_pickup_area_id" disabled class="destination-pickup-area-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                                        <option value="">Select destination location first</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Container &amp; Base Rate</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div>
+                                <label class="text-[11px] text-zinc-400 uppercase">Container</label>
+                                <select data-field="container_id" class="container-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                                    <option value="">Select</option>${uniqueContainerOptions()}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-zinc-400 uppercase">Class</label>
+                                <select data-field="container_class_id" class="class-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                                    <option value="">Select container first</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-zinc-400 uppercase">Size</label>
+                                <select data-field="container_size_id" class="size-select w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                                    <option value="">Select class first</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-zinc-400 uppercase">Min. Qty to Avail Rate</label>
+                                <input type="number" min="1" step="1" data-field="min_van_qty" placeholder="No minimum" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Adjustment</p>
+                        <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end border border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg p-3">
+                            <div>
+                                <label class="text-[11px] text-zinc-400 uppercase">Type</label>
+                                <select data-field="discount_type" class="discount-type w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                                    <option value="">None</option>
+                                    <option value="percentage">Discount (%)</option>
+                                    <option value="fixed">Discount (Fixed)</option>
+                                    <option value="increase_percentage">Increase (%)</option>
+                                    <option value="increase_fixed">Increase (Fixed)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-zinc-400 uppercase">Value</label>
+                                <input type="text" inputmode="decimal" data-field="discount_value" class="discount-value currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm" value="0">
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-zinc-400 uppercase">Base <span class="adjustment-base-display">₱0.00</span></p>
+                                <input type="text" inputmode="decimal" data-field="final_rate" readonly class="final-rate currency-input w-32 text-right border-0 bg-transparent text-lg font-bold text-orange-600 dark:text-orange-400 p-0" value="0.00">
+                                <span class="adjustment-pill hidden text-[10px] font-semibold px-2 py-0.5 rounded-full"></span>
+                            </div>
+                        </div>
+                        <input type="hidden" data-field="base_rate" class="base-rate" value="0.00">
+                    </div>
+
+                    <div class="border-t border-zinc-200 dark:border-zinc-700 pt-3 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Ancillary Services</p>
+                            <button type="button" class="add-ancillary-btn text-xs px-2 py-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700">+
+                                Add Ancillary Service</button>
+                        </div>
+                        <div class="proposal-ancillary-container space-y-2"></div>
+                    </div>
                 </div>
                 <input type="hidden" data-field="container_variant_id">
             `;
             wrap.appendChild(div);
+
+            // Exclusive expand, same pattern as the booking-requirement cards
+            // on the New Lead form - adding a 2nd/3rd line would otherwise
+            // leave every prior one still fully open (Route/Container/
+            // Adjustment/Ancillary all at once), turning the modal into an
+            // unscannable wall of fields.
+            Array.from(document.querySelectorAll('#leadProposalRatesContainer [data-row]')).forEach((other) => {
+                if (other !== div) setProposalLineExpanded(other, false);
+            });
+
             wireRow(div);
+            updateProposalTotalDisplay();
+        }
+
+        function setProposalLineExpanded(row, expanded) {
+            row.querySelector('.line-body')?.classList.toggle('hidden', !expanded);
+            row.querySelector('.line-toggle-chevron')?.classList.toggle('rotate-180', expanded);
+        }
+
+        function renumberProposalRows() {
+            Array.from(document.querySelectorAll('#leadProposalRatesContainer [data-row]')).forEach((row, i) => {
+                const badge = row.querySelector('.line-index-badge');
+                if (badge) badge.textContent = i + 1;
+            });
+        }
+
+        // Same shape/pattern as clientMasterForm.blade.php's Stage 4
+        // ancillary-row builder, scoped to one proposal container line
+        // instead of the whole client.
+        function proposalAncillaryRowHtml() {
+            return `
+            <div class="ancillary-row border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 space-y-2 relative">
+                <button type="button" class="remove-ancillary absolute top-2 right-2 text-red-500 hover:text-red-600 text-xs font-medium">✕</button>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Special Charge</label>
+                        <select data-field="required_service" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            ${specialChargeOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">CY</label>
+                        <select data-field="location" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            ${cargoYardOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Unit</label>
+                        <select data-field="unit" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                            ${unitOptionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
+                        <input type="number" step="0.01" data-field="quantity" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function addProposalAncillaryRow(row) {
+            const container = row.querySelector('.proposal-ancillary-container');
+            container.insertAdjacentHTML('beforeend', proposalAncillaryRowHtml());
+            return container.lastElementChild;
+        }
+
+        function collectAncillaryServicesFromRow(row) {
+            return Array.from(row.querySelectorAll('.proposal-ancillary-container .ancillary-row')).map((r) => {
+                const obj = {};
+                ['required_service', 'location', 'unit', 'quantity'].forEach((field) => {
+                    const el = r.querySelector(`[data-field="${field}"]`);
+                    obj[field] = el ? el.value : '';
+                });
+                return obj;
+            });
         }
 
         function wireRow(row) {
+            row.querySelector('.line-toggle').addEventListener('click', () => {
+                const expand = row.querySelector('.line-body').classList.contains('hidden');
+                if (expand) {
+                    Array.from(document.querySelectorAll('#leadProposalRatesContainer [data-row]')).forEach((
+                        other) => {
+                        if (other !== row) setProposalLineExpanded(other, false);
+                    });
+                }
+                setProposalLineExpanded(row, expand);
+            });
+
             const originSel = row.querySelector('[data-field="origin_port_id"]');
             const destSel = row.querySelector('[data-field="destination_port_id"]');
             const originLocationSel = row.querySelector('.origin-location-select');
             const destLocationSel = row.querySelector('.destination-location-select');
-            [originLocationSel, originSel, destLocationSel, destSel].forEach((el) => makeSearchableSelect(el));
+            const originPickupAreaSel = row.querySelector('.origin-pickup-area-select');
+            const destPickupAreaSel = row.querySelector('.destination-pickup-area-select');
+            [originLocationSel, originSel, destLocationSel, destSel, originPickupAreaSel, destPickupAreaSel]
+            .forEach((el) => makeSearchableSelect(el));
             const containerSel = row.querySelector('.container-select');
             const classSel = row.querySelector('.class-select');
             const sizeSel = row.querySelector('.size-select');
@@ -794,6 +1180,7 @@
                 sizeSel.innerHTML = `<option value="">Select class first</option>`;
                 variantInput.value = '';
                 resetRate(baseRateInput, finalRateInput);
+                updateLineSummary(row);
             });
 
             classSel.addEventListener('change', () => {
@@ -829,6 +1216,13 @@
                 originSel.disabled = !originLocationSel.value;
                 refreshSearchable(originSel);
                 lookupRate(row);
+
+                const areaOptions = pickupAreaOptionsForLocation(originLocationSel.value);
+                originPickupAreaSel.innerHTML =
+                    `<option value="">${originLocationSel.value ? 'No pickup area' : 'Select origin location first'}</option>${areaOptions}`;
+                originPickupAreaSel.disabled = !originLocationSel.value;
+                refreshSearchable(originPickupAreaSel);
+                updateLineSummary(row);
             });
             destLocationSel.addEventListener('change', () => {
                 destSel.innerHTML =
@@ -836,12 +1230,30 @@
                 destSel.disabled = !destLocationSel.value;
                 refreshSearchable(destSel);
                 lookupRate(row);
+
+                const areaOptions = pickupAreaOptionsForLocation(destLocationSel.value);
+                destPickupAreaSel.innerHTML =
+                    `<option value="">${destLocationSel.value ? 'No drop-off area' : 'Select destination location first'}</option>${areaOptions}`;
+                destPickupAreaSel.disabled = !destLocationSel.value;
+                refreshSearchable(destPickupAreaSel);
+                updateLineSummary(row);
             });
 
             discountTypeSel.addEventListener('change', () => recomputeFinalRate(row));
             discountValueInput.addEventListener('input', () => recomputeFinalRate(row));
 
-            row.querySelector('.remove-row').addEventListener('click', () => row.remove());
+            row.querySelector('.remove-row').addEventListener('click', () => {
+                row.remove();
+                renumberProposalRows();
+                updateProposalTotalDisplay();
+            });
+
+            row.querySelector('.add-ancillary-btn').addEventListener('click', () => addProposalAncillaryRow(row));
+            row.querySelector('.proposal-ancillary-container').addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-ancillary')) {
+                    e.target.closest('.ancillary-row')?.remove();
+                }
+            });
 
             function resetRate(baseEl, finalEl) {
                 baseEl.value = '0.00';
@@ -884,10 +1296,78 @@
             const finalRateInput = row.querySelector('.final-rate');
 
             let final = base;
-            if (type === 'percentage') final = base - (base * value / 100);
+            if (type === 'percentage') final = Math.max(0, base - (base * value / 100));
             if (type === 'fixed') final = Math.max(0, base - value);
+            if (type === 'increase_percentage') final = base + (base * value / 100);
+            if (type === 'increase_fixed') final = base + value;
 
             finalRateInput.value = formatCurrencyDisplay(final.toFixed(2));
+
+            const baseDisplay = row.querySelector('.adjustment-base-display');
+            if (baseDisplay) baseDisplay.textContent = `₱${formatCurrencyDisplay(base.toFixed(2))}`;
+
+            const lineFinalDisplay = row.querySelector('.line-final-display');
+            if (lineFinalDisplay) lineFinalDisplay.textContent = `₱${formatCurrencyDisplay(final.toFixed(2))}`;
+
+            const pill = row.querySelector('.adjustment-pill');
+            if (pill) {
+                pill.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'dark:bg-green-950/40',
+                    'dark:text-green-400', 'bg-amber-100', 'text-amber-700', 'dark:bg-amber-950/40',
+                    'dark:text-amber-400');
+                if (value > 0 && (type === 'percentage' || type === 'fixed')) {
+                    pill.textContent = '▾ Discount applied';
+                    pill.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-950/40',
+                        'dark:text-green-400');
+                } else if (value > 0 && (type === 'increase_percentage' || type === 'increase_fixed')) {
+                    pill.textContent = '▴ Increase applied';
+                    pill.classList.add('bg-amber-100', 'text-amber-700', 'dark:bg-amber-950/40',
+                        'dark:text-amber-400');
+                } else {
+                    pill.classList.add('hidden');
+                }
+            }
+
+            updateProposalTotalDisplay();
+        }
+
+        // Container/route labels shown in the collapsed-looking card header,
+        // so a proposal with several lines stays scannable without opening
+        // every section.
+        function updateLineSummary(row) {
+            const summaryEl = row.querySelector('.line-summary');
+            if (!summaryEl) return;
+
+            const containerSel = row.querySelector('.container-select');
+            const containerLabel = containerSel?.value ? containerSel.options[containerSel.selectedIndex]
+                ?.textContent : '';
+            const originSel = row.querySelector('.origin-location-select');
+            const originLabel = originSel?.value ? originSel.options[originSel.selectedIndex]?.textContent :
+                '';
+            const destSel = row.querySelector('.destination-location-select');
+            const destLabel = destSel?.value ? destSel.options[destSel.selectedIndex]?.textContent : '';
+
+            const parts = [containerLabel, (originLabel && destLabel) ? `${originLabel} → ${destLabel}` : '']
+                .filter(Boolean);
+            summaryEl.textContent = parts.length ? parts.join(' · ') : 'New container line';
+        }
+
+        // Live running total across every container line - purely a save-time
+        // preview, the actual total is always derived server-side from the
+        // saved rates.
+        function updateProposalTotalDisplay() {
+            const totalEl = document.getElementById('leadProposalTotalDisplay');
+            if (!totalEl) return;
+
+            const rows = Array.from(document.querySelectorAll('#leadProposalRatesContainer [data-row]'));
+            const total = rows.reduce((sum, row) => {
+                const final = parseFloat(parseCurrencyValue(row.querySelector('.final-rate')?.value)) || 0;
+                return sum + final;
+            }, 0);
+
+            totalEl.textContent = `₱${formatCurrencyDisplay(total.toFixed(2))}`;
+
+            const countEl = document.getElementById('leadProposalLineCount');
+            if (countEl) countEl.textContent = `${rows.length} container line${rows.length === 1 ? '' : 's'}`;
         }
 
         document.getElementById('leadProposalAddRowBtn').addEventListener('click', addProposalRow);
@@ -906,8 +1386,12 @@
 
             const rates = rows.map((row) => ({
                 origin_port_id: row.querySelector('[data-field="origin_port_id"]').value,
+                origin_pickup_area_id: row.querySelector('[data-field="origin_pickup_area_id"]').value ||
+                    null,
                 destination_port_id: row.querySelector('[data-field="destination_port_id"]')
                     .value,
+                destination_pickup_area_id: row.querySelector(
+                    '[data-field="destination_pickup_area_id"]').value || null,
                 container_id: row.querySelector('[data-field="container_id"]').value,
                 container_class_id: classIdForPayload(row.querySelector(
                     '[data-field="container_class_id"]')),
@@ -923,6 +1407,7 @@
                     '.discount-value').value)) || 0,
                 final_rate: parseFloat(parseCurrencyValue(row.querySelector('.final-rate')
                     .value)) || 0,
+                ancillary_services: collectAncillaryServicesFromRow(row),
             }));
 
             if (rates.some((r) => !r.origin_port_id || !r.destination_port_id || !r
@@ -939,12 +1424,21 @@
                 `/api/clientProposals/${proposalModalContext.proposalId}/rates` :
                 `/api/crm/leads/${window.currentLeadUuid}/proposals`;
 
+            const payload = {
+                rates
+            };
+            // Proposal-wide, only meaningful at creation - appending
+            // containers to an existing proposal never touches these.
+            if (proposalModalContext.mode !== 'append') {
+                chargeItemEls().forEach((item) => {
+                    payload[item.dataset.field] = item.checked;
+                });
+            }
+
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
-                payload: {
-                    rates
-                },
+                payload,
                 url,
                 button: this,
             });

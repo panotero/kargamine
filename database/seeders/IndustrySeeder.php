@@ -13,14 +13,26 @@ class IndustrySeeder extends Seeder
     {
         $option = \App\Models\Option::firstOrCreate(['option_name' => 'Industry']);
         foreach ([
-            'Manufacturing',
-            'Retail',
-            'Logistics & Freight',
-            'Construction',
-            'Agriculture',
-            'Information Technology',
             'Food & Beverage',
-            'Pharmaceuticals',
+            'Agriculture & Fisheries',
+            'Retail & E-commerce',
+            'Wholesale & Distribution',
+            'Manufacturing',
+            'Construction & Building Materials',
+            'Automotive & Transportation',
+            'Consumer Goods / FMCG',
+            'Electronics & Appliances',
+            'Pharmaceuticals & Healthcare',
+            'Industrial & Machinery',
+            'Chemicals & Industrial Supplies',
+            'Textiles, Apparel & Footwear',
+            'Furniture & Home Furnishings',
+            'Mining, Metals & Aggregates',
+            'Energy & Utilities',
+            'Hospitality & Food Service',
+            'Government & Institutional',
+            'Logistics & Transportation',
+            'Other Services / Other',
         ] as $name) {
             \App\Models\ListOfValue::firstOrCreate([
                 'lov_optionId' => $option->option_id,

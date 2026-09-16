@@ -1,4 +1,15 @@
 window.initCrmLogic = function initCrmLogic() {
+  // initCrmLogic() re-runs every time the SPA shell swaps in the CRM page
+  // fragment (routes/page.php -> loadPage()), but the document-level
+  // delegated listeners below bind to `document`, which persists across
+  // page swaps. Without this guard each revisit to the CRM page stacks
+  // another copy of every delegated listener, so a single click (e.g.
+  // "Duplicate" on a proposal) fires openDuplicateProposalModal once per
+  // prior visit - concurrently clearing/re-populating the same modal and
+  // producing doubled, interleaved container rows.
+  const bindDelegatedListeners = !window.__crmDelegatedListenersBound;
+  window.__crmDelegatedListenersBound = true;
+
   // ============================================================
   // STATE
   // ============================================================
@@ -74,6 +85,7 @@ window.initCrmLogic = function initCrmLogic() {
     DISAPPROVED: 3,
     ACCEPTED: 4,
     REJECTED: 5,
+    CANCELLED: 6,
   };
 
   const PROPOSAL_STATUS_LABEL = {
@@ -82,6 +94,7 @@ window.initCrmLogic = function initCrmLogic() {
     [PROPOSAL_STATUS.DISAPPROVED]: "Disapproved",
     [PROPOSAL_STATUS.ACCEPTED]: "Accepted",
     [PROPOSAL_STATUS.REJECTED]: "Rejected",
+    [PROPOSAL_STATUS.CANCELLED]: "Cancelled",
   };
 
   const PROPOSAL_STATUS_BADGE = {
@@ -90,6 +103,7 @@ window.initCrmLogic = function initCrmLogic() {
     [PROPOSAL_STATUS.DISAPPROVED]: "bg-red-100 text-red-600",
     [PROPOSAL_STATUS.ACCEPTED]: "bg-blue-100 text-blue-700",
     [PROPOSAL_STATUS.REJECTED]: "bg-zinc-200 text-zinc-600",
+    [PROPOSAL_STATUS.CANCELLED]: "bg-zinc-200 text-zinc-600",
   };
 
   // ============================================================
@@ -303,14 +317,16 @@ window.initCrmLogic = function initCrmLogic() {
 
   // Delegated - both empty-state buttons are (re)rendered inside the table
   // body's innerHTML, so they can't be bound once via getElementById.
-  document.addEventListener("click", function (e) {
-    if (e.target.closest("#crmEmptyNewLeadBtn")) {
-      document.getElementById("btnNewLead")?.click();
-    }
-    if (e.target.closest("#crmEmptyClearFiltersBtn")) {
-      clearCrmFilters();
-    }
-  });
+  if (bindDelegatedListeners) {
+    document.addEventListener("click", function (e) {
+      if (e.target.closest("#crmEmptyNewLeadBtn")) {
+        document.getElementById("btnNewLead")?.click();
+      }
+      if (e.target.closest("#crmEmptyClearFiltersBtn")) {
+        clearCrmFilters();
+      }
+    });
+  }
 
   function clearCrmFilters() {
     const searchInput = document.querySelector("#tableCrm .table-search-input");
@@ -640,7 +656,7 @@ window.initCrmLogic = function initCrmLogic() {
     const statusClass = getStatusBadgeClass(lead.crm_status.status);
 
     const opportunityBtn = document.getElementById("createClientMasterBtn");
-    const canCreateRecord = lead.has_accepted_proposal === true;
+    const canCreateRecord = lead.can_convert_to_client === true;
     opportunityBtn.classList.toggle("hidden", !canCreateRecord);
     opportunityBtn.onclick = async function () {
       // Reserve (or fetch the already-reserved) customer code so it stays
@@ -782,11 +798,13 @@ window.initCrmLogic = function initCrmLogic() {
   // than a one-time getElementById binding - it just forwards the click to
   // the existing #leadAddProposalBtn handler (defined in crm.blade.php's
   // proposal-modal script) instead of duplicating that logic.
-  document.addEventListener("click", function (e) {
-    if (e.target.closest("#leadProposalEmptyAddBtn")) {
-      document.getElementById("leadAddProposalBtn")?.click();
-    }
-  });
+  if (bindDelegatedListeners) {
+    document.addEventListener("click", function (e) {
+      if (e.target.closest("#leadProposalEmptyAddBtn")) {
+        document.getElementById("leadAddProposalBtn")?.click();
+      }
+    });
+  }
 
   function renderProposalCard(proposal) {
     const statusClass =
@@ -832,9 +850,17 @@ window.initCrmLogic = function initCrmLogic() {
                         <button type="button" class="lead-add-container-btn text-xs px-3 py-1.5 rounded-lg border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 text-zinc-700"
                             data-proposal-id="${proposal.id}">
                             + Add Container
+                        </button>
+                        <button type="button" class="cancel-proposal-btn text-xs px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50"
+                            data-proposal-id="${proposal.id}">
+                            Cancel
                         </button>`
                         : ""
                     }
+                    <button type="button" class="duplicate-proposal-btn text-xs px-3 py-1.5 rounded-lg border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 text-zinc-700"
+                        data-proposal-id="${proposal.id}">
+                        Duplicate
+                    </button>
                     <a href="${downloadUrl}" target="_blank"
                         class="${downloadClass} text-white w-8 h-8 flex items-center justify-center rounded-lg transition">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -898,10 +924,47 @@ window.initCrmLogic = function initCrmLogic() {
       });
   }
 
-  document.addEventListener("click", function (e) {
-    const btn = e.target.closest(".lead-add-container-btn");
-    if (btn) window.openLeadAddContainerModal?.(btn.dataset.proposalId);
-  });
+  if (bindDelegatedListeners) {
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest(".lead-add-container-btn");
+      if (btn) window.openLeadAddContainerModal?.(btn.dataset.proposalId);
+    });
+
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest(".duplicate-proposal-btn");
+      if (btn) window.openDuplicateProposalModal?.(btn.dataset.proposalId);
+    });
+
+    document.addEventListener("click", async function (e) {
+      const btn = e.target.closest(".cancel-proposal-btn");
+      if (!btn) return;
+
+      const confirmed = await window.customConfirm?.(
+        "Cancel this pending proposal? This cannot be undone.",
+      );
+      if (!confirmed) return;
+
+      const response = await apiCall({
+        mode: "POST",
+        isJson: true,
+        payload: {},
+        url: `/api/clientProposals/${btn.dataset.proposalId}/cancel`,
+        button: btn,
+      });
+
+      if (!response.success) {
+        showMessage({
+          status: "error",
+          title: "Error",
+          message: response.message ?? "Unable to cancel this proposal.",
+        });
+        return;
+      }
+
+      showMessage({ status: "success", title: "Proposal cancelled" });
+      window.loadLeadProposals?.(leadUUID, 1);
+    });
+  }
 
   // ============================================================
   // RENDER — CONTAINER REQUIREMENTS

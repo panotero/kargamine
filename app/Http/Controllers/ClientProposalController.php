@@ -12,6 +12,7 @@ use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
 use App\Models\User;
+use App\Jobs\SendExternalMailJob;
 use App\Services\FileUploadService;
 use App\Services\TeamNotifier;
 use App\Services\TeamService;
@@ -20,6 +21,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class ClientProposalController extends Controller
@@ -40,10 +42,13 @@ class ClientProposalController extends Controller
 
         $proposals = ClientProposal::with([
             'rates.originPort.location',
+            'rates.originPickupArea',
+            'rates.destinationPickupArea',
             'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
+            'rates.ancillaryServices',
             'creator:id,name',
             'decidedBy:id,name',
             'activeContract',
@@ -118,6 +123,7 @@ class ClientProposalController extends Controller
                 'disapproved' => $statusCounts->get(ClientProposal::STATUS_DISAPPROVED, 0),
                 'accepted' => $statusCounts->get(ClientProposal::STATUS_ACCEPTED, 0),
                 'rejected' => $statusCounts->get(ClientProposal::STATUS_REJECTED, 0),
+                'cancelled' => $statusCounts->get(ClientProposal::STATUS_CANCELLED, 0),
             ],
         ]);
     }
@@ -140,10 +146,13 @@ class ClientProposalController extends Controller
             'client.lead.company',
             'client.lead.user:id,name,team_id',
             'rates.originPort.location',
+            'rates.originPickupArea',
+            'rates.destinationPickupArea',
             'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
+            'rates.ancillaryServices',
             'activeContract',
         ]);
 
@@ -194,7 +203,7 @@ class ClientProposalController extends Controller
             $proposal = $this->createProposal($client, $request);
 
             foreach ($validated['rates'] as $rateData) {
-                $proposal->rates()->create($rateData);
+                $this->createRateWithAncillaryServices($proposal, $rateData);
             }
 
             return $proposal;
@@ -202,7 +211,7 @@ class ClientProposalController extends Controller
 
         $this->notifyProposalPending($proposal);
 
-        return response()->json(['success' => true, 'data' => $proposal->load('rates')], 201);
+        return response()->json(['success' => true, 'data' => $proposal->load('rates.ancillaryServices')], 201);
     }
 
     /**
@@ -221,11 +230,11 @@ class ClientProposalController extends Controller
 
         DB::transaction(function () use ($proposal, $validated) {
             foreach ($validated['rates'] as $rateData) {
-                $proposal->rates()->create($rateData);
+                $this->createRateWithAncillaryServices($proposal, $rateData);
             }
         });
 
-        return response()->json(['success' => true, 'data' => $proposal->load('rates')]);
+        return response()->json(['success' => true, 'data' => $proposal->load('rates.ancillaryServices')]);
     }
 
     public function destroyRate(ClientProposalRate $rate)
@@ -259,6 +268,7 @@ class ClientProposalController extends Controller
         ]);
 
         $this->notifyProposalDecision($proposal, $request->user(), 'approved');
+        $this->sendSignatureRequestEmail($proposal);
 
         return response()->json(['success' => true, 'data' => $proposal]);
     }
@@ -312,6 +322,33 @@ class ClientProposalController extends Controller
     }
 
     /**
+     * Only available while PENDING - once a decision has been made
+     * (approved/disapproved/etc.) the proposal follows the rest of the
+     * workflow instead (reject, re-approve, etc.).
+     */
+    public function cancel(Request $request, ClientProposal $proposal)
+    {
+        if (! $proposal->canBeCancelledBy($request->user())) {
+            return response()->json(['success' => false, 'message' => 'You are not authorized to cancel this proposal.'], 403);
+        }
+
+        if ($proposal->status !== ClientProposal::STATUS_PENDING) {
+            return response()->json(['success' => false, 'message' => 'Only pending proposals can be cancelled.'], 422);
+        }
+
+        $validated = $request->validate(['remarks' => ['nullable', 'string', 'max:500']]);
+
+        $proposal->update([
+            'status' => ClientProposal::STATUS_CANCELLED,
+            'decided_by' => $request->user()->id,
+            'decided_at' => now(),
+            'decision_remarks' => $validated['remarks'] ?? null,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $proposal]);
+    }
+
+    /**
      * Uploading the signed copy is what promotes an APPROVED proposal to ACCEPTED.
      */
     public function attachSigned(Request $request, ClientProposal $proposal)
@@ -351,10 +388,13 @@ class ClientProposalController extends Controller
             'lead.addresses',
             'creator',
             'rates.originPort.location',
+            'rates.originPickupArea',
+            'rates.destinationPickupArea',
             'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
+            'rates.ancillaryServices',
         ]);
 
         $pdf = Pdf::loadView('pdf.clientProposal', ['proposal' => $proposal]);
@@ -367,7 +407,9 @@ class ClientProposalController extends Controller
         return [
             'rates' => ['required', 'array', 'min:1'],
             'rates.*.origin_port_id' => ['required', 'integer', 'exists:ports,port_id'],
+            'rates.*.origin_pickup_area_id' => ['nullable', 'integer', 'exists:serviceable_areas,area_id'],
             'rates.*.destination_port_id' => ['required', 'integer', 'exists:ports,port_id'],
+            'rates.*.destination_pickup_area_id' => ['nullable', 'integer', 'exists:serviceable_areas,area_id'],
             'rates.*.container_id' => ['required', 'integer', 'exists:containers,id'],
             'rates.*.container_class_id' => ['nullable', 'integer', 'exists:container_class,id'],
             'rates.*.container_size_id' => ['nullable', 'integer', 'exists:container_size,id'],
@@ -377,7 +419,39 @@ class ClientProposalController extends Controller
             'rates.*.discount_type' => ['nullable', 'in:percentage,fixed,increase_percentage,increase_fixed'],
             'rates.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'rates.*.final_rate' => ['required', 'numeric', 'min:0'],
+            'rates.*.ancillary_services' => ['nullable', 'array'],
+            'rates.*.ancillary_services.*.required_service' => ['nullable', 'string', 'max:255'],
+            'rates.*.ancillary_services.*.location' => ['nullable', 'string', 'max:255'],
+            'rates.*.ancillary_services.*.unit' => ['nullable', 'string', 'max:255'],
+            'rates.*.ancillary_services.*.quantity' => ['nullable', 'numeric', 'min:0'],
+
+            // Proposal-wide opt-ins (not per rate) - only meaningful at
+            // creation time (store()/storeForLead()); harmless no-ops when
+            // present on addRates() since that path never reads them.
+            'include_special_charges' => ['nullable', 'boolean'],
+            'include_port_charges' => ['nullable', 'boolean'],
+            'include_handling_fee' => ['nullable', 'boolean'],
+            'include_general_charges' => ['nullable', 'boolean'],
         ];
+    }
+
+    /**
+     * ancillary_services isn't a client_proposal_rates column - pull it out
+     * before mass-assigning the rate, then create it as nested rows once the
+     * rate itself exists (it needs the rate's id).
+     */
+    protected function createRateWithAncillaryServices(ClientProposal $proposal, array $rateData): ClientProposalRate
+    {
+        $ancillaryServices = $rateData['ancillary_services'] ?? [];
+        unset($rateData['ancillary_services']);
+
+        $rate = $proposal->rates()->create($rateData);
+
+        foreach ($ancillaryServices as $service) {
+            $rate->ancillaryServices()->create($service);
+        }
+
+        return $rate;
     }
 
     protected function createProposal(ClientMaster $client, Request $request): ClientProposal
@@ -393,6 +467,10 @@ class ClientProposalController extends Controller
             'client_id' => $client->id,
             'status' => ClientProposal::STATUS_PENDING,
             'created_by' => $request->user()?->id,
+            'include_special_charges' => $request->boolean('include_special_charges'),
+            'include_port_charges' => $request->boolean('include_port_charges'),
+            'include_handling_fee' => $request->boolean('include_handling_fee'),
+            'include_general_charges' => $request->boolean('include_general_charges'),
         ]);
     }
 
@@ -450,16 +528,52 @@ class ClientProposalController extends Controller
         ]);
     }
 
+    /**
+     * Once approved, the client's authorized signatory (captured on the
+     * originating lead's company info - see ClientProposal::authorizedSignatoryContact())
+     * gets a signed, unauthenticated link where they can download the
+     * approved proposal and upload their signed copy - see
+     * routes/proposal_signing.php + ProposalSigningController.
+     */
+    protected function sendSignatureRequestEmail(ClientProposal $proposal): void
+    {
+        $signatory = $proposal->authorizedSignatoryContact();
+
+        if (! $signatory) {
+            return;
+        }
+
+        $signUrl = URL::temporarySignedRoute(
+            'proposal.sign.show',
+            now()->addDays(30),
+            ['proposal' => $proposal->uuid]
+        );
+
+        SendExternalMailJob::dispatch($signatory['email'], [
+            'subject' => "Please sign your proposal — {$proposal->code}",
+            'title' => 'Your Proposal Is Ready to Sign',
+            'message' => "Hi {$signatory['name']}, your proposal {$proposal->code} has been approved. " .
+                'Please download it, sign it — digitally or by hand — and upload the signed copy using the link below.',
+            'Header' => $proposal->code,
+            'button' => ['url' => $signUrl, 'text' => 'View & Sign Proposal'],
+        ]);
+
+        $proposal->update(['signature_requested_at' => now()]);
+    }
+
     public function indexByLead(Request $request, $leadUuid)
     {
         $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
 
         $proposals = ClientProposal::with([
             'rates.originPort.location',
+            'rates.originPickupArea',
+            'rates.destinationPickupArea',
             'rates.destinationPort.location',
             'rates.container',
             'rates.containerClass',
             'rates.containerSize',
+            'rates.ancillaryServices',
             'creator:id,name',
             'decidedBy:id,name',
         ])->where('lead_id', $lead->id)
@@ -488,10 +602,14 @@ class ClientProposalController extends Controller
                 'client_id' => null,
                 'status' => ClientProposal::STATUS_PENDING,
                 'created_by' => $request->user()?->id,
+                'include_special_charges' => $request->boolean('include_special_charges'),
+                'include_port_charges' => $request->boolean('include_port_charges'),
+                'include_handling_fee' => $request->boolean('include_handling_fee'),
+                'include_general_charges' => $request->boolean('include_general_charges'),
             ]);
 
             foreach ($validated['rates'] as $rateData) {
-                $proposal->rates()->create($rateData);
+                $this->createRateWithAncillaryServices($proposal, $rateData);
             }
 
             return $proposal;
@@ -499,7 +617,7 @@ class ClientProposalController extends Controller
 
         $this->notifyProposalPending($proposal);
 
-        return response()->json(['success' => true, 'data' => $proposal->load('rates')], 201);
+        return response()->json(['success' => true, 'data' => $proposal->load('rates.ancillaryServices')], 201);
     }
 
     /**

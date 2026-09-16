@@ -13,6 +13,7 @@ class ClientProposal extends Model
     public const STATUS_DISAPPROVED = 3;
     public const STATUS_ACCEPTED = 4;
     public const STATUS_REJECTED = 5;
+    public const STATUS_CANCELLED = 6;
 
     public const STATUS_LABELS = [
         self::STATUS_PENDING => 'Pending',
@@ -20,6 +21,7 @@ class ClientProposal extends Model
         self::STATUS_DISAPPROVED => 'Disapproved',
         self::STATUS_ACCEPTED => 'Accepted',
         self::STATUS_REJECTED => 'Rejected',
+        self::STATUS_CANCELLED => 'Cancelled',
     ];
 
     protected $fillable = [
@@ -31,21 +33,31 @@ class ClientProposal extends Model
         'created_by',
         'signed_document_path',
         'signed_at',
+        'signature_requested_at',
         'decided_by',
         'decided_at',
         'decision_remarks',
+        'include_special_charges',
+        'include_port_charges',
+        'include_handling_fee',
+        'include_general_charges',
     ];
 
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
         'signed_at' => 'datetime:M d, Y, h:i A',
+        'signature_requested_at' => 'datetime:M d, Y, h:i A',
         'decided_at' => 'datetime:M d, Y, h:i A',
+        'include_special_charges' => 'boolean',
+        'include_port_charges' => 'boolean',
+        'include_handling_fee' => 'boolean',
+        'include_general_charges' => 'boolean',
     ];
 
     // Computed permission flags travel with every JSON response, so the
     // frontend never re-implements this logic - it just reads p.can_approve / p.can_reject / p.can_upload_signed.
-    protected $appends = ['can_approve', 'can_reject', 'can_upload_signed'];
+    protected $appends = ['can_approve', 'can_reject', 'can_upload_signed', 'can_cancel'];
 
     public function client()
     {
@@ -160,6 +172,31 @@ class ClientProposal extends Model
     {
         return $this->canBeSignedBy(auth()->user());
     }
+
+    /**
+     * Cancelling is only meaningful while PENDING (see the "cancel" action
+     * in ClientProposalController) - open to the proposal's own creator, or
+     * anyone who could approve it (same team-leader pyramid as
+     * canBeApprovedBy), plus superadmin.
+     */
+    public function canBeCancelledBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if ((int) $this->created_by === (int) $user->id) {
+            return true;
+        }
+
+        return $this->canBeApprovedBy($user);
+    }
+
+    public function getCanCancelAttribute(): bool
+    {
+        return $this->canBeCancelledBy(auth()->user());
+    }
+
     public function lead()
     {
         return $this->belongsTo(CrmLead::class, 'lead_id');
@@ -174,5 +211,26 @@ class ClientProposal extends Model
     public function ownerUser(): ?User
     {
         return $this->lead?->user ?? $this->client?->lead?->user;
+    }
+
+    /**
+     * The deal's authorized signatory (name + email) - captured on the
+     * originating lead's company info at intake, same fallback chain as
+     * ownerUser(): this proposal's own lead first, then the client's
+     * originating lead for proposals created via the client-scoped store()
+     * path (which never sets lead_id).
+     */
+    public function authorizedSignatoryContact(): ?array
+    {
+        $company = $this->lead?->company ?? $this->client?->lead?->company;
+
+        if (! $company || ! $company->authorized_signatory_email) {
+            return null;
+        }
+
+        return [
+            'name' => $company->authorized_signatory_name ?: $company->authorized_signatory_email,
+            'email' => $company->authorized_signatory_email,
+        ];
     }
 }

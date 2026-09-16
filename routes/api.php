@@ -179,9 +179,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leadsource', [LovController::class, 'leadSource']);
         Route::get('/cargotype', [LovController::class, 'cargoType']);
         Route::get('/industry', [LovController::class, 'industry']);
+        Route::get('/industrysubcategory', [LovController::class, 'industrySubcategory']);
         Route::get('/organizationtype', [LovController::class, 'organizationType']);
         Route::get('/clientcategory', [LovController::class, 'clientCategory']);
         Route::get('/clientclassification', [LovController::class, 'clientClassification']);
+        Route::get('/contactdepartment', [LovController::class, 'contactDepartment']);
         Route::get('/unit', [LovController::class, 'unit']);
     });
 
@@ -235,6 +237,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{proposal}/approve', [ClientProposalController::class, 'approve']);
         Route::post('/{proposal}/disapprove', [ClientProposalController::class, 'disapprove']);
         Route::post('/{proposal}/reject', [ClientProposalController::class, 'reject']);
+        Route::post('/{proposal}/cancel', [ClientProposalController::class, 'cancel']);
         Route::post('/{proposal}/attachSigned', [ClientProposalController::class, 'attachSigned']);
         Route::get('/{proposal}/pdf', [ClientProposalController::class, 'downloadPdf']);
         Route::post('/{proposal}/contract', [ClientContractController::class, 'createFromProposal'])

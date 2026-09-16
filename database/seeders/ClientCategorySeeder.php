@@ -13,11 +13,9 @@ class ClientCategorySeeder extends Seeder
     {
         $option = \App\Models\Option::firstOrCreate(['option_name' => 'Client Category']);
         foreach ([
-            'Direct Client',
-            'Broker / Agent',
-            'Corporate Account',
-            'Government Account',
-            'Walk-in Client',
+            'Corporate',
+            'Retail',
+            'Logistics Provider',
         ] as $name) {
             \App\Models\ListOfValue::firstOrCreate([
                 'lov_optionId' => $option->option_id,

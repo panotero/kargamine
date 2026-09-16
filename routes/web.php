@@ -58,4 +58,5 @@ Route::middleware(['auth', 'check.status', 'prevent-back-history', 'must.change.
         Route::get('/', [NotificationController::class, 'index']);
     });
 });
+require __DIR__ . '/proposal_signing.php';
 require __DIR__ . '/auth.php';

@@ -145,20 +145,26 @@
                     <th width="5%">#</th>
                     <th width="15%">Origin</th>
                     <th width="15%">Destination</th>
-                    <th width="20%">Container</th>
-                    <th width="12%">Base Rate</th>
+                    <th width="18%">Container</th>
+                    <th width="9%">Min. Qty to Avail</th>
+                    <th width="11%">Base Rate</th>
                     <th width="16%">Adjustment</th>
-                    <th width="17%">Final Rate</th>
+                    <th width="16%">Final Rate</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($proposal->rates as $index => $rate)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>{{ $rate->originPort->location->name ?? '-' }} - {{ $rate->originPort->name ?? '-' }}</td>
-                        <td>{{ $rate->destinationPort->location->name ?? '-' }} - {{ $rate->destinationPort->name ?? '-' }}</td>
+                        <td>{{ $rate->originPort->location->name ?? '-' }} - {{ $rate->originPort->name ?? '-' }}
+                            @if ($rate->originPickupArea)<br><span style="font-size: 9px; color: #777;">Pickup: {{ $rate->originPickupArea->area_name }}</span>@endif
+                        </td>
+                        <td>{{ $rate->destinationPort->location->name ?? '-' }} - {{ $rate->destinationPort->name ?? '-' }}
+                            @if ($rate->destinationPickupArea)<br><span style="font-size: 9px; color: #777;">Drop-off: {{ $rate->destinationPickupArea->area_name }}</span>@endif
+                        </td>
                         <td>{{ $rate->container->name ?? '-' }} / {{ $rate->containerClass->class ?? '-' }} /
                             {{ $rate->containerSize->size ?? '-' }}</td>
+                        <td>{{ $rate->min_van_qty ?? '-' }}</td>
                         <td>₱{{ number_format($rate->base_rate, 2) }}</td>
                         <td>
                             @if ($rate->discount_type === 'percentage')
@@ -175,10 +181,39 @@
                         </td>
                         <td>₱{{ number_format($rate->final_rate, 2) }}</td>
                     </tr>
+                    @if ($rate->ancillaryServices->isNotEmpty())
+                        <tr>
+                            <td></td>
+                            <td colspan="7" style="font-size: 9px; color: #555;">
+                                <strong>Ancillary Services:</strong>
+                                {{ $rate->ancillaryServices->map(fn($s) => trim(
+                                    ($s->required_service ?? '-') .
+                                        ($s->quantity ? ' x' . rtrim(rtrim(number_format($s->quantity, 2), '0'), '.') : '') .
+                                        ($s->unit ? ' ' . $s->unit : '') .
+                                        ($s->location ? ' (' . $s->location . ')' : ''),
+                                ))->implode('; ') }}
+                            </td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
     </div>
+
+    @php
+        $additionalCharges = collect([
+            'include_special_charges' => 'Special Charges',
+            'include_port_charges' => 'Port Charges',
+            'include_handling_fee' => 'Handling Fee',
+            'include_general_charges' => 'General Charges',
+        ])->filter(fn($label, $field) => $proposal->$field);
+    @endphp
+    @if ($additionalCharges->isNotEmpty())
+        <div class="section">
+            <div class="section-title">Additional Charges</div>
+            <p style="font-size: 11px;">{{ $additionalCharges->implode(', ') }}</p>
+        </div>
+    @endif
 
     <div class="terms">
         <div class="section-title">Terms and Conditions</div>
@@ -193,6 +228,14 @@
             conditions, port congestion, and other circumstances beyond the
             control of the carrier.
         </p>
+        @if ($proposal->rates->contains(fn($rate) => $rate->min_van_qty))
+            <p>
+                Where indicated, the Final Rate for a container line is only
+                available when booked at or above its stated Minimum Quantity
+                to Avail. Bookings below that quantity may be re-quoted at a
+                different rate.
+            </p>
+        @endif
     </div>
 
     <div class="signature-section">

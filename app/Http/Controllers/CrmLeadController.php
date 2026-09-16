@@ -168,6 +168,7 @@ class CrmLeadController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'email_type' => ['nullable', 'in:personal,business'],
             'source' => ['required', 'string', 'max:255'],
+            'requires_proposal' => ['nullable', 'boolean'],
 
             'company_name' => ['required', 'string', 'max:255'],
             'type_of_business' => ['nullable', 'string', 'max:255'],
@@ -232,6 +233,7 @@ class CrmLeadController extends Controller
                 'email' => $data['email'] ?? null,
                 'email_type' => $data['email_type'] ?? null,
                 'source' => $data['source'],
+                'requires_proposal' => $data['requires_proposal'] ?? true,
             ]);
 
             if ($isNew) {
@@ -589,6 +591,7 @@ class CrmLeadController extends Controller
         // Computed once here (not on CrmLead itself) so the paginated
         // /api/crm/leads listing doesn't take an extra query per row.
         $lead->setAttribute('has_accepted_proposal', $lead->hasAcceptedProposal());
+        $lead->setAttribute('can_convert_to_client', $lead->canConvertToClient());
 
         return response()->json([
             'success' => true,

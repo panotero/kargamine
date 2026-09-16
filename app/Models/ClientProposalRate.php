@@ -15,7 +15,9 @@ class ClientProposalRate extends Model
     protected $fillable = [
         'proposal_id',
         'origin_port_id',
+        'origin_pickup_area_id',
         'destination_port_id',
+        'destination_pickup_area_id',
         'container_id',
         'container_class_id',
         'container_size_id',
@@ -39,6 +41,14 @@ class ClientProposalRate extends Model
     {
         return $this->belongsTo(Port::class, 'destination_port_id', 'port_id');
     }
+    public function originPickupArea()
+    {
+        return $this->belongsTo(ServiceableArea::class, 'origin_pickup_area_id', 'area_id');
+    }
+    public function destinationPickupArea()
+    {
+        return $this->belongsTo(ServiceableArea::class, 'destination_pickup_area_id', 'area_id');
+    }
     public function container()
     {
         return $this->belongsTo(Container::class);
@@ -54,5 +64,10 @@ class ClientProposalRate extends Model
     public function variant()
     {
         return $this->belongsTo(ContainerVariant::class, 'container_variant_id');
+    }
+
+    public function ancillaryServices()
+    {
+        return $this->hasMany(ClientProposalRateAncillaryService::class, 'proposal_rate_id');
     }
 }
