@@ -6,7 +6,7 @@ use App\Models\ClientContract;
 use App\Models\ClientMaster;
 use App\Models\ClientProposal;
 use App\Models\ContainerAsset;
-use App\Models\CrmLead;
+use App\Models\Prospect;
 use App\Services\TeamService;
 use App\Support\RoleHelper;
 use Carbon\Carbon;
@@ -29,14 +29,14 @@ class DashboardController extends Controller
             ? null
             : TeamService::accessibleUserIds($user)->all();
 
-        $leadsQuery = CrmLead::query()
+        $leadsQuery = Prospect::query()
             ->when($visibleUserIds !== null, fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
 
         $proposalsQuery = ClientProposal::query()
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
                 $q->where(function ($q) use ($visibleUserIds) {
-                    $q->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
-                        ->orWhereHas('client.lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
+                    $q->whereHas('prospect', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
+                        ->orWhereHas('client.prospect', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
                 });
             });
 
@@ -53,7 +53,7 @@ class DashboardController extends Controller
                         'crmStatus',
                         fn($q) => $q->whereNotIn('status', ['WIN', 'LOST'])
                     )->count(),
-                    'pending_proposals' => (clone $proposalsQuery)->where('status', ClientProposal::STATUS_PENDING)->count(),
+                    'pending_proposals' => (clone $proposalsQuery)->whereIn('status', [ClientProposal::STATUS_PENDING, ClientProposal::STATUS_PENDING_MANAGER])->count(),
                     'active_contracts' => (clone $contractsQuery)->where('status', ClientContract::STATUS_ACTIVE)->count(),
                 ],
                 'leads_by_status' => $this->leadsByStatus($leadsQuery),
@@ -79,10 +79,10 @@ class DashboardController extends Controller
 
     protected function leadsByStatus($leadsQuery): array
     {
-        $labels = ['LEAD', 'QUALIFIED', 'OPPORTUNITY', 'NEGOTIATION', 'WIN', 'LOST'];
+        $labels = ['PROSPECT', 'QUALIFIED', 'OPPORTUNITY', 'NEGOTIATION', 'WIN', 'LOST'];
 
         $counts = (clone $leadsQuery)
-            ->join('crm_status', 'crm_leads.status', '=', 'crm_status.id')
+            ->join('crm_status', 'prospects.status', '=', 'crm_status.id')
             ->select('crm_status.status as label', DB::raw('count(*) as total'))
             ->groupBy('crm_status.status')
             ->pluck('total', 'label');

@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        <input type="hidden" name="lead_id" id="contractLeadIdInput">
+        <input type="hidden" name="prospect_id" id="contractProspectIdInput">
         <input type="hidden" name="proposal_id" id="contractProposalIdInput">
 
         {{-- Contract details - shown once a proposal is loaded --}}
@@ -214,11 +214,11 @@
         }
 
         function applyProposalToForm(proposal) {
-            document.getElementById('contractLeadIdInput').value = proposal.lead_id ?? proposal.lead?.id ?? '';
+            document.getElementById('contractProspectIdInput').value = proposal.prospect_id ?? proposal.prospect?.id ?? '';
             document.getElementById('contractProposalIdInput').value = proposal.id;
 
             document.getElementById('contractClientDisplay').value =
-                proposal.lead?.contact_name ?? proposal.lead?.company?.company_name ?? `Lead #${proposal.lead_id}`;
+                proposal.prospect?.contact_name ?? proposal.prospect?.company?.company_name ?? `Lead #${proposal.prospect_id}`;
             document.getElementById('contractProposalDisplay').value = proposal.code;
 
             setSectionVisible('contractSummarySection', true);
@@ -231,7 +231,7 @@
         }
 
         function clearAutofill() {
-            document.getElementById('contractLeadIdInput').value = '';
+            document.getElementById('contractProspectIdInput').value = '';
             document.getElementById('contractProposalIdInput').value = '';
             document.getElementById('contractClientDisplay').value = '';
             document.getElementById('contractProposalDisplay').value = '';
@@ -345,7 +345,7 @@
             }
 
             const payload = {
-                lead_id: form.lead_id.value,
+                prospect_id: form.prospect_id.value,
                 proposal_id: form.proposal_id.value,
                 signed_date: form.signed_date.value || null,
                 valid_from: form.valid_from.value,

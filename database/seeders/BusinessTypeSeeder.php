@@ -13,6 +13,23 @@ class BusinessTypeSeeder extends Seeder
     public function run(): void
     {
         $option = \App\Models\Option::firstOrCreate(['option_name' => 'Type of Business']);
+
+        // Sample only - the final individual-only list hasn't been defined
+        // yet. These flag lov_is_individual = true, which is what now drives
+        // the Corporate/Individual distinction that used to be a separate
+        // manual toggle on the Prospect Identity tab (see
+        // Prospect::stageCompletionFlags() and ProspectController::saveStage1()).
+        foreach ([
+            'Sole Proprietorship',
+            'Self-Employed / Professional',
+            'Freelancer / Mixed Income Earner',
+        ] as $name) {
+            \App\Models\ListOfValue::firstOrCreate([
+                'lov_optionId' => $option->option_id,
+                'lov_name' => $name,
+            ], ['lov_code' => strtoupper(substr($name, 0, 3)), 'lov_is_individual' => true]);
+        }
+
         foreach ([
             'Accommodation and Food Service Activities',
             'Activities of Extraterritorial Organizations and Bodies',

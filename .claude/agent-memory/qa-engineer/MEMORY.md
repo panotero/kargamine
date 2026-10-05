@@ -1,0 +1,3 @@
+- [Prospect module untracked in git](project_prospect_module_untracked_in_git.md) — git diff/log show nothing for Prospect/ProposalRequest files; read current state directly instead
+- [Known test-suite baseline](project_broken_test_suite_sqlite_baseline.md) — 17 failed/42 passed (Auth/Booking/VesselVoyage/ClientMasterForm) is pre-existing, not a regression signal
+- [Container catalog shared-name risk](project_container_catalog_shared_name_risk.md) — "CRM-only" relabels can leak into shared seeders (containers.name); check seeder diffs, not just CRM JS/blade

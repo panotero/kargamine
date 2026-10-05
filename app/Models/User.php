@@ -30,6 +30,7 @@ class User extends Authenticatable
         'is_team_leader',
         'profile_photo_path',
         'nav_layout',
+        'font_size',
 
     ];
 

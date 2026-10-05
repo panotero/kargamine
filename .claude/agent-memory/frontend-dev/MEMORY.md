@@ -1,1 +1,4 @@
-- [CRM scope discipline](feedback_crm_scope_discipline.md) — crm.blade.php/logic_crm.js: never touch the proposal-row builder or completed LeadInfoModal relayout unless named
+- [CRM scope discipline](feedback_crm_scope_discipline.md) — crm.blade.php/logic_crm.js: don't touch pricing/discount logic unless named; LeadInfoModal/LeadAddProposalModal/LeadAddContainerModal are now deleted (2026-09-17), not off-limits-but-live anymore
+- [Prospect modal build](project_prospect_modal_build.md) — multi-pass 4-tab Prospect modal; Tab 4 (RFP wizard) built; RM picker now removed from Identity/Contact Summary (2026-09-30); endpoint gotchas
+- [Read-only attach preview mirrors form](feedback_readonly_attach_preview_mirrors_form.md) — chip-picker FK-attach previews must reuse the live form's field set/control types (disabled), not a compact summary grid
+- [Proposal assignment + Signed/Contracts split](project_proposal_assignment_and_signed_contracts_split.md) — new Request assignment queue page, RFP wizard gating, proposals.blade.php split into Approvals/Signed-Contracts sharing one JS file

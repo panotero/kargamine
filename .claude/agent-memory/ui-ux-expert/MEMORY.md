@@ -1,6 +1,7 @@
 # Memory Index
 
-- [CRM Lead Info modal redesign](project_crm_lead_info_modal_redesign.md) — full IA/hierarchy redesign in progress, prior review gave 2-pane+tabs recommendation
+- [CRM Lead Info modal redesign](project_crm_lead_info_modal_redesign.md) — SUPERSEDED, modal removed; see prospect-info-modal-sidebar entry below
+- [Prospect Info modal sidebar](project_prospect_info_modal_sidebar.md) — current ProspectInfoModal read-only view; 2026-10-05 review of Requested Proposals/Activity moved into right sidebar, found refresh-after-create bug + keyboard-scroll gap + status-pill-vs-plain-text inconsistency + raw-ISO-date bug
 - [CRM Lead form redesign](project_crm_lead_form_redesign.md) — New/Edit Lead full-page form redesign, prior review gave 3-step Stage 1 sub-wizard + signatory-mirror-checkbox recommendation, flagged a real premature-navigation bug on Stage 2 save
 - [CRM Leads list page redesign](project_crm_leads_list_redesign.md) — crm.blade.php page shell (header/status cards/filters/table) review; recommended single segmented pipeline bar over 7-card grid, needs-attention filter, table status color pill + row accent
 - [Client Masters page redesign](project_client_masters_redesign.md) — clientMasters.blade.php list+modal review; chip-strip over 3 bar-cards, rail+tabs modal over global-edit, createContractModal drift vs Proposals, empty-state/button-loading/window.prompt bugs
@@ -9,3 +10,4 @@
 - [Container Inventory redesign](project_container_inventory_redesign.md) — containerInventory.blade.php review; grouped-chip (not arrow-strip) status shape, booking-driven read-only states, dropped-reason + orphan-Damaged + terminal-OOS + missing-searchable-select + dark-input bugs
 - [Settings Users + Team Mgmt redesign](project_settings_users_redesign.md) — LIVE users.blade.php is a fake blue mockup on hardcoded arrays; real UserController API sits orphaned in usersmanagement.blade.php; team/leader cascade unexplained
 - [Settings area redesign (App Settings + Menus)](project_settings_area_redesign.md) — settings.blade.php CRUD endpoints (/api/offices,userconfigs,documenttypes,labeltypes) are UNREGISTERED/dead; page non-functional today; menus page is mostly modern
+- [Prospect/ProposalRequest module](project_prospect_proposal_request_module.md) — new CRM module replacing CrmLead; review found inconsistent apiCall button-protection, missing esc() in logic_prospect_add_modals.js, OD confirm-button style drift between wizard/standalone modal

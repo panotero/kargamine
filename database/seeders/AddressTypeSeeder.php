@@ -12,7 +12,7 @@ class AddressTypeSeeder extends Seeder
     public function run(): void
     {
         $option = \App\Models\Option::firstOrCreate(['option_name' => 'Address Type']);
-        foreach (['Individual', 'Branch Office', 'Head Office', 'Port', 'Yard', 'Warehouse'] as $name) {
+        foreach (['Individual', 'Main Office', 'Branch Office', 'Head Office', 'Port', 'Yard', 'Warehouse'] as $name) {
             \App\Models\ListOfValue::firstOrCreate([
                 'lov_optionId' => $option->option_id,
                 'lov_name' => $name,

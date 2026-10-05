@@ -22,6 +22,7 @@ class Setting_roleSeeder extends Seeder
                 ['id' => 4, 'role_name' => 'developer', 'is_system' => true],
                 ['id' => 5, 'role_name' => 'Credit Officer', 'is_system' => false],
                 ['id' => 6, 'role_name' => 'Sales', 'is_system' => false],
+                ['id' => 7, 'role_name' => 'Relationship Manager', 'is_system' => false],
             ],
             ['role_name'], // unique key to check
             ['role_name', 'is_system']  // columns to update if exists

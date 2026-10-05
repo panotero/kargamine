@@ -17,6 +17,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   const fields = {
     id: document.getElementById("menuId"),
     title: document.getElementById("menuTitle"),
+    category: document.getElementById("menuCategory"),
     icon: document.getElementById("menuIcon"),
     link: document.getElementById("menuLink"),
     rolesContainer: document.getElementById("menuRolesContainer"),
@@ -28,10 +29,14 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   const iconPreview = document.getElementById("menuIconPreview");
   const iconLabel = document.getElementById("menuIconLabel");
 
+  const categoryField = document.getElementById("menuCategoryField");
+  const categoryPanel = document.getElementById("menuCategoryPanel");
+
   let menusData = [];
   let iconsData = [];
   let iconsById = {};
   let rolesById = {};
+  let categoriesData = [];
 
   cancelBtn.addEventListener("click", () => closeModal());
 
@@ -93,6 +98,78 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     }
   });
 
+  function esc(v) {
+    return String(v ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[c]);
+  }
+
+  // -----------------------------------------------------------------
+  // Category combo - a plain text input + a suggestion panel of distinct
+  // category values already used elsewhere in this column (fetched from
+  // api/nav_menus/categories). Deliberately not window.makeSearchableSelect:
+  // that widget only picks from a closed <select> option list and has no
+  // "type a brand-new value" affordance, which this field needs.
+  // -----------------------------------------------------------------
+  async function loadCategories() {
+    const response = await fetchWithRetry(`/api/nav_menus/categories`, {
+      headers: { Accept: "application/json" },
+    });
+    categoriesData = response?.data ?? [];
+  }
+
+  function renderCategoryPanel(filterText = "") {
+    const q = filterText.trim().toLowerCase();
+    const matches = categoriesData.filter((c) => c.toLowerCase().includes(q));
+
+    if (!matches.length) {
+      categoryPanel.classList.add("hidden");
+      return;
+    }
+
+    categoryPanel.innerHTML = matches
+      .map(
+        (c) => `
+        <button type="button" class="category-option w-full text-left px-3 py-1.5 rounded-lg text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800" data-value="${esc(c)}">${esc(c)}</button>
+    `,
+      )
+      .join("");
+
+    categoryPanel.querySelectorAll(".category-option").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        fields.category.value = btn.dataset.value;
+        categoryPanel.classList.add("hidden");
+      });
+    });
+
+    categoryPanel.classList.remove("hidden");
+  }
+
+  fields.category.addEventListener("focus", () => renderCategoryPanel(fields.category.value));
+  fields.category.addEventListener("input", () => renderCategoryPanel(fields.category.value));
+
+  document.addEventListener("click", (e) => {
+    if (!categoryPanel.classList.contains("hidden") && !categoryPanel.contains(e.target) && e.target !== fields.category) {
+      categoryPanel.classList.add("hidden");
+    }
+  });
+
+  // Category only means anything on a top-level menu (it's what groups the
+  // sidebar) - hide and clear it for a child, same spirit as the roles
+  // checkboxes below getting disabled/forced to the parent's own value.
+  function updateCategoryFieldVisibility() {
+    const isTopLevel = !parseInt(fields.parent.value);
+    categoryField.classList.toggle("hidden", !isTopLevel);
+    if (!isTopLevel) {
+      fields.category.value = "";
+      categoryPanel.classList.add("hidden");
+    }
+  }
+
   function openModal(mode = "Add", menu = null) {
     modalTitle.textContent = mode === "Add" ? "Add New Menu" : "Modify Menu";
     saveBtn.textContent = mode === "Add" ? "Save" : "Modify";
@@ -100,6 +177,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     if (menu) {
       fields.id.value = menu.id;
       fields.title.value = menu.title || "";
+      fields.category.value = menu.category || "";
       setSelectedIcon(menu.icon || "");
       fields.link.value = menu.link || "";
       fields.parent.value = menu.parent_menu || 0;
@@ -112,6 +190,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     } else {
       fields.id.value = "";
       fields.title.value = "";
+      fields.category.value = "";
       setSelectedIcon("");
       fields.link.value = "";
       fields.parent.value = 0;
@@ -121,7 +200,9 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
       });
     }
 
+    updateCategoryFieldVisibility();
     iconPicker.classList.add("hidden");
+    categoryPanel.classList.add("hidden");
     modal.classList.remove("hidden");
     modal.classList.add("flex");
   }
@@ -313,8 +394,13 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
           ? `<svg class="w-4 h-4 inline-block align-text-bottom text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${iconEntry.svg}</svg>`
           : "";
 
+        const categoryHtml = menu.category
+          ? `<span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">${esc(menu.category)}</span>`
+          : '<span class="text-zinc-300 dark:text-zinc-600 italic">— none —</span>';
+
         tr.innerHTML = `
                 <td class="px-4 py-2.5 text-black dark:text-white">${indent}${iconPreviewHtml} ${menu.title}</td>
+                <td class="px-4 py-2.5">${categoryHtml}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${targetpage || ""}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${roles || ""}</td>
                 <td class="px-4 py-2.5 text-black dark:text-white">${parentName}</td>
@@ -341,23 +427,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
 
         tr.addEventListener("click", (e) => {
           if (e.target.closest("td.menubuttons")) return;
-
-          modalTitle.textContent = "Modify Menu";
-          saveBtn.textContent = "Modify";
-
-          fields.id.value = menu.id;
-          fields.title.value = menu.title || "";
-          setSelectedIcon(menu.icon || "");
-          fields.link.value = menu.link || "";
-          fields.parent.value = menu.parent_menu || 0;
-
-          const allowedRoles = JSON.parse(menu.allowed_roles || "[]");
-          document.querySelectorAll(".roleCheckbox").forEach((cb) => {
-            cb.checked = allowedRoles.includes(cb.value);
-          });
-
-          modal.classList.remove("hidden");
-          modal.classList.add("flex");
+          openModal("Edit", menu);
         });
 
         tableBody.appendChild(tr);
@@ -382,6 +452,8 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   }
 
   fields.parent.addEventListener("change", () => {
+    updateCategoryFieldVisibility();
+
     const parentId = parseInt(fields.parent.value);
     if (parentId === 0) {
       document.querySelectorAll(".roleCheckbox").forEach((cb) => {
@@ -418,6 +490,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
 
     const payload = {
       title: fields.title.value,
+      category: parentId === 0 ? fields.category.value.trim() || null : null,
       icon: fields.icon.value,
       link: fields.link.value,
       allowed_roles: JSON.stringify(checkedRoles),
@@ -446,6 +519,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
     closeModal();
     await loadMenus();
     await loadRoles();
+    await loadCategories();
   });
 
   tableBody.addEventListener("click", async (e) => {
@@ -509,6 +583,7 @@ window.initMenuSettingsPage = function initMenuSettingsPage() {
   (async function init() {
     await loadIcons();
     await loadRoles();
+    await loadCategories();
     await loadMenus();
   })();
 };

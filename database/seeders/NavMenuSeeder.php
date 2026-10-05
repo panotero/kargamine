@@ -46,7 +46,7 @@ class NavMenuSeeder extends Seeder
             [
                 'title' => 'Proposals',
                 'icon' => 'paper-airplane',
-                'link' => 'page_proposals',
+                'link' => '#',
                 'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
                 'parent_title' => null,
                 'menu_order' => '2',
@@ -223,6 +223,45 @@ class NavMenuSeeder extends Seeder
                 'link' => '/page_notification_test',
                 'allowed_roles' => ['4', '1'],
                 'parent_title' => 'Developer Option',
+                'menu_order' => '4',
+            ],
+            [
+                // Management-only queue - mints happen elsewhere, this is
+                // where superadmin/admin assign the CSR + Relationship
+                // Manager that unlock the RFP wizard for a prospect.
+                'title' => 'Request',
+                'icon' => 'paper-airplane',
+                'link' => '/page_proposal_requests',
+                'allowed_roles' => ['1', '2'],
+                'parent_title' => 'Proposals',
+                'menu_order' => '1',
+            ],
+            [
+                'title' => 'Approvals',
+                'icon' => 'paper-airplane',
+                'link' => 'page_proposals',
+                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
+                'parent_title' => 'Proposals',
+                'menu_order' => '2',
+            ],
+            [
+                'title' => 'Signed / Contracts',
+                'icon' => 'paper-airplane',
+                'link' => '/page_proposal_signed_contracts',
+                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
+                'parent_title' => 'Proposals',
+                'menu_order' => '3',
+            ],
+            [
+                // Self-scoped by query (assigned CSR/RM only) - no
+                // nav.access gate on its API route, same broad allowed_roles
+                // as Approvals/Signed-Contracts since visibility is already
+                // narrowed per-user. See ProposalRequestAssignmentController::mine().
+                'title' => 'My Requests',
+                'icon' => 'paper-airplane',
+                'link' => '/page_proposal_requests_mine',
+                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
+                'parent_title' => 'Proposals',
                 'menu_order' => '4',
             ],
         ];

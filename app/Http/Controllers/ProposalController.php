@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Proposal;
 use App\Models\ProposalInfo;
-use App\Models\CrmLead;
+use App\Models\Prospect;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\CrmCompanyInfo;
+use App\Models\ProspectCompanyInfo;
 use App\Models\ProposalStatus;
 use App\Services\ApplicationMailer;
 use App\Services\ActivityService;
@@ -35,15 +35,15 @@ class ProposalController extends Controller
             ->select(
                 'id',
                 'code',
-                'lead_id',
+                'prospect_id',
                 'created_by',
                 'status',
                 'created_at',
                 'updated_at'
             )
             ->with(
-                'lead:id,first_name,last_name',
-                'lead.company:id,lead_id,company_name',
+                'prospect:id,first_name,last_name',
+                'prospect.company:id,prospect_id,company_name',
                 'rates',
                 'creator:id,name',
                 'status:id,status'
@@ -53,7 +53,7 @@ class ProposalController extends Controller
 
                 $q->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
-                        ->orWhereHas('lead', function ($q) use ($search) {
+                        ->orWhereHas('prospect', function ($q) use ($search) {
                             $q->where('first_name', 'like', "%{$search}%")
                                 ->orWhere('last_name', 'like', "%{$search}%")
                                 ->orWhereHas('company', function ($q) use ($search) {
@@ -102,16 +102,16 @@ class ProposalController extends Controller
             $code = "{$prefix}-{$yearMonth}-{$sequencePadded}";
             DB::beginTransaction();
             //first get lead info
-            $lead = CrmLead::where('uuid', $request->uuid)->first();
-            $leadCompanyInfo = CrmCompanyInfo::where('lead_id', $lead->id)->first();
+            $lead = Prospect::where('uuid', $request->uuid)->first();
+            $leadCompanyInfo = ProspectCompanyInfo::where('prospect_id', $lead->id)->first();
             //check first if there is existing record on the proposal table
-            $proposal = Proposal::where('lead_id', $lead->id)->where('status', 1)->first();
+            $proposal = Proposal::where('prospect_id', $lead->id)->where('status', 1)->first();
 
 
             //if there is no existing record create the record first then return the id and create porposal rates with the proposal id.
             if (!$proposal) {
                 $payload = [
-                    'lead_id' => $lead->id,
+                    'prospect_id' => $lead->id,
                     'created_by' => auth()->id(),
                     'code' => $code,
 
@@ -175,8 +175,8 @@ class ProposalController extends Controller
                 'serviceOrigin',
                 'serviceDestination',
             ],
-            'lead',
-            'lead.company',
+            'prospect',
+            'prospect.company',
             'creator'
         ])->findOrFail($id);
         // return $proposal;
@@ -197,7 +197,7 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
             $proposal = Proposal::with([
-                'lead.company',
+                'prospect.company',
                 'creator',
                 'status',
                 'rates' => [
@@ -238,7 +238,7 @@ class ProposalController extends Controller
             $status = ProposalStatus::where('id', $proposal->status)->firstOrFail();
             DB::commit();
             $this->activityService->create(
-                $proposal->lead_id,
+                $proposal->prospect_id,
                 "Proposal Status Change",
                 "Proposal with code: " . $proposal->code . " has been " . $status['status'] . " by:"  . $auth->name
             );

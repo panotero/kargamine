@@ -112,19 +112,19 @@
             </tr>
             <tr>
                 <td><strong>Client / Company</strong></td>
-                <td>{{ $proposal->client->company_name ?? $proposal->lead?->company?->company_name ?? '-' }}</td>
+                <td>{{ $proposal->client->company_name ?? $proposal->prospect?->company?->company_name ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Customer Code</strong></td>
-                <td>{{ $proposal->client->customer_code ?? $proposal->lead?->customer_code ?? '-' }}</td>
+                <td>{{ $proposal->client->customer_code ?? $proposal->prospect?->customer_code ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Registered Address</strong></td>
-                <td>{{ $proposal->client?->formattedPrimaryAddress() ?? $proposal->lead?->formattedPrimaryAddress() ?? '-' }}</td>
+                <td>{{ $proposal->client?->formattedPrimaryAddress() ?? $proposal->prospect?->formattedPrimaryAddress() ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Contact Number</strong></td>
-                <td>{{ $proposal->client?->contacts->first()?->mobile ?? $proposal->lead?->mobile ?? '-' }}</td>
+                <td>{{ $proposal->client?->contacts->first()?->mobile ?? $proposal->prospect?->mobile ?? '-' }}</td>
             </tr>
             <tr>
                 <td><strong>Prepared By</strong></td>

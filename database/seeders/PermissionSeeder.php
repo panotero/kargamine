@@ -29,6 +29,8 @@ class PermissionSeeder extends Seeder
             ['key' => 'booking.generate-loadlist', 'label' => 'Generate a vessel voyage\'s loadlist', 'module' => 'Booking'],
             ['key' => 'contract.create', 'label' => 'Create a contract from an accepted proposal', 'module' => 'Contract'],
             ['key' => 'contract.terminate', 'label' => 'Terminate a contract', 'module' => 'Contract'],
+            ['key' => 'proposal.approve.rm', 'label' => 'Give the first (Relationship Manager) approval on a proposal', 'module' => 'Proposal'],
+            ['key' => 'proposal.approve.manager', 'label' => 'Give the final (Manager) approval/disapproval/rejection on a proposal', 'module' => 'Proposal'],
         ];
 
         foreach ($permissions as $permission) {

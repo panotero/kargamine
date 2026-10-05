@@ -82,6 +82,42 @@
 
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5 space-y-6 mt-6">
         <div>
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Font Size</h2>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Choose how large text and controls appear across the app.</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+            <button type="button" id="fontSizeSmallBtn" data-font-size="small"
+                class="font-size-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
+                <div class="font-size-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
+                <div class="w-full h-16 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                    <span class="font-bold text-zinc-500 dark:text-zinc-400" style="font-size: 1.1rem;">Aa</span>
+                </div>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Small</span>
+            </button>
+
+            <button type="button" id="fontSizeMediumBtn" data-font-size="medium"
+                class="font-size-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
+                <div class="font-size-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
+                <div class="w-full h-16 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                    <span class="font-bold text-zinc-500 dark:text-zinc-400" style="font-size: 1.5rem;">Aa</span>
+                </div>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Medium</span>
+            </button>
+
+            <button type="button" id="fontSizeLargeBtn" data-font-size="large"
+                class="font-size-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
+                <div class="font-size-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
+                <div class="w-full h-16 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                    <span class="font-bold text-zinc-500 dark:text-zinc-400" style="font-size: 1.9rem;">Aa</span>
+                </div>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Large</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm p-5 space-y-6 mt-6">
+        <div>
             <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Change Password</h2>
             <p class="text-sm text-zinc-500 dark:text-zinc-400">Ensure your account is using a long, random password to stay secure.</p>
         </div>
@@ -190,6 +226,7 @@
             document.getElementById('profileEmailInput').value = currentUser.email ?? '';
             renderPreview();
             setActiveNavLayoutOption(currentUser.nav_layout ?? 'side');
+            setActiveFontSizeOption(currentUser.font_size ?? 'medium');
         }
 
         const NAV_LAYOUT_ACTIVE_CLASSES = ['border-orange-500', 'ring-2', 'ring-orange-500'];
@@ -246,6 +283,66 @@
                     }
                 } finally {
                     setNavLayoutButtonsDisabled(false);
+                    if (spinner) spinner.classList.add('hidden');
+                }
+            });
+        });
+
+        const FONT_SIZE_ACTIVE_CLASSES = ['border-orange-500', 'ring-2', 'ring-orange-500'];
+        const FONT_SIZE_INACTIVE_CLASSES = ['border-zinc-200', 'dark:border-zinc-700'];
+        const fontSizeButtons = {
+            small: document.getElementById('fontSizeSmallBtn'),
+            medium: document.getElementById('fontSizeMediumBtn'),
+            large: document.getElementById('fontSizeLargeBtn'),
+        };
+
+        function setActiveFontSizeOption(fontSize) {
+            Object.entries(fontSizeButtons).forEach(([size, btn]) => {
+                if (!btn) return;
+                const isActive = size === fontSize;
+                FONT_SIZE_ACTIVE_CLASSES.forEach((cls) => btn.classList.toggle(cls, isActive));
+                FONT_SIZE_INACTIVE_CLASSES.forEach((cls) => btn.classList.toggle(cls, !isActive));
+            });
+        }
+
+        function setFontSizeButtonsDisabled(disabled) {
+            Object.values(fontSizeButtons).forEach((btn) => {
+                if (btn) btn.disabled = disabled;
+            });
+        }
+
+        Object.entries(fontSizeButtons).forEach(([size, btn]) => {
+            if (!btn) return;
+            btn.addEventListener('click', async () => {
+                // Already the active size - nothing to save.
+                if (currentUser && (currentUser.font_size ?? 'medium') === size) return;
+
+                // Guard against overlapping requests if another option is
+                // clicked before this one resolves.
+                if (btn.disabled) return;
+
+                const spinner = btn.querySelector('.font-size-spinner');
+                setFontSizeButtonsDisabled(true);
+                if (spinner) spinner.classList.remove('hidden');
+
+                try {
+                    const response = await apiCall({
+                        mode: 'PUT',
+                        isJson: true,
+                        payload: { font_size: size },
+                        url: '/api/profile/font-size',
+                    });
+
+                    if (response.success) {
+                        currentUser = response.data;
+                        setActiveFontSizeOption(currentUser.font_size ?? size);
+                        showMessage({ status: 'success', message: 'Font size updated. Reloading...' });
+                        setTimeout(() => window.location.reload(), 700);
+                    } else {
+                        showMessage({ status: 'error', message: response.message ?? 'Unable to update font size.' });
+                    }
+                } finally {
+                    setFontSizeButtonsDisabled(false);
                     if (spinner) spinner.classList.add('hidden');
                 }
             });

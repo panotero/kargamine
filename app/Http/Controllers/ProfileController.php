@@ -57,6 +57,21 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function updateFontSize(Request $request)
+    {
+        $validated = $request->validate([
+            'font_size' => ['required', 'string', 'in:small,medium,large'],
+        ]);
+
+        Auth::user()->update(['font_size' => $validated['font_size']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Font size updated.',
+            'data' => Auth::user(),
+        ]);
+    }
+
     public function updatePassword(Request $request)
     {
         $validated = $request->validate([

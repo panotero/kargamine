@@ -1,6 +1,7 @@
 <x-app-layout>
     @php $navLayout = Auth::user()->nav_layout ?? 'side'; @endphp
-    <div class="flex h-screen bg-zinc-100 dark:bg-zinc-950" id="appShell" data-nav-layout="{{ $navLayout }}">
+    <div class="flex h-screen bg-zinc-100 dark:bg-zinc-950" id="appShell" data-nav-layout="{{ $navLayout }}"
+        data-direct-page-link="{{ $directPageLink ?? '' }}">
         <aside id="sidebar-wrapper"
             class="bg-white dark:bg-zinc-900 shadow-lg w-64
            fixed lg:static inset-y-0 left-0

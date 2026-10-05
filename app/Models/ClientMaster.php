@@ -33,9 +33,9 @@ class ClientMaster extends Model
         'always_route_atw' => 'boolean',
     ];
 
-    public function lead()
+    public function prospect()
     {
-        return $this->belongsTo(\App\Models\CrmLead::class, 'lead_id');
+        return $this->belongsTo(\App\Models\Prospect::class, 'prospect_id');
     }
 
     public function addresses()
@@ -61,7 +61,7 @@ class ClientMaster extends Model
      */
     public function ownerUserId(): ?int
     {
-        return $this->sales_rep_id ?? $this->lead?->assigned_to;
+        return $this->sales_rep_id ?? $this->prospect?->assigned_to;
     }
 
     /**
@@ -80,7 +80,7 @@ class ClientMaster extends Model
             $q->whereIn('sales_rep_id', $userIds)
                 ->orWhere(function ($q) use ($userIds) {
                     $q->whereNull('sales_rep_id')
-                        ->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $userIds));
+                        ->whereHas('prospect', fn($q) => $q->whereIn('assigned_to', $userIds));
                 });
         });
     }
@@ -92,7 +92,7 @@ class ClientMaster extends Model
 
     /**
      * CM-{year}-0001, resetting each year. Finds the current highest
-     * sequence for this year across BOTH client_masters and crm_leads
+     * sequence for this year across BOTH client_masters and prospects
      * (a lead reserves its code here before a ClientMaster row exists),
      * then retries forward past any collision until a free one is found.
      */
@@ -110,14 +110,14 @@ class ClientMaster extends Model
                     ->max() ?? 0;
             };
 
-            $seq = max($maxSequenceIn('client_masters'), $maxSequenceIn('crm_leads'));
+            $seq = max($maxSequenceIn('client_masters'), $maxSequenceIn('prospects'));
 
             do {
                 $seq++;
                 $candidate = $prefix . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
             } while (
                 self::where('customer_code', $candidate)->exists()
-                || CrmLead::where('customer_code', $candidate)->exists()
+                || Prospect::where('customer_code', $candidate)->exists()
             );
 
             return $candidate;

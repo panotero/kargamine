@@ -10,6 +10,7 @@ class ListOfValue extends Model
     protected $casts = [
         'created_at' => 'datetime:M d, Y, h:i A',
         'updated_at' => 'datetime:M d, Y, h:i A',
+        'lov_is_individual' => 'boolean',
     ];
 
     use HasFactory;
@@ -22,6 +23,7 @@ class ListOfValue extends Model
         'lov_optionId',
         'lov_name',
         'lov_description',
+        'lov_is_individual',
         'parent_lov_id',
     ];
 

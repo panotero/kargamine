@@ -10,8 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE client_proposal_rates MODIFY discount_type ENUM('percentage', 'fixed', 'increase_percentage', 'increase_fixed') NULL");
-        DB::statement("ALTER TABLE client_contract_rates MODIFY discount_type ENUM('percentage', 'fixed', 'increase_percentage', 'increase_fixed') NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE client_proposal_rates MODIFY discount_type ENUM('percentage', 'fixed', 'increase_percentage', 'increase_fixed') NULL");
+            DB::statement("ALTER TABLE client_contract_rates MODIFY discount_type ENUM('percentage', 'fixed', 'increase_percentage', 'increase_fixed') NULL");
+        }
     }
 
     /**
@@ -19,7 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE client_proposal_rates MODIFY discount_type ENUM('percentage', 'fixed') NULL");
-        DB::statement("ALTER TABLE client_contract_rates MODIFY discount_type ENUM('percentage', 'fixed') NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE client_proposal_rates MODIFY discount_type ENUM('percentage', 'fixed') NULL");
+            DB::statement("ALTER TABLE client_contract_rates MODIFY discount_type ENUM('percentage', 'fixed') NULL");
+        }
     }
 };

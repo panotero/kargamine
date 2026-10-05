@@ -22,6 +22,9 @@
                         Title</th>
                     <th
                         class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
+                        Category</th>
+                    <th
+                        class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
                         Page</th>
                     <th
                         class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">
@@ -62,6 +65,33 @@
                 <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Title</label>
                 <input id="menuTitle" type="text"
                     class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+            </div>
+
+            {{--
+                Only meaningful on a top-level menu (it's what groups the
+                sidebar into labeled sections - see resources/js/navmenu.js)
+                - hidden for a child via #menuCategoryField, toggled by the
+                existing #menuParent change handler in menuSettings.js. A
+                plain text input + suggestion panel (fed by
+                api/nav_menus/categories) rather than window.makeSearchableSelect,
+                since that widget only picks from a closed list of existing
+                <select> options and has no "type a new value" affordance -
+                see menuSettings.js's loadCategories()/renderCategoryPanel().
+            --}}
+            <div class="flex flex-col gap-1" id="menuCategoryField">
+                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Category</label>
+                {{-- `relative` scoped to just the input (not the whole
+                     field, which also has the label/hint <p> around it) so
+                     the panel's `top-full` anchors to the input's own
+                     bottom edge instead of the field's full height. --}}
+                <div class="relative">
+                    <input id="menuCategory" type="text" autocomplete="off" placeholder="e.g. Sales, Operations"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+                    <div id="menuCategoryPanel"
+                        class="hidden absolute z-20 top-full left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg p-1">
+                    </div>
+                </div>
+                <p class="text-xs text-zinc-400 mt-0.5">Groups this menu under a label in the sidebar. Leave blank to keep it ungrouped.</p>
             </div>
 
             <div class="flex flex-col gap-1 relative">

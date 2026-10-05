@@ -136,6 +136,21 @@ class PageController extends Controller
         return view('pages.proposals');
     }
 
+    public function page_proposal_requests()
+    {
+        return view('pages.proposal_requests');
+    }
+
+    public function page_proposal_requests_mine()
+    {
+        return view('pages.proposal_requests_mine');
+    }
+
+    public function page_proposal_signed_contracts()
+    {
+        return view('pages.proposal_signed_contracts');
+    }
+
     public function page_maintenance()
     {
         return view('pages.maintenance');
@@ -149,11 +164,6 @@ class PageController extends Controller
     public function page_clientMasterForm()
     {
         return view('pages.clientMasterForm');
-    }
-
-    public function page_crmLeadForm()
-    {
-        return view('pages.crmLeadForm');
     }
 
     public function page_ContainerInventory()

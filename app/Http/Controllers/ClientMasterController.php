@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientMaster;
 use App\Models\ClientProposal;
-use App\Models\CrmLead;
+use App\Models\Prospect;
 use App\Models\CrmStatus;
 use App\Services\TeamService;
 use App\Support\RoleHelper;
@@ -35,7 +35,7 @@ class ClientMasterController extends Controller
                 'current_stage',
                 'is_complete',
                 'sales_rep_id',
-                'lead_id',
+                'prospect_id',
                 'created_at'
             )
             ->with('salesRep:id,name')
@@ -91,7 +91,7 @@ class ClientMasterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'uuid' => ['nullable', 'exists:client_masters,uuid'],
-            'lead_id' => ['nullable', 'exists:crm_leads,id'],
+            'prospect_id' => ['nullable', 'exists:prospects,id'],
             'customer_code' => ['nullable', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'client_mnemonic' => [
@@ -140,14 +140,14 @@ class ClientMasterController extends Controller
             $lead = null;
 
             if ($isNew) {
-                if (! empty($data['lead_id'])) {
-                    $client->lead_id = $data['lead_id'];
-                    $lead = CrmLead::find($data['lead_id']);
+                if (! empty($data['prospect_id'])) {
+                    $client->prospect_id = $data['prospect_id'];
+                    $lead = Prospect::find($data['prospect_id']);
                 }
 
                 // The code is either already reserved on the lead (locked
                 // there the moment the "Create Client Master" flow was
-                // opened - see CrmLeadController::getOrGenerateCustomerCode)
+                // opened - see ProspectController::getOrGenerateCustomerCode)
                 // or generated fresh right here for a lead-less client.
                 $client->customer_code = $lead?->customer_code
                     ?? $data['customer_code']
@@ -166,7 +166,7 @@ class ClientMasterController extends Controller
 
             $client->fill(
                 collect($data)
-                    ->except(['uuid', 'lead_id', 'customer_code', 'addresses'])
+                    ->except(['uuid', 'prospect_id', 'customer_code', 'addresses'])
                     ->toArray()
             );
 
@@ -199,11 +199,11 @@ class ClientMasterController extends Controller
                 }
 
                 // Any proposal created while this was still just a lead
-                // (client_id null, lead_id set) now belongs to the client
+                // (client_id null, prospect_id set) now belongs to the client
                 // it just became - otherwise it stays invisible to every
                 // client-scoped proposal list (Client Master modal) despite
                 // still showing up on the global Proposals page.
-                ClientProposal::where('lead_id', $lead->id)
+                ClientProposal::where('prospect_id', $lead->id)
                     ->whereNull('client_id')
                     ->update(['client_id' => $client->id]);
             }

@@ -1,18 +1,20 @@
 ---
 name: project-broken-test-suite-sqlite
-description: The full PHPUnit suite (in-memory SQLite) fails on every Feature test due to a pre-existing MySQL-only migration statement — not caused by any one feature's changes.
+description: The MySQL-only ENUM MODIFY migration that red-screened the whole PHPUnit suite was fixed on 2026-09-17 (driver-guarded) — suite now runs, but ~17 pre-existing failures unrelated to CRM/Prospect remain.
 metadata:
   type: project
 ---
 
-`phpunit.xml` forces `DB_CONNECTION=sqlite` / `DB_DATABASE=:memory:` for tests. As of 2026-09-06, running any `RefreshDatabase` Feature test (e.g. `php artisan test tests/Feature/BookingTest.php`) fails during migration with:
+`phpunit.xml` forces `DB_CONNECTION=sqlite` / `DB_DATABASE=:memory:` for tests. Until 2026-09-17, running any `RefreshDatabase` Feature test failed during migration with:
 
 ```
 SQLSTATE[HY000]: General error: 1 near "MODIFY": syntax error (Connection: sqlite, SQL: ALTER TABLE client_proposal_rates MODIFY discount_type ENUM(...) NULL)
 ```
 
-from `database/migrations/2026_07_07_124800_add_rate_type_and_rate_value_to_proposals_rates_table.php` (or similarly-named migration) using a raw MySQL `MODIFY ... ENUM` statement that SQLite's grammar doesn't support.
+from `database/migrations/2026_08_22_164450_widen_discount_type_enum_for_client_proposal_and_contract_rates.php`'s raw `DB::statement(...MODIFY...ENUM...)` calls.
 
-**Why:** This is pre-existing and unrelated to whatever feature is being worked on — confirmed by running an untouched test (`BookingTest`) and seeing the identical failure with no relation to the files changed in that session.
+**Fixed 2026-09-17** (as part of a Prospect-modal backend brief): both `up()` and `down()` in that migration now wrap the `DB::statement` calls in `if (DB::getDriverName() === 'mysql') { ... }`. SQLite has no enum enforcement, so skipping is harmless there.
 
-**How to apply:** Don't assume a red `php artisan test` run means your change broke something — reproduce on an untouched test file first. Verification for anything under `RefreshDatabase` currently has to happen another way: hit the real dev MySQL DB directly (migrate against it, use `php artisan tinker`, or spin up `php artisan serve` + `curl` with a real session/CSRF flow) rather than relying on the PHPUnit suite until someone fixes this migration to use SQLite-compatible schema-builder calls instead of a raw MySQL statement. Report this as a standing risk whenever asked to verify via `php artisan test`.
+**Current state:** `php artisan test` now actually executes (no more immediate red-screen). As of 2026-09-17, running the full suite gives `17 failed, 42 passed`, all in `AuthFlowTest`, `BookingDispatchTest`, `BookingEirTest`, `BookingGateScanTest`, `BookingTest`, `BookingVoyageTest`, `VesselVoyageLoadlistTest`, and `ClientMasterFormTest` (one case: "finance stage3 persists new fields and rejects an invalid cro"). None of these touch Prospect/CRM/`proposal_requests` code (no test file references `Prospect` or `crm/prospects` at all) — confirmed unrelated to that brief's changes, but still a **standing pre-existing gap** in the suite that nobody has triaged yet. Symptoms seen: booking/voyage tests get 403 instead of 201 (looks like a permission/role-seeding gap under the SQLite test DB), and the ClientMasterFormTest case gets 422 instead of 200 on CRO validation.
+
+**How to apply:** The old blanket "don't trust `php artisan test`, it red-screens everything" advice no longer applies — the suite is usable again for verification. But a green run is still not achievable without someone triaging the 17 failures above first. When verifying unrelated work, run the full suite and diff against this known-bad list rather than assuming any failure is yours; when touching Booking/Voyage/Auth/ClientMasterForm code, these failures may or may not already be there before your change — check by running just that test file on an untouched checkout first.

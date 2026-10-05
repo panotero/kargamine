@@ -121,33 +121,33 @@
 
             <tr>
                 <td><strong>Contact Person</strong></td>
-                <td>{{ $proposal->lead->contact_name }}</td>
+                <td>{{ $proposal->prospect->contact_name }}</td>
             </tr>
 
             <tr>
                 <td><strong>Email Address</strong></td>
-                <td>{{ $proposal->lead->email }}</td>
+                <td>{{ $proposal->prospect->email }}</td>
             </tr>
 
             <tr>
                 <td><strong>Mobile Number</strong></td>
-                <td>{{ $proposal->lead->mobile }}</td>
+                <td>{{ $proposal->prospect->mobile }}</td>
             </tr>
             <tr>
                 <td><strong>Company</strong></td>
-                <td>{{ $proposal->lead->company->company_name }}</td>
+                <td>{{ $proposal->prospect->company->company_name }}</td>
             </tr>
             <tr>
                 <td><strong>Company Address</strong></td>
-                <td>{{ $proposal->lead->company->company_address }}</td>
+                <td>{{ $proposal->prospect->company->company_address }}</td>
             </tr>
             <tr>
                 <td><strong>Authorized Signatory</strong></td>
-                <td>{{ $proposal->lead->company->authorized_signatory_name }}</td>
+                <td>{{ $proposal->prospect->company->authorized_signatory_name }}</td>
             </tr>
             <tr>
                 <td><strong>Signatory Position</strong></td>
-                <td>{{ $proposal->lead->company->authorized_signatory_position }}</td>
+                <td>{{ $proposal->prospect->company->authorized_signatory_position }}</td>
             </tr>
 
             <tr>

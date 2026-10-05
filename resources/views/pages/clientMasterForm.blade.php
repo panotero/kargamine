@@ -446,7 +446,7 @@
             const form = document.getElementById('stage1Form');
             const data = Object.fromEntries(new FormData(form).entries());
             if (clientUuid) data.uuid = clientUuid;
-            if (leadId) data.lead_id = leadId;
+            if (leadId) data.prospect_id = leadId;
 
             const addresses = collectAddressesFrom(document.getElementById('addressesContainer'));
             if (!addresses.length) {

@@ -318,7 +318,7 @@ window.renderRows = function renderRows(
 
 window.getStatusBadgeClass = function getStatusBadgeClass(status) {
   switch (status) {
-    case "LEAD":
+    case "PROSPECT":
       return "bg-gray-100 text-gray-700";
 
     case "QUALIFIED":

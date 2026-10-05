@@ -1,0 +1,12 @@
+---
+name: project-container-catalog-shared-name-risk
+description: containers.name (ContainerCatalogSeeder) is a shared, app-wide catalog field — a CRM-only display relabel must not touch it, but the 2026-09-27 CSR spec change did exactly that for LC ("Loose Cargo" -> "Break Bulk Cargo").
+metadata:
+  type: project
+---
+
+The `containers` table (seeded by `database/seeders/ContainerCatalogSeeder.php`, keyed by `code`, `updateOrCreate` on `name`) backs the Maintenance page's "Containers" tab (Settings > Maintenance, a plain CRUD table rendering `row.name` directly), and is referenced from Booking/Voyage PDFs, cargoBuildUp, ContainerController, ClientProposalController — i.e. it is NOT CRM-scoped, even though the CRM Requirements/Products tabs are its most visible consumer via `containerCatalogByCode`.
+
+**Why it matters:** the 2026-09-27 "Loose Cargo -> Break Bulk Cargo (BB)" relabel brief explicitly scoped the change to "the CRM flow ONLY, as a display label" (internal `container_type='LC'`, table, model, option value all meant to stay untouched). The implementation correctly kept every CRM-side label as a separate hardcoded string (`LINE_ITEM_TYPE_META`, `CONTAINER_TYPES` arrays in JS, blade `<option>` text) — but ALSO edited `ContainerCatalogSeeder.php`'s `name` field for `code => 'LC'` from `'Loose Cargo'` to `'Break Bulk Cargo'`. Since the seeder is an `updateOrCreate` keyed on `code`, re-running it (`php artisan db:seed` or `--class=ContainerCatalogSeeder`) renames the canonical catalog row everywhere it's read, bleeding a "CRM display only" change into the shared Maintenance page and any PDF/report that surfaces `container.name`. Confirmed via `php artisan tinker` that the local dev DB still shows `Loose Cargo` (seeder hasn't been re-run yet) — the bug is latent, not yet manifested, but will fire on the next full `db:seed`.
+
+**How to apply:** Any time a brief says a relabel is "CRM/[some flow]-only" or "display label only," specifically check whether the change touched a *shared master-data seeder* (containers, ports, delivery types, cargo yards, etc.) vs. a page-local hardcoded label array. `git diff` on `database/seeders/*.php` is the fastest tell — if a seeder's literal display string changed for a rename that was supposed to be scoped, that's the violation, regardless of how correct the CRM-side JS/blade labels look. See also [[project-prospect-module-untracked-in-git]] (most of this module isn't in git, but seeders are tracked and do show a diff).

@@ -17,6 +17,7 @@ class NavMenu extends Model
 
     protected $fillable = [
         'title',
+        'category',
         'icon',
         'link',
         'allowed_roles',

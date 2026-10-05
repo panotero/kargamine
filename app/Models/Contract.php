@@ -18,7 +18,7 @@ class Contract extends Model
         'uuid',
         'code',
         'proposal_id',
-        'lead_id',
+        'prospect_id',
         'signed_date',
         'valid_from',
         'valid_to',
@@ -51,9 +51,9 @@ class Contract extends Model
     }
 
     // NOTE: adjust the class name here to match your actual CRM Lead model.
-    public function lead(): BelongsTo
+    public function prospect(): BelongsTo
     {
-        return $this->belongsTo(CrmLead::class, 'lead_id');
+        return $this->belongsTo(Prospect::class, 'prospect_id');
     }
 
     public function createdBy(): BelongsTo

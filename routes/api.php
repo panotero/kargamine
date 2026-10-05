@@ -7,7 +7,6 @@ use App\Http\Controllers\ClientMasterController;
 use App\Http\Controllers\ClientProposalController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CrmActivityController;
-use App\Http\Controllers\CrmLeadController;
 use App\Http\Controllers\CrmNoteController;
 use App\Http\Controllers\CrmStatusController;
 use App\Http\Controllers\DashboardController;
@@ -20,6 +19,9 @@ use App\Http\Controllers\NavIconController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProposalRequestAssignmentController;
+use App\Http\Controllers\ProposalRequestProductController;
+use App\Http\Controllers\ProspectController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\TeamController;
@@ -47,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/', [ProfileController::class, 'update']);
         Route::put('/password', [ProfileController::class, 'updatePassword']);
         Route::put('/layout', [ProfileController::class, 'updateLayout']);
+        Route::put('/font-size', [ProfileController::class, 'updateFontSize']);
         Route::post('/photo', [ProfileController::class, 'uploadPhoto']);
         Route::delete('/photo', [ProfileController::class, 'deletePhoto']);
     });
@@ -58,7 +61,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/test-send', [NotificationController::class, 'testSend'])->middleware('can:isSuperAdmin');
 
     Route::post('/documents/route', [RoutingController::class, 'routeDocument']);
-
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
@@ -76,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('nav_menus')->group(function () {
         Route::get('/list', [MenusController::class, 'menulist']);
+        Route::get('/categories', [MenusController::class, 'categories']);
         Route::post('/', [MenusController::class, 'store']);
         Route::put('/{id}', [MenusController::class, 'update']);
         Route::delete('/{id}', [MenusController::class, 'destroy']);
@@ -138,13 +141,18 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('crm')->group(function () {
 
-        // LEADS (create full lead package)
-        Route::post('/leads', [CrmLeadController::class, 'store']);
-        Route::get('/leads', [CrmLeadController::class, 'index']);
-        Route::get('/leads/assignable-users', [CrmLeadController::class, 'assignableUsers']);
-        Route::get('/leads/{uuid}', [CrmLeadController::class, 'show']);
-        Route::put('/leads/{uuid}', [CrmLeadController::class, 'update']);
-        Route::delete('/leads/{uuid}', [CrmLeadController::class, 'destroy']);
+        // PROSPECTS (create full prospect package)
+        Route::post('/prospects', [ProspectController::class, 'store']);
+        Route::get('/prospects', [ProspectController::class, 'index']);
+        Route::get('/prospects/assignable-users', [ProspectController::class, 'assignableUsers']);
+        Route::get('/prospects/{uuid}', [ProspectController::class, 'show']);
+        Route::put('/prospects/{uuid}', [ProspectController::class, 'update']);
+        Route::delete('/prospects/{uuid}', [ProspectController::class, 'destroy']);
+
+        // Management-only - assigns the CSR/Relationship Manager that
+        // unlock the RFP wizard endpoints for this prospect.
+        Route::post('/prospects/{uuid}/assignment', [ProspectController::class, 'assignOwners'])
+            ->middleware('nav.access:/page_proposal_requests');
 
         // STATUS CRUD
         Route::get('/getCrmStatus', [CrmStatusController::class, 'index']);
@@ -152,20 +160,60 @@ Route::middleware(['auth'])->group(function () {
         // ACTIVITIES CRUD
         Route::apiResource('activities', CrmActivityController::class);
 
-        // TEST BY PAGE FETCHING
-        Route::get('/leads/datatables', [CrmLeadController::class, 'datatable']);
-
         Route::post('/note', [CrmNoteController::class, 'store']);
         Route::post('/activity', [CrmActivityController::class, 'store']);
-        Route::post('/leads/stage1', [CrmLeadController::class, 'saveStage1']);
-        Route::post('/leads/{uuid}/stage2', [CrmLeadController::class, 'saveStage2']); // routes/api.php - inside the existing `crm` prefix group
-        Route::post('/leads/{uuid}/containers', [CrmLeadController::class, 'storeContainer']);
-        Route::get('/leads/{uuid}/proposals', [ClientProposalController::class, 'indexByLead']);
-        Route::post('/leads/{uuid}/proposals', [ClientProposalController::class, 'storeForLead']);
-        Route::get('/leads/{uuid}/proposalContainerDefaults', [ClientProposalController::class, 'leadContainerDefaults']);
-        Route::get('/leads/{uuid}/customerCode', [CrmLeadController::class, 'getOrGenerateCustomerCode']);
+        Route::post('/prospects/stage1', [ProspectController::class, 'saveStage1']);
+        Route::post('/prospects/{uuid}/stage2', [ProspectController::class, 'saveStage2']); // routes/api.php - inside the existing `crm` prefix group
+        Route::post('/prospects/{uuid}/containers', [ProspectController::class, 'storeContainer']);
+        Route::get('/prospects/{uuid}/proposals', [ClientProposalController::class, 'indexByLead']);
+        Route::post('/prospects/{uuid}/proposals', [ClientProposalController::class, 'storeForLead']);
+        Route::get('/prospects/{uuid}/proposalContainerDefaults', [ClientProposalController::class, 'leadContainerDefaults']);
+        Route::get('/prospects/{uuid}/customerCode', [ProspectController::class, 'getOrGenerateCustomerCode']);
 
-        Route::post('/leads/uploadDgDocument', [CrmLeadController::class, 'uploadDgDocument']);
+        Route::post('/prospects/uploadDgDocument', [ProspectController::class, 'uploadDgDocument']);
+
+        // 4-tab Prospect modal: Contacts tab + Requirements tab
+        // (proposal_requests / proposal_request_containers).
+        Route::post('/prospects/{uuid}/contacts', [ProspectController::class, 'saveContacts']);
+        Route::post('/prospects/{uuid}/proposalRequest/containers', [ProspectController::class, 'storeProposalRequestContainer']);
+        Route::delete('/prospects/{uuid}/proposalRequest/containers/{id}', [ProspectController::class, 'destroyProposalRequestContainer']);
+        Route::post('/prospects/{uuid}/proposalRequest/truckings', [ProspectController::class, 'storeProposalRequestTrucking']);
+        Route::delete('/prospects/{uuid}/proposalRequest/truckings/{id}', [ProspectController::class, 'destroyProposalRequestTrucking']);
+        Route::post('/prospects/{uuid}/proposalRequest/charters', [ProspectController::class, 'storeProposalRequestCharter']);
+        Route::delete('/prospects/{uuid}/proposalRequest/charters/{id}', [ProspectController::class, 'destroyProposalRequestCharter']);
+        // Multiple Proposal Requests per prospect (Draft -> Pending ->
+        // Cancelled lifecycle) - the wizard always addresses one explicitly
+        // by id, unlike the "latest draft" routes above.
+        Route::post('/prospects/{uuid}/proposalRequests', [ProspectController::class, 'storeProposalRequestNew']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}', [ProspectController::class, 'destroyProposalRequest']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/companyDetails', [ProspectController::class, 'storeProposalRequestCompanyDetails']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/signatories', [ProspectController::class, 'storeProposalRequestSignatory']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/signatories/{id}', [ProspectController::class, 'destroyProposalRequestSignatory']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/locations', [ProspectController::class, 'storeProposalRequestLocation']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/locations/{id}', [ProspectController::class, 'destroyProposalRequestLocation']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/submit', [ProspectController::class, 'submitProposalRequest']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/cancel', [ProspectController::class, 'cancelProposalRequest']);
+
+        // Request for Proposal wizard's Products tab - a parallel, richer
+        // set of product forms (see ProposalRequestProductController).
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/containers', [ProposalRequestProductController::class, 'storeContainer']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/containers/{id}', [ProposalRequestProductController::class, 'destroyContainer']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo', [ProposalRequestProductController::class, 'storeRollingCargo']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo/{id}', [ProposalRequestProductController::class, 'destroyRollingCargo']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/looseCargo', [ProposalRequestProductController::class, 'storeLooseCargo']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/looseCargo/{id}', [ProposalRequestProductController::class, 'destroyLooseCargo']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/truckings', [ProposalRequestProductController::class, 'storeTrucking']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/truckings/{id}', [ProposalRequestProductController::class, 'destroyTrucking']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/charters', [ProposalRequestProductController::class, 'storeCharter']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/charters/{id}', [ProposalRequestProductController::class, 'destroyCharter']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/charters/{charterId}/cargo', [ProposalRequestProductController::class, 'storeCharterCargo']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/charters/{charterId}/cargo/{id}', [ProposalRequestProductController::class, 'destroyCharterCargo']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/charters/{charterId}/ports', [ProposalRequestProductController::class, 'storeCharterPort']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/charters/{charterId}/ports/{id}', [ProposalRequestProductController::class, 'destroyCharterPort']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo/{rollingCargoId}/topLoad', [ProposalRequestProductController::class, 'storeTopLoadCargo']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo/{rollingCargoId}/topLoad/{id}', [ProposalRequestProductController::class, 'destroyTopLoadCargo']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/ancillaryServices', [ProposalRequestProductController::class, 'storeAncillaryService']);
+        Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/ancillaryServices/{id}', [ProposalRequestProductController::class, 'destroyAncillaryService']);
     });
 
     Route::prefix('listofval')->group(function () {
@@ -177,7 +225,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/typeofbusiness', [LovController::class, 'typeOfBusiness']);
         Route::get('/addresstype', [LovController::class, 'addressType']);
         Route::get('/leadsource', [LovController::class, 'leadSource']);
+        Route::get('/title', [LovController::class, 'title']);
         Route::get('/cargotype', [LovController::class, 'cargoType']);
+        Route::get('/truckingcargotype', [LovController::class, 'truckingCargoType']);
+        Route::get('/ancillarytype', [LovController::class, 'ancillaryType']);
         Route::get('/industry', [LovController::class, 'industry']);
         Route::get('/industrysubcategory', [LovController::class, 'industrySubcategory']);
         Route::get('/organizationtype', [LovController::class, 'organizationType']);
@@ -224,6 +275,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{uuid}/contracts', [ClientContractController::class, 'store']);
     });
 
+    // Management's Proposal Request assignment queue - lists every
+    // ProposalRequest with its prospect's CSR/Relationship Manager
+    // assignment status. Not team-scoped.
+    Route::get('/proposalRequests', [ProposalRequestAssignmentController::class, 'index'])
+        ->middleware('nav.access:/page_proposal_requests');
+
+    // "My Requests" - the assigned CSR/RM's own workspace. Deliberately no
+    // nav.access gate: self-scoped by an exact assigned_to/
+    // relationship_manager_id match in the query itself (see mine()),
+    // matching the dominant pattern in this app (e.g. /page_crm) rather
+    // than the rare "only admin/a permission-holder" case nav.access is for.
+    Route::get('/proposalRequests/mine', [ProposalRequestAssignmentController::class, 'mine']);
+
     // Global proposal actions - used by the Proposals tab (and re-used by the
     // client modal for container/status actions). Static segments MUST come
     // before the {proposal} wildcard route.
@@ -252,7 +316,7 @@ Route::middleware(['auth'])->group(function () {
             ->middleware('permission:contract.terminate');
     });
 
-    require __DIR__ . '/api_maintenance.php';
+    require __DIR__.'/api_maintenance.php';
 });
 
 // -----------------------------------------------------------------

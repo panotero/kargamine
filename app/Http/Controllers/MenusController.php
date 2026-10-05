@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\NavMenu;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class MenusController extends Controller
 {
-
     public function index()
     {
         $user = Auth::user();
@@ -21,25 +20,27 @@ class MenusController extends Controller
             ->get();
         $filtered = $menus->filter(function ($menu) use ($user) {
             $allowedRoles = json_decode($menu->allowed_roles, true) ?? [];
+
             return in_array($user->role_id, $allowedRoles);
         })->values();
 
         $grouped = $filtered->where('parent_menu', 0)->map(function ($parent) use ($filtered) {
             $children = $filtered->where('parent_menu', $parent->id)->values();
+
             return [
                 'id' => $parent->id,
                 'title' => $parent->title,
+                'category' => $parent->category,
                 'icon' => $parent->icon,
                 'link' => $parent->link,
                 'menu_order' => $parent->menu_order,
                 'allowed_roles' => $parent->allowed_roles,
-                'children' => $children
+                'children' => $children,
             ];
         })->values();
 
         return response()->json($grouped);
     }
-
 
     public function menulist()
     {
@@ -48,12 +49,32 @@ class MenusController extends Controller
             ->get());
     }
 
+    /**
+     * Distinct category values already in use, for the admin form's
+     * suggestion panel (resources/js/menuSettings.js) - not a lookup
+     * table, just whatever free text has actually been typed so far.
+     */
+    public function categories()
+    {
+        $categories = NavMenu::whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        return response()->json(['success' => true, 'data' => $categories]);
+    }
+
     public function store(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
             'title' => [
                 'required',
+                'string',
+            ],
+            'category' => [
+                'nullable',
                 'string',
             ],
             'icon' => [
@@ -65,15 +86,15 @@ class MenusController extends Controller
                 'string',
             ],
             'allowed_roles' => [
-                'nullable'
+                'nullable',
             ],
             'parent_menu' => [
                 'nullable',
-                'integer'
+                'integer',
             ],
             'menu_order' => [
                 'nullable',
-                'integer'
+                'integer',
             ],
         ]);
 
@@ -86,18 +107,26 @@ class MenusController extends Controller
         }
 
         Log::info('STORE request received', [
-            'payload' => $request->all()
+            'payload' => $request->all(),
         ]);
 
         try {
             $data = $request->validate([
                 'title' => 'required|string',
+                'category' => 'nullable|string',
                 'icon' => 'nullable|string',
                 'link' => 'nullable|string',
                 'allowed_roles' => 'nullable',
                 'parent_menu' => 'nullable|integer',
                 'menu_order' => 'nullable|integer',
             ]);
+
+            // Category only means anything on a top-level item (it's what
+            // groups the sidebar) - a child always renders nested under its
+            // own parent's button regardless, so never persist one here.
+            if (($data['parent_menu'] ?? 0) != 0) {
+                $data['category'] = null;
+            }
 
             $parentId = $data['parent_menu'] ?? 0;
             $maxOrder = NavMenu::where('parent_menu', $parentId)->max('menu_order');
@@ -112,7 +141,7 @@ class MenusController extends Controller
             }
 
             Log::info('STORE request received', [
-                'maxOrder' => $data
+                'maxOrder' => $data,
             ]);
 
             $menu = NavMenu::create($data);
@@ -122,18 +151,18 @@ class MenusController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Menu created successfully',
-                'data' => $menu
+                'data' => $menu,
             ]);
         } catch (\Exception $e) {
             Log::error('STORE error', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create menu',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -142,12 +171,16 @@ class MenusController extends Controller
     {
         Log::info('UPDATE request received', [
             'id' => $id,
-            'payload' => $request->all()
+            'payload' => $request->all(),
         ]);
 
         $validator = Validator::make($request->all(), [
             'title' => [
                 'required',
+                'string',
+            ],
+            'category' => [
+                'nullable',
                 'string',
             ],
             'icon' => [
@@ -159,11 +192,11 @@ class MenusController extends Controller
                 'string',
             ],
             'allowed_roles' => [
-                'nullable'
+                'nullable',
             ],
             'parent_menu' => [
                 'nullable',
-                'integer'
+                'integer',
             ],
         ]);
 
@@ -180,11 +213,18 @@ class MenusController extends Controller
 
             $data = $request->validate([
                 'title' => 'required|string',
+                'category' => 'nullable|string',
                 'icon' => 'nullable|string',
                 'link' => 'nullable|string',
                 'allowed_roles' => 'nullable',
                 'parent_menu' => 'nullable|integer',
             ]);
+
+            // Category only means anything on a top-level item - never
+            // persist one for a child (see store()'s identical guard).
+            if (($data['parent_menu'] ?? 0) != 0) {
+                $data['category'] = null;
+            }
 
             $menu->update($data);
 
@@ -193,35 +233,34 @@ class MenusController extends Controller
 
             foreach ($childMenus as $child) {
                 $child->update([
-                    'allowed_roles' => $menu->allowed_roles
+                    'allowed_roles' => $menu->allowed_roles,
                 ]);
             }
 
             Log::info('Child menus updated', [
                 'parent_id' => $id,
-                'child_count' => $childMenus->count()
+                'child_count' => $childMenus->count(),
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Menu updated successfully (including child menus)',
-                'data' => $menu
+                'data' => $menu,
             ]);
         } catch (\Exception $e) {
             Log::error('UPDATE error', [
                 'id' => $id,
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update menu',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-
 
     public function destroy($id)
     {
@@ -243,19 +282,19 @@ class MenusController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Menu deleted successfully'
+                'message' => 'Menu deleted successfully',
             ]);
         } catch (\Exception $e) {
             Log::error('DELETE error', [
                 'id' => $id,
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete menu',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -267,34 +306,36 @@ class MenusController extends Controller
 
         Log::info('Swap request received', [
             'id1' => $id1,
-            'id2' => $id2
+            'id2' => $id2,
         ]);
 
-        if (!$id1 || !$id2) {
+        if (! $id1 || ! $id2) {
             Log::warning('Invalid IDs for swap', ['id1' => $id1, 'id2' => $id2]);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid menu IDs provided.'
+                'message' => 'Invalid menu IDs provided.',
             ], 400);
         }
 
         $menu1 = DB::table('nav_menus')->where('id', $id1)->first();
         $menu2 = DB::table('nav_menus')->where('id', $id2)->first();
 
-        if (!$menu1 || !$menu2) {
+        if (! $menu1 || ! $menu2) {
             Log::warning('Menu not found for swap', [
                 'menu1_found' => (bool) $menu1,
-                'menu2_found' => (bool) $menu2
+                'menu2_found' => (bool) $menu2,
             ]);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'One or both menu items not found.'
+                'message' => 'One or both menu items not found.',
             ], 404);
         }
 
         Log::info('Current menu order before swap', [
             'menu1' => ['id' => $menu1->id, 'title' => $menu1->title, 'menu_order' => $menu1->menu_order],
-            'menu2' => ['id' => $menu2->id, 'title' => $menu2->title, 'menu_order' => $menu2->menu_order]
+            'menu2' => ['id' => $menu2->id, 'title' => $menu2->title, 'menu_order' => $menu2->menu_order],
         ]);
 
         try {
@@ -346,12 +387,12 @@ class MenusController extends Controller
         } catch (\Exception $e) {
             Log::error('Swap failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while swapping menu order.'
+                'message' => 'An error occurred while swapping menu order.',
             ], 500);
         }
     }

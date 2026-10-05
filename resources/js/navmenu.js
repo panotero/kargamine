@@ -164,6 +164,18 @@ document.addEventListener("DOMContentLoaded", function () {
     return sidebarWrapper.classList.contains("w-16");
   }
 
+  // Exposes the sidebar's current width as a CSS custom property so fixed
+  // overlays that need to sit beside it (not on top of it) - e.g. the
+  // minimized-prospect-draft dock in crm.blade.php - can react to
+  // collapse/expand without duplicating this width logic themselves. 0px
+  // when nav_layout is "top": there's no side rail reserving space then.
+  function syncSidebarWidthVar(collapsed) {
+    document.documentElement.style.setProperty(
+      "--sidebar-w",
+      navLayout === "top" ? "0px" : collapsed ? "4rem" : "16rem"
+    );
+  }
+
   function applyCollapsed(collapsed) {
     sidebarWrapper.classList.toggle("w-16", collapsed);
     sidebarWrapper.classList.toggle("w-64", !collapsed);
@@ -203,6 +215,19 @@ document.addEventListener("DOMContentLoaded", function () {
       el.classList.toggle("gap-0", collapsed);
     });
 
+    // Category group labels (see createCategoryLabel()/groupMenusByCategory()
+    // below) can't just reuse the .nav-label max-width/opacity treatment
+    // above - they're block-level section headers, not inline text next to
+    // an icon, so there's nothing for a collapsed max-width to visually
+    // hide. Swap the label for a thin divider instead, so a group boundary
+    // is still legible on the icon-only rail.
+    document.querySelectorAll(".cat-label").forEach((el) => {
+      el.classList.toggle("hidden", collapsed);
+    });
+    document.querySelectorAll(".cat-divider").forEach((el) => {
+      el.classList.toggle("hidden", !collapsed);
+    });
+
     // Collapsing while a submenu is open would leave it visually floating
     // with no parent label - close every open accordion instead.
     if (collapsed) {
@@ -216,6 +241,8 @@ document.addEventListener("DOMContentLoaded", function () {
       hideFlyout();
       hideTooltip();
     }
+
+    syncSidebarWidthVar(collapsed);
   }
 
   if (collapseToggle) {
@@ -229,6 +256,7 @@ document.addEventListener("DOMContentLoaded", function () {
       applyCollapsed(true);
     }
   }
+  syncSidebarWidthVar(isCollapsed());
 
   //build tree of parent and child menu
   function buildTree(flat) {
@@ -243,6 +271,54 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
     return roots;
+  }
+
+  // Groups top-level menus by their (optional) category for the vertical
+  // sidebar - see MenusController::index()/menuSettings.js for where
+  // menu.category comes from. Items with no category render first, flat,
+  // exactly like before this feature existed; categorized items follow as
+  // one section per category, in first-appearance order (no separate
+  // "category order" concept - it just follows whatever order the items
+  // already have via menu_order). The horizontal top-nav layout
+  // (topnavMenu, createTopNavItem()) deliberately keeps rendering the flat
+  // `menus` list untouched - grouping only applies to the vertical rail.
+  function groupMenusByCategory(menus) {
+    const uncategorized = [];
+    const groups = [];
+    const groupIndex = new Map();
+
+    menus.forEach((menu) => {
+      const category = (menu.category || "").trim();
+      if (!category) {
+        uncategorized.push(menu);
+        return;
+      }
+      if (!groupIndex.has(category)) {
+        groupIndex.set(category, groups.length);
+        groups.push({ category, items: [] });
+      }
+      groups[groupIndex.get(category)].items.push(menu);
+    });
+
+    return { uncategorized, groups };
+  }
+
+  // Thin section-boundary rule, shown only on the collapsed icon rail (see
+  // applyCollapsed()) where there's no room for the text label below.
+  function createCategoryDivider() {
+    const divider = document.createElement("div");
+    divider.className = "cat-divider hidden mx-2 my-1.5 border-t border-zinc-100 dark:border-zinc-800";
+    return divider;
+  }
+
+  // Small-caps section label - same style already used for the collapsed
+  // rail's flyout heading and this app's form eyebrows (VISUALS.md).
+  function createCategoryLabel(category) {
+    const label = document.createElement("div");
+    label.className =
+      "cat-label px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 truncate";
+    label.textContent = category;
+    return label;
   }
 
   //creates menu item (parent and child)
@@ -455,7 +531,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   //loads page to the content area
-  window.loadPage = async function loadPage(menu) {
+  // historyMode:
+  //   "push"    (default) - a real user click on a nav item. Adds a new
+  //             browser-history entry so Back returns to the previous page.
+  //   "replace" - an automatic restore (initial boot, loadlastpage()) that
+  //             shouldn't itself become a Back-able step.
+  //   "none"    - triggered by popstate itself (the user already pressed
+  //             Back/Forward, the browser already moved the history
+  //             pointer - pushing/replacing again here would fight it).
+  window.loadPage = async function loadPage(menu, { historyMode = "push" } = {}) {
     window.pageLoaded = false;
     if (!menu) return;
     localStorage.setItem("lastMenu", JSON.stringify(menu));
@@ -522,6 +606,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
       window.pageLoaded = true;
 
+      // Real URL + Back/Forward support: only for menu objects with a real
+      // link (guards against the pre-existing loadlastpage() fallback paths
+      // that call this with a bare string instead of a menu object).
+      if (historyMode !== "none" && menu && typeof menu === "object" && menu.link) {
+        const state = { loadPageMenu: menu };
+        if (historyMode === "replace") {
+          history.replaceState(state, "", menu.link);
+        } else {
+          history.pushState(state, "", menu.link);
+        }
+      }
+
       // Execute inline scripts
       contentEl.querySelectorAll("script").forEach((oldScript) => {
         const newScript = document.createElement("script");
@@ -552,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let lastMenu = localStorage.getItem("lastMenu");
 
     if (!lastMenu) {
-      loadPage("/dashboard");
+      loadPage("/dashboard", { historyMode: "replace" });
       return;
     }
 
@@ -560,15 +656,15 @@ document.addEventListener("DOMContentLoaded", function () {
       lastMenu = JSON.parse(lastMenu);
 
       if (typeof lastMenu === "string") {
-        loadPage(lastMenu);
+        loadPage(lastMenu, { historyMode: "replace" });
       } else if (lastMenu?.url) {
-        loadPage(lastMenu.url);
+        loadPage(lastMenu.url, { historyMode: "replace" });
       } else {
-        loadPage("/dashboard");
+        loadPage("/dashboard", { historyMode: "replace" });
       }
     } catch (e) {
       console.warn("Failed to parse lastMenu", e);
-      loadPage("/dashboard");
+      loadPage("/dashboard", { historyMode: "replace" });
     }
   };
   //initialize menu
@@ -595,33 +691,75 @@ document.addEventListener("DOMContentLoaded", function () {
     if (topnavMenu && navLayout === "top") topnavMenu.innerHTML = "";
 
     let firstMenu = null;
-    menus.forEach((menu) => {
-      const node = createMenuItem(menu);
-      sidebarMenu.appendChild(node);
+    function appendSidebarItem(menu) {
+      sidebarMenu.appendChild(createMenuItem(menu));
       if (!firstMenu && menu.title?.toLowerCase() === "dashboard")
         firstMenu = menu;
+    }
 
-      if (topnavMenu && navLayout === "top") {
-        topnavMenu.appendChild(createTopNavItem(menu));
-      }
+    // Sidebar: uncategorized items flat first (today's behavior,
+    // unchanged), then one labeled section per category. Top-nav: stays
+    // flat/ungrouped, reading the same `menus` list in its original order -
+    // see groupMenusByCategory()'s own comment for why.
+    const { uncategorized, groups } = groupMenusByCategory(menus);
+    uncategorized.forEach(appendSidebarItem);
+    groups.forEach(({ category, items }) => {
+      sidebarMenu.appendChild(createCategoryDivider());
+      sidebarMenu.appendChild(createCategoryLabel(category));
+      items.forEach(appendSidebarItem);
     });
+
+    if (topnavMenu && navLayout === "top") {
+      menus.forEach((menu) => topnavMenu.appendChild(createTopNavItem(menu)));
+    }
 
     if (collapseToggle && localStorage.getItem("sidebarCollapsed") === "1") {
       applyCollapsed(true);
+    }
+
+    // A direct/shared link to a /page_* URL (see EnsureAppShellForDirectPageVisit
+    // + dashboard.blade.php) - render the shell first, then load the actual
+    // requested page into #content, taking priority over "resume where I
+    // left off" below since the user (or whoever shared the link) asked for
+    // this specific page.
+    const directPageLink = document.getElementById("appShell")?.dataset.directPageLink || "";
+    if (directPageLink) {
+      const findByLink = (list) => {
+        for (const m of list) {
+          if (m.link === directPageLink) return m;
+          if (m.children?.length) {
+            const found = findByLink(m.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      loadPage(findByLink(menus) || { title: "", link: directPageLink }, { historyMode: "replace" });
+      return;
     }
 
     let lastMenu = localStorage.getItem("lastMenu");
     if (lastMenu) {
       try {
         lastMenu = JSON.parse(lastMenu);
-        loadPage(lastMenu);
+        loadPage(lastMenu, { historyMode: "replace" });
         return;
       } catch (e) {
         console.warn("Failed to parse lastMenu", e);
       }
     }
 
-    if (firstMenu) loadPage(firstMenu);
-    else if (menus.length) loadPage(menus[0]);
+    if (firstMenu) loadPage(firstMenu, { historyMode: "replace" });
+    else if (menus.length) loadPage(menus[0], { historyMode: "replace" });
   })();
+
+  // Back/Forward: only react to history entries this same loadPage() wrote
+  // (see the { loadPageMenu } state shape above) - going back past the very
+  // first SPA navigation lands on the plain /app entry with no such state,
+  // which is left alone rather than guessed at.
+  window.addEventListener("popstate", (e) => {
+    if (e.state && e.state.loadPageMenu) {
+      loadPage(e.state.loadPageMenu, { historyMode: "none" });
+    }
+  });
 });

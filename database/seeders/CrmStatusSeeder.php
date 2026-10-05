@@ -14,7 +14,7 @@ class CrmStatusSeeder extends Seeder
     {
         $statuses = [
             [
-                'status' => 'LEAD',
+                'status' => 'PROSPECT',
                 'description' => 'New incoming lead',
             ],
             [

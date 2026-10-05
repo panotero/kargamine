@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\CrmActivity;
+use App\Models\ProspectActivity;
 
 class ActivityService
 {
@@ -13,7 +13,7 @@ class ActivityService
      * @param string $type
      * @param string $description
      * @param int|null $createdBy
-     * @return \App\Models\CrmActivity
+     * @return \App\Models\ProspectActivity
      */
     public function create(
         int $leadId,
@@ -21,8 +21,8 @@ class ActivityService
         string $description,
         ?int $createdBy = null
     ) {
-        CrmActivity::create([
-            'lead_id'     => $leadId,
+        ProspectActivity::create([
+            'prospect_id' => $leadId,
             'type'        => $type,
             'description' => $description,
             'created_by'  => $createdBy ?? auth()->id(),

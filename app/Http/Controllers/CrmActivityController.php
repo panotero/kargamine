@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CrmActivity;
-use App\Models\CrmLead;
+use App\Models\ProspectActivity;
+use App\Models\Prospect;
 use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +19,7 @@ class CrmActivityController extends Controller
 
     public function index()
     {
-        return CrmActivity::all();
+        return ProspectActivity::all();
     }
 
     public function store(Request $request)
@@ -31,13 +31,13 @@ class CrmActivityController extends Controller
         }
 
         try {
-            $lead = CrmLead::where('uuid', $request->leadUUId)->firstOrFail();
+            $lead = Prospect::where('uuid', $request->leadUUId)->firstOrFail();
             $updatepayload = [
                 'status' => $request->status,
             ];
             DB::beginTransaction();
-            CrmActivity::create([
-                'lead_id' => $lead->id,
+            ProspectActivity::create([
+                'prospect_id' => $lead->id,
                 'type' => $request->type,
                 'description' => $request->activity,
                 'attachment' => $attachmentPath,
@@ -62,12 +62,12 @@ class CrmActivityController extends Controller
 
     public function show($id)
     {
-        return CrmActivity::findOrFail($id);
+        return ProspectActivity::findOrFail($id);
     }
 
     public function update(Request $request, $id)
     {
-        $activity = CrmActivity::findOrFail($id);
+        $activity = ProspectActivity::findOrFail($id);
         $activity->update($request->all());
 
         return $activity;
@@ -75,7 +75,7 @@ class CrmActivityController extends Controller
 
     public function destroy($id)
     {
-        CrmActivity::findOrFail($id)->delete();
+        ProspectActivity::findOrFail($id)->delete();
 
         return response()->json(['message' => 'Deleted']);
     }

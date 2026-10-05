@@ -20,6 +20,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php
         $__theme = \App\Models\AppThemeSetting::current();
+        // Tailwind's spacing/type scale is rem-based throughout, so scaling
+        // the root font-size scales the whole UI proportionally - the same
+        // technique used for the theme colors above, applied once here
+        // instead of touching every page. Profile -> Font Size writes this
+        // (see ProfileController::updateFontSize()); "medium" is Tailwind's
+        // own default (16px = 1rem), left unset rather than redeclared.
+        $__fontSizePx = ['small' => '14px', 'large' => '18px'][Auth::user()->font_size ?? 'medium'] ?? null;
     @endphp
     <style>
         :root {
@@ -28,6 +35,11 @@
             {{ \App\Support\TailwindPalette::cssVariables('secondary', $__theme->button_secondary_color) }}
             {{ \App\Support\TailwindPalette::cssVariables('danger', $__theme->button_danger_color) }}
         }
+        @if ($__fontSizePx)
+        html {
+            font-size: {{ $__fontSizePx }};
+        }
+        @endif
     </style>
 </head>
 

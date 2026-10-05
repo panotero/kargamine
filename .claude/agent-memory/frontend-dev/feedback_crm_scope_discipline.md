@@ -10,25 +10,40 @@ When editing `resources/views/pages/crm.blade.php` or `resources/js/logic_crm.js
 `recomputeFinalRate`, any `discount_type`/`base_rate`/`final_rate` field) as off-limits unless a
 task explicitly names them.
 
-Note: the `LeadInfoModal` was rebuilt 2026-09-02 into a rail (left) + tabbed pane (right,
-Proposals/Requirements/Activity tabs) layout, replacing the older stacked-cards
-Contact/Company/Deal relayout this memory used to describe. The rail (Contact card + Company/
-Addresses `<details>`), stat strip (Deal Value/Assigned Rep/Primary Contact/Expected Close), tab
-bar, and merged Activity timeline (`renderTimeline`, `#leadTimelineContainer`) are now the
-"completed" structure — apply the same off-limits treatment to *this* structure unless a task
-explicitly names it, rather than assuming the old 3-column grid described in earlier versions of
-this memory still exists.
+**Update (2026-09-17):** That proposal-row builder no longer lives in `crm.blade.php`. As of the
+Prospect-modal rebuild, `crm.blade.php`'s `LeadInfoModal`, `LeadAddProposalModal`, and
+`LeadAddContainerModal` (plus every JS function that existed only to power them - `loadLeadInfo`,
+`renderTimeline`, `renderContainers`, `renderAddresses`, `renderProposalCard`,
+`addProposalRow`/`applyRowDefaults`/`recomputeFinalRate`, the change-stage and edit-contact
+dropdown wiring, etc.) were confirmed dead - nothing linked to them anymore since both "New
+Prospect" and every table row now open `<x-prospect-modal>` (`components/prospect-modal.blade.php`
++ `logic_prospect_modal.js`, see [[project_prospect_modal_build]]) - and were removed in a
+dedicated cleanup pass. `crm.blade.php` is now just the table/pipeline-bar page shell (~114 lines)
+plus `<x-prospect-modal />`; `logic_crm.js` is just the live table/counts/filters logic (~430
+lines).
+
+There is **no current live UI** for creating/appending proposal rate lines from the CRM side as of
+2026-09-17 - the Prospect modal's own Tab 4 ("Request for Proposal") is still a bare placeholder
+(see [[project_prospect_modal_build]]). A component matching the old field set exists at
+`resources/views/components/new-proposal-modal.blade.php` (`<x-side-modal id="generateProposal">`,
+backed by `app/View/Components/newProposalModal.php`) and also calls `window.reloadCrmData()` on
+save, which looked at first glance like the successor - **it is not**: grep confirmed nothing in
+the codebase includes `<x-new-proposal-modal />` or calls `initSideModal({modalId:
+'generateProposal'})`, so it is itself orphaned/unreferenced. Don't assume it's live without
+re-checking those two things yourself first; if a future task wires it up (or replaces it with
+something else) as the Tab 4 implementation, update this note to point at whatever that turns out
+to be, and treat it as the off-limits discount/rate-logic surface at that point.
 
 **Why:** Two prior passes on this page were reverted — one added an unrequested discount/rate
 feature and rewrote the proposal-row builder, another silently deleted a validation rule. The
 tech lead now explicitly calls out "STOP AND READ THIS FIRST — scope discipline" at the top of
-CRM-related briefs.
+CRM-related briefs. The 2026-09-17 removal was itself explicitly named/authorized by that task's
+brief (it named `LeadAddProposalModal`/`LeadAddContainerModal` directly as dead code to delete),
+which is the narrow exception this memory always allowed for.
 
-**How to apply:** Before finishing any crm.blade.php/logic_crm.js task, grep for
-`recomputeFinalRate`/`discount_type`/`base_rate`/`final_rate` and diff-check that those lines are
-byte-identical to before (only shifted by line-number offsets from unrelated edits elsewhere in
-the file). Only touch the narrow exception explicitly granted in a brief (e.g. wrapping a
-*different* card's fields in a collapse/summary shell without touching calculation logic in the
-same script block). If a fix seems to require touching pricing/discount logic or the completed
-LeadInfoModal layout, stop and flag it in the report instead of proceeding. Note in the final
-report exactly what was left untouched, with grep evidence.
+**How to apply:** Before finishing any crm.blade.php/logic_crm.js task, first re-verify with a grep
+whether a live proposal-row builder exists yet anywhere (`recomputeFinalRate`/`discount_type`/
+`base_rate`/`final_rate`, and check what actually opens/includes that file) - don't assume it's
+still `crm.blade.php`, and don't assume `new-proposal-modal.blade.php` is live either. Only touch
+pricing/discount logic if a brief explicitly names it. Note in the final report exactly what was
+left untouched, with grep evidence.

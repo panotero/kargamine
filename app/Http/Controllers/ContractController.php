@@ -14,7 +14,7 @@ class ContractController extends Controller
     public function index(Request $request)
     {
         $contracts = Contract::query()
-            ->with(['proposal:id,code', 'lead'])
+            ->with(['proposal:id,code', 'prospect'])
 
             // Search
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -25,7 +25,7 @@ class ContractController extends Controller
                         ->orWhereHas('proposal', function ($q) use ($search) {
                             $q->where('code', 'like', "%{$search}%");
                         })
-                        ->orWhereHas('lead', function ($q) use ($search) {
+                        ->orWhereHas('prospect', function ($q) use ($search) {
                             $q->where('first_name', 'like', "%{$search}%")
                                 ->orWhere('last_name', 'like', "%{$search}%")
                                 ->orWhereHas('company', function ($q) use ($search) {
@@ -35,7 +35,7 @@ class ContractController extends Controller
                 });
             })
 
-            ->when($request->filled('lead_id'), fn($q) => $q->where('lead_id', $request->lead_id))
+            ->when($request->filled('prospect_id'), fn($q) => $q->where('prospect_id', $request->prospect_id))
 
             ->when($request->filled('status'), function ($q) use ($request) {
 
@@ -95,13 +95,13 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        return response()->json(['success' => true, 'data' => $contract->load(['proposal', 'lead', 'rates'])]);
+        return response()->json(['success' => true, 'data' => $contract->load(['proposal', 'prospect', 'rates'])]);
     }
 
     /**
      * Create a contract from an agreed proposal.
      *
-     * Expects lead_id + proposal_id (the proposal the client signed off on),
+     * Expects prospect_id + proposal_id (the proposal the client signed off on),
      * the contract validity window, and one or more rate lines - each line
      * carries the lane/container combination plus the discount (percentage
      * or fixed) to apply to that lane's FRT at booking time.
@@ -110,7 +110,7 @@ class ContractController extends Controller
     {
         try {
             $validated = $request->validate([
-                'lead_id' => ['required', 'integer', 'exists:crm_leads,id'],
+                'prospect_id' => ['required', 'integer', 'exists:prospects,id'],
                 'proposal_id' => ['required', 'integer', 'exists:proposals,id'],
                 'signed_date' => ['nullable', 'date'],
                 'valid_from' => ['required', 'date'],
@@ -134,7 +134,7 @@ class ContractController extends Controller
 
             // Guard rail: the proposal must actually belong to the lead the
             // contract is being written for.
-            if ((int) $proposal->lead_id !== (int) $validated['lead_id']) {
+            if ((int) $proposal->prospect_id !== (int) $validated['prospect_id']) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This proposal does not belong to the selected lead.',
@@ -168,7 +168,7 @@ class ContractController extends Controller
                 'uuid' => (string) Str::uuid(),
                 'code' => $code,
                 'proposal_id' => $validated['proposal_id'],
-                'lead_id' => $validated['lead_id'],
+                'prospect_id' => $validated['prospect_id'],
                 'signed_date' => $validated['signed_date'] ?? null,
                 'valid_from' => $validated['valid_from'],
                 'valid_to' => $validated['valid_to'],

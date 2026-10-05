@@ -30,6 +30,13 @@ import "./toast";
 
 import "./formatter";
 import "./logic_crm";
+import "./logic_prospect_modal";
+import "./logic_prospect_info_modal";
+import "./logic_prospect_add_modals";
+import "./logic_prospect_request_proposal";
+import "./logic_proposal_requests";
+import "./logic_proposal_requests_mine";
+import "./logic_client_proposals_shared";
 import "./remoteTable";
 import "./searchableSelect";
 import "./containerAssetMap";

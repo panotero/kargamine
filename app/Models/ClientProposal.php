@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TeamService;
+use App\Support\PermissionHelper;
 use App\Support\RoleHelper;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,21 +15,24 @@ class ClientProposal extends Model
     public const STATUS_ACCEPTED = 4;
     public const STATUS_REJECTED = 5;
     public const STATUS_CANCELLED = 6;
+    public const STATUS_PENDING_MANAGER = 7;
 
     public const STATUS_LABELS = [
-        self::STATUS_PENDING => 'Pending',
+        self::STATUS_PENDING => 'Pending RM Approval',
         self::STATUS_APPROVED => 'Approved',
         self::STATUS_DISAPPROVED => 'Disapproved',
         self::STATUS_ACCEPTED => 'Accepted',
         self::STATUS_REJECTED => 'Rejected',
         self::STATUS_CANCELLED => 'Cancelled',
+        self::STATUS_PENDING_MANAGER => 'Pending Manager Approval',
     ];
 
     protected $fillable = [
         'uuid',
         'code',
         'client_id',
-        'lead_id',
+        'prospect_id',
+        'proposal_request_id',
         'status',
         'created_by',
         'signed_document_path',
@@ -37,6 +41,8 @@ class ClientProposal extends Model
         'decided_by',
         'decided_at',
         'decision_remarks',
+        'rm_approved_by',
+        'rm_approved_at',
         'include_special_charges',
         'include_port_charges',
         'include_handling_fee',
@@ -49,6 +55,7 @@ class ClientProposal extends Model
         'signed_at' => 'datetime:M d, Y, h:i A',
         'signature_requested_at' => 'datetime:M d, Y, h:i A',
         'decided_at' => 'datetime:M d, Y, h:i A',
+        'rm_approved_at' => 'datetime:M d, Y, h:i A',
         'include_special_charges' => 'boolean',
         'include_port_charges' => 'boolean',
         'include_handling_fee' => 'boolean',
@@ -91,12 +98,28 @@ class ClientProposal extends Model
     }
 
     /**
-     * Approval now follows the team hierarchy instead of the old
-     * approver_roles config: only the team leader over the lead's assigned
-     * rep (their own team leader, or a leader further up the pyramid) may
-     * approve/disapprove - superadmin always can, regardless of team.
+     * Approval is now a two-step, permission-gated chain instead of the old
+     * team-leader pyramid: STATUS_PENDING is the Relationship Manager's
+     * forward-only checkpoint (canBeApprovedByRm()), STATUS_PENDING_MANAGER
+     * is the Manager's authoritative decision (canBeApprovedByManager()).
+     * Dispatching on status here keeps canBeCancelledBy() and
+     * getCanApproveAttribute() correct with no further changes.
      */
     public function canBeApprovedBy(?User $user): bool
+    {
+        return match ($this->status) {
+            self::STATUS_PENDING => $this->canBeApprovedByRm($user),
+            self::STATUS_PENDING_MANAGER => $this->canBeApprovedByManager($user),
+            default => false,
+        };
+    }
+
+    /**
+     * Stage 1: must be *this deal's* assigned Relationship Manager (not just
+     * anyone with the permission) - mirrors how the old check required being
+     * within the owner's specific team, not just any team leader anywhere.
+     */
+    public function canBeApprovedByRm(?User $user): bool
     {
         if (!$user) {
             return false;
@@ -106,17 +129,30 @@ class ClientProposal extends Model
             return true;
         }
 
-        if (!$user->is_team_leader || !$user->team_id) {
+        if (!PermissionHelper::userCan($user, 'proposal.approve.rm')) {
             return false;
         }
 
-        $ownerTeamId = $this->ownerUser()?->team_id;
+        $rm = $this->assignedRelationshipManager();
 
-        if (!$ownerTeamId) {
+        return $rm && (int) $rm->id === (int) $user->id;
+    }
+
+    /**
+     * Stage 2: the final, authoritative decision - not scoped to the deal,
+     * same as how Management (superadmin/admin) isn't deal-specific today.
+     */
+    public function canBeApprovedByManager(?User $user): bool
+    {
+        if (!$user) {
             return false;
         }
 
-        return TeamService::accessibleTeamIds($user)->contains($ownerTeamId);
+        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+            return true;
+        }
+
+        return PermissionHelper::userCan($user, 'proposal.approve.manager');
     }
 
     public function canBeRejectedBy(?User $user): bool
@@ -174,10 +210,10 @@ class ClientProposal extends Model
     }
 
     /**
-     * Cancelling is only meaningful while PENDING (see the "cancel" action
-     * in ClientProposalController) - open to the proposal's own creator, or
-     * anyone who could approve it (same team-leader pyramid as
-     * canBeApprovedBy), plus superadmin.
+     * Cancelling is only meaningful while pending RM or Manager approval
+     * (see the "cancel" action in ClientProposalController) - open to the
+     * proposal's own creator, or whoever could approve it at its current
+     * stage (canBeApprovedBy() is stage-aware), plus superadmin.
      */
     public function canBeCancelledBy(?User $user): bool
     {
@@ -197,20 +233,41 @@ class ClientProposal extends Model
         return $this->canBeCancelledBy(auth()->user());
     }
 
-    public function lead()
+    public function prospect()
     {
-        return $this->belongsTo(CrmLead::class, 'lead_id');
+        return $this->belongsTo(Prospect::class, 'prospect_id');
+    }
+
+    /**
+     * The ProposalRequest (RFP) this commercial proposal was built from, if
+     * any - lets approve()/attachSigned() sync "approved"/"signed" onto the
+     * request's own status. Null for a ClientProposal created without one.
+     */
+    public function proposalRequest()
+    {
+        return $this->belongsTo(ProposalRequest::class, 'proposal_request_id');
     }
 
     /**
      * The user this proposal "belongs to" for team-scoping purposes: its own
      * lead's assigned rep, or - for proposals created via the client-scoped
-     * store() path, which never sets lead_id - the client's originating
+     * store() path, which never sets prospect_id - the client's originating
      * lead's assigned rep instead.
      */
     public function ownerUser(): ?User
     {
-        return $this->lead?->user ?? $this->client?->lead?->user;
+        return $this->prospect?->user ?? $this->client?->prospect?->user;
+    }
+
+    /**
+     * The deal's assigned Relationship Manager - same fallback chain as
+     * ownerUser() (this proposal's own prospect first, then the client's
+     * originating prospect for proposals created via the client-scoped
+     * store() path). This is who gives the first (RM) approval.
+     */
+    public function assignedRelationshipManager(): ?User
+    {
+        return $this->prospect?->relationshipManager ?? $this->client?->prospect?->relationshipManager;
     }
 
     /**
@@ -218,11 +275,11 @@ class ClientProposal extends Model
      * originating lead's company info at intake, same fallback chain as
      * ownerUser(): this proposal's own lead first, then the client's
      * originating lead for proposals created via the client-scoped store()
-     * path (which never sets lead_id).
+     * path (which never sets prospect_id).
      */
     public function authorizedSignatoryContact(): ?array
     {
-        $company = $this->lead?->company ?? $this->client?->lead?->company;
+        $company = $this->prospect?->company ?? $this->client?->prospect?->company;
 
         if (! $company || ! $company->authorized_signatory_email) {
             return null;

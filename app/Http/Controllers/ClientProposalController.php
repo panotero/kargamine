@@ -7,30 +7,51 @@ use App\Models\ClientProposal;
 use App\Models\ClientProposalRate;
 use App\Models\Container;
 use App\Models\ContainerVariant;
-use App\Models\CrmLead;
 use App\Models\Lane;
 use App\Models\LaneTariffRate;
 use App\Models\LaneTariffRatePrice;
+use App\Models\Prospect;
 use App\Models\User;
-use App\Jobs\SendExternalMailJob;
+use App\Services\ActivityService;
 use App\Services\FileUploadService;
 use App\Services\TeamNotifier;
 use App\Services\TeamService;
+use App\Support\PermissionHelper;
 use App\Support\RoleHelper;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class ClientProposalController extends Controller
 {
     protected $fileUploadService;
 
-    public function __construct(FileUploadService $fileUploadService)
+    protected ActivityService $activityService;
+
+    public function __construct(FileUploadService $fileUploadService, ActivityService $activityService)
     {
         $this->fileUploadService = $fileUploadService;
+        $this->activityService = $activityService;
+    }
+
+    /**
+     * Resolves the integer prospects.id this proposal should log CRM
+     * activity against: its own lead-scoped prospect_id, or - for
+     * proposals created via the client-scoped store() path (which never
+     * sets prospect_id directly) - the client's originating prospect.
+     * Returns null if neither resolves (nothing to log against).
+     */
+    private function activityProspectId(ClientProposal $proposal): ?int
+    {
+        if ($proposal->prospect_id) {
+            return $proposal->prospect_id;
+        }
+
+        $proposal->loadMissing('client.prospect');
+
+        return $proposal->client?->prospect?->id;
     }
 
     /**
@@ -52,7 +73,7 @@ class ClientProposalController extends Controller
             'creator:id,name',
             'decidedBy:id,name',
             'activeContract',
-            'lead.user:id,name,team_id',
+            'prospect.user:id,name,team_id',
         ])->where('client_id', $client->id)
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 5))
@@ -70,9 +91,9 @@ class ClientProposalController extends Controller
         // member only sees proposals for their own leads; a team leader sees
         // their team's subtree; superadmin bypasses entirely. A proposal's
         // "owner" is its lead's assigned rep - checked via the proposal's own
-        // lead_id first, falling back to the client's originating lead for
+        // prospect_id first, falling back to the client's originating lead for
         // proposals created via the client-scoped store() path (which never
-        // sets lead_id directly).
+        // sets prospect_id directly).
         $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
             ? null
             : TeamService::accessibleUserIds($request->user());
@@ -80,8 +101,8 @@ class ClientProposalController extends Controller
         $visibilityScope = function ($q) use ($visibleUserIds) {
             $q->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
                 $q->where(function ($q) use ($visibleUserIds) {
-                    $q->whereHas('lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds))
-                        ->orWhereHas('client.lead', fn($q) => $q->whereIn('assigned_to', $visibleUserIds));
+                    $q->whereHas('prospect', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds))
+                        ->orWhereHas('client.prospect', fn ($q) => $q->whereIn('assigned_to', $visibleUserIds));
                 });
             });
         };
@@ -90,26 +111,26 @@ class ClientProposalController extends Controller
             'client:id,uuid,company_name,customer_code,sales_rep_id',
             'creator:id,name',
             'decidedBy:id,name',
-            'lead.user:id,name,team_id',
+            'prospect.user:id,name,team_id',
         ])
             ->tap($visibilityScope)
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->search;
                 $q->where('code', 'like', "%{$s}%")
-                    ->orWhereHas('client', fn($q) => $q->where('company_name', 'like', "%{$s}%"));
+                    ->orWhereHas('client', fn ($q) => $q->where('company_name', 'like', "%{$s}%"));
             })
-            ->when($request->filled('status') && $request->status !== 'all', fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('status') && $request->status !== 'all', fn ($q) => $q->where('status', $request->status))
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15))
             ->appends($request->query());
 
-        $statusCounts = ClientProposal::tap($visibilityScope)->get()->groupBy('status')->map(fn($group) => $group->count());
+        $statusCounts = ClientProposal::tap($visibilityScope)->get()->groupBy('status')->map(fn ($group) => $group->count());
 
         $pendingAwaitingDecision = ClientProposal::tap($visibilityScope)
-            ->where('status', ClientProposal::STATUS_PENDING)
-            ->with(['lead.user:id,team_id', 'client.lead.user:id,team_id'])
+            ->whereIn('status', [ClientProposal::STATUS_PENDING, ClientProposal::STATUS_PENDING_MANAGER])
+            ->with(['prospect.user:id,team_id', 'client.prospect.user:id,team_id'])
             ->get()
-            ->filter(fn($p) => $p->canBeApprovedBy($request->user()))
+            ->filter(fn ($p) => $p->canBeApprovedBy($request->user()))
             ->count();
 
         return response()->json([
@@ -119,6 +140,7 @@ class ClientProposalController extends Controller
                 'all' => $statusCounts->sum(),
                 'awaiting_decision' => $pendingAwaitingDecision,
                 'pending' => $statusCounts->get(ClientProposal::STATUS_PENDING, 0),
+                'pending_manager' => $statusCounts->get(ClientProposal::STATUS_PENDING_MANAGER, 0),
                 'approved' => $statusCounts->get(ClientProposal::STATUS_APPROVED, 0),
                 'disapproved' => $statusCounts->get(ClientProposal::STATUS_DISAPPROVED, 0),
                 'accepted' => $statusCounts->get(ClientProposal::STATUS_ACCEPTED, 0),
@@ -134,17 +156,17 @@ class ClientProposalController extends Controller
             'client',
             'creator',
             'decidedBy',
-            'lead.company',
-            'lead.addresses',
+            'prospect.company',
+            'prospect.addresses',
             // team_id is required here, not just display fields - canBeApprovedBy()/
             // canBeSignedBy() read it via ownerUser()->team_id, and a column-
             // restricted eager load silently nulls out anything not selected.
-            'lead.user:id,name,team_id',
-            // Client-scoped proposals (created via store()) never set lead_id
+            'prospect.user:id,name,team_id',
+            // Client-scoped proposals (created via store()) never set prospect_id
             // directly - this is the same fallback as ClientProposal::ownerUser(),
             // so the modal can still show lead info for those.
-            'client.lead.company',
-            'client.lead.user:id,name,team_id',
+            'client.prospect.company',
+            'client.prospect.user:id,name,team_id',
             'rates.originPort.location',
             'rates.originPickupArea',
             'rates.destinationPickupArea',
@@ -209,6 +231,19 @@ class ClientProposalController extends Controller
             return $proposal;
         });
 
+        try {
+            if ($pid = $this->activityProspectId($proposal)) {
+                $this->activityService->create(
+                    $pid,
+                    'proposal_submitted',
+                    'Proposal '.$proposal->code.' submitted for approval.',
+                    $request->user()?->id
+                );
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $this->notifyProposalPending($proposal);
 
         return response()->json(['success' => true, 'data' => $proposal->load('rates.ancillaryServices')], 201);
@@ -254,11 +289,39 @@ class ClientProposalController extends Controller
             return response()->json(['success' => false, 'message' => 'You are not authorized to approve proposals.'], 403);
         }
 
-        if ($proposal->status !== ClientProposal::STATUS_PENDING) {
-            return response()->json(['success' => false, 'message' => 'Only pending proposals can be approved.'], 422);
+        if (! in_array($proposal->status, [ClientProposal::STATUS_PENDING, ClientProposal::STATUS_PENDING_MANAGER], true)) {
+            return response()->json(['success' => false, 'message' => 'Only proposals pending RM or Manager approval can be approved.'], 422);
         }
 
         $validated = $request->validate(['remarks' => ['nullable', 'string', 'max:500']]);
+
+        // Stage 1 (RM) is a forward-only checkpoint - it moves the proposal
+        // to the Manager's queue without touching decided_by/decided_at,
+        // which stay reserved for whichever stage makes the final call.
+        if ($proposal->status === ClientProposal::STATUS_PENDING) {
+            $proposal->update([
+                'status' => ClientProposal::STATUS_PENDING_MANAGER,
+                'rm_approved_by' => $request->user()->id,
+                'rm_approved_at' => now(),
+            ]);
+
+            try {
+                if ($pid = $this->activityProspectId($proposal)) {
+                    $this->activityService->create(
+                        $pid,
+                        'proposal_rm_approved',
+                        'Proposal '.$proposal->code.' approved by RM and forwarded to Manager.',
+                        $request->user()->id
+                    );
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
+            $this->notifyProposalPendingManager($proposal);
+
+            return response()->json(['success' => true, 'data' => $proposal]);
+        }
 
         $proposal->update([
             'status' => ClientProposal::STATUS_APPROVED,
@@ -267,8 +330,21 @@ class ClientProposalController extends Controller
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
 
+        $proposal->proposalRequest?->update(['status' => 'approved']);
+
+        try {
+            if ($pid = $this->activityProspectId($proposal)) {
+                $description = 'Proposal '.$proposal->code.' approved.';
+                if (! empty($validated['remarks'])) {
+                    $description .= ' Remarks: '.$validated['remarks'];
+                }
+                $this->activityService->create($pid, 'proposal_approved', $description, $request->user()->id);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $this->notifyProposalDecision($proposal, $request->user(), 'approved');
-        $this->sendSignatureRequestEmail($proposal);
 
         return response()->json(['success' => true, 'data' => $proposal]);
     }
@@ -279,8 +355,8 @@ class ClientProposalController extends Controller
             return response()->json(['success' => false, 'message' => 'You are not authorized to disapprove proposals.'], 403);
         }
 
-        if ($proposal->status !== ClientProposal::STATUS_PENDING) {
-            return response()->json(['success' => false, 'message' => 'Only pending proposals can be disapproved.'], 422);
+        if (! in_array($proposal->status, [ClientProposal::STATUS_PENDING, ClientProposal::STATUS_PENDING_MANAGER], true)) {
+            return response()->json(['success' => false, 'message' => 'Only proposals pending RM or Manager approval can be disapproved.'], 422);
         }
 
         $validated = $request->validate(['remarks' => ['nullable', 'string', 'max:500']]);
@@ -291,6 +367,18 @@ class ClientProposalController extends Controller
             'decided_at' => now(),
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
+
+        try {
+            if ($pid = $this->activityProspectId($proposal)) {
+                $description = 'Proposal '.$proposal->code.' disapproved.';
+                if (! empty($validated['remarks'])) {
+                    $description .= ' Remarks: '.$validated['remarks'];
+                }
+                $this->activityService->create($pid, 'proposal_disapproved', $description, $request->user()->id);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $this->notifyProposalDecision($proposal, $request->user(), 'disapproved');
 
@@ -316,15 +404,27 @@ class ClientProposalController extends Controller
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
 
+        try {
+            if ($pid = $this->activityProspectId($proposal)) {
+                $description = 'Proposal '.$proposal->code.' rejected.';
+                if (! empty($validated['remarks'])) {
+                    $description .= ' Remarks: '.$validated['remarks'];
+                }
+                $this->activityService->create($pid, 'proposal_rejected', $description, $request->user()->id);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $this->notifyProposalDecision($proposal, $request->user(), 'rejected');
 
         return response()->json(['success' => true, 'data' => $proposal]);
     }
 
     /**
-     * Only available while PENDING - once a decision has been made
-     * (approved/disapproved/etc.) the proposal follows the rest of the
-     * workflow instead (reject, re-approve, etc.).
+     * Only available while pending RM or Manager approval - once a decision
+     * has been made (approved/disapproved/etc.) the proposal follows the
+     * rest of the workflow instead (reject, re-approve, etc.).
      */
     public function cancel(Request $request, ClientProposal $proposal)
     {
@@ -332,8 +432,8 @@ class ClientProposalController extends Controller
             return response()->json(['success' => false, 'message' => 'You are not authorized to cancel this proposal.'], 403);
         }
 
-        if ($proposal->status !== ClientProposal::STATUS_PENDING) {
-            return response()->json(['success' => false, 'message' => 'Only pending proposals can be cancelled.'], 422);
+        if (! in_array($proposal->status, [ClientProposal::STATUS_PENDING, ClientProposal::STATUS_PENDING_MANAGER], true)) {
+            return response()->json(['success' => false, 'message' => 'Only proposals pending RM or Manager approval can be cancelled.'], 422);
         }
 
         $validated = $request->validate(['remarks' => ['nullable', 'string', 'max:500']]);
@@ -344,6 +444,18 @@ class ClientProposalController extends Controller
             'decided_at' => now(),
             'decision_remarks' => $validated['remarks'] ?? null,
         ]);
+
+        try {
+            if ($pid = $this->activityProspectId($proposal)) {
+                $description = 'Proposal '.$proposal->code.' cancelled.';
+                if (! empty($validated['remarks'])) {
+                    $description .= ' Remarks: '.$validated['remarks'];
+                }
+                $this->activityService->create($pid, 'proposal_cancelled', $description, $request->user()->id);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json(['success' => true, 'data' => $proposal]);
     }
@@ -376,6 +488,21 @@ class ClientProposalController extends Controller
             'status' => ClientProposal::STATUS_ACCEPTED,
         ]);
 
+        $proposal->proposalRequest?->update(['status' => 'signed']);
+
+        try {
+            if ($pid = $this->activityProspectId($proposal)) {
+                $this->activityService->create(
+                    $pid,
+                    'proposal_signed',
+                    'Signed document uploaded — proposal '.$proposal->code.' accepted.',
+                    $request->user()->id
+                );
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return response()->json(['success' => true, 'data' => $proposal]);
     }
 
@@ -384,8 +511,8 @@ class ClientProposalController extends Controller
         $proposal->load([
             'client',
             'client.addresses',
-            'lead.company',
-            'lead.addresses',
+            'prospect.company',
+            'prospect.addresses',
             'creator',
             'rates.originPort.location',
             'rates.originPickupArea',
@@ -399,7 +526,7 @@ class ClientProposalController extends Controller
 
         $pdf = Pdf::loadView('pdf.clientProposal', ['proposal' => $proposal]);
 
-        return $pdf->download($proposal->code . '.pdf');
+        return $pdf->download($proposal->code.'.pdf');
     }
 
     protected function rateRules(): array
@@ -465,6 +592,7 @@ class ClientProposalController extends Controller
             'uuid' => (string) Str::uuid(),
             'code' => sprintf('CPR-%s-%04d', $yearMonth, $seq),
             'client_id' => $client->id,
+            'proposal_request_id' => $request->input('proposal_request_id'),
             'status' => ClientProposal::STATUS_PENDING,
             'created_by' => $request->user()?->id,
             'include_special_charges' => $request->boolean('include_special_charges'),
@@ -475,20 +603,21 @@ class ClientProposalController extends Controller
     }
 
     /**
-     * A freshly-created (PENDING) proposal notifies the direct team leader(s)
-     * of its owner (the lead's assigned rep) that it needs approval - same
-     * direct-only rule as the CRM new-lead notification, not the wider
-     * cascading pyramid that canBeApprovedBy() allows for actually approving.
+     * Fired at creation (status STATUS_PENDING) - notifies the deal's
+     * assigned Relationship Manager directly, since RM approval is now a
+     * per-deal identity (prospects.relationship_manager_id), not a team
+     * lookup. Silently skipped if no RM is assigned yet.
      */
     protected function notifyProposalPending(ClientProposal $proposal): void
     {
         $owner = $proposal->ownerUser();
+        $rm = $proposal->assignedRelationshipManager();
 
-        if (!$owner) {
+        if (! $owner || ! $rm) {
             return;
         }
 
-        TeamNotifier::notify(TeamNotifier::directLeaderIds($owner), [
+        TeamNotifier::notify([$rm->id], [
             'type' => 'proposal.pending',
             'title' => 'Proposal awaiting your approval',
             'message' => "{$proposal->code} for {$owner->name} needs your approval.",
@@ -497,9 +626,36 @@ class ClientProposalController extends Controller
             'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
             'email_subject' => "Approval needed — {$proposal->code}",
             // Clicking this notification opens the Proposals page AND the
-            // specific proposal's modal - this one needs the team leader's
-            // eyes on it, not just a landing on the page (unlike the CRM
-            // new-lead notification, which only opens the CRM page).
+            // specific proposal's modal - this one needs the RM's eyes on
+            // it, not just a landing on the page (unlike the CRM new-lead
+            // notification, which only opens the CRM page).
+            'data' => ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
+        ]);
+    }
+
+    /**
+     * Fired when the RM approves/forwards (status STATUS_PENDING_MANAGER) -
+     * notifies every user whose role currently holds the
+     * "proposal.approve.manager" permission, since the Manager approval
+     * isn't scoped to a single assigned individual.
+     */
+    protected function notifyProposalPendingManager(ClientProposal $proposal): void
+    {
+        $owner = $proposal->ownerUser();
+        $managerIds = PermissionHelper::userIdsWithPermission('proposal.approve.manager');
+
+        if (! $owner || ! $managerIds) {
+            return;
+        }
+
+        TeamNotifier::notify($managerIds, [
+            'type' => 'proposal.pending_manager',
+            'title' => 'Proposal awaiting your final approval',
+            'message' => "{$proposal->code} for {$owner->name} was approved by the RM and needs your final decision.",
+            'from_user_id' => $owner->id,
+            'notifiable' => $proposal,
+            'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
+            'email_subject' => "Final approval needed — {$proposal->code}",
             'data' => ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
         ]);
     }
@@ -512,7 +668,7 @@ class ClientProposalController extends Controller
     {
         $creator = $proposal->creator;
 
-        if (!$creator) {
+        if (! $creator) {
             return;
         }
 
@@ -528,42 +684,9 @@ class ClientProposalController extends Controller
         ]);
     }
 
-    /**
-     * Once approved, the client's authorized signatory (captured on the
-     * originating lead's company info - see ClientProposal::authorizedSignatoryContact())
-     * gets a signed, unauthenticated link where they can download the
-     * approved proposal and upload their signed copy - see
-     * routes/proposal_signing.php + ProposalSigningController.
-     */
-    protected function sendSignatureRequestEmail(ClientProposal $proposal): void
-    {
-        $signatory = $proposal->authorizedSignatoryContact();
-
-        if (! $signatory) {
-            return;
-        }
-
-        $signUrl = URL::temporarySignedRoute(
-            'proposal.sign.show',
-            now()->addDays(30),
-            ['proposal' => $proposal->uuid]
-        );
-
-        SendExternalMailJob::dispatch($signatory['email'], [
-            'subject' => "Please sign your proposal — {$proposal->code}",
-            'title' => 'Your Proposal Is Ready to Sign',
-            'message' => "Hi {$signatory['name']}, your proposal {$proposal->code} has been approved. " .
-                'Please download it, sign it — digitally or by hand — and upload the signed copy using the link below.',
-            'Header' => $proposal->code,
-            'button' => ['url' => $signUrl, 'text' => 'View & Sign Proposal'],
-        ]);
-
-        $proposal->update(['signature_requested_at' => now()]);
-    }
-
     public function indexByLead(Request $request, $leadUuid)
     {
-        $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
+        $lead = Prospect::where('uuid', $leadUuid)->firstOrFail();
 
         $proposals = ClientProposal::with([
             'rates.originPort.location',
@@ -576,7 +699,7 @@ class ClientProposalController extends Controller
             'rates.ancillaryServices',
             'creator:id,name',
             'decidedBy:id,name',
-        ])->where('lead_id', $lead->id)
+        ])->where('prospect_id', $lead->id)
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 5))
             ->appends($request->query());
@@ -586,7 +709,7 @@ class ClientProposalController extends Controller
 
     public function storeForLead(Request $request, $leadUuid)
     {
-        $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
+        $lead = Prospect::where('uuid', $leadUuid)->firstOrFail();
         $validated = $request->validate($this->rateRules());
 
         $proposal = DB::transaction(function () use ($lead, $validated, $request) {
@@ -598,8 +721,9 @@ class ClientProposalController extends Controller
             $proposal = ClientProposal::create([
                 'uuid' => (string) Str::uuid(),
                 'code' => sprintf('CPR-%s-%04d', $yearMonth, $seq),
-                'lead_id' => $lead->id,
+                'prospect_id' => $lead->id,
                 'client_id' => null,
+                'proposal_request_id' => $request->input('proposal_request_id'),
                 'status' => ClientProposal::STATUS_PENDING,
                 'created_by' => $request->user()?->id,
                 'include_special_charges' => $request->boolean('include_special_charges'),
@@ -615,6 +739,17 @@ class ClientProposalController extends Controller
             return $proposal;
         });
 
+        try {
+            $this->activityService->create(
+                $lead->id,
+                'proposal_submitted',
+                'Proposal '.$proposal->code.' submitted for approval.',
+                $request->user()?->id
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $this->notifyProposalPending($proposal);
 
         return response()->json(['success' => true, 'data' => $proposal->load('rates.ancillaryServices')], 201);
@@ -622,7 +757,7 @@ class ClientProposalController extends Controller
 
     /**
      * Builds pre-filled (best-effort) proposal rate rows from the lead's
-     * own container requirements (crm_lead_containers), so the "New Proposal"
+     * own container requirements (prospect_containers_legacy), so the "New Proposal"
      * form opens already populated. The frontend still lets the user edit,
      * add, or remove any row before saving.
      *
@@ -634,7 +769,7 @@ class ClientProposalController extends Controller
      */
     public function leadContainerDefaults($leadUuid)
     {
-        $lead = CrmLead::where('uuid', $leadUuid)->firstOrFail();
+        $lead = Prospect::where('uuid', $leadUuid)->firstOrFail();
 
         $rows = $lead->containers()
             ->with(['originPort.location', 'destinationPort.location', 'containerClass', 'containerSize'])

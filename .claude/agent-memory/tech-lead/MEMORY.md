@@ -1,2 +1,6 @@
 - [Searchable select decision](project_searchable_select_decision.md) — why we hand-rolled the combobox instead of adding Select2/Choices/TomSelect
 - [Nullable class/size pipeline](project_nullable_class_size.md) — class/size nullable end-to-end, plus two rate-row payload bugs found doing it
+- [Proposal Request O&D design](project_proposal_request_od_design.md) — O&D stays FK-not-snapshot; singular vs plural proposalRequest route gotcha; draft/pending/cancelled lifecycle
+- [CSR proposal-request fields](project_csr_proposal_request_fields.md) — service_type replaces delivery_type_id; Break Bulk=LC label-only; Products qty; what already existed
+- [Prospect activity + RFP sections](project_prospect_activity_and_rfp_sections.md) — detail modal vs intake modal; ActivityService had no live call sites; show() payload already carries the data
+- [Requirement vs product location tables](project_requirement_vs_product_location_tables.md) — requirement O&D → `locations` master; product O&D → `prospect_locations`; IDs not interchangeable

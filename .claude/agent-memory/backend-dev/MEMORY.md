@@ -1,4 +1,5 @@
 - [Client Master rebuild (2026-08-03)](project_client_master_rebuild.md) — new mnemonic/account_manager/finance/contacts/ancillary shapes, CRO role, and pre-existing convention inconsistencies to not re-introduce/re-fix.
-- [Broken sqlite test suite](project_broken_test_suite_sqlite.md) — every RefreshDatabase Feature test fails on a MySQL-only migration statement; not your change's fault, verify via real MySQL DB instead.
+- [Broken sqlite test suite — now fixed, 17 unrelated failures remain](project_broken_test_suite_sqlite.md) — the MySQL-only migration that red-screened everything was fixed 2026-09-17; suite runs now.
 - [nav.access:/page_settings has no nav_menus row](project_nav_access_settings_gap.md) — settings-gated routes 403 for everyone incl. superadmin until that row is seeded; no code bug.
-- [userconfig_table has no migration](project_userconfig_table_missing.md) — UserConfig model/controller are correct PHP but the table doesn't exist in any environment yet.
+- [userconfig_table migration — RESOLVED](project_userconfig_table_missing.md) — table now exists (migration found 2026-09-17); historical note only, don't assume still broken.
+- [Prospect modal Contacts+Requirements phase (2026-09-17)](project_prospect_modal_contacts_requirements.md) — prospect_contacts/proposal_requests shapes; Identity tab reconciled to drop contact/signatory fields from saveStage1/gate1; restrictOnDelete FK fixed to cascade.

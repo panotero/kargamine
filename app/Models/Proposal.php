@@ -12,7 +12,7 @@ class Proposal extends Model
     protected $table = 'proposals';
     protected $fillable = [
         'uuid',
-        'lead_id',
+        'prospect_id',
         'created_by',
         'status',
         'code',
@@ -28,9 +28,9 @@ class Proposal extends Model
         return ['uuid'];
     }
 
-    public function lead()
+    public function prospect()
     {
-        return $this->belongsTo(CrmLead::class, 'lead_id');
+        return $this->belongsTo(Prospect::class, 'prospect_id');
     }
 
     public function creator()

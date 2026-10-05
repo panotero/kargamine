@@ -47,6 +47,7 @@ to require one, stop and report that back instead.
 ## Your report
 
 Return, concisely:
+
 - Files created/modified, with paths
 - The final response shape of each endpoint you touched, written out as JSON
 - Anything you had to deviate from in the brief, and why
