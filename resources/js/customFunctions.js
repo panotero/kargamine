@@ -56,6 +56,66 @@ document.addEventListener(
   true,
 );
 
+// -------------------- PHONE INPUT FORMATTING --------------------
+// Any input with class="phone-input" auto-formats into space-separated
+// digit groups live as the user types (on the "input" event), preserving
+// caret position the same way the currency-input block does (counting
+// digits, not raw character offsets). Event-delegated so dynamically
+// inserted rows get this for free.
+//
+// STORAGE DECISION: phone numbers are stored digits-only in the DB.
+// Formatting (spacing) is purely display/entry sugar - always strip back
+// to digits with parsePhoneValue() before sending a payload.
+window.formatPhoneDisplay = function formatPhoneDisplay(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits === "") return "";
+
+  // 11-digit PH mobile starting with "09": group as XXXX XXX XXXX.
+  if (digits.length === 11 && digits.startsWith("09")) {
+    return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
+  }
+
+  // Generic fallback: group left-to-right into blocks of 4.
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+};
+
+window.parsePhoneValue = function parsePhoneValue(value) {
+  return String(value ?? "").replace(/\D/g, "");
+};
+
+document.addEventListener(
+  "input",
+  (e) => {
+    if (!e.target.matches || !e.target.matches(".phone-input")) return;
+
+    const el = e.target;
+    const cursorPos = el.selectionStart ?? el.value.length;
+    const digitsBeforeCursor = el.value.slice(0, cursorPos).replace(/\D/g, "").length;
+
+    const formatted = formatPhoneDisplay(el.value);
+    if (formatted === el.value) return;
+    el.value = formatted;
+
+    let newPos = formatted.length;
+    if (digitsBeforeCursor === 0) {
+      newPos = 0;
+    } else {
+      let seen = 0;
+      for (let i = 0; i < formatted.length; i++) {
+        if (formatted[i] !== " ") {
+          seen++;
+          if (seen === digitsBeforeCursor) {
+            newPos = i + 1;
+            break;
+          }
+        }
+      }
+    }
+    el.setSelectionRange(newPos, newPos);
+  },
+  true,
+);
+
 window.initModal = function initModal({ modalId }) {
   const modal = document.getElementById(modalId);
   const closeBtn = modal?.querySelectorAll(".modal-close");
@@ -388,26 +448,44 @@ window.loadingLine = function loadingLine() {
 </div>`;
 };
 
+// Canonical date/datetime display helpers. Built from Date parts by hand
+// (NOT toLocaleString) because toLocaleString's default output inserts a
+// comma between the year and the time, which the canonical shape below
+// does not have: "January 01, 2001 01:00 PM".
+window.MONTH_NAMES_LONG = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 window.formatDateTime = function formatDateTime(dateString) {
+  if (!dateString) return "";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
 
-  return date.toLocaleString("en-PH", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const month = window.MONTH_NAMES_LONG[date.getMonth()];
+  const day = String(date.getDate()).padStart(2, "0");
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  const hoursStr = String(hours).padStart(2, "0");
+
+  return `${month} ${day}, ${year} ${hoursStr}:${minutes} ${ampm}`;
 };
-window.formatDate = function formatDate(dateString) {
-  const date = new Date(dateString);
 
-  return date.toLocaleString("en-PH", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
+window.formatDate = function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  const month = window.MONTH_NAMES_LONG[date.getMonth()];
+  const day = String(date.getDate()).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${month} ${day}, ${year}`;
 };
 window.customConfirm = function customConfirm(message) {
   return new Promise((resolve) => {

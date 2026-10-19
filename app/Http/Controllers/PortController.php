@@ -11,7 +11,7 @@ class PortController extends Controller
     public function index(Request $request)
     {
         $ports = Port::query()
-            ->with('location')
+            ->with('location.serviceableAreas')
             ->when($request->filled('search'), fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
                     ->orWhereHas('location', fn($q) => $q->where('name', 'like', "%{$request->search}%"));

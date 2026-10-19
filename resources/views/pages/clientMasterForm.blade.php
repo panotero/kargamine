@@ -724,14 +724,14 @@
                     <div>
                         <label class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Landline</label>
                         <div class="flex gap-1">
-                            <input type="text" data-field="landline_number" class="border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
+                            <input type="text" data-field="landline_number" class="phone-input border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
                             ${typeSelectHtml('landline_type')}
                         </div>
                     </div>
                     <div>
                         <label class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Mobile</label>
                         <div class="flex gap-1">
-                            <input type="text" data-field="mobile" class="border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
+                            <input type="text" data-field="mobile" class="phone-input border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0">
                             ${typeSelectHtml('mobile_type')}
                         </div>
                     </div>
@@ -798,7 +798,8 @@
                 .map(card => {
                     const obj = {};
                     card.querySelectorAll('.contact-fields [data-field]').forEach(input => {
-                        obj[input.dataset.field] = input.value;
+                        obj[input.dataset.field] = input.classList.contains('phone-input') ?
+                            parsePhoneValue(input.value) : input.value;
                     });
                     obj.addresses = collectAddressesFrom(card.querySelector(
                         '.contact-addresses-container'));
@@ -983,7 +984,7 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 dark:text-zinc-500 uppercase">Quantity</label>
-                        <input type="number" step="0.01" data-field="quantity" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                        <input type="text" inputmode="decimal" data-field="quantity" class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     </div>
                 </div>
             </div>`;
@@ -1009,7 +1010,11 @@
                     const obj = {};
                     ['required_service', 'location', 'unit', 'quantity'].forEach(field => {
                         const el = row.querySelector(`[data-field="${field}"]`);
-                        obj[field] = el ? el.value : '';
+                        if (!el) {
+                            obj[field] = '';
+                        } else {
+                            obj[field] = el.classList.contains('currency-input') ? parseCurrencyValue(el.value) : el.value;
+                        }
                     });
                     return obj;
                 });

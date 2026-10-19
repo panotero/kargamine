@@ -43,8 +43,8 @@ class Prospect extends Model
     protected $appends = ['contact_name', 'is_fully_assigned'];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'requires_proposal' => 'boolean',
     ];
 
@@ -119,6 +119,17 @@ class Prospect extends Model
     public function relationshipManager()
     {
         return $this->belongsTo(User::class, 'relationship_manager_id');
+    }
+
+    /**
+     * Permanent record of who created this prospect - independent of
+     * assigned_to, which only ever reflects Management's current CSR
+     * staffing and starts null until assignOwners() sets it. Purely
+     * historical; not read by any authorization check.
+     */
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**

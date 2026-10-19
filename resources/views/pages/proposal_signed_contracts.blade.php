@@ -87,7 +87,11 @@
             </div>
         </div>
 
-        <table class="w-full text-xs">
+        {{-- Legacy rate lines (Client Masters -> Add Proposal origin) - hidden
+             when this proposal came from the RFP wizard instead; see
+             #cpmRfpRatesTable below and logic_client_proposals_shared.js's
+             openProposalModal() for the branch. --}}
+        <table id="cpmLegacyRatesTable" class="w-full text-xs">
             <thead class="text-zinc-400 uppercase">
                 <tr>
                     <th class="text-left py-1">Route</th>
@@ -101,10 +105,51 @@
             <tbody id="cpmRatesBody"></tbody>
         </table>
 
+        {{-- RFP-sourced rate lines (Request for Proposal wizard's Build Rate
+             Matrix) - shown instead of the table above when the proposal has
+             a proposal_request with saved product_rates. --}}
+        <table id="cpmRfpRatesTable" class="w-full text-xs hidden">
+            <thead class="text-zinc-400 uppercase">
+                <tr>
+                    <th class="text-left py-1">Item No.</th>
+                    <th class="text-left py-1">Product</th>
+                    <th class="text-right py-1">Base Rate</th>
+                    <th class="text-right py-1">Adjustment</th>
+                    <th class="text-right py-1">Total</th>
+                </tr>
+            </thead>
+            <tbody id="cpmRfpRatesBody"></tbody>
+        </table>
+
         {{-- Additional Charges - proposal-wide opt-ins, hidden entirely when none apply --}}
         <div id="cpmAdditionalCharges" class="hidden">
             <p class="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Additional Charges</p>
             <div class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        {{-- RFP Terms & Conditions recap (Terms of Payment + grouped
+             Ancillary Service fees saved on the request's T&C tab) - hidden
+             entirely unless the proposal's proposal_request carries this
+             data. See logic_client_proposals_shared.js's openProposalModal(). --}}
+        <div id="cpmRfpTerms" class="hidden space-y-4">
+            <div id="cpmRfpTermsOfPayment" class="hidden space-y-2">
+                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Terms of Payment</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div id="cpmRfpTopStandardWrap" class="hidden border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1">All Except Charter</p>
+                        <p id="cpmRfpTopStandard" class="text-sm font-medium text-zinc-800 dark:text-zinc-100">-</p>
+                    </div>
+                    <div id="cpmRfpTopCharterWrap" class="hidden border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-1">Charter Only</p>
+                        <p id="cpmRfpTopCharter" class="text-sm font-medium text-zinc-800 dark:text-zinc-100">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cpmRfpAncillaryWrap" class="hidden space-y-2">
+                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Ancillary Service Fees</p>
+                <div id="cpmRfpAncillaryBody" class="space-y-3"></div>
+            </div>
         </div>
 
         {{-- Attach signed document - only shown when APPROVED --}}

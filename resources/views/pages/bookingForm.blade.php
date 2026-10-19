@@ -409,7 +409,7 @@
 
             return Array.from(rows).every((row) => {
                 const variantId = row.querySelector('[data-field="container_variant_id"]')?.value;
-                const quantity = row.querySelector('[data-field="quantity"]')?.value;
+                const quantity = parseCurrencyValue(row.querySelector('[data-field="quantity"]')?.value);
                 return !!variantId && Number(quantity) > 0;
             });
         }
@@ -566,7 +566,7 @@
         function bumpRowQuantity(row, minVanQty) {
             const quantityInput = row.querySelector('[data-field="quantity"]');
             const increment = minVanQty > 1 ? minVanQty : 1;
-            quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + increment;
+            quantityInput.value = (parseInt(parseCurrencyValue(quantityInput.value), 10) || 0) + increment;
             quantityInput.dispatchEvent(new Event('change'));
         }
 
@@ -806,7 +806,7 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                        <input type="number" min="1" value="1" data-field="quantity" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        <input type="text" inputmode="numeric" value="1" data-field="quantity" class="currency-input w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Declared Value</label>
@@ -822,7 +822,7 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Weight (kg)</label>
-                        <input type="number" step="0.01" min="0" data-field="weight_kg" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                        <input type="text" inputmode="decimal" data-field="weight_kg" class="currency-input w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Volume (m&sup3;)</label>
@@ -877,7 +877,7 @@
                         </div>
                         <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                             <label class="text-[11px] text-zinc-400 uppercase">Consignee Contact Number</label>
-                            <input type="text" data-field="consignee_contact_number" class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            <input type="text" data-field="consignee_contact_number" class="phone-input w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                         </div>
                         <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                             <label class="text-[11px] text-zinc-400 uppercase">Consignee Address</label>
@@ -1427,7 +1427,7 @@
                     consignee_name: dget('consignee_name')?.value || null,
                     consignee_address: dget('consignee_address')?.value || null,
                     consignee_contact_person: dget('consignee_contact_person')?.value || null,
-                    consignee_contact_number: dget('consignee_contact_number')?.value || null,
+                    consignee_contact_number: parsePhoneValue(dget('consignee_contact_number')?.value || '') || null,
                     delivery_date: dget('delivery_date')?.value || null,
                     delivery_date_notes: dget('delivery_date_notes')?.value || null,
                     first_delivery_date: dget('first_delivery_date')?.value || null,
@@ -1440,9 +1440,9 @@
                     return {
                         ...shared,
                         container_variant_id: Number(rowGet('container_variant_id').value) || null,
-                        quantity: Number(rowGet('quantity').value) || 1,
+                        quantity: Number(parseCurrencyValue(rowGet('quantity').value)) || 1,
                         description: rowGet('description').value || null,
-                        weight_kg: rowGet('weight_kg').value || null,
+                        weight_kg: parseCurrencyValue(rowGet('weight_kg').value) || null,
                         volume_cbm: rowGet('volume_cbm').value || null,
                         is_hazardous: rowGet('is_hazardous').checked,
                         is_fragile: rowGet('is_fragile').checked,

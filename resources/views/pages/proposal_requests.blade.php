@@ -3,12 +3,17 @@
 
     Management's Proposal Request assignment queue - lists every
     ProposalRequest alongside its prospect's current CSR (assigned_to) /
-    Relationship Manager (relationship_manager_id) assignment, and lets
-    Management assign both via <x-side-modal id="assignOwnersModal">. A
-    request stays locked out of the RFP wizard (see
-    logic_prospect_request_proposal.js's applyAssignmentGating()) until
-    both are set - see ProspectController::assignOwners() /
-    ProposalRequestAssignmentController::index().
+    Relationship Manager (relationship_manager_id) assignment. Clicking a
+    row fetches the full prospect and opens the dedicated, fully read-only
+    <x-proposal-request-info-modal /> below (deliberately NOT the CRM's own
+    ProspectInfoModal - see that component's header comment) - see the row
+    click handler in logic_proposal_requests.js. That modal's own "Assign"
+    action (shown only while the request's status is "pending") opens
+    <x-side-modal id="assignOwnersModal"> for the actual CSR/RM assignment
+    (openAssignModal(), bound to #priAssignBtn). A request stays locked out
+    of the RFP wizard (see logic_prospect_request_proposal.js's
+    applyAssignmentGating()) until both are set - see
+    ProspectController::assignOwners() / ProposalRequestAssignmentController::index().
 
     Root element (#ProposalRequestsPage) is only a self-guard hook for
     logic_proposal_requests.js's initProposalRequestsPage() - that file is
@@ -49,7 +54,12 @@
     <x-table id="tableProposalRequests" />
 </div>
 
-{{-- Assign CSR / Relationship Manager side-modal --}}
+{{-- Dedicated, fully read-only "Proposal Request Info" modal - see
+     resources/views/components/proposal-request-info-modal.blade.php. --}}
+<x-proposal-request-info-modal />
+
+{{-- Assign CSR / Relationship Manager side-modal - reached from the info
+     modal's own "Assign" button (status === "pending" only). --}}
 <x-side-modal id="assignOwnersModal">
     <div
         class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">

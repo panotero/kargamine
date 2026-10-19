@@ -13,8 +13,8 @@ class ServiceableArea extends Model
     protected $fillable = ['location_id', 'area_name', 'is_active'];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 

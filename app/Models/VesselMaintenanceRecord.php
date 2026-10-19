@@ -20,9 +20,9 @@ class VesselMaintenanceRecord extends Model
     ];
 
     protected $casts = [
-        'performed_at' => 'date:M d, Y',
-        'completed_at' => 'date:M d, Y',
-        'next_due_at' => 'date:M d, Y',
+        'performed_at' => 'date',
+        'completed_at' => 'date',
+        'next_due_at' => 'date',
         'cost' => 'decimal:2',
     ];
 

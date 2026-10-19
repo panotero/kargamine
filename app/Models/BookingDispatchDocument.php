@@ -41,18 +41,18 @@ class BookingDispatchDocument extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
-        'generated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'generated_at' => 'datetime',
         'is_single_pickup' => 'boolean',
         'is_advance_pull_out' => 'boolean',
         'convan_count' => 'integer',
-        'cy_empty_pull_out_at' => 'datetime:M d, Y, h:i A',
-        'cy_stuffing_activity_at' => 'datetime:M d, Y, h:i A',
-        'cy_stripping_activity_at' => 'datetime:M d, Y, h:i A',
-        'cy_delivery_of_cargo_at' => 'datetime:M d, Y, h:i A',
-        'estimated_departure_at' => 'datetime:M d, Y, h:i A',
-        'estimated_arrival_at' => 'datetime:M d, Y, h:i A',
+        'cy_empty_pull_out_at' => 'datetime',
+        'cy_stuffing_activity_at' => 'datetime',
+        'cy_stripping_activity_at' => 'datetime',
+        'cy_delivery_of_cargo_at' => 'datetime',
+        'estimated_departure_at' => 'datetime',
+        'estimated_arrival_at' => 'datetime',
     ];
 
     public function bookingLine(): BelongsTo

@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Proposal extends Model
 {
     use HasFactory, HasUuids;
+
     protected $table = 'proposals';
+
     protected $fillable = [
         'uuid',
         'prospect_id',
@@ -19,8 +21,8 @@ class Proposal extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function uniqueIds(): array
@@ -42,8 +44,9 @@ class Proposal extends Model
     {
         return $this->hasMany(ProposalInfo::class, 'proposal_id');
     }
+
     public function status()
     {
-        return  $this->belongsTo(ProposalStatus::class, 'status');
+        return $this->belongsTo(ProposalStatus::class, 'status');
     }
 }

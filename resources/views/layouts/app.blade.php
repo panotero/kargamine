@@ -26,7 +26,7 @@
         // instead of touching every page. Profile -> Font Size writes this
         // (see ProfileController::updateFontSize()); "medium" is Tailwind's
         // own default (16px = 1rem), left unset rather than redeclared.
-        $__fontSizePx = ['small' => '14px', 'large' => '18px'][Auth::user()->font_size ?? 'medium'] ?? null;
+        $__fontSizePx = ['small' => '14px', 'large' => '18px', 'extra_large' => '20px'][Auth::user()->font_size ?? 'medium'] ?? null;
     @endphp
     <style>
         :root {

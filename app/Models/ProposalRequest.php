@@ -14,10 +14,12 @@ class ProposalRequest extends Model
         'created_by',
         'submitted_at',
         'submitted_by',
+        'terms_of_payment_standard',
+        'terms_of_payment_charter',
     ];
 
     protected $casts = [
-        'submitted_at' => 'datetime:M d, Y, h:i A',
+        'submitted_at' => 'datetime',
     ];
 
     public function prospect()
@@ -93,6 +95,78 @@ class ProposalRequest extends Model
     public function productCharters()
     {
         return $this->hasMany(ProposalRequestProductCharter::class, 'proposal_request_id');
+    }
+
+    /**
+     * Rate Matrix tab - one row per priced product line across all five
+     * product types, keyed by (product_type, product_id).
+     */
+    public function productRates()
+    {
+        return $this->hasMany(ProposalRequestProductRate::class, 'proposal_request_id');
+    }
+
+    /**
+     * Terms & Conditions tab - ancillary fee grid, keyed by (section,
+     * service_name).
+     */
+    public function ancillaryFees()
+    {
+        return $this->hasMany(ProposalRequestAncillaryFee::class, 'proposal_request_id');
+    }
+
+    public function termsOfPayment()
+    {
+        return $this->hasMany(ProposalRequestTermsOfPayment::class, 'proposal_request_id');
+    }
+
+    /**
+     * Relation names needed for a full Proposal Request tree (every tab's
+     * data) - shared by ProspectController::show() (prefixed
+     * proposalRequest./proposalRequests.) and
+     * ProposalRequestAssignmentController::mine() (used directly), so the
+     * "what a full recap needs" list can never drift apart between callers.
+     */
+    public static function fullTreeEagerLoadSuffixes(): array
+    {
+        return [
+            'companyDetail.prospectLocation',
+            'signatories.prospectContact',
+            'locations.prospectLocation',
+            'productContainers.containerSize:id,size',
+            'productContainers.deliveryType:delivery_type_id,code,name',
+            'productContainers.originLocation',
+            'productContainers.destinationLocation',
+            'productContainers.originPort:port_id,location_id,name',
+            'productContainers.destinationPort:port_id,location_id,name',
+            'productContainers.ancillaryServices.cargoYard',
+            'productContainers.ancillaryServices.specialCharge',
+            'productRollingCargo.deliveryType:delivery_type_id,code,name',
+            'productRollingCargo.originLocation',
+            'productRollingCargo.destinationLocation',
+            'productRollingCargo.originPort:port_id,location_id,name',
+            'productRollingCargo.destinationPort:port_id,location_id,name',
+            'productRollingCargo.ancillaryServices.cargoYard',
+            'productRollingCargo.ancillaryServices.specialCharge',
+            'productRollingCargo.topLoadCargo',
+            'productLooseCargo.deliveryType:delivery_type_id,code,name',
+            'productLooseCargo.originLocation',
+            'productLooseCargo.destinationLocation',
+            'productLooseCargo.originPort:port_id,location_id,name',
+            'productLooseCargo.destinationPort:port_id,location_id,name',
+            'productLooseCargo.ancillaryServices.cargoYard',
+            'productLooseCargo.ancillaryServices.specialCharge',
+            'productTruckings.originLocation',
+            'productTruckings.destinationLocation',
+            'productTruckings.ancillaryServices.cargoYard',
+            'productTruckings.ancillaryServices.specialCharge',
+            'productCharters.cargoItems',
+            'productCharters.ports.port:port_id,location_id,name',
+            'productCharters.ports.port.location:location_id,name',
+            'productRates',
+            'ancillaryFees',
+            'termsOfPayment',
+        ];
     }
 
     /**

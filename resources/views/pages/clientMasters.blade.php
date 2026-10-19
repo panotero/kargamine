@@ -1159,7 +1159,7 @@
                 <p><span class="text-zinc-400">Registered Tax Type:</span> ${f.registered_tax_type ?? '-'}</p>
                 <p><span class="text-zinc-400">Withholding Tax Code:</span> ${f.withholding_tax_code ?? '-'}</p>
                 <p><span class="text-zinc-400">Trade Name:</span> ${f.trade_name ?? '-'}</p>
-                <p><span class="text-zinc-400">TIN Registration Date:</span> ${f.tin_registration_date ?? '-'}</p>
+                <p><span class="text-zinc-400">TIN Registration Date:</span> ${f.tin_registration_date ? formatDate(f.tin_registration_date) : '-'}</p>
                 <p><span class="text-zinc-400">Line of Business:</span> ${f.line_of_business ?? '-'}</p>
                 <p><span class="text-zinc-400">Tax Percent:</span> ${f.tax_percent ?? '-'}</p>
                 <p><span class="text-zinc-400">Withholding Tax Percent:</span> ${f.withholding_tax_percent ?? '-'}</p>
@@ -1315,7 +1315,7 @@
             <div class="contact-row grid grid-cols-1 md:grid-cols-5 gap-2 border rounded-lg p-3 relative">
                 <input type="text" data-field="contact_name" placeholder="Contact Name" class="border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                 <div class="flex gap-1">
-                    <input type="text" data-field="contact_number" placeholder="Contact Number" class="border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
+                    <input type="text" data-field="contact_number" placeholder="Contact Number" class="phone-input border rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0 dark:text-zinc-900">
                     <select data-field="contact_number_type" class="border rounded-lg px-1 py-1.5 text-xs w-24 shrink-0 dark:text-zinc-900">
                         <option value="">Type</option>
                         <option value="mobile">Mobile</option>
@@ -1356,7 +1356,13 @@
             return Array.from(document.querySelectorAll(`#${containerId} .${rowClass}`)).map((row) => {
                 const obj = {};
                 row.querySelectorAll('[data-field]').forEach((input) => {
-                    obj[input.dataset.field] = input.value;
+                    if (input.classList.contains('currency-input')) {
+                        obj[input.dataset.field] = parseCurrencyValue(input.value);
+                    } else if (input.classList.contains('phone-input')) {
+                        obj[input.dataset.field] = parsePhoneValue(input.value);
+                    } else {
+                        obj[input.dataset.field] = input.value;
+                    }
                 });
                 return obj;
             });
@@ -1771,7 +1777,7 @@
                                 <p class="font-semibold text-sm">${c.code}</p>
                                 ${contractStatusBadge(c.status)}
                             </div>
-                            <p class="text-xs text-zinc-400">${c.valid_from} → ${c.valid_to}</p>
+                            <p class="text-xs text-zinc-400">${formatDate(c.valid_from)} → ${formatDate(c.valid_to)}</p>
                         </div>
                         ${c.status === 2 ? `
                             <button type="button" class="contract-terminate-btn shrink-0 text-[11px] px-2 py-1 rounded-md border border-red-200 dark:border-red-900 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40" data-contract-id="${c.id}" title="Terminate this contract">
@@ -2347,7 +2353,7 @@
                     <td class="py-1.5 px-2">${lane}</td>
                     <td class="py-1.5 px-2">${variant}</td>
                     <td class="py-1.5 px-2">
-                        <input type="number" min="1" step="1" placeholder="None" class="cc-input-minqty w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ''}">
+                        <input type="text" inputmode="numeric" placeholder="None" class="cc-input-minqty currency-input w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ''}">
                     </td>
                     <td class="py-1.5 px-2">
                         <input type="text" inputmode="decimal" class="cc-input-base currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.base_rate)}">
@@ -2434,7 +2440,7 @@
             }
 
             if (e.target.closest('.cc-apply-btn')) {
-                const minQtyRaw = row.querySelector('.cc-input-minqty').value;
+                const minQtyRaw = parseCurrencyValue(row.querySelector('.cc-input-minqty').value);
                 const newValues = {
                     min_van_qty: minQtyRaw === '' ? null : Number(minQtyRaw),
                     base_rate: Number(parseCurrencyValue(row.querySelector('.cc-input-base')
@@ -2642,7 +2648,7 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Min Qty (for discount)</label>
-                        <input type="number" min="1" step="1" data-field="min_van_qty" placeholder="No minimum" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                        <input type="text" inputmode="numeric" data-field="min_van_qty" placeholder="No minimum" class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
                     </div>
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">Rate (FRT)</label>
@@ -2839,7 +2845,7 @@
                 container_class_id: classIdForPayload(row.querySelector('[data-field="container_class_id"]')),
                 container_size_id: sizeIdForPayload(row.querySelector('[data-field="container_size_id"]')),
                 container_variant_id: row.querySelector('[data-field="container_variant_id"]').value,
-                min_van_qty: row.querySelector('[data-field="min_van_qty"]').value || null,
+                min_van_qty: parseCurrencyValue(row.querySelector('[data-field="min_van_qty"]').value) || null,
                 base_rate: parseFloat(parseCurrencyValue(row.querySelector('.base-rate').value)) || 0,
                 discount_type: row.querySelector('.discount-type').value || null,
                 discount_value: parseFloat(parseCurrencyValue(row.querySelector('.discount-value')

@@ -35,8 +35,8 @@
             </div>
             <div>
                 <label for="cpmPortChargeAmount" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Amount to be Charged</label>
-                <input type="number" step="0.01" id="cpmPortChargeAmount"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                <input type="text" inputmode="decimal" id="cpmPortChargeAmount"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
             </div>
 
             <div class="md:col-span-3 border-t dark:border-zinc-700 pt-3">
@@ -44,8 +44,8 @@
             </div>
             <div>
                 <label for="cpmCargoesLoading" class="text-[11px] text-zinc-400 uppercase">Cargoes for Loading</label>
-                <input type="number" id="cpmCargoesLoading"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                <input type="text" inputmode="numeric" id="cpmCargoesLoading"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
             </div>
             <div>
                 <label for="cpmMeasurementLoading" class="text-[11px] text-zinc-400 uppercase">Cargo Measurement</label>
@@ -63,8 +63,8 @@
             </div>
             <div>
                 <label for="cpmCargoesUnloading" class="text-[11px] text-zinc-400 uppercase">Cargoes for Unloading</label>
-                <input type="number" id="cpmCargoesUnloading"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
+                <input type="text" inputmode="numeric" id="cpmCargoesUnloading"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900">
             </div>
             <div>
                 <label for="cpmMeasurementUnloading" class="text-[11px] text-zinc-400 uppercase">Cargo Measurement</label>
@@ -92,7 +92,7 @@
 
         <div class="flex justify-end pt-2">
             <button type="button" id="cpmCloseBtn"
-                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium">
+                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 Close
             </button>
         </div>

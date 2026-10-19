@@ -16,13 +16,6 @@
     '<option value="">Select Service Type</option>' +
     SERVICE_TYPES.map((t) => `<option value="${t}">${t}</option>`).join("");
 
-  const CONTAINER_TYPE_DOT_COLOR = {
-    CV: "bg-orange-500",
-    FR: "bg-amber-500",
-    RF: "bg-cyan-500",
-    LC: "bg-purple-500",
-    RC: "bg-blue-500",
-  };
   const CONTAINER_TYPES = [
     { value: "CV", label: "Container Van (CV)" },
     { value: "FR", label: "Flatrack (FR)" },
@@ -37,9 +30,6 @@
     LC: { convanSize: false, temperature: false, revenueTon: true },
     RC: { convanSize: false, temperature: false, revenueTon: true },
   };
-  const WEIGHT_UNIT_LABEL = { kg: "kg", mt: "MT" };
-  const DISPATCH_MODE_LABEL = { single: "Single", tandem: "Tandem" };
-  const EMPTY = "—";
 
   // Staff-entered free-text address fields get interpolated raw into
   // innerHTML all over this file (chip labels, the O&D preview form) - esc()
@@ -171,12 +161,19 @@
     const card = document.querySelector("#acmContactCardWrap .pm-contact-card");
     if (!card) return null;
     const get = (field) => card.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
+    const PHONE_CHANNEL_TYPES = ["mobile", "landline"];
     const channels = Array.from(card.querySelectorAll(".pm-channel-row"))
-      .map((row) => ({
-        channel_type: row.querySelector('[data-field="channel_type"]').value,
-        value: row.querySelector('[data-field="value"]').value.trim(),
-        contact_type: row.querySelector('[data-field="contact_type"]').value,
-      }))
+      .map((row) => {
+        const channel_type = row.querySelector('[data-field="channel_type"]').value;
+        const rawValue = row.querySelector('[data-field="value"]').value.trim();
+        return {
+          channel_type,
+          // Phone numbers are stored digits-only - strip the live formatting
+          // sugar before submitting; email values are left untouched.
+          value: PHONE_CHANNEL_TYPES.includes(channel_type) ? parsePhoneValue(rawValue) : rawValue,
+          contact_type: row.querySelector('[data-field="contact_type"]').value,
+        };
+      })
       .filter((ch) => ch.value);
     const locationSelect = card.querySelector(".acmContactLocationSelect");
     const location_ids = locationSelect?.value ? [Number(locationSelect.value)] : [];
@@ -232,39 +229,45 @@
   }
 
   // ------------------------------------------------------------------
-  // ADD REQUIREMENT MODAL - mirrors ProspectModal's Requirements tab
-  // (product picker + Freight/Trucking/Charter forms + tables with remove
-  // actions), targeting its own `arm*` ids so both can exist in the DOM at
-  // once without id collisions.
+  // ADD FREIGHT / ADD TRUCKING / ADD CHARTER MODALS - three separate
+  // popups, one per Requirements-tab table (mirrors ProspectModal's own
+  // Requirements tab redesign - no shared product picker, no duplicate
+  // "live" tables with their own remove actions inside the popup; the
+  // read-only tables on the Requirements tab itself now own Remove
+  // directly, see removeRequirementRow()/renderRequirementsSummary() in
+  // logic_prospect_info_modal.js). All three target the same `arm*` field
+  // ids ProspectModal's own Requirements-tab popups don't use, so neither
+  // set of ids collides with the other even though both modals can exist
+  // in the DOM at once.
   // ------------------------------------------------------------------
   let armLocationsOptionsHtml = "";
 
-  function applyArmLookups(modal) {
-    modal.querySelector("#armCargoType").innerHTML = window.prospectShared.getCargoTypeOptionsHtml();
-    modal.querySelector("#armDeliveryType").innerHTML = serviceTypeOptionsHtml;
-    modal.querySelector("#armTruckingCargoType").innerHTML = window.prospectShared.getTruckingCargoTypeOptionsHtml();
-    modal.querySelector("#armTruckingCargoTypeGeneral").innerHTML = window.prospectShared.getCargoTypeOptionsHtml();
+  function applyArmLookups() {
+    document.getElementById("armCargoType").innerHTML = window.prospectShared.getCargoTypeOptionsHtml();
+    document.getElementById("armDeliveryType").innerHTML = serviceTypeOptionsHtml;
+    document.getElementById("armTruckingCargoType").innerHTML = window.prospectShared.getTruckingCargoTypeOptionsHtml();
+    document.getElementById("armTruckingCargoTypeGeneral").innerHTML = window.prospectShared.getCargoTypeOptionsHtml();
 
     armLocationsOptionsHtml = window.prospectShared.getLocationsOptionsHtml();
     ["armOriginLocation", "armDestinationLocation", "armTruckingOrigin", "armTruckingDestination"].forEach((id) => {
-      const el = modal.querySelector(`#${id}`);
+      const el = document.getElementById(id);
       el.innerHTML = `<option value="">Select Location</option>${armLocationsOptionsHtml}`;
       makeSearchableSelect(el);
     });
   }
 
-  function applyArmContainerTypeVisibility(modal) {
-    const type = modal.querySelector("#armContainerType").value;
+  function applyArmContainerTypeVisibility() {
+    const type = document.getElementById("armContainerType").value;
     const flags = TYPE_FIELD_VISIBILITY[type] || {};
-    modal.querySelector(".field-convan-size")?.classList.toggle("hidden", !flags.convanSize);
-    modal.querySelector(".field-temperature")?.classList.toggle("hidden", !flags.temperature);
-    modal.querySelectorAll(".field-revenue-ton").forEach((el) => el.classList.toggle("hidden", !flags.revenueTon));
+    document.querySelector(".field-convan-size")?.classList.toggle("hidden", !flags.convanSize);
+    document.querySelector(".field-temperature")?.classList.toggle("hidden", !flags.temperature);
+    document.querySelectorAll(".field-revenue-ton").forEach((el) => el.classList.toggle("hidden", !flags.revenueTon));
   }
 
-  function populateArmContainerClassSizeOptions(modal) {
-    const type = modal.querySelector("#armContainerType").value;
+  function populateArmContainerClassSizeOptions() {
+    const type = document.getElementById("armContainerType").value;
     const catalog = window.prospectShared.getContainerCatalogByCode()[type] ?? { sizes: [], classes: [] };
-    const sizeSelect = modal.querySelector("#armContainerSize");
+    const sizeSelect = document.getElementById("armContainerSize");
     sizeSelect.innerHTML =
       '<option value="">Select Size</option>' + catalog.sizes.map((s) => `<option value="${s.id}">${s.size}</option>`).join("");
   }
@@ -282,138 +285,6 @@
     const form = document.querySelector(formSelector);
     form.querySelectorAll("input[type=text], input[type=number], textarea").forEach((el) => (el.value = ""));
     form.querySelectorAll("select").forEach((el) => (el.selectedIndex = 0));
-  }
-
-  function containerRowHtml(c) {
-    const NA = "-";
-    const flags = TYPE_FIELD_VISIBILITY[c.container_type] || {};
-    const typeLabel = CONTAINER_TYPES.find((t) => t.value === c.container_type)?.label ?? c.container_type ?? EMPTY;
-    const dot = CONTAINER_TYPE_DOT_COLOR[c.container_type] ?? "bg-zinc-400";
-    const weight =
-      c.weight != null
-        ? `${Number(c.weight).toLocaleString()} ${WEIGHT_UNIT_LABEL[c.weight_unit] ?? c.weight_unit ?? ""}`.trim()
-        : EMPTY;
-
-    const cells = [
-      `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dot} shrink-0"></span>${typeLabel}</span>`,
-      flags.convanSize ? (c.container_size?.size ?? EMPTY) : NA,
-      flags.temperature ? (c.minimum_temperature ?? EMPTY) : NA,
-      flags.revenueTon ? (c.revenue_ton ?? EMPTY) : NA,
-      flags.revenueTon ? (c.cargo_measurement ?? EMPTY) : NA,
-      c.quantity ?? EMPTY,
-      c.frequency ?? EMPTY,
-      c.service_type ?? EMPTY,
-      c.origin_location?.name ?? EMPTY,
-      c.destination_location?.name ?? EMPTY,
-      c.declared_value_per_unit != null ? `₱${Number(c.declared_value_per_unit).toLocaleString()}` : EMPTY,
-      weight,
-      c.cargo_type ?? EMPTY,
-      c.general_cargo_description ?? EMPTY,
-      c.special_requirements ?? EMPTY,
-      c.booking_unit_type ?? EMPTY,
-    ];
-    const tds = cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("");
-    return `<tr class="arm-container-row" data-id="${c.id}">${tds}<td class="px-3 py-2 align-top"><button type="button" class="arm-remove-container-row text-red-500 text-xs font-medium whitespace-nowrap">✕ Remove</button></td></tr>`;
-  }
-
-  function truckingRowHtml(t) {
-    const weight =
-      t.weight != null
-        ? `${Number(t.weight).toLocaleString()} ${WEIGHT_UNIT_LABEL[t.weight_unit] ?? t.weight_unit ?? ""}`.trim()
-        : EMPTY;
-    const cells = [
-      t.trucking_cargo_type ?? EMPTY,
-      t.quantity ?? EMPTY,
-      t.frequency ?? EMPTY,
-      DISPATCH_MODE_LABEL[t.dispatch_mode] ?? t.dispatch_mode ?? EMPTY,
-      t.origin_location?.name ?? EMPTY,
-      t.destination_location?.name ?? EMPTY,
-      t.declared_value_per_unit != null ? `₱${Number(t.declared_value_per_unit).toLocaleString()}` : EMPTY,
-      weight,
-      t.cargo_type ?? EMPTY,
-      t.general_cargo_description ?? EMPTY,
-      t.special_requirements ?? EMPTY,
-    ];
-    const tds = cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("");
-    return `<tr class="arm-trucking-row" data-id="${t.id}">${tds}<td class="px-3 py-2 align-top"><button type="button" class="arm-remove-trucking-row text-red-500 text-xs font-medium whitespace-nowrap">✕ Remove</button></td></tr>`;
-  }
-
-  function charterRowHtml(c) {
-    const cargoSummary =
-      (c.cargo_items ?? [])
-        .map((item) => item.cargo_type)
-        .filter(Boolean)
-        .join(", ") || EMPTY;
-    const portSummary = (c.ports ?? []).map((p, i) => `PORT ${i + 1}: ${p.port?.name ?? "—"}`).join(", ") || EMPTY;
-    const weight =
-      c.weight != null
-        ? `${Number(c.weight).toLocaleString()} ${WEIGHT_UNIT_LABEL[c.weight_unit] ?? c.weight_unit ?? ""}`.trim()
-        : EMPTY;
-    const cells = [
-      cargoSummary,
-      portSummary,
-      c.charter_start_date ?? EMPTY,
-      c.charter_end_date ?? EMPTY,
-      c.declared_value != null ? `₱${Number(c.declared_value).toLocaleString()}` : EMPTY,
-      weight,
-    ];
-    const tds = cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("");
-    return `<tr class="arm-charter-row" data-id="${c.id}">${tds}<td class="px-3 py-2 align-top"><button type="button" class="arm-remove-charter-row text-red-500 text-xs font-medium whitespace-nowrap">✕ Remove</button></td></tr>`;
-  }
-
-  function toggleArmTableWrap(modal, wrapId, hasRows) {
-    modal.querySelector(`#${wrapId}`)?.classList.toggle("hidden", !hasRows);
-  }
-
-  // "Prospect products" - owned directly by the prospect, independent of
-  // any Proposal Request. `lead` is the full prospect payload (top-level
-  // requirement_containers/_truckings/_charters fields), not a
-  // ProposalRequest.
-  function renderArmTables(modal, lead) {
-    const containers = lead?.requirement_containers ?? [];
-    const truckings = lead?.requirement_truckings ?? [];
-    const charters = lead?.requirement_charters ?? [];
-
-    const cBody = modal.querySelector("#armContainersTableBody");
-    cBody.innerHTML = containers.map(containerRowHtml).join("");
-    cBody.querySelectorAll(".arm-remove-container-row").forEach((btn) =>
-      btn.addEventListener("click", () => removeArmRow(modal, "containers", btn.closest("tr").dataset.id))
-    );
-    toggleArmTableWrap(modal, "armContainersTableWrap", containers.length > 0);
-
-    const tBody = modal.querySelector("#armTruckingsTableBody");
-    tBody.innerHTML = truckings.map(truckingRowHtml).join("");
-    tBody.querySelectorAll(".arm-remove-trucking-row").forEach((btn) =>
-      btn.addEventListener("click", () => removeArmRow(modal, "truckings", btn.closest("tr").dataset.id))
-    );
-    toggleArmTableWrap(modal, "armTruckingsTableWrap", truckings.length > 0);
-
-    const chBody = modal.querySelector("#armChartersTableBody");
-    chBody.innerHTML = charters.map(charterRowHtml).join("");
-    chBody.querySelectorAll(".arm-remove-charter-row").forEach((btn) =>
-      btn.addEventListener("click", () => removeArmRow(modal, "charters", btn.closest("tr").dataset.id))
-    );
-    toggleArmTableWrap(modal, "armChartersTableWrap", charters.length > 0);
-
-    modal.querySelector("#armRequirementsEmpty")?.classList.toggle(
-      "hidden",
-      Boolean(containers.length || truckings.length || charters.length)
-    );
-  }
-
-  async function removeArmRow(modal, kind, id) {
-    const lead = window.prospectInfo?.getCurrentLead();
-    if (!lead) return;
-    const response = await apiCall({
-      mode: "DELETE",
-      url: `/api/crm/prospects/${lead.uuid}/proposalRequest/${kind}/${id}`,
-    });
-    if (!response.success) {
-      showMessage({ status: "error", title: "Error Removing", message: response.message ?? "" });
-      return;
-    }
-    await window.prospectInfo.reload(lead.uuid);
-    renderArmTables(modal, window.prospectInfo.getCurrentLead());
   }
 
   // Cargo/Port repeatable rows (Charter pane)
@@ -470,6 +341,8 @@
     document.getElementById("armCharterDeclaredValue").value = "";
     document.getElementById("armCharterWeight").value = "";
     document.getElementById("armCharterWeightUnit").selectedIndex = 0;
+    document.getElementById("armCharterServiceId").innerHTML =
+      `<option value="">Select Charter Type (optional)</option>${window.prospectShared.getCharterServiceOptionsHtml()}`;
     document.getElementById("armCharterCargoContainer").innerHTML = "";
     addArmCharterCargoRow();
     document.getElementById("armCharterPortsContainer").innerHTML = "";
@@ -489,53 +362,53 @@
       charter_start_date: document.getElementById("armCharterStartDate").value,
       charter_end_date: document.getElementById("armCharterEndDate").value,
       declared_value: parseCurrencyValue(document.getElementById("armCharterDeclaredValue").value),
-      weight: document.getElementById("armCharterWeight").value,
+      weight: parseCurrencyValue(document.getElementById("armCharterWeight").value),
       weight_unit: document.getElementById("armCharterWeightUnit").value,
+      charter_service_id: document.getElementById("armCharterServiceId").value || null,
       cargo,
       ports,
     };
   }
 
-  // Product picker
-  const ARM_PRODUCT_PANES = { freight: "armProductPaneFreight", trucking: "armProductPaneTrucking", charter: "armProductPaneCharter" };
-
-  function bindArmProductSelector(modal) {
-    modal.querySelector("#armRequirementProduct").addEventListener("change", function () {
-      Object.entries(ARM_PRODUCT_PANES).forEach(([key, paneId]) => {
-        modal.querySelector(`#${paneId}`)?.classList.toggle("hidden", key !== this.value);
-      });
-      modal.querySelector("#armAddRequirementBtnWrap")?.classList.toggle("hidden", !this.value);
-    });
-  }
-
-  function resetArmProductSelector(modal) {
-    modal.querySelector("#armRequirementProduct").value = "";
-    Object.values(ARM_PRODUCT_PANES).forEach((paneId) => modal.querySelector(`#${paneId}`)?.classList.add("hidden"));
-    modal.querySelector("#armAddRequirementBtnWrap")?.classList.add("hidden");
-  }
-
-  async function submitArmRequirement(modal, button) {
+  // Opens <x-pim-add-freight-modal /> with a freshly-reset form.
+  async function openPimAddFreightModal() {
     const lead = window.prospectInfo?.getCurrentLead();
     if (!lead) return;
-    const product = modal.querySelector("#armRequirementProduct").value;
-    if (!product) return;
 
-    let url;
-    let payload;
-    if (product === "freight") {
-      url = `/api/crm/prospects/${lead.uuid}/proposalRequest/containers`;
-      payload = collectArmFormPayload("#armContainerForm");
-      const typeSelect = modal.querySelector("#armContainerType");
-      payload.booking_unit_type = typeSelect.options[typeSelect.selectedIndex]?.textContent ?? "";
-    } else if (product === "trucking") {
-      url = `/api/crm/prospects/${lead.uuid}/proposalRequest/truckings`;
-      payload = collectArmFormPayload("#armTruckingForm");
-    } else {
-      url = `/api/crm/prospects/${lead.uuid}/proposalRequest/charters`;
-      payload = collectArmCharterPayload();
+    await window.prospectShared.ensureContainerLookupsLoaded();
+    applyArmLookups();
+
+    const containerTypeSelect = document.getElementById("armContainerType");
+    if (!containerTypeSelect.dataset.filled) {
+      containerTypeSelect.insertAdjacentHTML(
+        "beforeend",
+        CONTAINER_TYPES.map((t) => `<option value="${t.value}">${t.label}</option>`).join("")
+      );
+      containerTypeSelect.dataset.filled = "1";
     }
 
-    const response = await apiCall({ mode: "POST", isJson: true, payload, url, button });
+    resetArmForm("#armContainerForm");
+    applyArmContainerTypeVisibility();
+    populateArmContainerClassSizeOptions();
+
+    window.initModal({ modalId: "PimAddFreightModal" });
+  }
+
+  async function savePimFreight(button) {
+    const lead = window.prospectInfo?.getCurrentLead();
+    if (!lead) return;
+
+    const payload = collectArmFormPayload("#armContainerForm");
+    const typeSelect = document.getElementById("armContainerType");
+    payload.booking_unit_type = typeSelect.options[typeSelect.selectedIndex]?.textContent ?? "";
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload,
+      url: `/api/crm/prospects/${lead.uuid}/proposalRequest/containers`,
+      button,
+    });
     if (!response.success) {
       const errors = response.data?.errors ?? [];
       showMessage({
@@ -546,49 +419,93 @@
       return;
     }
 
-    showMessage({ status: "success", title: "Requirement Added" });
-
-    if (product === "freight") {
-      resetArmForm("#armContainerForm");
-      applyArmContainerTypeVisibility(modal);
-      populateArmContainerClassSizeOptions(modal);
-    } else if (product === "trucking") {
-      resetArmForm("#armTruckingForm");
-    } else {
-      resetArmCharterForm();
-    }
-
+    showMessage({ status: "success", title: "Freight Added" });
+    resetArmForm("#armContainerForm");
+    applyArmContainerTypeVisibility();
+    populateArmContainerClassSizeOptions();
     await window.prospectInfo.reload(lead.uuid);
-    renderArmTables(modal, window.prospectInfo.getCurrentLead());
+    window.closeModal("PimAddFreightModal");
   }
 
-  async function openAddRequirementModal() {
+  // Opens <x-pim-add-trucking-modal /> with a freshly-reset form.
+  async function openPimAddTruckingModal() {
     const lead = window.prospectInfo?.getCurrentLead();
     if (!lead) return;
-    const modal = document.getElementById("AddRequirementModal");
 
     await window.prospectShared.ensureContainerLookupsLoaded();
-    applyArmLookups(modal);
+    applyArmLookups();
+    resetArmForm("#armTruckingForm");
 
-    const containerTypeSelect = modal.querySelector("#armContainerType");
-    if (!containerTypeSelect.dataset.filled) {
-      containerTypeSelect.insertAdjacentHTML(
-        "beforeend",
-        CONTAINER_TYPES.map((t) => `<option value="${t.value}">${t.label}</option>`).join("")
-      );
-      containerTypeSelect.dataset.filled = "1";
+    window.initModal({ modalId: "PimAddTruckingModal" });
+  }
+
+  async function savePimTrucking(button) {
+    const lead = window.prospectInfo?.getCurrentLead();
+    if (!lead) return;
+
+    const payload = collectArmFormPayload("#armTruckingForm");
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload,
+      url: `/api/crm/prospects/${lead.uuid}/proposalRequest/truckings`,
+      button,
+    });
+    if (!response.success) {
+      const errors = response.data?.errors ?? [];
+      showMessage({
+        status: "error",
+        title: "Error Adding Requirement",
+        message: errors.length ? errors.join(" ") : response.message ?? "Please check the required fields.",
+      });
+      return;
     }
 
-    resetArmForm("#armContainerForm");
+    showMessage({ status: "success", title: "Trucking Added" });
     resetArmForm("#armTruckingForm");
+    await window.prospectInfo.reload(lead.uuid);
+    window.closeModal("PimAddTruckingModal");
+  }
+
+  // Opens <x-pim-add-charter-modal /> with a freshly-reset form.
+  async function openPimAddCharterModal() {
+    const lead = window.prospectInfo?.getCurrentLead();
+    if (!lead) return;
+
+    await window.prospectShared.ensureContainerLookupsLoaded();
     resetArmCharterForm();
-    resetArmProductSelector(modal);
-    applyArmContainerTypeVisibility(modal);
-    populateArmContainerClassSizeOptions(modal);
 
-    renderArmTables(modal, lead);
+    window.initModal({ modalId: "PimAddCharterModal" });
+  }
 
-    window.initModal({ modalId: "AddRequirementModal" });
+  async function savePimCharter(button) {
+    const lead = window.prospectInfo?.getCurrentLead();
+    if (!lead) return;
+
+    const payload = collectArmCharterPayload();
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload,
+      url: `/api/crm/prospects/${lead.uuid}/proposalRequest/charters`,
+      button,
+    });
+    if (!response.success) {
+      const errors = response.data?.errors ?? [];
+      showMessage({
+        status: "error",
+        title: "Error Adding Requirement",
+        message: errors.length ? errors.join(" ") : response.message ?? "Please check the required fields.",
+      });
+      return;
+    }
+
+    showMessage({ status: "success", title: "Charter Added" });
+    resetArmCharterForm();
+    await window.prospectInfo.reload(lead.uuid);
+    window.closeModal("PimAddCharterModal");
   }
 
   // ------------------------------------------------------------------
@@ -608,8 +525,9 @@
   // AddLocationModal already uses for exactly this "one-off editable
   // address, not a repeatable list" shape. Trimmed of the Remove button
   // (nothing to remove) and the Primary radio (doesn't apply to an O&D
-  // entry). Field markup kept identical to request-proposal-modal.blade.php's
-  // equivalent card (see that file's ensureOdCard()).
+  // entry). Field markup kept identical to the Request for Proposal
+  // wizard's own equivalent popup (see logic_prospect_request_proposal.js's
+  // ensureRpmOdCard()).
   function ensureAodmCard() {
     const wrap = document.getElementById("aodmCardWrap");
     if (aodmCard && wrap.contains(aodmCard)) return aodmCard;
@@ -773,17 +691,28 @@
       saveAddContact(this);
     });
 
-    const armModal = document.getElementById("AddRequirementModal");
-    document.getElementById("pimAddRequirementBtn")?.addEventListener("click", openAddRequirementModal);
-    bindArmProductSelector(armModal);
-    armModal.querySelector("#armContainerType").addEventListener("change", () => {
-      applyArmContainerTypeVisibility(armModal);
-      populateArmContainerClassSizeOptions(armModal);
+    document.getElementById("pimAddFreightBtn")?.addEventListener("click", openPimAddFreightModal);
+    document.getElementById("armContainerType")?.addEventListener("change", () => {
+      applyArmContainerTypeVisibility();
+      populateArmContainerClassSizeOptions();
     });
-    armModal.querySelector("#armAddCharterCargoBtn").addEventListener("click", addArmCharterCargoRow);
-    armModal.querySelector("#armAddCharterPortBtn").addEventListener("click", addArmCharterPortRow);
-    armModal.querySelector("#armAddRequirementBtn").addEventListener("click", function () {
-      submitArmRequirement(armModal, this);
+    document.getElementById("pimAfmCancelBtn")?.addEventListener("click", () => window.closeModal("PimAddFreightModal"));
+    document.getElementById("pimAfmSaveBtn")?.addEventListener("click", function () {
+      savePimFreight(this);
+    });
+
+    document.getElementById("pimAddTruckingBtn")?.addEventListener("click", openPimAddTruckingModal);
+    document.getElementById("pimAtmCancelBtn")?.addEventListener("click", () => window.closeModal("PimAddTruckingModal"));
+    document.getElementById("pimAtmSaveBtn")?.addEventListener("click", function () {
+      savePimTrucking(this);
+    });
+
+    document.getElementById("pimAddCharterBtn")?.addEventListener("click", openPimAddCharterModal);
+    document.getElementById("armAddCharterCargoBtn")?.addEventListener("click", addArmCharterCargoRow);
+    document.getElementById("armAddCharterPortBtn")?.addEventListener("click", addArmCharterPortRow);
+    document.getElementById("pimChmCancelBtn")?.addEventListener("click", () => window.closeModal("PimAddCharterModal"));
+    document.getElementById("pimChmSaveBtn")?.addEventListener("click", function () {
+      savePimCharter(this);
     });
   }
   window.initAddModals = initAddModals;

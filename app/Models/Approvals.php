@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class Approvals extends Model
 {
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     use HasFactory;
+
     protected $table = 'approval_table';
 
     protected $fillable = [
@@ -31,7 +32,7 @@ class Approvals extends Model
             ->with([
                 'files',
                 'modifications',
-                'activities'
+                'activities',
             ]);
     }
 }

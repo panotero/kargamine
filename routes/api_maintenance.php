@@ -8,6 +8,7 @@ use App\Http\Controllers\BookingVoyageController;
 use App\Http\Controllers\CargoBuildUpController;
 use App\Http\Controllers\CargoYardController;
 use App\Http\Controllers\ChargeTypeController;
+use App\Http\Controllers\CharterServiceController;
 use App\Http\Controllers\ContainerAssetController;
 use App\Http\Controllers\ContainerAssignmentController;
 use App\Http\Controllers\ContainerController;
@@ -128,6 +129,14 @@ Route::prefix('cargoYards')->group(function () {
     Route::post('/', [CargoYardController::class, 'store'])->middleware('nav.access:/page_maintenance');
     Route::put('/{cargoYard}', [CargoYardController::class, 'update'])->middleware('nav.access:/page_maintenance');
     Route::delete('/{cargoYard}', [CargoYardController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
+});
+
+Route::prefix('charterServices')->group(function () {
+    Route::get('/', [CharterServiceController::class, 'index']);
+    Route::get('/{charterService}', [CharterServiceController::class, 'show']);
+    Route::post('/', [CharterServiceController::class, 'store'])->middleware('nav.access:/page_maintenance');
+    Route::put('/{charterService}', [CharterServiceController::class, 'update'])->middleware('nav.access:/page_maintenance');
+    Route::delete('/{charterService}', [CharterServiceController::class, 'destroy'])->middleware('nav.access:/page_maintenance');
 });
 
 // =========================================================

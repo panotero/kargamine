@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContainerSize extends Model
 {
     protected $table = 'container_size';
+
     protected $fillable = ['container_id', 'size'];
+
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function container(): BelongsTo

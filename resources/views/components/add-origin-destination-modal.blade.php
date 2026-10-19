@@ -2,7 +2,7 @@
     Standalone "Add Origin/Destination Location" modal - opened from
     ProspectInfoModal's (conditionally-visible) Origin & Destination tab.
     Genuinely separate from ProspectModal, same rule as
-    AddLocationModal/AddContactModal/AddRequirementModal. Chip+preview
+    AddLocationModal/AddContactModal/PimAddFreightModal/etc. Chip+preview
     picker from this prospect's own addresses (prospect_locations) - the
     append-one endpoint (POST .../proposalRequests/{id}/locations) is the
     same one the Request for Proposal wizard's own Origin & Destination tab
@@ -38,7 +38,7 @@
 
         <div class="flex justify-end gap-2 pt-2">
             <button type="button" id="aodmCancelBtn"
-                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium">
+                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 Cancel
             </button>
             <button type="button" id="aodmSaveBtn"

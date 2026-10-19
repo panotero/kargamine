@@ -78,13 +78,16 @@ class ProposalRequestAssignmentController extends Controller
         $userId = $request->user()->id;
 
         $base = fn () => ProposalRequest::query()
-            ->with([
-                'prospect:id,uuid,assigned_to,relationship_manager_id',
-                'prospect.company:id,prospect_id,company_name',
-                'prospect.user:id,name',
-                'prospect.relationshipManager:id,name',
-                'creator:id,name',
-            ])
+            ->with(array_merge(
+                [
+                    'prospect:id,uuid,assigned_to,relationship_manager_id',
+                    'prospect.company:id,prospect_id,company_name',
+                    'prospect.user:id,name',
+                    'prospect.relationshipManager:id,name',
+                    'creator:id,name',
+                ],
+                ProposalRequest::fullTreeEagerLoadSuffixes(),
+            ))
             ->whereHas('prospect', fn ($q) => $q->where('assigned_to', $userId)->orWhere('relationship_manager_id', $userId));
 
         $requests = $base()

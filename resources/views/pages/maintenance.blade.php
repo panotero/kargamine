@@ -16,7 +16,7 @@
                 data-tab="locations">Locations</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                data-tab="containers">Containers</button>
+                data-tab="containers">Products</button>
             <button type="button"
                 class="maintenance-tab-btn px-3.5 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
                 data-tab="chargeTypes">Charge Types</button>
@@ -57,7 +57,7 @@
     <div class="mt-5" id="maintenanceTabPanels">
         @foreach ([
         'locations' => 'Locations',
-        'containers' => 'Containers',
+        'containers' => 'Products',
         'chargeTypes' => 'Charge Types',
         'deliveryTypes' => 'Delivery Types',
         'lanes' => 'Lanes',
@@ -70,6 +70,23 @@
         'cargoYards' => 'Cargo Yard (CY)',
     ] as $key => $label)
             <div class="tab-panel hidden" data-tab-panel="{{ $key }}">
+                @if ($key === 'containers')
+                    {{-- Freight/Charter category pills - Products tab nests two
+                         catalogs (the existing container catalog, and the new
+                         charterServices catalog) behind one tab, toggled here
+                         instead of adding a whole new top-level maintenance tab. --}}
+                    <div class="mb-4 flex items-center gap-2">
+                        <button type="button" id="productCatFreightBtn" data-product-cat="freight"
+                            class="rounded-full px-4 py-1.5 text-[11px] font-medium uppercase tracking-widest transition bg-orange-600 text-white">
+                            Freight
+                        </button>
+                        <button type="button" id="productCatCharterBtn" data-product-cat="charter"
+                            class="rounded-full px-4 py-1.5 text-[11px] font-medium uppercase tracking-widest transition bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                            Charter
+                        </button>
+                    </div>
+                    <div id="productFreightPanel" data-product-panel="freight">
+                @endif
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-base font-medium text-zinc-900 dark:text-white">{{ $label }}</h2>
                     <button type="button"
@@ -84,8 +101,44 @@
 
                 <x-search-bar :id="$key" placeholder="Search {{ strtolower($label) }}..." />
 
+                @if ($key === 'locations')
+                    <div class="mb-4 flex flex-wrap items-center gap-3">
+                        <div>
+                            <label for="locationFilterActive"
+                                class="block text-[11px] font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">Active</label>
+                            <select id="locationFilterActive"
+                                class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="">All</option>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="locationFilterPorts"
+                                class="block text-[11px] font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">Ports</label>
+                            <select id="locationFilterPorts"
+                                class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="">All</option>
+                                <option value="1">Has Ports</option>
+                                <option value="0">No Ports</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="locationFilterArea"
+                                class="block text-[11px] font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1">Serviceable
+                                Area</label>
+                            <select id="locationFilterArea"
+                                class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="">All</option>
+                                <option value="1">Has Serviceable Area</option>
+                                <option value="0">No Serviceable Area</option>
+                            </select>
+                        </div>
+                    </div>
+                @endif
+
                 <div
-                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden"
                     <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
                         <thead class="bg-zinc-50 dark:bg-zinc-800">
                             <tr data-table-head="{{ $key }}"></tr>
@@ -95,6 +148,39 @@
                     </table>
                     <x-table-pagination :id="$key" />
                 </div>
+                @if ($key === 'containers')
+                    </div>
+
+                    {{-- Charter sub-panel - same generic table/form engine (ENTITY_CONFIG.charterServices),
+                         lazy-loaded the first time this pill is clicked. --}}
+                    <div id="productCharterPanel" data-product-panel="charter" class="hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-base font-medium text-zinc-900 dark:text-white">Charter Services</h2>
+                            <button type="button"
+                                class="add-new-btn inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-orange-700 transition"
+                                data-entity="charterServices">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Add New
+                            </button>
+                        </div>
+
+                        <x-search-bar :id="'charterServices'" placeholder="Search charter services..." />
+
+                        <div
+                            class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden"
+                            <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
+                                <thead class="bg-zinc-50 dark:bg-zinc-800">
+                                    <tr data-table-head="charterServices"></tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800"
+                                    data-table-body="charterServices"></tbody>
+                            </table>
+                            <x-table-pagination :id="'charterServices'" />
+                        </div>
+                    </div>
+                @endif
             </div>
         @endforeach
 
@@ -117,8 +203,11 @@
     </div>
 </div>
 
-{{-- Generic slide-over form - fields are injected by JS based on which entity's "Add New"/"Edit" was clicked --}}
-<x-side-modal id="maintenanceFormModal">
+{{-- Generic slide-over form - fields are injected by JS based on which entity's "Add New"/"Edit" was clicked.
+     Widened from the side-modal default (md:w-[500px] lg:w-[700px]) - several
+     entities here (Port Charges, Trucking Tariffs) stack 3-4 fields including
+     selects, and the default felt cramped. --}}
+<x-side-modal id="maintenanceFormModal" panelClass="w-full md:w-[560px] lg:w-[800px]">
     <div
         class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <h3 id="maintenanceFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Item</h3>
@@ -147,7 +236,7 @@
     </div>
 </x-side-modal>
 
-<x-side-modal id="containerFormModal">
+<x-side-modal id="containerFormModal" panelClass="w-full md:w-[560px] lg:w-[800px]">
     <div
         class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <h3 id="containerFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Container</h3>
@@ -162,20 +251,20 @@
     <form id="containerForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <input type="hidden" id="containerIdInput">
 
-        <div class="grid grid-cols-2 gap-3">
-            <div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Code <span
                         class="req-asterisk">*</span></label>
                 <input type="text" id="containerCodeInput" required placeholder="e.g. CV"
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
-            <div>
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Name <span
                         class="req-asterisk">*</span></label>
                 <input type="text" id="containerNameInput" required placeholder="e.g. Con Van"
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
-            <div class="col-span-2">
+            <div class="sm:col-span-2">
                 <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                     <input type="checkbox" id="containerActiveInput" checked
                         class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
@@ -184,7 +273,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Sizes</label>
@@ -237,7 +326,7 @@
     </div>
 </x-side-modal>
 
-<x-side-modal id="locationFormModal">
+<x-side-modal id="locationFormModal" panelClass="w-full md:w-[560px] lg:w-[800px]">
     <div
         class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <h3 id="locationFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Location</h3>
@@ -249,15 +338,26 @@
         </button>
     </div>
 
-    <form id="locationForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+    {{-- No overflow-y-auto here - the panel from <x-side-modal> (which has
+         its own h-screen overflow-y-auto, see that component) is already
+         the single scroll container for header+form+footer together. A
+         second overflow-y-auto on this form clips the absolutely-positioned
+         Province/Municipality searchable-select dropdowns (see
+         searchableSelect.js's .searchable-select-menu, z-50) whenever one
+         opens near the bottom of the form - the dropdown's own z-index
+         never gets a chance to paint over the footer because it gets cut
+         off by this element's overflow box first. --}}
+    <form id="locationForm" class="px-5 py-4 space-y-4">
         <input type="hidden" id="locationIdInput">
 
-        <div class="grid grid-cols-2 gap-3">
-            <div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Location Name <span
                         class="req-asterisk">*</span></label>
                 <input type="text" id="locationNameInput" required placeholder="e.g. Aklan"
+                    list="locationNameSuggestions"
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <datalist id="locationNameSuggestions"></datalist>
             </div>
             <div class="flex items-end">
                 <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 pb-2">
@@ -294,7 +394,7 @@
                     Add Area
                 </button>
             </div>
-            <p class="text-xs text-zinc-400 mb-2">Trucking zones within this location, e.g. Cabuyao, Calamba</p>
+            <p class="text-xs text-zinc-400 mb-2">Trucking zones within this location, e.g. Laguna - Binan. Pick Province then Municipality, or type directly.</p>
             <div id="locationAreaRows" class="space-y-2"></div>
         </div>
     </form>
@@ -308,6 +408,72 @@
         <button type="submit" form="locationForm" id="locationFormSubmitBtn"
             class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
             Save Location
+        </button>
+    </div>
+</x-side-modal>
+
+{{-- Special Charge modal - bespoke, same idea as the Location modal's Ports/
+     Serviceable Areas: the flat base_value field is gone, replaced by a
+     repeatable Unit + Base Value rate rows list (see specialChargeRateRowHtml()/
+     openSpecialChargeForm() below). --}}
+<x-side-modal id="specialChargeFormModal" panelClass="w-full md:w-[560px] lg:w-[800px]">
+    <div
+        class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <h3 id="specialChargeFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Special
+            Charge</h3>
+        <button type="button" id="specialChargeFormCloseBtn"
+            class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <form id="specialChargeForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <input type="hidden" id="specialChargeIdInput">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Charge Name <span
+                        class="req-asterisk">*</span></label>
+                <input type="text" id="specialChargeNameInput" required placeholder="e.g. Bullet Seal"
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div class="flex items-end">
+                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 pb-2">
+                    <input type="checkbox" id="specialChargeActiveInput" checked
+                        class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
+                    Active
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Rates <span
+                        class="req-asterisk">*</span></label>
+                <button type="button" id="addSpecialChargeRateBtn"
+                    class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Add Rate
+                </button>
+            </div>
+            <p class="text-xs text-zinc-400 mb-2">Set a base value per unit, e.g. day/s, others.</p>
+            <div id="specialChargeRateRows" class="space-y-2"></div>
+        </div>
+    </form>
+
+    <div
+        class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
+        <button type="button" id="specialChargeFormCancelBtn"
+            class="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            Cancel
+        </button>
+        <button type="submit" form="specialChargeForm" id="specialChargeFormSubmitBtn"
+            class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+            Save
         </button>
     </div>
 </x-side-modal>
@@ -328,25 +494,25 @@
         </button>
     </div>
 
-    <form id="laneForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+    <form id="laneForm" class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <input type="hidden" id="laneIdInput">
         <input type="hidden" id="laneTariffRateIdInput">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Origin Port <span
                         class="req-asterisk">*</span></label>
                 <select id="laneOriginPortInput" required
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    <option value="">Select origin port…</option>
+                    <option value="">Select Origin Port</option>
                 </select>
             </div>
-            <div>
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Destination Port
                     <span class="req-asterisk">*</span></label>
                 <select id="laneDestinationPortInput" required
                     class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
-                    <option value="">Select destination port…</option>
+                    <option value="">Select Destination Port</option>
                 </select>
             </div>
             <div class="sm:col-span-2">
@@ -359,12 +525,12 @@
         </div>
 
         <div class="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tariff Rates (FRT per
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tariff Rates (Freight per
                 combination)</label>
-            <p class="text-xs text-zinc-400 mb-3" id="laneTariffRateHint">Set the freight rate for every available
+            <p class="text-xs text-zinc-400 mb-2" id="laneTariffRateHint">Set the freight rate for every available
                 container combination on this lane. Combinations come from the Containers tab and are grouped by
                 container type below.</p>
-            <div id="laneTariffGroups" class="space-y-5"></div>
+            <div id="laneTariffGroups" class="space-y-4"></div>
         </div>
     </form>
 
@@ -394,16 +560,18 @@
         <div class="border border-gray-200 dark:border-zinc-700 rounded-xl p-5 space-y-4">
             <p class="font-semibold text-lg dark:text-white">Option Information</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="flex flex-col">
-                    <label class="text-sm dark:text-white">Option Name</label>
-                    <input type="text" name="OptionName" id="OptionName"
-                        class="border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Option Name <span
+                            class="req-asterisk">*</span></label>
+                    <input type="text" name="OptionName" id="OptionName" required
+                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
                 </div>
-                <div class="flex flex-col">
-                    <label class="text-sm dark:text-white">Option Description</label>
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Option
+                        Description</label>
                     <input type="text" name="OptionDescription" id="OptionDescription"
-                        class="border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
                 </div>
             </div>
         </div>
@@ -443,23 +611,25 @@
     <div class="max-h-[70vh] overflow-y-auto p-5 space-y-6">
         <input type="hidden" name="OptionID" id="OptionID">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex flex-col">
-                <label class="text-sm dark:text-white">LOV Code</label>
-                <input type="text"
-                    class="add-lov-code border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">LOV Code <span
+                        class="req-asterisk">*</span></label>
+                <input type="text" required
+                    class="add-lov-code w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
-            <div class="flex flex-col">
-                <label class="text-sm dark:text-white">LOV Name</label>
-                <input type="text"
-                    class="add-lov-name border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">LOV Name <span
+                        class="req-asterisk">*</span></label>
+                <input type="text" required
+                    class="add-lov-name w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
             </div>
         </div>
 
-        <div class="flex flex-col">
-            <label class="text-sm dark:text-white">LOV Description</label>
+        <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">LOV Description</label>
             <input type="text"
-                class="add-lov-description border p-2 rounded-lg dark:bg-zinc-900 dark:border-zinc-700 dark:text-white">
+                class="add-lov-description w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
     </div>
 
@@ -500,6 +670,28 @@
          * "ADJUST ME" below if your actual response shape differs):
          *   - GET      -> { success: true, data: <raw Laravel response body> }
          *   - POST/PUT -> { success: true, data: <created/updated record> }
+         *
+         * FORM CONVENTIONS - every Add/Edit form on this page (Location,
+         * Container, Lane, the ENTITY_CONFIG-driven generic form, General
+         * Lookups) follows these, deliberately kept separate from
+         * VISUALS.md's uppercase small-caps label style used by the
+         * customer-facing CRM/Prospect screens - this is a plain utilitarian
+         * admin page, not a redesigned screen:
+         *   - Label: "text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+         *   - Required field: req-asterisk span on the label, PLUS the
+         *     wrapper <div> gets "border-l-2 border-orange-400
+         *     dark:border-orange-600 pl-3" - never ship the asterisk alone.
+         *   - Form vertical rhythm: space-y-4
+         *   - 2-column field rows: "grid grid-cols-1 sm:grid-cols-2 gap-3"
+         *   - Hint paragraphs under a section: "text-xs text-zinc-400 mb-2"
+         *   - Select placeholder: "Select {Label}" (no ellipsis)
+         *   - Inputs/selects: "w-full rounded-lg border border-zinc-300
+         *     dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900
+         *     dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500
+         *     focus:ring-orange-500"
+         * Adding a new entity to ENTITY_CONFIG gets all of this for free via
+         * fieldWrapperHtml() - only hand-rolled modals (Location/Container/
+         * Lane/General Lookups) need it applied manually.
          */
 
         // -----------------------------------------------------------------
@@ -767,7 +959,7 @@
                     },
                     {
                         key: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         render: (row) => money(row.amount)
                     },
                     {
@@ -797,7 +989,7 @@
                     },
                     {
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -810,7 +1002,7 @@
                 ],
                 editFields: [{
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -837,7 +1029,7 @@
                     },
                     {
                         key: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         render: (row) => money(row.amount)
                     },
                     {
@@ -860,7 +1052,7 @@
                     },
                     {
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -873,7 +1065,7 @@
                 ],
                 editFields: [{
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -900,7 +1092,7 @@
                     },
                     {
                         key: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         render: (row) => money(row.amount)
                     },
                     {
@@ -923,7 +1115,7 @@
                     },
                     {
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -936,7 +1128,7 @@
                 ],
                 editFields: [{
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -969,7 +1161,7 @@
                     },
                     {
                         key: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         render: (row) => money(row.amount)
                     },
                     {
@@ -999,7 +1191,7 @@
                     },
                     {
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -1012,7 +1204,7 @@
                 ],
                 editFields: [{
                         name: 'amount',
-                        label: 'Amount',
+                        label: 'Amount (₱)',
                         type: 'currency',
                         required: true
                     },
@@ -1038,7 +1230,7 @@
                     },
                     {
                         key: 'rate_percent',
-                        label: 'Rate %',
+                        label: 'Rate (%)',
                         render: (row) => `${money(row.rate_percent)}%`
                     },
                     {
@@ -1077,7 +1269,7 @@
                     },
                     {
                         name: 'rate_percent',
-                        label: 'Rate %',
+                        label: 'Rate (%)',
                         type: 'number',
                         step: '0.01',
                         required: true
@@ -1092,7 +1284,7 @@
                 ],
                 editFields: [{
                         name: 'rate_percent',
-                        label: 'Rate %',
+                        label: 'Rate (%)',
                         type: 'number',
                         step: '0.01',
                         required: true
@@ -1105,6 +1297,11 @@
                 ],
             },
 
+            // Bespoke form - see openSpecialChargeForm()/specialChargeRateRowHtml()
+            // below (same idea as the Location modal's Ports/Serviceable Areas
+            // rows). `fields` is unused once special-cased in openEditForm()/
+            // the Add New handler, but the generic table engine still reads
+            // listUrl/columns/pk from this entry.
             specialCharges: {
                 label: 'Special Charge',
                 pk: 'special_charge_id',
@@ -1117,9 +1314,11 @@
                         label: 'Name'
                     },
                     {
-                        key: 'base_value',
-                        label: 'Base Value',
-                        render: (row) => money(row.base_value)
+                        key: 'rates',
+                        label: 'Rates',
+                        render: (row) => (row.rates || []).length
+                            ? (row.rates).map(r => `${r.unit}: ${money(r.base_value)}`).join(', ')
+                            : '—'
                     },
                     {
                         key: 'is_active',
@@ -1133,12 +1332,6 @@
                         type: 'text',
                         required: true,
                         placeholder: 'e.g. Bullet Seal'
-                    },
-                    {
-                        name: 'base_value',
-                        label: 'Base Value',
-                        type: 'currency',
-                        placeholder: '0.00'
                     },
                     {
                         name: 'is_active',
@@ -1168,10 +1361,47 @@
                 ],
                 fields: [{
                         name: 'name',
-                        label: 'CY Name',
+                        label: 'Cargo Yard Name',
                         type: 'text',
                         required: true,
                         placeholder: "e.g. Palawan - Puerto Princesa"
+                    },
+                    {
+                        name: 'is_active',
+                        label: 'Active',
+                        type: 'checkbox',
+                        default: true
+                    },
+                ],
+            },
+
+            // Not a top-level maintenance tab - rendered as the "Charter" pill
+            // nested inside the Products (containers) tab panel (see
+            // #productCharterPanel above), but otherwise a fully generic
+            // ENTITY_CONFIG entry using the same slide-over form/table engine.
+            charterServices: {
+                label: 'Charter Service',
+                pk: 'charter_service_id',
+                listUrl: '/api/charterServices',
+                createUrl: '/api/charterServices',
+                updateUrl: (id) => `/api/charterServices/${id}`,
+                deleteUrl: (id) => `/api/charterServices/${id}`,
+                columns: [{
+                        key: 'name',
+                        label: 'Name'
+                    },
+                    {
+                        key: 'is_active',
+                        label: 'Status',
+                        render: (row) => activeBadge(row.is_active)
+                    },
+                ],
+                fields: [{
+                        name: 'name',
+                        label: 'Charter Service Name',
+                        type: 'text',
+                        required: true,
+                        placeholder: 'e.g. Full Vessel Charter'
                     },
                     {
                         name: 'is_active',
@@ -1230,6 +1460,12 @@
         // -----------------------------------------------------------------
         let activeTab = 'locations';
         let editingId = null;
+        // The entity whose form is currently open in the generic slide-over.
+        // Usually equal to activeTab, except for charterServices, which lives
+        // inside the containers tab's "Charter" pill rather than being its
+        // own top-level tab - activeTab stays 'containers' while that form is
+        // open, so submit/reload must key off this instead.
+        let formEntityKey = null;
 
         // -----------------------------------------------------------------
         // Tabs
@@ -1270,6 +1506,52 @@
 
             renderTableHead(key);
             getOrCreateTable(key).load(1);
+        }
+
+        // -----------------------------------------------------------------
+        // Products tab - Freight/Charter category pills. Freight is just the
+        // existing container catalog (data-product-panel="freight"); Charter
+        // is the new charterServices catalog, lazy-loaded on first click
+        // since it isn't a top-level tab and showTab() never touches it.
+        // -----------------------------------------------------------------
+        function initProductCategoryPills() {
+            const freightBtn = document.getElementById('productCatFreightBtn');
+            const charterBtn = document.getElementById('productCatCharterBtn');
+            if (!freightBtn || !charterBtn) return;
+
+            const freightPanel = document.querySelector('[data-product-panel="freight"]');
+            const charterPanel = document.querySelector('[data-product-panel="charter"]');
+            let charterLoaded = false;
+
+            const ACTIVE = ['bg-orange-600', 'text-white'];
+            const INACTIVE = ['bg-zinc-100', 'dark:bg-zinc-800', 'text-zinc-600', 'dark:text-zinc-300'];
+
+            function showFreight() {
+                freightPanel.classList.remove('hidden');
+                charterPanel.classList.add('hidden');
+                freightBtn.classList.add(...ACTIVE);
+                freightBtn.classList.remove(...INACTIVE);
+                charterBtn.classList.add(...INACTIVE);
+                charterBtn.classList.remove(...ACTIVE);
+            }
+
+            function showCharter() {
+                charterPanel.classList.remove('hidden');
+                freightPanel.classList.add('hidden');
+                charterBtn.classList.add(...ACTIVE);
+                charterBtn.classList.remove(...INACTIVE);
+                freightBtn.classList.add(...INACTIVE);
+                freightBtn.classList.remove(...ACTIVE);
+
+                if (!charterLoaded) {
+                    renderTableHead('charterServices');
+                    getOrCreateTable('charterServices').load(1);
+                    charterLoaded = true;
+                }
+            }
+
+            freightBtn.addEventListener('click', showFreight);
+            charterBtn.addEventListener('click', showCharter);
         }
 
         // -----------------------------------------------------------------
@@ -1396,12 +1678,19 @@
         function fieldWrapperHtml(field) {
             if (field.type === 'checkbox') {
                 return `
-                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                    <input type="checkbox" name="${field.name}" class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
-                    ${field.label}
-                </label>
+                <div>
+                    <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                        <input type="checkbox" name="${field.name}" class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
+                        ${field.label}
+                    </label>
+                </div>
             `;
             }
+
+            // Required fields get the standard accent wrapper (see VISUALS.md's
+            // required-field convention) so the asterisk is never the only
+            // cue - never ship it alone.
+            const wrapperClass = field.required ? 'border-l-2 border-orange-400 dark:border-orange-600 pl-3' : '';
 
             if (field.type === 'select') {
                 // Static options (e.g. a fixed PORT/GENERAL choice) vs dynamic
@@ -1412,7 +1701,7 @@
                     .join('');
 
                 return `
-                <div>
+                <div class="${wrapperClass}">
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' <span class="req-asterisk">*</span>' : ''}</label>
                     <select name="${field.name}" ${field.required ? 'required' : ''}
                             class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
@@ -1425,7 +1714,7 @@
 
             if (field.type === 'currency') {
                 return `
-                <div>
+                <div class="${wrapperClass}">
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' <span class="req-asterisk">*</span>' : ''}</label>
                     <input type="text" inputmode="decimal" name="${field.name}" ${field.required ? 'required' : ''}
                            placeholder="${field.placeholder ?? '0.00'}"
@@ -1435,7 +1724,7 @@
             }
 
             return `
-            <div>
+            <div class="${wrapperClass}">
                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">${field.label}${field.required ? ' <span class="req-asterisk">*</span>' : ''}</label>
                 <input type="${field.type}" name="${field.name}" ${field.required ? 'required' : ''}
                        ${field.step ? `step="${field.step}"` : ''}
@@ -1492,6 +1781,7 @@
         async function openAddForm(key) {
             const config = ENTITY_CONFIG[key];
             editingId = null;
+            formEntityKey = key;
 
             document.getElementById('maintenanceFormTitle').textContent = `Add ${config.label}`;
             renderFormFields(config, false);
@@ -1505,8 +1795,10 @@
             if (key === 'containers') return openContainerForm(id);
             if (key === 'locations') return openLocationForm(id);
             if (key === 'lanes') return openLaneForm(id);
+            if (key === 'specialCharges') return openSpecialChargeForm(id);
             const config = ENTITY_CONFIG[key];
             editingId = id;
+            formEntityKey = key;
 
             // Pull the row fresh so the form always reflects the latest data.
             const response = await apiCall({
@@ -1537,7 +1829,7 @@
         async function handleFormSubmit(event) {
             event.preventDefault();
 
-            const config = ENTITY_CONFIG[activeTab];
+            const config = ENTITY_CONFIG[formEntityKey];
             const isEdit = Boolean(editingId);
             const payload = collectFormData(config, isEdit);
             const button = document.getElementById('maintenanceFormSubmitBtn');
@@ -1566,7 +1858,7 @@
             });
 
             closeSideModal('maintenanceFormModal');
-            getOrCreateTable(activeTab).reload();
+            getOrCreateTable(formEntityKey).reload();
         }
 
         async function deleteRow(key, id) {
@@ -1606,6 +1898,7 @@
         // -----------------------------------------------------------------
         function init() {
             initTabs();
+            initProductCategoryPills();
 
             document.querySelectorAll('.add-new-btn').forEach((btn) => {
                 btn.addEventListener('click', () => {
@@ -1615,6 +1908,8 @@
                         openLocationForm();
                     } else if (btn.dataset.entity === 'lanes') {
                         openLaneForm();
+                    } else if (btn.dataset.entity === 'specialCharges') {
+                        openSpecialChargeForm();
                     } else {
                         openAddForm(btn.dataset.entity);
                     }
@@ -1775,6 +2070,222 @@
             'containerFormModal'));
 
         // -----------------------------------------------------------------
+        // PH province/municipality lookup for Serviceable Area rows - a
+        // minimal duplicate of the subset of logic_prospect_modal.js's own
+        // PSGC cascade (initLocationPsgcCascade) this page needs, since
+        // this page has no shared JS scope with that file. Only two levels
+        // (no barangay) - a Serviceable Area is a trucking zone, not a
+        // precise address. These two selects are a convenience only: the
+        // area_name text input below them is always directly editable by
+        // hand, and silently stays plain manual entry if the PSGC API is
+        // ever unreachable (loadProvinces()/loadMunicipalities() below
+        // just resolve to [] on failure rather than throwing).
+        // -----------------------------------------------------------------
+        const PSGC_API = 'https://psgc.cloud/api';
+        const NCR_REGION_CODE = '1300000000';
+
+        function refreshSearchable(el) {
+            el?._searchableSelect?.refresh();
+        }
+
+        function fixMojibake(str) {
+            return typeof str === 'string' ? str.replace(/Ã±/g, 'ñ').replace(/Ã‘/g, 'Ñ') : str;
+        }
+
+        async function fetchPsgc(url) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 6000);
+            try {
+                const res = await fetch(url, { signal: controller.signal });
+                if (!res.ok) throw new Error(`PSGC request failed: ${res.status}`);
+                const data = await res.json();
+                return Array.isArray(data)
+                    ? data.map((item) => (item && typeof item.name === 'string' ? { ...item, name: fixMojibake(item.name) } : item))
+                    : data;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        function resetPsgcSelect(select, placeholder) {
+            select.innerHTML = '';
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = placeholder;
+            select.appendChild(option);
+            select.disabled = true;
+        }
+
+        function populatePsgcSelect(select, items, placeholder) {
+            resetPsgcSelect(select, placeholder);
+            items.forEach((item) => {
+                const option = document.createElement('option');
+                const name = (item.name || '').trim();
+                option.value = name;
+                option.textContent = name;
+                option.dataset.code = item.code;
+                select.appendChild(option);
+            });
+            select.disabled = false;
+        }
+
+        let provincesPromise = null;
+        function loadProvinces() {
+            if (!provincesPromise) {
+                provincesPromise = fetchPsgc(`${PSGC_API}/provinces`)
+                    .then((provinces) => {
+                        provinces.push({ name: 'Metro Manila (NCR)', code: NCR_REGION_CODE });
+                        provinces.sort((a, b) => a.name.localeCompare(b.name));
+                        return provinces;
+                    })
+                    .catch((err) => {
+                        console.warn('PH province lookup unavailable - Serviceable Area dropdowns disabled, manual text entry still works', err);
+                        return [];
+                    });
+            }
+            return provincesPromise;
+        }
+
+        // Cached per province code across every row on the page - picking
+        // the same province on a second row shouldn't refetch.
+        const municipalitiesByProvinceCode = {};
+        async function loadMunicipalities(provinceCode) {
+            if (municipalitiesByProvinceCode[provinceCode]) return municipalitiesByProvinceCode[provinceCode];
+            const endpoint = provinceCode === NCR_REGION_CODE
+                ? `${PSGC_API}/regions/${provinceCode}/cities-municipalities`
+                : `${PSGC_API}/provinces/${provinceCode}/cities-municipalities`;
+            try {
+                const entries = await fetchPsgc(endpoint);
+                // Exclude "SubMun" entries (Manila's internal districts) -
+                // same filter the existing address cascade's Town/City
+                // level already applies, so a Municipality picked here can
+                // exactly match ProspectLocation.address_town_city (sourced
+                // from that same filtered list) for the Request for
+                // Proposal wizard's Port-filtering-by-area feature.
+                const municipalities = entries.filter((e) => e.type !== 'SubMun').sort((a, b) => a.name.localeCompare(b.name));
+                municipalitiesByProvinceCode[provinceCode] = municipalities;
+                return municipalities;
+            } catch (err) {
+                console.warn('PH municipality lookup unavailable for this province - manual text entry still works', err);
+                return [];
+            }
+        }
+
+        // Flat, nationwide municipality list (every province + NCR) - lets a
+        // Municipality be searched/picked before any Province is chosen
+        // (see bindAreaRowCascade() below). Built by fanning loadMunicipalities()
+        // out across every province - that function already caches per
+        // province code, so this reuses whatever a normal province-first
+        // pick already fetched instead of refetching it. Cached once for
+        // the whole page session (first row to need it pays the cost; every
+        // row after reuses the same resolved promise).
+        let allMunicipalitiesPromise = null;
+        function loadAllMunicipalities() {
+            if (!allMunicipalitiesPromise) {
+                allMunicipalitiesPromise = loadProvinces().then(async (provinces) => {
+                    const perProvince = await Promise.all(
+                        provinces.map((p) =>
+                            loadMunicipalities(p.code).then((municipalities) =>
+                                municipalities.map((m) => ({ ...m, provinceName: p.name, provinceCode: p.code }))
+                            )
+                        )
+                    );
+                    return perProvince.flat().sort((a, b) => a.name.localeCompare(b.name));
+                });
+            }
+            return allMunicipalitiesPromise;
+        }
+
+        // Like populatePsgcSelect(), but labels each option "Town (Province)"
+        // when the item carries a provinceName (the flat nationwide list
+        // does; a single province's own list doesn't need to since it's
+        // already implied) and stashes province info on the option so
+        // picking one can auto-fill the Province select - see
+        // bindAreaRowCascade()'s municipalitySelect change handler.
+        function populateMunicipalitySelect(select, items, placeholder) {
+            resetPsgcSelect(select, placeholder);
+            items.forEach((item) => {
+                const option = document.createElement('option');
+                const name = (item.name || '').trim();
+                option.value = name;
+                option.textContent = item.provinceName ? `${name} (${item.provinceName})` : name;
+                option.dataset.code = item.code;
+                if (item.provinceName) option.dataset.provinceName = item.provinceName;
+                if (item.provinceCode) option.dataset.provinceCode = item.provinceCode;
+                select.appendChild(option);
+            });
+            select.disabled = false;
+        }
+
+        // Wires one Serviceable Area row's Province/Municipality selects -
+        // picking both composes "Province - Municipality" into that row's
+        // own area_name text input (which stays directly editable by hand
+        // regardless, and is the only field actually submitted). Works in
+        // either order: pick Province first to narrow Municipality down to
+        // its towns, or search Municipality directly (nationwide) and
+        // Province auto-fills to match.
+        async function bindAreaRowCascade(row) {
+            const provinceSelect = row.querySelector('.area-province-select');
+            const municipalitySelect = row.querySelector('.area-municipality-select');
+            const textInput = row.querySelector('[data-field="area_name"]');
+
+            const provinces = await loadProvinces();
+            if (!provinces.length) return; // degrade silently - text input stays plain manual entry
+
+            populatePsgcSelect(provinceSelect, provinces, 'Province');
+            makeSearchableSelect(provinceSelect);
+            makeSearchableSelect(municipalitySelect);
+
+            resetPsgcSelect(municipalitySelect, 'Loading...');
+            refreshSearchable(municipalitySelect);
+            loadAllMunicipalities().then((all) => {
+                // Only take the full nationwide list if the admin hasn't
+                // already picked a Province while this was loading - that
+                // case is handled by the change handler below instead.
+                if (provinceSelect.value) return;
+                populateMunicipalitySelect(municipalitySelect, all, 'Municipality');
+                refreshSearchable(municipalitySelect);
+            });
+
+            provinceSelect.addEventListener('change', async function () {
+                const provinceCode = this.selectedOptions[0]?.dataset.code;
+                resetPsgcSelect(municipalitySelect, 'Loading...');
+                refreshSearchable(municipalitySelect);
+
+                const all = await loadAllMunicipalities();
+                const municipalities = provinceCode ? all.filter((m) => m.provinceCode === provinceCode) : all;
+                populateMunicipalitySelect(municipalitySelect, municipalities, 'Municipality');
+                refreshSearchable(municipalitySelect);
+            });
+
+            municipalitySelect.addEventListener('change', function () {
+                const provinceName = this.selectedOptions[0]?.dataset.provinceName;
+                if (provinceName && provinceSelect.value !== provinceName) {
+                    provinceSelect.value = provinceName;
+                    refreshSearchable(provinceSelect);
+                }
+                if (provinceSelect.value && this.value) {
+                    textInput.value = `${provinceSelect.value} - ${this.value}`;
+                }
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // Location Name - single text input with native <datalist>
+        // suggestions, built from the same cached loadProvinces() list as
+        // the Serviceable Area rows above. The datalist only suggests -
+        // the input stays plain free text, so a name that isn't a PSGC
+        // province (or the API being unreachable, leaving the list empty)
+        // still works as plain manual entry.
+        // -----------------------------------------------------------------
+        loadProvinces().then((provinces) => {
+            if (!provinces.length) return; // degrade silently - input stays plain manual entry
+            document.getElementById('locationNameSuggestions').innerHTML = provinces
+                .map((p) => `<option value="${(p.name || '').replace(/"/g, '&quot;')}">`)
+                .join('');
+        });
+
+        // -----------------------------------------------------------------
         // Location form - Ports and Serviceable Areas are managed as
         // nested multi-row lists here (same catalogRowHtml pattern as the
         // Container modal's Sizes/Classes), instead of their own tabs.
@@ -1807,12 +2318,44 @@
             row.querySelector('[data-field="port_id"]').value = portId ?? '';
         }
 
+        // Serviceable Area rows get a Province + Municipality picker above
+        // the plain area_name text input (unlike Port rows, which stay
+        // idRowHtml()'s plain text-only shape) - see bindAreaRowCascade()
+        // above. data-catalog-row stays on the OUTER wrapper here so
+        // removeCatalogRowOnClick() below removes the whole row (selects
+        // included), not just the inner id+text+remove slice.
+        function areaRowHtml() {
+            return `
+        <div class="catalog-row space-y-1.5" data-catalog-row>
+            <div class="grid grid-cols-2 gap-2">
+                <select class="area-province-select rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm">
+                    <option value="">Province</option>
+                </select>
+                <select class="area-municipality-select rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm" disabled>
+                    <option value="">Municipality</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="hidden" data-field="area_id">
+                <input type="text" data-field="area_name" required placeholder="e.g. Laguna - Binan"
+                       class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <button type="button" class="remove-catalog-row text-zinc-400 hover:text-red-600 p-1">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+        }
+
         function addAreaRow(name = '', areaId = null) {
             const wrap = document.getElementById('locationAreaRows');
-            wrap.insertAdjacentHTML('beforeend', idRowHtml('area_id', 'area_name', 'e.g. Cabuyao'));
+            wrap.insertAdjacentHTML('beforeend', areaRowHtml());
             const row = wrap.lastElementChild;
             row.querySelector('[data-field="area_name"]').value = name;
             row.querySelector('[data-field="area_id"]').value = areaId ?? '';
+            bindAreaRowCascade(row);
         }
 
         document.getElementById('locationPortRows').addEventListener('click', removeCatalogRowOnClick);
@@ -1820,6 +2363,16 @@
 
         document.getElementById('addPortRowBtn').addEventListener('click', () => addPortRow());
         document.getElementById('addAreaRowBtn').addEventListener('click', () => addAreaRow());
+
+        document.getElementById('locationFilterActive')?.addEventListener('change', function () {
+            getOrCreateTable('locations').setFilter('is_active', this.value);
+        });
+        document.getElementById('locationFilterPorts')?.addEventListener('change', function () {
+            getOrCreateTable('locations').setFilter('has_ports', this.value);
+        });
+        document.getElementById('locationFilterArea')?.addEventListener('change', function () {
+            getOrCreateTable('locations').setFilter('has_serviceable_area', this.value);
+        });
 
         async function openLocationForm(id = null) {
             editingLocationId = id;
@@ -1849,6 +2402,7 @@
                 (row.serviceable_areas ?? []).forEach((a) => addAreaRow(a.area_name, a.area_id));
             } else {
                 document.getElementById('locationIdInput').value = '';
+                document.getElementById('locationActiveInput').checked = true;
             }
 
             initSideModal({
@@ -1913,6 +2467,180 @@
             'locationFormModal'));
         document.getElementById('locationFormCancelBtn').addEventListener('click', () => closeSideModal(
             'locationFormModal'));
+
+        // -----------------------------------------------------------------
+        // Special Charge form - the old flat base_value field is replaced by
+        // a repeatable Unit + Base Value rate rows list (same idRowHtml()
+        // pattern as Location's Ports/Serviceable Areas and Container's
+        // Sizes/Classes above). Each row optionally carries the existing
+        // rate's id (hidden input) so the backend updates it in place
+        // instead of deleting + recreating it.
+        // -----------------------------------------------------------------
+        let editingSpecialChargeId = null;
+        let specialChargeUnitOptionsHtml = '';
+        let specialChargeUnitOptionsPromise = null;
+
+        async function ensureSpecialChargeUnitOptionsLoaded() {
+            if (!specialChargeUnitOptionsPromise) {
+                specialChargeUnitOptionsPromise = apiCall({
+                    mode: 'GET',
+                    url: '/api/listofval/unit'
+                }).then((res) => {
+                    const rows = Array.isArray(res) ? res : (res?.data ?? []);
+                    specialChargeUnitOptionsHtml = rows
+                        .map((lov) => `<option value="${lov.lov_name}">${lov.lov_name}</option>`)
+                        .join('');
+                });
+            }
+            return specialChargeUnitOptionsPromise;
+        }
+
+        function specialChargeRateRowHtml() {
+            return `
+        <div class="catalog-row flex items-center gap-2" data-catalog-row>
+            <input type="hidden" data-field="id">
+            <select data-field="unit" required
+                    class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                <option value="">Select Unit</option>
+                ${specialChargeUnitOptionsHtml}
+            </select>
+            <input type="text" inputmode="decimal" data-field="base_value" required placeholder="0.00"
+                   class="currency-input w-36 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            <button type="button" class="remove-catalog-row text-zinc-400 hover:text-red-600 p-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    `;
+        }
+
+        function addSpecialChargeRateRow(unit = '', baseValue = '', id = null) {
+            const wrap = document.getElementById('specialChargeRateRows');
+            wrap.insertAdjacentHTML('beforeend', specialChargeRateRowHtml());
+            const row = wrap.lastElementChild;
+            row.querySelector('[data-field="id"]').value = id ?? '';
+            row.querySelector('[data-field="unit"]').value = unit;
+            row.querySelector('[data-field="base_value"]').value = baseValue === '' || baseValue === null ?
+                '' : formatCurrencyDisplay(baseValue);
+        }
+
+        document.getElementById('specialChargeRateRows').addEventListener('click', removeCatalogRowOnClick);
+        document.getElementById('addSpecialChargeRateBtn').addEventListener('click', () => addSpecialChargeRateRow());
+
+        async function openSpecialChargeForm(id = null) {
+            await ensureSpecialChargeUnitOptionsLoaded();
+
+            editingSpecialChargeId = id;
+            document.getElementById('specialChargeForm').reset();
+            document.getElementById('specialChargeRateRows').innerHTML = '';
+            document.getElementById('specialChargeFormTitle').textContent = id ? 'Edit Special Charge' :
+                'Add Special Charge';
+
+            if (id) {
+                const response = await apiCall({
+                    mode: 'GET',
+                    url: `/api/specialCharges/${id}`
+                });
+                if (!response.success) {
+                    showMessage({
+                        status: 'error',
+                        title: 'Error',
+                        message: 'Unable to load this special charge.'
+                    });
+                    return;
+                }
+                const row = response.data;
+                document.getElementById('specialChargeIdInput').value = row.special_charge_id;
+                document.getElementById('specialChargeNameInput').value = row.name;
+                document.getElementById('specialChargeActiveInput').checked = Boolean(row.is_active);
+                (row.rates ?? []).forEach((r) => addSpecialChargeRateRow(r.unit, r.base_value, r.id));
+            } else {
+                document.getElementById('specialChargeIdInput').value = '';
+                document.getElementById('specialChargeActiveInput').checked = true;
+                addSpecialChargeRateRow();
+            }
+
+            initSideModal({
+                modalId: 'specialChargeFormModal'
+            });
+        }
+
+        document.getElementById('specialChargeForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const rates = Array.from(document.querySelectorAll('#specialChargeRateRows [data-catalog-row]'))
+                .map((row) => {
+                    const idValue = row.querySelector('[data-field="id"]').value.trim();
+                    const unit = row.querySelector('[data-field="unit"]').value;
+                    const baseValue = parseCurrencyValue(row.querySelector('[data-field="base_value"]').value);
+                    const entry = {
+                        unit,
+                        base_value: baseValue === '' ? null : Number(baseValue)
+                    };
+                    if (idValue) entry.id = Number(idValue);
+                    return entry;
+                })
+                .filter((entry) => entry.unit);
+
+            if (!rates.length) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Add at least one rate (unit + base value) before saving.'
+                });
+                return;
+            }
+
+            const hasBlankValue = rates.some((r) => r.base_value === null || r.base_value === undefined || Number.isNaN(r.base_value));
+            if (hasBlankValue) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: 'Enter a base value for each unit rate (or remove the row).'
+                });
+                return;
+            }
+
+            const payload = {
+                name: document.getElementById('specialChargeNameInput').value,
+                is_active: document.getElementById('specialChargeActiveInput').checked,
+                rates,
+            };
+
+            const isEdit = Boolean(editingSpecialChargeId);
+            const button = document.getElementById('specialChargeFormSubmitBtn');
+
+            const response = await apiCall({
+                mode: isEdit ? 'PUT' : 'POST',
+                isJson: true,
+                payload,
+                url: isEdit ? `/api/specialCharges/${editingSpecialChargeId}` : '/api/specialCharges',
+                button,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: response.message || 'Unable to save this special charge.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Saved',
+                message: `Special Charge ${isEdit ? 'updated' : 'added'}.`
+            });
+            closeSideModal('specialChargeFormModal');
+            getOrCreateTable('specialCharges').reload();
+        });
+
+        document.getElementById('specialChargeFormCloseBtn').addEventListener('click', () => closeSideModal(
+            'specialChargeFormModal'));
+        document.getElementById('specialChargeFormCancelBtn').addEventListener('click', () => closeSideModal(
+            'specialChargeFormModal'));
 
         // -----------------------------------------------------------------
         // Lane form - Tariff Rates live here instead of their own tab (same
@@ -2004,9 +2732,9 @@
             editingLaneId = id;
             editingLaneTariffRateId = null;
             document.getElementById('laneForm').reset();
-            document.getElementById('laneOriginPortInput').innerHTML = '<option value="">Select origin port…</option>';
+            document.getElementById('laneOriginPortInput').innerHTML = '<option value="">Select Origin Port</option>';
             document.getElementById('laneDestinationPortInput').innerHTML =
-                '<option value="">Select destination port…</option>';
+                '<option value="">Select Destination Port</option>';
             document.getElementById('laneFormTitle').textContent = id ? 'Edit Lane' : 'Add Lane';
 
             await Promise.all([
@@ -2303,30 +3031,33 @@
         const addLovButton = document.getElementById('addLovButton');
         addLovButton.addEventListener('click', function() {
             const lovTemplate = document.createElement('div');
-            lovTemplate.classList.add('lov-item', 'flex', 'p-2', 'rounded', 'border', 'border-zinc-300',
-                'dark:border-zinc-700', 'gap-4', 'mb-2',
-                'bg-white', 'dark:bg-zinc-800', 'text-black', 'dark:text-zinc-100');
+            lovTemplate.classList.add('lov-item', 'flex', 'items-end', 'gap-2', 'p-2', 'rounded-lg', 'border',
+                'border-zinc-300', 'dark:border-zinc-700', 'bg-white', 'dark:bg-zinc-800');
 
+            // No required-asterisk here - unlike addLOVModal's standalone
+            // "Add List of Value" flow (which posts to /api/lov and
+            // requires Code+Name), these nested rows go through
+            // OptionController::store()'s lovData array, which validates
+            // only option_name/option_description - lov_code/lov_name/
+            // lov_description are genuinely optional in this flow.
             lovTemplate.innerHTML = `
         <div class="flex-1">
-            <p>List of Value Code</p>
-            <input type="text" class="lov-code w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded px-2 py-1 text-black dark:text-zinc-100">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">LOV Code</label>
+            <input type="text" class="lov-code w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
         <div class="flex-1">
-            <p>List of Value Name</p>
-            <input type="text" class="lov-name w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded px-2 py-1 text-black dark:text-zinc-100">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">LOV Name</label>
+            <input type="text" class="lov-name w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
         <div class="flex-1">
-            <p>List of Value Description</p>
-            <input type="text" class="lov-description w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded px-2 py-1 text-black dark:text-zinc-100">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">LOV Description</label>
+            <input type="text" class="lov-description w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
         </div>
-        <div class="flex items-end">
-            <button type="button" class="remove-lov aspect-square p-2 bg-red-500 text-white rounded font-black">
-                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12m-1 0-1 14a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2L7 7m3 0V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2" />
-</svg>
-            </button>
-        </div>
+        <button type="button" class="remove-lov text-zinc-400 hover:text-red-600 p-1">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
     `;
 
             lovContainer.appendChild(lovTemplate);

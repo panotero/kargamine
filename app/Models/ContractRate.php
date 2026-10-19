@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContractRate extends Model
 {
     public const DISCOUNT_PERCENTAGE = 'PERCENTAGE';
+
     public const DISCOUNT_FIXED = 'FIXED';
 
     protected $fillable = [
@@ -26,8 +27,8 @@ class ContractRate extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'discount_value' => 'decimal:2',
         'is_active' => 'boolean',
     ];

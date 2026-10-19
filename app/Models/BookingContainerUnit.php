@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\DB;
 class BookingContainerUnit extends Model
 {
     public const STATUS_PENDING = 1;
+
     public const STATUS_LOADED = 2;
+
     public const STATUS_DISCHARGED = 3;
+
     public const STATUS_EXCEPTION = 4;
 
     public const STATUS_LABELS = [
@@ -45,14 +48,14 @@ class BookingContainerUnit extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'unit_index' => 'integer',
         'status' => 'integer',
-        'actual_gate_out_at' => 'datetime:M d, Y, h:i A',
-        'actual_gate_in_at' => 'datetime:M d, Y, h:i A',
+        'actual_gate_out_at' => 'datetime',
+        'actual_gate_in_at' => 'datetime',
         'equivalent_teu' => 'decimal:2',
-        'shut_out_at' => 'datetime:M d, Y, h:i A',
+        'shut_out_at' => 'datetime',
     ];
 
     public function bookingLine(): BelongsTo

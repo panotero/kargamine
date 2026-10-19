@@ -4,3 +4,4 @@
 - [CSR proposal-request fields](project_csr_proposal_request_fields.md) — service_type replaces delivery_type_id; Break Bulk=LC label-only; Products qty; what already existed
 - [Prospect activity + RFP sections](project_prospect_activity_and_rfp_sections.md) — detail modal vs intake modal; ActivityService had no live call sites; show() payload already carries the data
 - [Requirement vs product location tables](project_requirement_vs_product_location_tables.md) — requirement O&D → `locations` master; product O&D → `prospect_locations`; IDs not interchangeable
+- [RFP → ClientProposal bridge](project_rfp_to_clientproposal_bridge.md) — RFP submit mints a lead-scoped ClientProposal; rate matrix/T&C in their own tables, rendered additively on Approvals

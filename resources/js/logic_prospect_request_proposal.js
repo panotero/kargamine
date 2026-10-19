@@ -20,7 +20,7 @@
 // page must only claim window.prospectInfo while its own DOM is present).
 (function () {
   const EMPTY = "—";
-  const RPM_TABS = ["CompanyDetails", "OriginDestination", "Products", "Confirmation"];
+  const RPM_TABS = ["CompanyDetails", "OriginDestination", "Products", "BuildMatrix", "TermsConditions", "Confirmation"];
 
   // Fixed Service Type list (replaces the Delivery Types LOV on every
   // product form's Service Type select) - value IS the label string,
@@ -39,18 +39,20 @@
   // Pending requests can exist for the same prospect at once.
   let rpmProposalRequestId = null;
   // Currently chip-selected prospect address (if any) seeding the Origin &
-  // Destination form's fields - see renderOdChips()/hydrateOdCard(). Purely
-  // a convenience autofill source and an optional "seeded from" reference
-  // sent alongside the Add payload; the form itself is always editable and
-  // clicking a chip never removes it from the suggestion list (each Add
-  // creates its own independent snapshot entry, see addOdLocation()).
-  // Cleared after a successful add and on tab (re)open.
+  // Destination popup's fields - see renderRpmOdChips()/hydrateOdCard().
+  // Purely a convenience autofill source and an optional "seeded from"
+  // reference sent alongside the Save payload; the form itself is always
+  // editable and clicking a chip never removes it from the suggestion list
+  // (each Save creates its own independent snapshot entry, see
+  // saveRpmAddOd()). Cleared after a successful save and on every popup
+  // (re)open.
   let rpmSelectedOdLocationId = null;
   // The single live address-form card built via
   // window.prospectShared.locationCardHtml()/initLocationPsgcCascade() for
-  // the Origin & Destination tab - (re)built once per tab-open, not on
-  // every renderOriginDestination() call, so PSGC's /provinces endpoint
-  // isn't re-fetched on every incidental lead refresh.
+  // the Origin & Destination popup (<x-rpm-add-od-modal />) - rebuilt fresh
+  // every time the popup opens (see openRpmAddOdModal()), cached here only
+  // for the lifetime of that one open so a chip click's hydrateOdCard()
+  // call reuses the same card instance.
   let rpmOdCard = null;
 
   function getMyProposalRequest(lead) {
@@ -109,8 +111,8 @@
   // ------------------------------------------------------------------
   // SHARED: location dropdowns (Company Details' address picker) - sourced
   // from this prospect's own addresses, not the master Locations catalog.
-  // Origin & Destination has its own chip+preview picker instead (see
-  // renderOdChips() below).
+  // Origin & Destination has its own chip+preview picker instead, in its
+  // own popup (see renderRpmOdChips() below).
   // ------------------------------------------------------------------
   function populateLocationDropdowns(modal, lead) {
     const options = (lead.addresses ?? [])
@@ -131,24 +133,55 @@
       .map((c) => `<option value="${c.id}">${esc(formatContactName(c))}</option>`)
       .join("");
     const el = modal.querySelector("#rpmSignatoryContact");
-    el.innerHTML = `<option value="">Select Contact</option>${options}`;
+    el.innerHTML = `<option value="">Select Contact (optional - or type below manually)</option>${options}`;
+    // Keeps its live `lead.contacts` list on the element itself (same
+    // pattern as bindOdPair's _odLocations) so the change handler below
+    // always prefills from the latest data, not whatever was current the
+    // first time this dropdown was populated.
+    el._contacts = lead.contacts ?? [];
     refreshSearchable(el);
+  }
+
+  // Picking a Contact prefills Name/Position/Email/Contact Number - every
+  // field stays fully editable afterward, and this never clears fields the
+  // admin may have already typed manually (picking the blank option is a
+  // no-op here, not a reset).
+  function signatoryContactChange(modal) {
+    const select = modal.querySelector("#rpmSignatoryContact");
+    const contact = (select._contacts ?? []).find((c) => String(c.id) === String(select.value));
+    if (!contact) return;
+
+    modal.querySelector("#rpmSignatoryName").value = formatContactName(contact);
+    modal.querySelector("#rpmSignatoryPosition").value = contact.position ?? "";
+    modal.querySelector("#rpmSignatoryEmail").value = (contact.channels ?? []).find((c) => c.channel_type === "email")?.value ?? "";
+    const phoneChannel =
+      (contact.channels ?? []).find((c) => c.channel_type === "mobile") ?? (contact.channels ?? []).find((c) => c.channel_type === "landline");
+    modal.querySelector("#rpmSignatoryContactNumber").value = phoneChannel?.value ?? "";
   }
 
   // ------------------------------------------------------------------
   // TAB: COMPANY DETAILS
   // ------------------------------------------------------------------
+  // Displays each signatory's own name/position/email/contact_number
+  // snapshot (captured at Add time - see addSignatory()) directly, not
+  // re-derived from the linked prospect_contact - that snapshot is what
+  // was actually entered on this request, which may differ from whatever
+  // the live contact currently says.
   function renderSignatoriesList(modal, lead) {
     const signatories = getMyProposalRequest(lead)?.signatories ?? [];
     modal.querySelector("#rpmSignatoriesEmpty").classList.toggle("hidden", signatories.length > 0);
     modal.querySelector("#rpmSignatoriesList").innerHTML = signatories
-      .map(
-        (s) => `
+      .map((s) => {
+        const subline = [s.position, s.email, s.contact_number].filter(Boolean).join(" · ");
+        return `
       <div class="flex justify-between items-center border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2">
-          <p class="text-sm text-zinc-800 dark:text-zinc-100">${esc(formatContactName(s.prospect_contact ?? {}))}</p>
+          <div>
+              <p class="text-sm text-zinc-800 dark:text-zinc-100">${esc(s.name || EMPTY)}</p>
+              ${subline ? `<p class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">${esc(subline)}</p>` : ""}
+          </div>
           <button type="button" class="rpm-remove-signatory text-red-500 text-xs font-medium shrink-0" data-id="${s.id}">✕ Remove</button>
-      </div>`
-      )
+      </div>`;
+      })
       .join("");
 
     modal.querySelectorAll(".rpm-remove-signatory").forEach((btn) => {
@@ -203,15 +236,24 @@
 
     const modal = document.getElementById("RequestProposalModal");
     const contactId = modal.querySelector("#rpmSignatoryContact").value;
-    if (!contactId) {
-      showMessage({ status: "error", title: "Select a contact first." });
+    const name = modal.querySelector("#rpmSignatoryName").value.trim();
+    if (!name) {
+      showMessage({ status: "error", title: "Name is required." });
       return;
     }
+
+    const payload = {
+      prospect_contact_id: contactId || null,
+      name,
+      position: modal.querySelector("#rpmSignatoryPosition").value.trim() || null,
+      email: modal.querySelector("#rpmSignatoryEmail").value.trim() || null,
+      contact_number: modal.querySelector("#rpmSignatoryContactNumber").value.trim() || null,
+    };
 
     const response = await apiCall({
       mode: "POST",
       isJson: true,
-      payload: { prospect_contact_id: contactId },
+      payload,
       url: `/api/crm/prospects/${lead.uuid}/proposalRequests/${rpmProposalRequestId}/signatories`,
       button,
     });
@@ -221,6 +263,12 @@
     }
 
     showMessage({ status: "success", title: "Authorized Signatory Added" });
+    modal.querySelector("#rpmSignatoryContact").value = "";
+    modal.querySelector("#rpmSignatoryName").value = "";
+    modal.querySelector("#rpmSignatoryPosition").value = "";
+    modal.querySelector("#rpmSignatoryEmail").value = "";
+    modal.querySelector("#rpmSignatoryContactNumber").value = "";
+    refreshSearchable(modal.querySelector("#rpmSignatoryContact"));
     await refreshLead(modal);
   }
 
@@ -265,14 +313,17 @@
     </tr>`;
   }
 
-  // Builds the single live address-form card (once per tab-open, cached in
-  // rpmOdCard - see its declaration above) using the same shared helpers
-  // AddLocationModal already uses for exactly this "one-off editable
-  // address, not a repeatable list" shape. Trimmed of the Remove button
-  // (nothing to remove - there's only ever one card) and the Primary radio
-  // (doesn't apply to an O&D entry).
-  function ensureOdCard(modal) {
-    const wrap = modal.querySelector("#rpmOdCardWrap");
+  // Builds the single live address-form card (rebuilt fresh every time the
+  // popup opens, cached in rpmOdCard for the lifetime of one open - see its
+  // declaration above) using the same shared helpers AddLocationModal
+  // already uses for exactly this "one-off editable address, not a
+  // repeatable list" shape. Trimmed of the Remove button (nothing to
+  // remove - there's only ever one card) and the Primary radio (doesn't
+  // apply to an O&D entry). Lives in <x-rpm-add-od-modal />, not inside
+  // #RequestProposalModal, hence document.getElementById rather than a
+  // modal-scoped query.
+  function ensureRpmOdCard() {
+    const wrap = document.getElementById("rpmAodmCardWrap");
     if (rpmOdCard && wrap.contains(rpmOdCard)) return rpmOdCard;
 
     wrap.innerHTML = window.prospectShared.locationCardHtml(0);
@@ -347,31 +398,30 @@
   }
 
   // Suggestion chips for ALL of this prospect's own addresses - never
-  // filtered by what's already been added (each Add below creates its own
+  // filtered by what's already been added (each Save below creates its own
   // independent snapshot entry, so the same seed address can legitimately
   // start more than one). Clicking a chip is a pure convenience autofill;
-  // it does not append a row by itself - the "+ Add" button
-  // (addOdLocation()) does that, and works even with no chip ever clicked.
-  function renderOdChips(modal, lead) {
-    const addresses = lead.addresses ?? [];
-
-    modal.querySelector("#rpmOdChipsEmpty").classList.toggle("hidden", addresses.length > 0);
-    modal.querySelector("#rpmOdChips").innerHTML = addresses
+  // it does not append a row by itself - saveRpmAddOd() does that, and
+  // works even with no chip ever clicked.
+  function renderRpmOdChips(addresses) {
+    const chipsWrap = document.getElementById("rpmAodmChips");
+    document.getElementById("rpmAodmChipsEmpty").classList.toggle("hidden", addresses.length > 0);
+    chipsWrap.innerHTML = addresses
       .map((loc) => {
         const active = loc.id === rpmSelectedOdLocationId;
         const activeClasses = active
           ? "border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20"
           : "border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-orange-400 dark:hover:border-orange-500";
-        return `<button type="button" class="rpm-od-chip px-3 py-1.5 rounded-lg border text-sm font-medium ${activeClasses}" data-id="${loc.id}" aria-pressed="${active}">${esc(formatLocationLabel(loc))}</button>`;
+        return `<button type="button" class="rpm-aodm-chip px-3 py-1.5 rounded-lg border text-sm font-medium ${activeClasses}" data-id="${loc.id}" aria-pressed="${active}">${esc(formatLocationLabel(loc))}</button>`;
       })
       .join("");
 
-    modal.querySelectorAll(".rpm-od-chip").forEach((btn) => {
+    chipsWrap.querySelectorAll(".rpm-aodm-chip").forEach((btn) => {
       btn.addEventListener("click", async () => {
         rpmSelectedOdLocationId = Number(btn.dataset.id);
-        renderOdChips(modal, lead);
+        renderRpmOdChips(addresses);
         const loc = addresses.find((a) => a.id === rpmSelectedOdLocationId);
-        if (loc) await hydrateOdCard(ensureOdCard(modal), loc);
+        if (loc) await hydrateOdCard(ensureRpmOdCard(), loc);
       });
     });
   }
@@ -385,17 +435,30 @@
     modal.querySelectorAll(".rpm-remove-od").forEach((btn) => {
       btn.addEventListener("click", () => removeOdLocation(Number(btn.dataset.id)));
     });
-
-    ensureOdCard(modal);
-    renderOdChips(modal, lead);
   }
 
-  async function addOdLocation(button) {
+  // Opens <x-rpm-add-od-modal /> with a fresh blank card + this prospect's
+  // own address chips - mirrors openPmAddLocationModal()'s shape
+  // (logic_prospect_modal.js).
+  function openRpmAddOdModal() {
+    const lead = rpmLead;
+    if (!lead) return;
+
+    rpmSelectedOdLocationId = null;
+    rpmOdCard = null;
+
+    ensureRpmOdCard();
+    renderRpmOdChips(lead.addresses ?? []);
+
+    window.initModal({ modalId: "RpmAddOdModal" });
+  }
+
+  async function saveRpmAddOd(button) {
     const lead = rpmLead;
     if (!lead) return;
 
     const modal = document.getElementById("RequestProposalModal");
-    const payload = { ...collectOdCard(ensureOdCard(modal)), prospect_location_id: rpmSelectedOdLocationId };
+    const payload = { ...collectOdCard(ensureRpmOdCard()), prospect_location_id: rpmSelectedOdLocationId };
 
     const response = await apiCall({
       mode: "POST",
@@ -411,8 +474,9 @@
 
     showMessage({ status: "success", title: "Location Added" });
     rpmSelectedOdLocationId = null;
-    rpmOdCard = null; // next render builds a fresh blank card for the next entry
+    rpmOdCard = null;
     await refreshLead(modal);
+    window.closeModal("RpmAddOdModal");
   }
 
   async function removeOdLocation(id) {
@@ -649,6 +713,115 @@
     </div>`;
   }
 
+  // RATE MATRIX RECAP - a flat table (not grouped by type, unlike the
+  // Products block above) mirroring the Build Rate Matrix tab exactly, same
+  // unmerged rows + Item No. sequence (see allProductRowsFlat()), same Rate
+  // cell (amount + ▸/▾ fee breakdown toggle, via matrixRateCellHtml()/
+  // matrixBreakdownRowHtml() - see those for the ⚠-icon-when-unpriced
+  // fallback). Shared with the read-only "My Requests" Proposal Request
+  // Summary modal via window.buildProposalRequestRecapHtml AND
+  // window.wireMatrixBreakdownToggles (that modal lives in
+  // logic_proposal_requests_mine.js, a different file on the same global
+  // bundle, and must call the latter after setting this HTML or its toggles
+  // stay dead).
+  //
+  // onlyWithRate: false (default) - every product row, same as the Build
+  // Matrix tab itself. Both actual callers (the wizard's own Confirmation
+  // tab via buildConfirmationTabHtml(), and the read-only My Requests
+  // Proposal Request Summary modal via buildProposalRequestRecapHtml())
+  // pass onlyWithRate: true - an unpriced row is still just the prospect's
+  // own requirement, not something to show in a rate summary yet. The
+  // default stays false here so this function itself remains reusable for
+  // an unfiltered listing if one's ever needed again.
+  function buildRateMatrixRecapBlock(pr, { onlyWithRate = false } = {}) {
+    let rows = allProductRowsFlat(pr);
+    if (onlyWithRate) {
+      rows = rows.filter((row) => rpmMatrixConfirmedKeys.has(matrixRowKey(row)) || hasPersistedRate(pr, row));
+    }
+
+    if (!rows.length) {
+      return `
+      <div class="space-y-2">
+          <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Build Rate Matrix</p>
+          <p class="text-sm text-zinc-400 dark:text-zinc-500">${onlyWithRate ? "No products have a rate yet." : "No products added."}</p>
+      </div>`;
+    }
+
+    const rowsHtml = rows
+      .map((row) => {
+        const rateRow = matrixRateRowFor(pr, row);
+        return matrixRecapRowHtml(row, rateRow) + matrixBreakdownRowHtml(row, rateRow);
+      })
+      .join("");
+
+    return `
+    <div class="space-y-2">
+        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Build Rate Matrix</p>
+        <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
+            <table class="min-w-full text-xs">
+                <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Item No.</th>
+                        <th class="px-3 py-2 text-left">Rate</th>
+                        <th class="px-3 py-2 text-left">Product</th>
+                        <th class="px-3 py-2 text-left">Detail</th>
+                        <th class="px-3 py-2 text-left">Route</th>
+                        <th class="px-3 py-2 text-right">Qty</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700">${rowsHtml}</tbody>
+            </table>
+        </div>
+    </div>`;
+  }
+
+  // TERMS OF PAYMENT RECAP - one row per section that actually has a saved
+  // term (see saveTermsAndConditions()/renderTermsConditions() - each of
+  // the 6 per-product TnC sections has its own Terms of Payment select,
+  // persisted as a proposal_request_terms_of_payment row keyed by
+  // section). Ancillary fees are no longer captured on that tab, so
+  // there's nothing to recap here anymore. Shared with the My Requests
+  // read-only summary too (via buildProposalRequestRecapHtml()) - this
+  // rewrite is required there regardless, since the old flat
+  // terms_of_payment_standard/_charter fields it used to read no longer
+  // exist.
+  function buildTermsRecapBlock(pr) {
+    const terms = pr?.terms_of_payment ?? [];
+
+    if (!terms.length) {
+      return `
+      <div class="space-y-2">
+          <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Terms of Payment</p>
+          <p class="text-sm text-zinc-400 dark:text-zinc-500">No terms of payment set.</p>
+      </div>`;
+    }
+
+    return `
+    <div class="space-y-2">
+        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Terms of Payment</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${terms
+              .map(
+                (t) => `
+            <div>
+                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">${esc(t.section)}</p>
+                <p class="text-sm text-zinc-800 dark:text-zinc-100 mt-0.5">${esc(t.terms_of_payment)}</p>
+            </div>`
+              )
+              .join("")}
+        </div>
+    </div>`;
+  }
+
+  // Leaner Confirmation-tab-only recap: just the Rate Matrix (filtered to
+  // priced products) + Terms of Payment - unlike
+  // buildProposalRequestRecapHtml() (shared with the My Requests read-only
+  // summary, which still shows Company Details/Origin & Destination/
+  // Products in full), this is wizard-local and not window-exposed.
+  function buildConfirmationTabHtml(pr) {
+    return buildRateMatrixRecapBlock(pr, { onlyWithRate: true }) + buildTermsRecapBlock(pr);
+  }
+
   function buildProposalRequestRecapHtml(lead, pr) {
     const companyDetail = pr?.company_detail ?? null;
     const signatories = pr?.signatories ?? [];
@@ -660,7 +833,7 @@
       ["Location Address", companyDetail?.prospect_location ? formatLocationLabel(companyDetail.prospect_location) : EMPTY],
       ["Assigned CSR", lead.user?.name || EMPTY],
       ["Assigned Relationship Manager", lead.relationship_manager?.name || EMPTY],
-      ["Authorized Signatories", signatories.length ? signatories.map((s) => formatContactName(s.prospect_contact ?? {})).join(", ") : EMPTY],
+      ["Authorized Signatories", signatories.length ? signatories.map((s) => s.name || EMPTY).join(", ") : EMPTY],
     ];
 
     const companyBlock = `
@@ -692,15 +865,23 @@
     </div>`;
 
     const productsBlock = buildProductsRecapBlock(pr);
+    // onlyWithRate: true - an unpriced product is still just the
+    // prospect's own requirement, not yet part of what's being proposed;
+    // it only belongs in a rate summary once Build Rate Matrix has priced
+    // it (same rule the Confirmation tab already enforces).
+    const rateMatrixBlock = buildRateMatrixRecapBlock(pr, { onlyWithRate: true });
+    const termsBlock = buildTermsRecapBlock(pr);
 
-    return [companyBlock, odBlock, productsBlock].filter(Boolean).join("");
+    return [companyBlock, odBlock, productsBlock, rateMatrixBlock, termsBlock].filter(Boolean).join("");
   }
   window.buildProposalRequestRecapHtml = buildProposalRequestRecapHtml;
 
   function renderConfirmation(modal, lead) {
     const pr = getMyProposalRequest(lead);
-    modal.querySelector("#rpmConfirmationRecap").innerHTML = buildProposalRequestRecapHtml(lead, pr);
-    modal.querySelector("#rpmSubmittedStatus").textContent = pr?.submitted_at ? `Submitted on ${pr.submitted_at}` : "";
+    const recap = modal.querySelector("#rpmConfirmationRecap");
+    recap.innerHTML = buildConfirmationTabHtml(pr);
+    wireMatrixBreakdownToggles(recap);
+    modal.querySelector("#rpmSubmittedStatus").textContent = pr?.submitted_at ? `Submitted on ${formatDateTime(pr.submitted_at)}` : "";
   }
 
   async function submitProposalRequest(button) {
@@ -735,7 +916,12 @@
     "rpmSaveCompanyDetailsBtn",
     "rpmAddSignatoryBtn",
     "rpmAddOdBtn",
-    "rpmAddProductBtn",
+    "rpmAddContainerBtn",
+    "rpmAddRollingCargoBtn",
+    "rpmAddLooseCargoBtn",
+    "rpmAddTruckingBtn",
+    "rpmAddCharterBtn",
+    "rpmSaveTermsConditionsBtn",
     "rpmSubmitBtn",
   ];
   function applyAssignmentGating(modal, lead) {
@@ -757,6 +943,8 @@
     renderCompanyDetails(modal, lead);
     renderOriginDestination(modal, lead);
     renderProducts(modal, lead);
+    renderBuildMatrix(modal, lead);
+    renderTermsConditions(modal, lead);
     renderConfirmation(modal, lead);
     applyAssignmentGating(modal, lead);
   }
@@ -792,12 +980,15 @@
     "50% - full payment upon arrival of VESSEL at DISCHARGE PORT, but prior to unloading of CARGO at DISCHARGE PORT",
     "Full payment upon signing of contract, before loading of CARGO",
   ];
-  const PRODUCT_PANES = {
-    container: "rpmProductPaneContainer",
-    rolling_cargo: "rpmProductPaneRollingCargo",
-    loose_cargo: "rpmProductPaneLooseCargo",
-    trucking: "rpmProductPaneTrucking",
-    charter: "rpmProductPaneCharter",
+  // Maps each product type to its own standalone "+ Add" popup (see
+  // rpm-add-*-modal.blade.php) - used by applyProductPrefill() to open the
+  // right popup for the "Copy from Prospect Products" shortcut.
+  const PRODUCT_MODAL_IDS = {
+    container: "RpmAddContainerModal",
+    rolling_cargo: "RpmAddRollingCargoModal",
+    loose_cargo: "RpmAddLooseCargoModal",
+    trucking: "RpmAddTruckingModal",
+    charter: "RpmAddCharterModal",
   };
   const PRODUCT_ENDPOINTS = {
     container: { url: "containers", form: "#rpmContainerForm" },
@@ -810,6 +1001,10 @@
   let unitOptionsHtml = "";
   let ancillaryTypeOptionsHtml = "";
   let cargoYardOptionsHtml = "";
+  // id -> {name, base_value} - the Special Charges catalog (App Settings ->
+  // /page_maintenance), now the data source for the Ancillary Type select
+  // (was a free LOV) so a picked type can show its real base value.
+  let specialChargesById = {};
   let productLookupsPromise = null;
 
   function optionsHtmlFromList(values) {
@@ -821,17 +1016,19 @@
 
     // Delivery Types LOV is no longer fetched here - Service Type is now
     // the fixed SERVICE_TYPES list (see top of file), not an LOV-backed id.
-    const [unitRes, ancillaryRes, yardRes] = await Promise.all([
+    const [unitRes, chargesRes, yardRes] = await Promise.all([
       apiCall({ mode: "GET", url: "/api/listofval/unit" }),
-      apiCall({ mode: "GET", url: "/api/listofval/ancillarytype" }),
+      apiCall({ mode: "GET", url: "/api/specialCharges?per_page=200" }),
       apiCall({ mode: "GET", url: "/api/cargoYards?per_page=200" }),
     ]);
 
     if (Array.isArray(unitRes)) {
       unitOptionsHtml = unitRes.map((lov) => `<option value="${esc(lov.lov_name)}">${esc(lov.lov_name)}</option>`).join("");
     }
-    if (Array.isArray(ancillaryRes)) {
-      ancillaryTypeOptionsHtml = ancillaryRes.map((lov) => `<option value="${esc(lov.lov_name)}">${esc(lov.lov_name)}</option>`).join("");
+    if (chargesRes.success) {
+      const charges = (chargesRes.data.data ?? []).filter((c) => c.is_active);
+      specialChargesById = Object.fromEntries(charges.map((c) => [c.special_charge_id, c]));
+      ancillaryTypeOptionsHtml = charges.map((c) => `<option value="${c.special_charge_id}">${esc(c.name)}</option>`).join("");
     }
     if (yardRes.success) {
       cargoYardOptionsHtml = yardRes.data.data.map((y) => `<option value="${y.cargo_yard_id}">${esc(y.name)}</option>`).join("");
@@ -847,47 +1044,56 @@
   // Shared dropdown population (static lists + Origin/Destination pairs
   // sourced from the Origin & Destination tab's own saved list)
   // ------------------------------------------------------------------
-  function populateProductStaticDropdowns(modal) {
-    modal.querySelectorAll(".rpmPortDropdown").forEach((el) => {
+  // Document-scoped (not modal-scoped) - these fields now live across 5
+  // separate standalone popups (see rpm-add-*-modal.blade.php), not nested
+  // inside #RequestProposalModal.
+  function populateProductStaticDropdowns() {
+    document.querySelectorAll(".rpmPortDropdown").forEach((el) => {
       const current = el.value;
       el.innerHTML = `<option value="">Select Port</option>${window.prospectShared.getPortsOptionsHtml()}`;
       el.value = current;
       makeSearchableSelect(el);
       refreshSearchable(el);
     });
-    modal.querySelectorAll(".rpmCargoTypeDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmCargoTypeDropdown").forEach((el) => {
       const current = el.value;
       el.innerHTML = `<option value="">Select Cargo Type</option>${window.prospectShared.getCargoTypeOptionsHtml()}`;
       el.value = current;
     });
-    modal.querySelectorAll(".rpmTruckingCargoTypeDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmTruckingCargoTypeDropdown").forEach((el) => {
       const current = el.value;
       el.innerHTML = `<option value="">Select Cargo Type</option>${window.prospectShared.getTruckingCargoTypeOptionsHtml()}`;
       el.value = current;
     });
-    modal.querySelectorAll(".rpmDeliveryTypeDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmDeliveryTypeDropdown").forEach((el) => {
       const current = el.value;
       el.innerHTML = serviceTypeOptionsHtml;
       el.value = current;
     });
-    modal.querySelectorAll(".rpmUnitDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmUnitDropdown").forEach((el) => {
       const current = el.value;
       el.innerHTML = `<option value="">Select Unit</option>${unitOptionsHtml}`;
       el.value = current;
     });
-    modal.querySelectorAll(".rpmRtUnitDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmRtUnitDropdown").forEach((el) => {
       el.innerHTML = RT_UNIT_OPTIONS_HTML;
     });
-    modal.querySelectorAll(".rpmTermsOfPaymentDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmTermsOfPaymentDropdown").forEach((el) => {
       const current = el.value;
-      el.innerHTML = optionsHtmlFromList(TERMS_OF_PAYMENT_STANDARD);
-      if (current) el.value = current;
+      el.innerHTML = `<option value="">Select Terms of Payment</option>${optionsHtmlFromList(TERMS_OF_PAYMENT_STANDARD)}`;
+      el.value = current;
     });
-    modal.querySelectorAll(".rpmCharterTermsOfPaymentDropdown").forEach((el) => {
+    document.querySelectorAll(".rpmCharterTermsOfPaymentDropdown").forEach((el) => {
       const current = el.value;
-      el.innerHTML = optionsHtmlFromList(TERMS_OF_PAYMENT_CHARTER);
-      if (current) el.value = current;
+      el.innerHTML = `<option value="">Select Terms of Payment</option>${optionsHtmlFromList(TERMS_OF_PAYMENT_CHARTER)}`;
+      el.value = current;
     });
+    const charterServiceSelect = document.getElementById("rpmChCharterServiceId");
+    if (charterServiceSelect) {
+      const current = charterServiceSelect.value;
+      charterServiceSelect.innerHTML = `<option value="">Select Charter Type (optional)</option>${window.prospectShared.getCharterServiceOptionsHtml()}`;
+      charterServiceSelect.value = current;
+    }
   }
 
   // Products' Origin/Destination selects still key off prospect_location_id
@@ -898,18 +1104,37 @@
   // the row's own snapshot fields (l.location_mnemonic/formatLocationLabel(l))
   // rather than the joined prospect_location, since that reflects what was
   // actually saved even if the entry was edited away from its seed address.
-  function odOptionsHtml(locations, excludeId) {
-    return (locations ?? [])
-      .filter((l) => l.prospect_location_id && String(l.prospect_location_id) !== String(excludeId ?? ""))
-      .map((l) => `<option value="${l.prospect_location_id}">${esc(l.location_mnemonic || formatLocationLabel(l))}</option>`)
+  function odOptionsHtml(addresses, excludeId) {
+    return (addresses ?? [])
+      .filter((a) => String(a.id) !== String(excludeId ?? ""))
+      .map((a) => `<option value="${a.id}">${esc(a.location_mnemonic || formatLocationLabel(a))}</option>`)
       .join("");
+  }
+
+  // Re-renders one side's Port <select> to only the ports whose Location
+  // has a Serviceable Area matching the selected Origin/Destination
+  // address's province/town-city (see getPortsOptionsHtmlForArea() in
+  // logic_prospect_modal.js) - falls back to every port when nothing's
+  // selected yet or nothing matches. Clears the previously-picked port if
+  // it's no longer among the filtered options, same "drop a now-invalid
+  // value" precedent as applyDispatchModeGating() below.
+  function applyPortFilterForSide(locationEl, portEl) {
+    if (!portEl) return;
+
+    const address = (locationEl._odLocations ?? []).find((a) => String(a.id) === String(locationEl.value));
+    const current = portEl.value;
+    portEl.innerHTML =
+      '<option value="">Select Port</option>' +
+      window.prospectShared.getPortsOptionsHtmlForArea(address?.address_province, address?.address_town_city);
+    portEl.value = Array.from(portEl.options).some((o) => o.value === current) ? current : "";
+    refreshSearchable(portEl);
   }
 
   // originEl/destEl keep their live `locations` list on the element itself
   // (not a closure variable) so the one-time-bound change listener always
   // filters against the latest Origin & Destination tab data, not whatever
   // was current the first time this pair was bound.
-  function bindOdPair(originEl, destEl, locations) {
+  function bindOdPair(originEl, destEl, locations, originPortEl, destPortEl) {
     originEl._odLocations = locations;
 
     const currentOrigin = originEl.value;
@@ -920,6 +1145,8 @@
     destEl.value = currentDest;
     refreshSearchable(originEl);
     refreshSearchable(destEl);
+    applyPortFilterForSide(originEl, originPortEl);
+    applyPortFilterForSide(destEl, destPortEl);
 
     if (!originEl.dataset.odBound) {
       originEl.dataset.odBound = "1";
@@ -930,21 +1157,35 @@
         destEl.innerHTML = `<option value="">Select Destination</option>${odOptionsHtml(originEl._odLocations, originEl.value)}`;
         destEl.value = keepDest === originEl.value ? "" : keepDest;
         refreshSearchable(destEl);
+        applyPortFilterForSide(originEl, originPortEl);
+        applyPortFilterForSide(destEl, destPortEl);
+      });
+      destEl.addEventListener("change", () => {
+        applyPortFilterForSide(destEl, destPortEl);
       });
     }
   }
 
-  function populateOdPairs(modal, lead) {
-    const locations = getMyProposalRequest(lead)?.locations ?? [];
+  // Sourced from the prospect's own address book (lead.addresses), the same
+  // list the Origin & Destination tab's own suggestion chips use - NOT from
+  // getMyProposalRequest(lead)?.locations (the O&D tab's saved rows), since
+  // origin_prospect_location_id/destination_prospect_location_id FK straight
+  // to prospect_locations. Previously sourced from the O&D tab's own saved
+  // rows filtered to only chip-selected ones (via prospect_location_id),
+  // which silently hid any manually-typed O&D entry from these dropdowns.
+  function populateOdPairs(lead) {
+    const addresses = lead.addresses ?? [];
     [
-      ["#rpmPcOrigin", "#rpmPcDestination"],
-      ["#rpmRcOrigin", "#rpmRcDestination"],
-      ["#rpmLcOrigin", "#rpmLcDestination"],
+      ["#rpmPcOrigin", "#rpmPcDestination", "#rpmPcOriginPort", "#rpmPcDestinationPort"],
+      ["#rpmRcOrigin", "#rpmRcDestination", "#rpmRcOriginPort", "#rpmRcDestinationPort"],
+      ["#rpmLcOrigin", "#rpmLcDestination", "#rpmLcOriginPort", "#rpmLcDestinationPort"],
       ["#rpmTrOrigin", "#rpmTrDestination"],
-    ].forEach(([originSel, destSel]) => {
-      const originEl = modal.querySelector(originSel);
-      const destEl = modal.querySelector(destSel);
-      if (originEl && destEl) bindOdPair(originEl, destEl, locations);
+    ].forEach(([originSel, destSel, originPortSel, destPortSel]) => {
+      const originEl = document.querySelector(originSel);
+      const destEl = document.querySelector(destSel);
+      const originPortEl = originPortSel ? document.querySelector(originPortSel) : null;
+      const destPortEl = destPortSel ? document.querySelector(destPortSel) : null;
+      if (originEl && destEl) bindOdPair(originEl, destEl, addresses, originPortEl, destPortEl);
     });
   }
 
@@ -954,15 +1195,24 @@
   // Dispatch Mode (Origin/Destination) are disabled per side when the
   // selected Service Type doesn't include trucking on that side (Pier).
   // ------------------------------------------------------------------
-  function applyPcContainerTypeVisibility(modal) {
-    const type = modal.querySelector("#rpmPcContainerType").value;
-    modal.querySelector(".rpm-field-min-temp")?.classList.toggle("hidden", type !== "RF");
+  // Document-scoped - these now live in the standalone <x-rpm-add-container-modal />
+  // popup, not nested inside #RequestProposalModal.
+  function applyPcContainerTypeVisibility() {
+    const type = document.getElementById("rpmPcContainerType").value;
+
+    // Per brief: the rest of the Add Container form stays hidden until a
+    // Container Type is picked - mirrors the Requirements tab's own Add
+    // Freight gating (applyContainerTypeVisibility() in logic_prospect_modal.js).
+    document.getElementById("rpmPcRestOfForm")?.classList.toggle("hidden", !type);
+    document.getElementById("rpmPcLockedHint")?.classList.toggle("hidden", Boolean(type));
+
+    document.querySelector(".rpm-field-min-temp")?.classList.toggle("hidden", type !== "RF");
   }
 
-  function populatePcContainerSizeOptions(modal) {
-    const type = modal.querySelector("#rpmPcContainerType").value;
+  function populatePcContainerSizeOptions() {
+    const type = document.getElementById("rpmPcContainerType").value;
     const catalog = window.prospectShared.getContainerCatalogByCode()[type] ?? { sizes: [] };
-    const sizeSelect = modal.querySelector("#rpmPcContainerSize");
+    const sizeSelect = document.getElementById("rpmPcContainerSize");
     const current = sizeSelect.value;
     sizeSelect.innerHTML = '<option value="">Select Size</option>' + catalog.sizes.map((s) => `<option value="${s.id}">${s.size}</option>`).join("");
     sizeSelect.value = current;
@@ -987,23 +1237,16 @@
     }
   }
 
-  // ------------------------------------------------------------------
-  // Product picker - swaps which form pane is visible, same mechanic as
-  // the Requirements tab's bindProductSelector().
-  // ------------------------------------------------------------------
-  function bindProductSelector(modal) {
-    modal.querySelector("#rpmProductSelect").addEventListener("change", function () {
-      Object.values(PRODUCT_PANES).forEach((id) => modal.querySelector(`#${id}`)?.classList.add("hidden"));
-      const paneId = PRODUCT_PANES[this.value];
-      if (paneId) modal.querySelector(`#${paneId}`)?.classList.remove("hidden");
-    });
-  }
-
   function collectFormPayload(formSelector) {
     const form = document.querySelector(formSelector);
     const obj = {};
     form.querySelectorAll("[data-field]").forEach((el) => {
-      obj[el.dataset.field] = el.type === "checkbox" ? el.checked : el.value === "" ? null : el.value;
+      if (el.type === "checkbox") {
+        obj[el.dataset.field] = el.checked;
+        return;
+      }
+      const rawValue = el.classList.contains("currency-input") ? parseCurrencyValue(el.value) : el.value;
+      obj[el.dataset.field] = rawValue === "" ? null : rawValue;
     });
     return obj;
   }
@@ -1031,7 +1274,7 @@
     });
   }
 
-  function resetProductForm(modal, formSelector) {
+  function resetProductForm(formSelector) {
     document.querySelector(formSelector)
       .querySelectorAll("[data-field]")
       .forEach((el) => {
@@ -1040,21 +1283,41 @@
         else el.value = "";
       });
     // Container form's type-driven bits need re-applying after a reset
-    // snaps #rpmPcContainerType back to its default (CV) - harmless no-op
-    // when a different product's form was just reset.
-    applyPcContainerTypeVisibility(modal);
-    populatePcContainerSizeOptions(modal);
+    // snaps #rpmPcContainerType back to its default (blank) - harmless
+    // no-op when a different product's form was just reset.
+    applyPcContainerTypeVisibility();
+    populatePcContainerSizeOptions();
   }
 
-  async function submitProduct(modal, button) {
+  // Opens the standalone "+ Add X" popup for one product type (see
+  // rpm-add-*-modal.blade.php), with a freshly-reset form.
+  function openRpmAddProductModal(productType) {
+    if (!rpmLead) return;
+    resetProductForm(PRODUCT_ENDPOINTS[productType].form);
+    window.initModal({ modalId: PRODUCT_MODAL_IDS[productType] });
+  }
+  function openRpmAddContainerModal() {
+    openRpmAddProductModal("container");
+  }
+  function openRpmAddRollingCargoModal() {
+    openRpmAddProductModal("rolling_cargo");
+  }
+  function openRpmAddLooseCargoModal() {
+    openRpmAddProductModal("loose_cargo");
+  }
+  function openRpmAddTruckingModal() {
+    openRpmAddProductModal("trucking");
+  }
+  function openRpmAddCharterModal() {
+    openRpmAddProductModal("charter");
+  }
+
+  // Shared save handler for all 5 product popups - POSTs the matching
+  // form, appends the row to the Products tab behind it, then closes the
+  // popup. See the 5 thin wrappers below (one per "+ Add" button).
+  async function saveRpmProduct(productType, button) {
     const lead = rpmLead;
     if (!lead) return;
-
-    const productType = modal.querySelector("#rpmProductSelect").value;
-    if (!productType) {
-      showMessage({ status: "error", title: "Select a product first." });
-      return;
-    }
 
     const { url, form } = PRODUCT_ENDPOINTS[productType];
     const payload = collectFormPayload(form);
@@ -1072,8 +1335,24 @@
     }
 
     showMessage({ status: "success", title: "Product Added" });
-    resetProductForm(modal, form);
-    await refreshLead(modal);
+    resetProductForm(form);
+    await refreshLead(document.getElementById("RequestProposalModal"));
+    window.closeModal(PRODUCT_MODAL_IDS[productType]);
+  }
+  function saveRpmContainer(button) {
+    return saveRpmProduct("container", button);
+  }
+  function saveRpmRollingCargo(button) {
+    return saveRpmProduct("rolling_cargo", button);
+  }
+  function saveRpmLooseCargo(button) {
+    return saveRpmProduct("loose_cargo", button);
+  }
+  function saveRpmTrucking(button) {
+    return saveRpmProduct("trucking", button);
+  }
+  function saveRpmCharter(button) {
+    return saveRpmProduct("charter", button);
   }
 
   async function removeProductRow(productType, id) {
@@ -1102,10 +1381,6 @@
   // lists that were never built inline (Ancillary/Top Load/Charter Cargo
   // Info/Charter Ports) - see the 4 sub-item modals below.
   // ------------------------------------------------------------------
-  function toggleTableWrap(modal, wrapId, hasRows) {
-    modal.querySelector(`#${wrapId}`)?.classList.toggle("hidden", !hasRows);
-  }
-
   function productContainerRowHtml(row) {
     const ancCount = (row.ancillary_services ?? []).length;
     return `
@@ -1123,7 +1398,7 @@
         <td class="px-3 py-2">${esc(row.dispatch_mode_origin || EMPTY)}</td>
         <td class="px-3 py-2">${esc(row.dispatch_mode_destination || EMPTY)}</td>
         <td class="px-3 py-2">${esc(row.terms_of_payment || EMPTY)}</td>
-        <td class="px-3 py-2"><button type="button" class="rpm-view-ancillary text-orange-600 hover:text-orange-700 text-xs font-medium" data-type="container" data-id="${row.id}">${ancCount} · View</button></td>
+        <td class="px-3 py-2"><span class="inline-flex items-center gap-1.5">${matrixRateIcon(ancCount > 0)}<button type="button" class="rpm-view-ancillary text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-type="container" data-id="${row.id}">${ancCount} · View</button></span></td>
         <td class="px-3 py-2"><button type="button" class="rpm-remove-product text-red-500 text-xs font-medium" data-product="container" data-id="${row.id}">✕ Remove</button></td>
     </tr>`;
   }
@@ -1131,7 +1406,7 @@
   function productCargoRowHtml(row, productType, withTopLoad) {
     const ancCount = (row.ancillary_services ?? []).length;
     const topCell = withTopLoad
-      ? `<td class="px-3 py-2"><button type="button" class="rpm-view-topload text-orange-600 hover:text-orange-700 text-xs font-medium" data-id="${row.id}">${(row.top_load_cargo ?? []).length} · View</button></td>`
+      ? `<td class="px-3 py-2"><button type="button" class="rpm-view-topload text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${row.id}">${(row.top_load_cargo ?? []).length} · View</button></td>`
       : "";
     return `
     <tr data-id="${row.id}">
@@ -1148,7 +1423,7 @@
         <td class="px-3 py-2">${esc(row.destination_location?.location_mnemonic || EMPTY)}</td>
         <td class="px-3 py-2">${esc(row.destination_port?.name || EMPTY)}</td>
         <td class="px-3 py-2">${esc(row.terms_of_payment || EMPTY)}</td>
-        <td class="px-3 py-2"><button type="button" class="rpm-view-ancillary text-orange-600 hover:text-orange-700 text-xs font-medium" data-type="${productType}" data-id="${row.id}">${ancCount} · View</button></td>
+        <td class="px-3 py-2"><span class="inline-flex items-center gap-1.5">${matrixRateIcon(ancCount > 0)}<button type="button" class="rpm-view-ancillary text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-type="${productType}" data-id="${row.id}">${ancCount} · View</button></span></td>
         ${topCell}
         <td class="px-3 py-2"><button type="button" class="rpm-remove-product text-red-500 text-xs font-medium" data-product="${productType}" data-id="${row.id}">✕ Remove</button></td>
     </tr>`;
@@ -1165,7 +1440,7 @@
         <td class="px-3 py-2">${esc(row.cargo_type || EMPTY)}</td>
         <td class="px-3 py-2">${esc(row.cargo_description || EMPTY)}</td>
         <td class="px-3 py-2">${esc(row.terms_of_payment || EMPTY)}</td>
-        <td class="px-3 py-2"><button type="button" class="rpm-view-ancillary text-orange-600 hover:text-orange-700 text-xs font-medium" data-type="trucking" data-id="${row.id}">${ancCount} · View</button></td>
+        <td class="px-3 py-2"><span class="inline-flex items-center gap-1.5">${matrixRateIcon(ancCount > 0)}<button type="button" class="rpm-view-ancillary text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-type="trucking" data-id="${row.id}">${ancCount} · View</button></span></td>
         <td class="px-3 py-2"><button type="button" class="rpm-remove-product text-red-500 text-xs font-medium" data-product="trucking" data-id="${row.id}">✕ Remove</button></td>
     </tr>`;
   }
@@ -1187,8 +1462,8 @@
         <td class="px-3 py-2">${esc(row.terms_of_payment || EMPTY)}</td>
         <td class="px-3 py-2">${row.declared_value != null ? "₱" + Number(row.declared_value).toLocaleString() : EMPTY}</td>
         <td class="px-3 py-2">${row.weight != null ? Number(row.weight).toLocaleString() + " " + esc(row.weight_unit || "") : EMPTY}</td>
-        <td class="px-3 py-2"><button type="button" class="rpm-view-charter-cargo text-orange-600 hover:text-orange-700 text-xs font-medium" data-id="${row.id}">${cargoCount} · View</button></td>
-        <td class="px-3 py-2"><button type="button" class="rpm-view-charter-ports text-orange-600 hover:text-orange-700 text-xs font-medium" data-id="${row.id}">${portCount} · View</button></td>
+        <td class="px-3 py-2"><button type="button" class="rpm-view-charter-cargo text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${row.id}">${cargoCount} · View</button></td>
+        <td class="px-3 py-2"><button type="button" class="rpm-view-charter-ports text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${row.id}">${portCount} · View</button></td>
         <td class="px-3 py-2"><button type="button" class="rpm-remove-product text-red-500 text-xs font-medium" data-product="charter" data-id="${row.id}">✕ Remove</button></td>
     </tr>`;
   }
@@ -1291,53 +1566,50 @@
     return (rpmLead?.[key] ?? []).find((r) => r.id === id) ?? null;
   }
 
-  function switchProductPane(modal, productType) {
-    const select = modal.querySelector("#rpmProductSelect");
-    select.value = productType;
-    select.dispatchEvent(new Event("change"));
-  }
-
-  function applyProductPrefill(modal, kind, id) {
+  // Opens the matching product's own standalone "+ Add" popup (see
+  // PRODUCT_MODAL_IDS above), pre-filled with this requirement row's
+  // overlapping fields - the "Copy from Prospect Products" shortcut's
+  // primitive. Same open-then-fill shape as openPmAddFreightModal() in
+  // logic_prospect_modal.js, just reset+fill before showing instead of
+  // after.
+  function applyProductPrefill(kind, id) {
     const row = findRequirementRow(kind, id);
     if (!row) return;
 
     if (kind === "container") {
       const productType = CONTAINER_TYPE_TO_PRODUCT[row.container_type] ?? "container";
       const { form } = PRODUCT_ENDPOINTS[productType];
-      switchProductPane(modal, productType);
-      resetProductForm(modal, form);
+      resetProductForm(form);
 
       if (productType === "container") {
         // Ordering matters: the size <select> has no options until
         // generated for the chosen type, so set the type + regenerate
         // visibility/options BEFORE writing container_size_id.
-        modal.querySelector("#rpmPcContainerType").value = row.container_type;
-        applyPcContainerTypeVisibility(modal);
-        populatePcContainerSizeOptions(modal);
+        document.getElementById("rpmPcContainerType").value = row.container_type;
+        applyPcContainerTypeVisibility();
+        populatePcContainerSizeOptions();
         fillFormFromData(form, containerPrefillData(row));
         // service_type was just prefilled - re-run the dispatch-mode
         // enabled/disabled gating so it matches the copied value.
-        applyDispatchModeGating(modal, "rpmPcDeliveryType", "rpmPcDispatchOrigin", "rpmPcDispatchDestination");
+        applyDispatchModeGating(document.getElementById("RpmAddContainerModal"), "rpmPcDeliveryType", "rpmPcDispatchOrigin", "rpmPcDispatchDestination");
       } else {
         fillFormFromData(form, rollingOrLoosePrefillData(row));
       }
-      modal.querySelector("#" + PRODUCT_PANES[productType])?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      window.initModal({ modalId: PRODUCT_MODAL_IDS[productType] });
       return;
     }
 
     if (kind === "trucking") {
-      switchProductPane(modal, "trucking");
-      resetProductForm(modal, PRODUCT_ENDPOINTS.trucking.form);
+      resetProductForm(PRODUCT_ENDPOINTS.trucking.form);
       fillFormFromData(PRODUCT_ENDPOINTS.trucking.form, truckingPrefillData(row));
-      modal.querySelector("#" + PRODUCT_PANES.trucking)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      window.initModal({ modalId: PRODUCT_MODAL_IDS.trucking });
       return;
     }
 
     if (kind === "charter") {
-      switchProductPane(modal, "charter");
-      resetProductForm(modal, PRODUCT_ENDPOINTS.charter.form);
+      resetProductForm(PRODUCT_ENDPOINTS.charter.form);
       fillFormFromData(PRODUCT_ENDPOINTS.charter.form, charterPrefillData(row));
-      modal.querySelector("#" + PRODUCT_PANES.charter)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      window.initModal({ modalId: PRODUCT_MODAL_IDS.charter });
     }
   }
 
@@ -1361,7 +1633,7 @@
     ].join("");
 
     modal.querySelectorAll(".rpm-prefill-chip").forEach((btn) => {
-      btn.addEventListener("click", () => applyProductPrefill(modal, btn.dataset.kind, Number(btn.dataset.id)));
+      btn.addEventListener("click", () => applyProductPrefill(btn.dataset.kind, Number(btn.dataset.id)));
     });
   }
 
@@ -1372,17 +1644,6 @@
     const loose = pr?.product_loose_cargo ?? [];
     const truckings = pr?.product_truckings ?? [];
     const charters = pr?.product_charters ?? [];
-
-    toggleTableWrap(modal, "rpmProductContainersTableWrap", containers.length > 0);
-    toggleTableWrap(modal, "rpmProductRollingCargoTableWrap", rolling.length > 0);
-    toggleTableWrap(modal, "rpmProductLooseCargoTableWrap", loose.length > 0);
-    toggleTableWrap(modal, "rpmProductTruckingsTableWrap", truckings.length > 0);
-    toggleTableWrap(modal, "rpmProductChartersTableWrap", charters.length > 0);
-
-    modal.querySelector("#rpmProductsEmpty").classList.toggle(
-      "hidden",
-      containers.length + rolling.length + loose.length + truckings.length + charters.length > 0
-    );
 
     modal.querySelector("#rpmProductContainersTableBody").innerHTML = containers.map(productContainerRowHtml).join("");
     modal.querySelector("#rpmProductRollingCargoTableBody").innerHTML = rolling
@@ -1395,11 +1656,364 @@
     modal.querySelector("#rpmProductChartersTableBody").innerHTML = charters.map(productCharterRowHtml).join("");
 
     bindProductRowActions(modal);
-    populateProductStaticDropdowns(modal);
-    populateOdPairs(modal, lead);
-    populatePcContainerSizeOptions(modal);
-    applyPcContainerTypeVisibility(modal);
+    populateProductStaticDropdowns();
+    populateOdPairs(lead);
+    populatePcContainerSizeOptions();
+    applyPcContainerTypeVisibility();
     renderProductsPrefillShortcuts(modal, lead);
+  }
+
+  // ==================================================================
+  // TAB: BUILD RATE MATRIX - every product added on the Products tab,
+  // unmerged (one row per actual saved product, unlike collectProductLineItems()
+  // above which merges by route+type for the Confirmation recap - this tab
+  // needs the full per-row field set for ProductSpecificationModal, which
+  // a merged summary row doesn't carry). Rate column is a session-only
+  // "reviewed" flag (rpmMatrixConfirmedKeys, reset per wizard open) - not
+  // persisted; real rate-matrix pricing is backend work planned separately.
+  // ==================================================================
+  let rpmMatrixConfirmedKeys = new Set();
+  let rpmMatrixCurrentKey = null;
+  // Full flat row (from allProductRowsFlat()) for whatever product the
+  // Product Specification modal is currently open against - set in
+  // openProductSpecificationModal(), cleared in cancelProductSpecification()/
+  // saveProductSpecification(). saveProductSpecification() needs __type/id/
+  // __itemNo off of it to build the productRates POST payload.
+  let rpmMatrixCurrentRow = null;
+
+  // Item No. is this function's own sequence (NOT the Products recap's
+  // collectProductLineItems() numbering, which merges duplicate rows) -
+  // every consumer (Build Matrix tab, Product Specification modal, the
+  // Confirmation Rate Matrix summary) calls this same function, so they
+  // always agree without sharing any state. Deliberately unmerged - one
+  // row per actual saved record, since the modal needs each row's full,
+  // exact field set (dispatch mode, ports, etc.) which a merged summary
+  // row can't safely carry.
+  function allProductRowsFlat(pr) {
+    const rows = [];
+    (pr?.product_containers ?? []).forEach((r) => rows.push({ ...r, __type: "container", __typeCode: r.container_type }));
+    (pr?.product_rolling_cargo ?? []).forEach((r) => rows.push({ ...r, __type: "rolling_cargo", __typeCode: "RC" }));
+    (pr?.product_loose_cargo ?? []).forEach((r) => rows.push({ ...r, __type: "loose_cargo", __typeCode: "LC" }));
+    (pr?.product_truckings ?? []).forEach((r) => rows.push({ ...r, __type: "trucking", __typeCode: "TR" }));
+    (pr?.product_charters ?? []).forEach((r) => rows.push({ ...r, __type: "charter", __typeCode: "CH" }));
+    const code = pr?.code || "RQ-YY-XXXXXX";
+    rows.forEach((row, idx) => {
+      row.__itemNo = `${code}-${String(idx + 1).padStart(2, "0")}`;
+    });
+    return rows;
+  }
+
+  function matrixRowKey(row) {
+    return `${row.__type}:${row.id}`;
+  }
+
+  function matrixRateIcon(confirmed) {
+    return confirmed
+      ? `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400" title="Rate reviewed">✓</span>`
+      : `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400" title="Rate not yet set">⚠</span>`;
+  }
+
+  function matrixRouteLabel(row) {
+    if (row.__type === "charter") {
+      const ports = row.ports ?? [];
+      const origin = ports[0]?.port?.name || EMPTY;
+      const dest = ports.length ? ports[ports.length - 1]?.port?.name || EMPTY : EMPTY;
+      return `${esc(origin)} → ${esc(dest)}`;
+    }
+    const origin = row.origin_location?.location_mnemonic || EMPTY;
+    const dest = row.destination_location?.location_mnemonic || EMPTY;
+    return `${esc(origin)} → ${esc(dest)}`;
+  }
+
+  function matrixDetailLabel(row) {
+    switch (row.__type) {
+      case "container":
+        return [LINE_ITEM_TYPE_META[row.container_type]?.label ?? row.container_type, row.container_size?.size].filter(Boolean).map(esc).join(" · ") || EMPTY;
+      case "rolling_cargo":
+      case "loose_cargo":
+        return esc(row.cargo_type || EMPTY);
+      case "trucking":
+        return esc(row.trucking_cargo_type || EMPTY);
+      case "charter":
+        return esc(row.vessel_name || EMPTY);
+      default:
+        return EMPTY;
+    }
+  }
+
+  function matrixQtyLabel(row) {
+    switch (row.__type) {
+      case "container":
+      case "trucking":
+        return esc(row.quantity ?? EMPTY);
+      case "rolling_cargo":
+      case "loose_cargo":
+        return esc(row.cargo_quantity ?? EMPTY);
+      case "charter":
+        return `${(row.cargo_items ?? []).length} cargo line${(row.cargo_items ?? []).length === 1 ? "" : "s"}`;
+      default:
+        return EMPTY;
+    }
+  }
+
+  // hasPersistedRate() lets the Rate ✓ icon survive a reload/reopen - the
+  // session-only rpmMatrixConfirmedKeys Set is empty on every fresh wizard
+  // open (see openRequestProposalModal()), so "reviewed" must also be true
+  // whenever a product_rates row already exists for this product on the
+  // current pr. Both signals are OR'd by the two callers below.
+  function hasPersistedRate(pr, row) {
+    return (pr?.product_rates ?? []).some((r) => r.product_type === row.__type && Number(r.product_id) === Number(row.id));
+  }
+
+  // Same (product_type, product_id) match hasPersistedRate() uses, but
+  // returns the actual row (not just a boolean) so callers can show the
+  // real amount + fee breakdown instead of just a reviewed/not-reviewed
+  // icon - used by every Rate-column renderer (Build Matrix tab and both
+  // recap tables).
+  function matrixRateRowFor(pr, row) {
+    return (pr?.product_rates ?? []).find((r) => r.product_type === row.__type && Number(r.product_id) === Number(row.id));
+  }
+
+  // Rate column cell for the Build Matrix tab (not the recap tables, which
+  // keep the plain icon via matrixRateIcon()/matrixRecapRowHtml()). No
+  // persisted rate yet -> same ⚠ icon as before, but still gets a toggle if
+  // the row has ancillary services (those are independent of whether the
+  // rate itself has been set yet). A persisted rate -> the real total
+  // (peso() - same formatter the rate entry modal uses) plus a ▸/▾ toggle
+  // when there's a fee breakdown and/or ancillary services to show, wired
+  // up in renderBuildMatrix() below.
+  function matrixRateCellHtml(row, rateRow) {
+    const hasAncillary = (row.ancillary_services ?? []).length > 0;
+    if (!rateRow || rateRow.total_rate == null) {
+      const toggle = hasAncillary
+        ? `<button type="button" class="rpm-matrix-breakdown-toggle ml-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" aria-expanded="false" title="Show ancillary services">▸</button>`
+        : "";
+      return `${matrixRateIcon(false)}${toggle}`;
+    }
+    const hasBreakdown = (rateRow.fee_breakdown ?? []).length > 0 || hasAncillary;
+    const toggle = hasBreakdown
+      ? `<button type="button" class="rpm-matrix-breakdown-toggle ml-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" aria-expanded="false" title="Show fee breakdown">▸</button>`
+      : "";
+    return `<span class="font-semibold text-zinc-800 dark:text-zinc-100 whitespace-nowrap">${peso(Number(rateRow.total_rate))}</span>${toggle}`;
+  }
+
+  function breakdownSubtableHtml(title, headers, rowsHtml) {
+    return `
+    <div class="space-y-1">
+        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">${esc(title)}</p>
+        <table class="min-w-full text-[11px]">
+            <thead class="text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                <tr>${headers.map((h, i) => `<th class="px-3 py-1 ${i === 0 ? "text-left" : "text-right"}">${esc(h)}</th>`).join("")}</tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">${rowsHtml}</tbody>
+        </table>
+    </div>`;
+  }
+
+  // Collapsed-by-default sub-row inserted directly under its parent matrix
+  // row (colspan across all 6 columns), read-only, toggled by the caret
+  // matrixRateCellHtml() renders. Independently toggleable per row (not an
+  // exclusive accordion) - this is a passive review table, not a form, so
+  // comparing two rows' breakdowns open at once is a legitimate use case.
+  // Stacks two independent sub-tables when both exist - Rate Breakdown
+  // (the product's own fee_breakdown) and Ancillary Services (quantity ×
+  // base price + adjustment per line, same shape ProductSpecificationModal
+  // edits) - either can be present without the other.
+  function matrixBreakdownRowHtml(row, rateRow) {
+    const feeLines = rateRow?.fee_breakdown ?? [];
+    const ancillaryLines = row?.ancillary_services ?? [];
+    if (!feeLines.length && !ancillaryLines.length) return "";
+
+    const feeTable = feeLines.length
+      ? breakdownSubtableHtml(
+          "Rate Breakdown",
+          ["Detail", "Base Rate", "Adjustment", "Total"],
+          feeLines
+            .map((line) => {
+              const base = Number(line.base) || 0;
+              const adjustment = Number(line.adjustment) || 0;
+              return `
+            <tr>
+                <td class="px-3 py-1.5">${esc(line.detail)}</td>
+                <td class="px-3 py-1.5 text-right">${peso(base)}</td>
+                <td class="px-3 py-1.5 text-right">${peso(adjustment)}</td>
+                <td class="px-3 py-1.5 text-right font-medium text-zinc-700 dark:text-zinc-200">${peso(base + adjustment)}</td>
+            </tr>`;
+            })
+            .join("")
+        )
+      : "";
+
+    const ancillaryTable = ancillaryLines.length
+      ? breakdownSubtableHtml(
+          "Ancillary Services",
+          ["Detail", "Qty", "Base Price", "Adjustment", "Sub Total"],
+          ancillaryLines
+            .map((s) => {
+              const base = Number(s.base_value) || 0;
+              const qty = Number(s.quantity) || 0;
+              const adjustment = Number(s.adjustment) || 0;
+              return `
+            <tr>
+                <td class="px-3 py-1.5">${esc(s.special_charge?.name || s.ancillary_type || EMPTY)}</td>
+                <td class="px-3 py-1.5 text-right">${esc(s.quantity ?? EMPTY)}</td>
+                <td class="px-3 py-1.5 text-right">${peso(base)}</td>
+                <td class="px-3 py-1.5 text-right">${peso(adjustment)}</td>
+                <td class="px-3 py-1.5 text-right font-medium text-zinc-700 dark:text-zinc-200">${peso(qty * base + adjustment)}</td>
+            </tr>`;
+            })
+            .join("")
+        )
+      : "";
+
+    return `
+    <tr class="rpm-matrix-breakdown hidden bg-zinc-50 dark:bg-zinc-800/30">
+        <td colspan="6" class="px-3 py-2 space-y-3">
+            ${feeTable}
+            ${ancillaryTable}
+        </td>
+    </tr>`;
+  }
+
+  // Shared by every table that renders matrixRateCellHtml()'s ▸/▾ toggle -
+  // the Build Matrix tab, the Confirmation tab recap, and the read-only "My
+  // Requests" Proposal Request Summary modal (wired from
+  // logic_proposal_requests_mine.js via window.wireMatrixBreakdownToggles,
+  // since that modal lives in a different file but shares this global
+  // bundle). Finds the breakdown row via DOM adjacency (the toggle's own
+  // <tr> immediate next sibling) rather than a data-key lookup, since two of
+  // those three tables can exist in the same modal's DOM at once (different
+  // <details>/tab panes) and a key-based querySelector could resolve to the
+  // wrong table's row.
+  function wireMatrixBreakdownToggles(container) {
+    container.querySelectorAll(".rpm-matrix-breakdown-toggle").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const breakdownRow = btn.closest("tr")?.nextElementSibling;
+        if (!breakdownRow || !breakdownRow.classList.contains("rpm-matrix-breakdown")) return;
+        const expanded = !breakdownRow.classList.toggle("hidden");
+        btn.textContent = expanded ? "▾" : "▸";
+        btn.setAttribute("aria-expanded", String(expanded));
+      });
+    });
+  }
+  window.wireMatrixBreakdownToggles = wireMatrixBreakdownToggles;
+
+  function matrixRowHtml(row, rateRow) {
+    const meta = LINE_ITEM_TYPE_META[row.__typeCode] ?? { label: row.__typeCode, dot: "bg-zinc-400" };
+    return `
+    <tr class="rpm-matrix-row cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800" data-type="${row.__type}" data-id="${row.id}">
+        <td class="px-3 py-2 font-mono text-zinc-700 dark:text-zinc-200 whitespace-nowrap">${esc(row.__itemNo)}</td>
+        <td class="px-3 py-2">${matrixRateCellHtml(row, rateRow)}</td>
+        <td class="px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${meta.dot} shrink-0"></span>${esc(meta.label)}</span></td>
+        <td class="px-3 py-2">${matrixDetailLabel(row)}</td>
+        <td class="px-3 py-2">${matrixRouteLabel(row)}</td>
+        <td class="px-3 py-2 text-right">${matrixQtyLabel(row)}</td>
+    </tr>`;
+  }
+
+  // Same cells and Rate display as matrixRowHtml(), minus the
+  // clickable/hover-to-edit affordance - used by buildRateMatrixRecapBlock()
+  // (Confirmation tab + the read-only "My Requests" summary modal, neither
+  // of which opens ProductSpecificationModal on click for this table, just
+  // the same ▸/▾ breakdown toggle Build Matrix has).
+  function matrixRecapRowHtml(row, rateRow) {
+    const meta = LINE_ITEM_TYPE_META[row.__typeCode] ?? { label: row.__typeCode, dot: "bg-zinc-400" };
+    return `
+    <tr>
+        <td class="px-3 py-2 font-mono text-zinc-700 dark:text-zinc-200 whitespace-nowrap">${esc(row.__itemNo)}</td>
+        <td class="px-3 py-2">${matrixRateCellHtml(row, rateRow)}</td>
+        <td class="px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${meta.dot} shrink-0"></span>${esc(meta.label)}</span></td>
+        <td class="px-3 py-2">${matrixDetailLabel(row)}</td>
+        <td class="px-3 py-2">${matrixRouteLabel(row)}</td>
+        <td class="px-3 py-2 text-right">${matrixQtyLabel(row)}</td>
+    </tr>`;
+  }
+
+  function renderBuildMatrix(modal, lead) {
+    const pr = getMyProposalRequest(lead);
+    const rows = allProductRowsFlat(pr);
+
+    modal.querySelector("#rpmMatrixEmpty").classList.toggle("hidden", rows.length > 0);
+    modal.querySelector("#rpmMatrixTableWrap").classList.toggle("hidden", rows.length === 0);
+    modal.querySelector("#rpmMatrixTableBody").innerHTML = rows
+      .map((row) => {
+        const rateRow = matrixRateRowFor(pr, row);
+        return matrixRowHtml(row, rateRow) + matrixBreakdownRowHtml(row, rateRow);
+      })
+      .join("");
+
+    modal.querySelectorAll(".rpm-matrix-row").forEach((tr) => {
+      tr.addEventListener("click", () => openProductSpecificationModal(tr.dataset.type, Number(tr.dataset.id)));
+    });
+
+    wireMatrixBreakdownToggles(modal);
+  }
+
+  // ==================================================================
+  // TAB: TERMS & CONDITIONS - each of the 6 per-product reference sections
+  // has its own Terms of Payment select (.rpm-tc-payment-term,
+  // data-section identifies which - see request-proposal-modal.blade.php),
+  // persisted as one proposal_request_terms_of_payment row per section
+  // (keyed by section). A section is only shown when its matching product
+  // table actually has at least one row - see
+  // RPM_TC_SECTION_PRODUCT_CHECKS below. Every other input in this pane
+  // (declared value caps, surcharge %, storage days, load limits,
+  // temperature, laytime) stays display-only per brief, not persisted.
+  // ==================================================================
+  // Maps each TnC section id to a check against the current pr - run once
+  // per renderTermsConditions() call to show/hide that section. ConVans &
+  // Flatracks / Reefer Vans both come from product_containers, split by
+  // container_type; the rest map 1:1 to their own product array.
+  const RPM_TC_SECTION_PRODUCT_CHECKS = {
+    rpmTcSectionConvan: (pr) => (pr?.product_containers ?? []).some((c) => ["CV", "FR"].includes(c.container_type)),
+    rpmTcSectionReefer: (pr) => (pr?.product_containers ?? []).some((c) => c.container_type === "RF"),
+    rpmTcSectionRolling: (pr) => (pr?.product_rolling_cargo ?? []).length > 0,
+    rpmTcSectionBreakbulk: (pr) => (pr?.product_loose_cargo ?? []).length > 0,
+    rpmTcSectionTrucking: (pr) => (pr?.product_truckings ?? []).length > 0,
+    rpmTcSectionCharter: (pr) => (pr?.product_charters ?? []).length > 0,
+  };
+
+  function renderTermsConditions(modal, lead) {
+    const pr = getMyProposalRequest(lead);
+    const terms = pr?.terms_of_payment ?? [];
+
+    modal.querySelectorAll(".rpm-tc-payment-term").forEach((el) => {
+      const saved = terms.find((t) => t.section === el.dataset.section);
+      el.value = saved?.terms_of_payment ?? "";
+    });
+
+    Object.entries(RPM_TC_SECTION_PRODUCT_CHECKS).forEach(([sectionId, hasProduct]) => {
+      modal.querySelector(`#${sectionId}`)?.classList.toggle("hidden", !hasProduct(pr));
+    });
+  }
+
+  async function saveTermsAndConditions(modal, button) {
+    const lead = rpmLead;
+    if (!lead) return;
+
+    const terms_of_payment = [];
+    modal.querySelectorAll(".rpm-tc-payment-term").forEach((el) => {
+      if (!el.value) return;
+      terms_of_payment.push({ section: el.dataset.section, terms_of_payment: el.value });
+    });
+
+    const payload = { terms_of_payment };
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload,
+      url: `/api/crm/prospects/${lead.uuid}/proposalRequests/${rpmProposalRequestId}/termsAndConditions`,
+      button,
+    });
+    if (!response.success) {
+      showMessage({ status: "error", title: "Error Saving", message: response.message ?? "" });
+      return;
+    }
+
+    showMessage({ status: "success", title: "Terms of Payment Saved" });
+    await refreshLead(modal);
   }
 
   // ==================================================================
@@ -1444,20 +2058,25 @@
     const row = findProductRow(ancillaryContext.parentType, ancillaryContext.parentId);
     const services = row?.ancillary_services ?? [];
     modal.querySelector("#asmEmpty").classList.toggle("hidden", services.length > 0);
+    modal.querySelector("#asmListWrap").classList.toggle("hidden", services.length === 0);
     modal.querySelector("#asmList").innerHTML = services
       .map(
         (s) => `
-      <div class="flex justify-between items-center border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2">
-          <div class="text-sm text-zinc-800 dark:text-zinc-100">
-              <span class="font-medium">${esc(s.ancillary_type || EMPTY)}</span>
-              <span class="text-zinc-400"> · ${esc(s.cargo_yard?.name || EMPTY)} · ${esc(s.ancillary_unit || EMPTY)}</span>
+      <tr>
+          <td class="px-3 py-2">
+              <span class="font-medium text-zinc-800 dark:text-zinc-100">${esc(s.special_charge?.name || s.ancillary_type || EMPTY)}</span>
               ${s.ancillary_remarks ? `<div class="text-xs text-zinc-400">${esc(s.ancillary_remarks)}</div>` : ""}
-          </div>
-          <div class="flex gap-2 shrink-0">
-              <button type="button" class="asm-edit text-orange-600 text-xs font-medium" data-id="${s.id}">Edit</button>
-              <button type="button" class="asm-remove text-red-500 text-xs font-medium" data-id="${s.id}">✕ Remove</button>
-          </div>
-      </div>`
+          </td>
+          <td class="px-3 py-2">${esc(s.cargo_yard?.name || EMPTY)}</td>
+          <td class="px-3 py-2">${esc(s.ancillary_unit || EMPTY)}</td>
+          <td class="px-3 py-2 text-right">${peso(Number(s.base_value) || 0)}</td>
+          <td class="px-3 py-2 text-right">${esc(s.quantity ?? EMPTY)}</td>
+          <td class="px-3 py-2 text-right font-medium">${peso((Number(s.base_value) || 0) * (Number(s.quantity) || 0))}</td>
+          <td class="px-3 py-2 text-right whitespace-nowrap">
+              <button type="button" class="asm-edit text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${s.id}">Edit</button>
+              <button type="button" class="asm-remove text-red-500 text-xs font-medium ml-2" data-id="${s.id}">✕</button>
+          </td>
+      </tr>`
       )
       .join("");
 
@@ -1482,7 +2101,24 @@
     modal.querySelector("#asmAncillaryType").value = "";
     modal.querySelector("#asmCargoYard").value = "";
     modal.querySelector("#asmUnit").value = "";
+    modal.querySelector("#asmQuantity").value = "1";
     modal.querySelector("#asmRemarks").value = "";
+    updateAncillaryPreview();
+  }
+
+  // Live Base Value + Subtotal preview, driven by the picked Special
+  // Charge (specialChargesById) and the typed Quantity - recomputed on
+  // every Type change and every Quantity keystroke, nothing persisted here.
+  function updateAncillaryPreview() {
+    const modal = document.getElementById("AncillaryServicesModal");
+    const charge = specialChargesById[modal.querySelector("#asmAncillaryType").value];
+    const unit = modal.querySelector("#asmUnit").value;
+    const rate = (charge?.rates ?? []).find((r) => r.unit === unit);
+    const baseValue = Number(rate?.base_value) || 0;
+    const quantity = Number(window.parseCurrencyValue(modal.querySelector("#asmQuantity").value)) || 0;
+    const priced = Boolean(charge && rate);
+    modal.querySelector("#asmBaseValuePreview").textContent = priced ? peso(baseValue) : "—";
+    modal.querySelector("#asmSubtotalPreview").textContent = priced ? peso(baseValue * quantity) : "—";
   }
 
   async function addAncillary(button) {
@@ -1490,11 +2126,20 @@
     const payload = {
       ancillaryable_type: ancillaryContext.parentType,
       ancillaryable_id: ancillaryContext.parentId,
-      ancillary_type: modal.querySelector("#asmAncillaryType").value || null,
+      special_charge_id: modal.querySelector("#asmAncillaryType").value || null,
       cargo_yard_id: modal.querySelector("#asmCargoYard").value || null,
       ancillary_unit: modal.querySelector("#asmUnit").value || null,
       ancillary_remarks: modal.querySelector("#asmRemarks").value.trim() || null,
+      quantity: window.parseCurrencyValue(modal.querySelector("#asmQuantity").value) || 0,
     };
+    if (!payload.special_charge_id) {
+      showMessage({ status: "error", title: "Select an Ancillary Type first." });
+      return;
+    }
+    if (!payload.ancillary_unit) {
+      showMessage({ status: "error", title: "Pick a unit", message: "Choose an ancillary unit so the charge can be priced." });
+      return;
+    }
     const response = await apiCall({
       mode: "POST",
       isJson: true,
@@ -1531,10 +2176,12 @@
     const row = services.find((s) => s.id === id);
     if (!row) return;
     const modal = document.getElementById("AncillaryServicesModal");
-    modal.querySelector("#asmAncillaryType").value = row.ancillary_type ?? "";
+    modal.querySelector("#asmAncillaryType").value = String(row.special_charge_id ?? "");
     modal.querySelector("#asmCargoYard").value = String(row.cargo_yard_id ?? "");
     modal.querySelector("#asmUnit").value = row.ancillary_unit ?? "";
+    modal.querySelector("#asmQuantity").value = row.quantity ?? "1";
     modal.querySelector("#asmRemarks").value = row.ancillary_remarks ?? "";
+    updateAncillaryPreview();
     await deleteAncillaryRow(id);
     await refreshProductsAndReRenderSubModal(renderAncillaryList);
   }
@@ -1563,7 +2210,7 @@
               ${t.details ? `<div class="text-xs text-zinc-400">${esc(t.details)}</div>` : ""}
           </div>
           <div class="flex gap-2 shrink-0">
-              <button type="button" class="tlcm-edit text-orange-600 text-xs font-medium" data-id="${t.id}">Edit</button>
+              <button type="button" class="tlcm-edit text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${t.id}">Edit</button>
               <button type="button" class="tlcm-remove text-red-500 text-xs font-medium" data-id="${t.id}">✕ Remove</button>
           </div>
       </div>`
@@ -1591,9 +2238,9 @@
     return {
       top_load_type: modal.querySelector("#tlcmType").value || null,
       details: modal.querySelector("#tlcmDetails").value.trim() || null,
-      quantity: modal.querySelector("#tlcmQuantity").value || null,
+      quantity: parseCurrencyValue(modal.querySelector("#tlcmQuantity").value) || null,
       units: modal.querySelector("#tlcmUnits").value || null,
-      revenue_ton: modal.querySelector("#tlcmRevenueTon").value || null,
+      revenue_ton: parseCurrencyValue(modal.querySelector("#tlcmRevenueTon").value) || null,
       revenue_ton_unit: modal.querySelector("#tlcmRevenueTonUnit").value || null,
       measurement: modal.querySelector("#tlcmMeasurement").value.trim() || null,
     };
@@ -1682,7 +2329,7 @@
               ${c.special_requirements ? `<div class="text-xs text-zinc-400">${esc(c.special_requirements)}</div>` : ""}
           </div>
           <div class="flex gap-2 shrink-0">
-              <button type="button" class="ccim-edit text-orange-600 text-xs font-medium" data-id="${c.id}">Edit</button>
+              <button type="button" class="ccim-edit text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${c.id}">Edit</button>
               <button type="button" class="ccim-remove text-red-500 text-xs font-medium" data-id="${c.id}">✕ Remove</button>
           </div>
       </div>`
@@ -1829,7 +2476,7 @@
                   </div>
               </div>
               <div class="flex gap-2 shrink-0">
-                  <button type="button" class="cpm-edit text-orange-600 text-xs font-medium" data-id="${p.id}">Edit</button>
+                  <button type="button" class="cpm-edit text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 text-xs font-medium" data-id="${p.id}">Edit</button>
                   <button type="button" class="cpm-remove text-red-500 text-xs font-medium" data-id="${p.id}">✕ Remove</button>
               </div>
           </div>
@@ -1860,11 +2507,11 @@
     return {
       port_id: modal.querySelector("#cpmPort").value || null,
       port_charge_account: modal.querySelector("#cpmPortChargeAccount").value || null,
-      port_charge_amount: modal.querySelector("#cpmPortChargeAmount").value || null,
-      cargoes_for_loading: modal.querySelector("#cpmCargoesLoading").value || null,
+      port_charge_amount: parseCurrencyValue(modal.querySelector("#cpmPortChargeAmount").value) || null,
+      cargoes_for_loading: parseCurrencyValue(modal.querySelector("#cpmCargoesLoading").value) || null,
       cargo_measurement_for_loading: modal.querySelector("#cpmMeasurementLoading").value.trim() || null,
       revenue_ton_unit_loading: modal.querySelector("#cpmRtUnitLoading").value || null,
-      cargoes_for_unloading: modal.querySelector("#cpmCargoesUnloading").value || null,
+      cargoes_for_unloading: parseCurrencyValue(modal.querySelector("#cpmCargoesUnloading").value) || null,
       cargo_measurement_for_unloading: modal.querySelector("#cpmMeasurementUnloading").value.trim() || null,
       revenue_ton_unit_unloading: modal.querySelector("#cpmRtUnitUnloading").value || null,
     };
@@ -1941,6 +2588,286 @@
     await refreshProductsAndReRenderSubModal(renderCharterPortsList);
   }
 
+  // ------------------------------------------------------------------
+  // PRODUCT SPECIFICATION MODAL - opened from a Build Rate Matrix row.
+  // Summary grid is real data (the actual saved product row); the fee
+  // breakdown table below is sample/placeholder only (see file header
+  // comment on rpmMatrixConfirmedKeys) - Save just marks the row reviewed
+  // for this wizard session, it doesn't persist any pricing.
+  // ------------------------------------------------------------------
+  function specRow(label, value) {
+    return `<div><span class="text-zinc-400 dark:text-zinc-500">${esc(label)}:</span> <span class="font-medium text-zinc-800 dark:text-zinc-100">${value || value === 0 ? esc(value) : EMPTY}</span></div>`;
+  }
+
+  function buildProductSpecSummaryRows(row) {
+    const itemNoRow = specRow("Item No.", row.__itemNo);
+    switch (row.__type) {
+      case "container":
+        return [
+          itemNoRow,
+          specRow("Container Type", LINE_ITEM_TYPE_META[row.container_type]?.label ?? row.container_type),
+          specRow("Size", row.container_size?.size),
+          specRow("Service Type", row.service_type),
+          specRow("Origin", row.origin_location?.location_mnemonic),
+          specRow("Port of Origin", row.origin_port?.name),
+          specRow("Destination", row.destination_location?.location_mnemonic),
+          specRow("Port of Destination", row.destination_port?.name),
+          specRow("Dispatch Mode (Origin)", row.dispatch_mode_origin),
+          specRow("Dispatch Mode (Destination)", row.dispatch_mode_destination),
+          specRow("Cargo Type", row.cargo_type),
+          specRow("Cargo Description", row.cargo_description),
+        ].join("");
+      case "rolling_cargo":
+      case "loose_cargo":
+        return [
+          itemNoRow,
+          specRow("Cargo Type", row.cargo_type),
+          specRow("Cargo Details", row.cargo_details),
+          specRow("Quantity", row.cargo_quantity),
+          specRow("Units", row.cargo_units),
+          specRow("Revenue Ton (RT)", row.revenue_ton),
+          specRow("RT Unit", row.revenue_ton_unit),
+          specRow("Cargo Measurement", row.cargo_measurement),
+          specRow("Service Type", row.service_type),
+          specRow("Origin", row.origin_location?.location_mnemonic),
+          specRow("Port of Origin", row.origin_port?.name),
+          specRow("Destination", row.destination_location?.location_mnemonic),
+          specRow("Port of Destination", row.destination_port?.name),
+        ].join("");
+      case "trucking":
+        return [
+          itemNoRow,
+          specRow("Trucking Cargo Type", row.trucking_cargo_type),
+          specRow("Dispatch Mode", row.dispatch_mode),
+          specRow("Origin", row.origin_location?.location_mnemonic),
+          specRow("Destination", row.destination_location?.location_mnemonic),
+          specRow("Cargo Type", row.cargo_type),
+          specRow("Cargo Description", row.cargo_description),
+        ].join("");
+      case "charter":
+        return [
+          itemNoRow,
+          specRow("Vessel Name", row.vessel_name),
+          specRow("Vessel Dead Weight", row.vessel_dead_weight),
+          specRow("Loading Date", row.loading_date),
+          specRow("Charter Start Date", row.charter_start_date),
+          specRow("Charter End Date", row.charter_end_date),
+          specRow("Declared Value", row.declared_value),
+          specRow("Weight", row.weight != null ? `${row.weight} ${row.weight_unit ?? ""}`.trim() : null),
+        ].join("");
+      default:
+        return "";
+    }
+  }
+
+  // Sample/placeholder only - not derived from any real rate data. Adjustment
+  // can be negative (discount) or positive (increase); Total Rate = Base + Adjustment.
+  function sampleFeeBreakdown() {
+    return [
+      { detail: "Base Freight Charge", base: 15000, adjustment: 0 },
+      { detail: "Fuel Surcharge", base: 1200, adjustment: 150 },
+      { detail: "Documentation Fee", base: 500, adjustment: 0 },
+      { detail: "Handling Fee", base: 800, adjustment: -100 },
+    ];
+  }
+
+  function peso(n) {
+    const sign = n < 0 ? "-" : "";
+    return `${sign}₱${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  // Rate Adjustment is a live-editable input (discount = negative, increase =
+  // positive) - Base Rate stays display-only (the "standard rate"); editing
+  // Adjustment recomputes that row's Total Rate and the grand Total row
+  // instantly via recomputePsmRow()/recomputePsmGrandTotal() below. Still
+  // sample data end to end - nothing here is persisted (see Save handler).
+  function feeBreakdownRowHtml(line) {
+    const total = line.base + line.adjustment;
+    return `
+    <tr class="psm-fee-row" data-base="${line.base}">
+        <td class="px-3 py-2">${esc(line.detail)}</td>
+        <td class="px-3 py-2 text-right">${peso(line.base)}</td>
+        <td class="px-3 py-2 text-right">
+            <input type="text" inputmode="decimal" class="currency-input psm-adjustment-input w-28 text-right border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1 text-xs" value="${line.adjustment}">
+        </td>
+        <td class="px-3 py-2 text-right font-semibold text-zinc-800 dark:text-zinc-100 psm-row-total">${peso(total)}</td>
+    </tr>`;
+  }
+
+  function feeBreakdownTotalRowHtml(lines) {
+    const base = lines.reduce((sum, l) => sum + l.base, 0);
+    const adjustment = lines.reduce((sum, l) => sum + l.adjustment, 0);
+    return `
+    <tr class="bg-zinc-50 dark:bg-zinc-800/50 font-semibold">
+        <td class="px-3 py-2">Total</td>
+        <td class="px-3 py-2 text-right" id="psmTotalBase">${peso(base)}</td>
+        <td class="px-3 py-2 text-right" id="psmTotalAdjustment">${peso(adjustment)}</td>
+        <td class="px-3 py-2 text-right" id="psmTotalTotal">${peso(base + adjustment)}</td>
+    </tr>`;
+  }
+
+  function recomputePsmRow(input) {
+    const tr = input.closest("tr");
+    const base = Number(tr.dataset.base) || 0;
+    const adjustment = Number(window.parseCurrencyValue(input.value)) || 0;
+    tr.querySelector(".psm-row-total").textContent = peso(base + adjustment);
+    recomputePsmGrandTotal();
+  }
+
+  function recomputePsmGrandTotal() {
+    const modal = document.getElementById("ProductSpecificationModal");
+    let base = 0;
+    let adjustment = 0;
+    modal.querySelectorAll("#psmRateBreakdownBody tr.psm-fee-row").forEach((tr) => {
+      base += Number(tr.dataset.base) || 0;
+      adjustment += Number(window.parseCurrencyValue(tr.querySelector(".psm-adjustment-input").value)) || 0;
+    });
+    modal.querySelector("#psmTotalBase").textContent = peso(base);
+    modal.querySelector("#psmTotalAdjustment").textContent = peso(adjustment);
+    modal.querySelector("#psmTotalTotal").textContent = peso(base + adjustment);
+  }
+
+  // Rehydrates the fee breakdown from this product's already-saved
+  // product_rates row (if one exists) instead of sampleFeeBreakdown(), so
+  // re-opening/re-saving doesn't clobber a reviewer's prior adjustments.
+  function savedFeeBreakdown(pr, row) {
+    const saved = (pr?.product_rates ?? []).find((r) => r.product_type === row.__type && Number(r.product_id) === Number(row.id));
+    return saved?.fee_breakdown ?? null;
+  }
+
+  // Ancillary Services section (right column, below Rate Breakdown) - each
+  // line is a REAL ancillary service row already added from the Products
+  // tab (unlike the Rate Breakdown's sample lines, these have a real id and
+  // no "add new" affordance here). Quantity/Base Price/Adjustment are all
+  // editable; Sub Total = Qty*Base + Adjustment, same shape as Rate
+  // Breakdown's Base/Adjustment/Total, recomputed live and persisted
+  // together with the rate on Save (see saveProductSpecification()).
+  function ancillaryBreakdownRowHtml(service) {
+    const baseValue = Number(service.base_value) || 0;
+    const quantity = Number(service.quantity) || 0;
+    const adjustment = Number(service.adjustment) || 0;
+    const subtotal = quantity * baseValue + adjustment;
+    return `
+    <tr class="psm-ancillary-row" data-id="${service.id}">
+        <td class="px-3 py-2">${esc(service.special_charge?.name || service.ancillary_type || EMPTY)}</td>
+        <td class="px-3 py-2 text-right">
+            <input type="text" inputmode="decimal" class="currency-input psm-ancillary-qty w-20 text-right border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1 text-xs" value="${quantity}">
+        </td>
+        <td class="px-3 py-2 text-right">
+            <input type="text" inputmode="decimal" class="currency-input psm-ancillary-base w-28 text-right border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1 text-xs" value="${baseValue}">
+        </td>
+        <td class="px-3 py-2 text-right">
+            <input type="text" inputmode="decimal" class="currency-input psm-ancillary-adjustment w-28 text-right border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1 text-xs" value="${adjustment}">
+        </td>
+        <td class="px-3 py-2 text-right font-semibold text-zinc-800 dark:text-zinc-100 psm-ancillary-subtotal">${peso(subtotal)}</td>
+    </tr>`;
+  }
+
+  function recomputeAncillaryRow(tr) {
+    const qty = Number(window.parseCurrencyValue(tr.querySelector(".psm-ancillary-qty").value)) || 0;
+    const base = Number(window.parseCurrencyValue(tr.querySelector(".psm-ancillary-base").value)) || 0;
+    const adjustment = Number(window.parseCurrencyValue(tr.querySelector(".psm-ancillary-adjustment").value)) || 0;
+    tr.querySelector(".psm-ancillary-subtotal").textContent = peso(qty * base + adjustment);
+  }
+
+  function openProductSpecificationModal(type, id) {
+    const pr = getMyProposalRequest(rpmLead);
+    const row = allProductRowsFlat(pr).find((r) => r.__type === type && r.id === id);
+    if (!row) return;
+
+    rpmMatrixCurrentKey = matrixRowKey(row);
+    rpmMatrixCurrentRow = row;
+
+    const modal = document.getElementById("ProductSpecificationModal");
+    const meta = LINE_ITEM_TYPE_META[row.__typeCode] ?? { label: row.__typeCode };
+    modal.querySelector("#psmSubtitle").textContent = `${meta.label} · ${matrixRouteLabel(row).replace(/<[^>]+>/g, "")}`;
+    modal.querySelector("#psmSummaryGrid").innerHTML = buildProductSpecSummaryRows(row);
+
+    const lines = savedFeeBreakdown(pr, row) ?? sampleFeeBreakdown();
+    modal.querySelector("#psmRateBreakdownBody").innerHTML = lines.map(feeBreakdownRowHtml).join("") + feeBreakdownTotalRowHtml(lines);
+    modal.querySelectorAll(".psm-adjustment-input").forEach((input) => {
+      input.addEventListener("input", () => recomputePsmRow(input));
+    });
+
+    const ancServices = row.ancillary_services ?? [];
+    modal.querySelector("#psmAncillaryEmpty").classList.toggle("hidden", ancServices.length > 0);
+    modal.querySelector("#psmAncillaryWrap").classList.toggle("hidden", ancServices.length === 0);
+    modal.querySelector("#psmAncillaryBody").innerHTML = ancServices.map(ancillaryBreakdownRowHtml).join("");
+    modal.querySelectorAll(".psm-ancillary-row input").forEach((input) => {
+      input.addEventListener("input", () => recomputeAncillaryRow(input.closest("tr")));
+    });
+
+    window.initModal({ modalId: "ProductSpecificationModal" });
+  }
+  window.openProductSpecificationModal = openProductSpecificationModal;
+
+  async function cancelProductSpecification() {
+    const confirmed = await customConfirm("Discard changes to this product's rate review? Nothing entered here has been saved yet.");
+    if (!confirmed) return;
+    rpmMatrixCurrentKey = null;
+    rpmMatrixCurrentRow = null;
+    window.closeModal("ProductSpecificationModal");
+  }
+
+  async function saveProductSpecification(button) {
+    const row = rpmMatrixCurrentRow;
+    const lead = rpmLead;
+    if (!row || !lead) return;
+
+    const modal = document.getElementById("ProductSpecificationModal");
+    const feeBreakdown = [];
+    modal.querySelectorAll("#psmRateBreakdownBody tr.psm-fee-row").forEach((tr) => {
+      const detail = tr.querySelector("td")?.textContent?.trim() ?? "";
+      const base = Number(tr.dataset.base) || 0;
+      const adjustment = Number(window.parseCurrencyValue(tr.querySelector(".psm-adjustment-input").value)) || 0;
+      feeBreakdown.push({ detail, base, adjustment });
+    });
+    const base_rate = feeBreakdown.reduce((sum, l) => sum + l.base, 0);
+    const adjustment = feeBreakdown.reduce((sum, l) => sum + l.adjustment, 0);
+    const total_rate = base_rate + adjustment;
+
+    const ancillaryAdjustments = [];
+    modal.querySelectorAll("#psmAncillaryBody tr.psm-ancillary-row").forEach((tr) => {
+      ancillaryAdjustments.push({
+        id: Number(tr.dataset.id),
+        quantity: Number(window.parseCurrencyValue(tr.querySelector(".psm-ancillary-qty").value)) || 0,
+        base_value: Number(window.parseCurrencyValue(tr.querySelector(".psm-ancillary-base").value)) || 0,
+        adjustment: Number(window.parseCurrencyValue(tr.querySelector(".psm-ancillary-adjustment").value)) || 0,
+      });
+    });
+
+    const payload = {
+      product_type: row.__type,
+      product_id: row.id,
+      item_no: row.__itemNo,
+      base_rate,
+      adjustment,
+      total_rate,
+      fee_breakdown: feeBreakdown,
+      ancillary_adjustments: ancillaryAdjustments,
+    };
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload,
+      url: `/api/crm/prospects/${lead.uuid}/proposalRequests/${rpmProposalRequestId}/productRates`,
+      button,
+    });
+    if (!response.success) {
+      showMessage({ status: "error", title: "Error Saving Rate", message: response.message ?? "" });
+      return;
+    }
+
+    if (rpmMatrixCurrentKey) rpmMatrixConfirmedKeys.add(rpmMatrixCurrentKey);
+    rpmMatrixCurrentKey = null;
+    rpmMatrixCurrentRow = null;
+    window.closeModal("ProductSpecificationModal");
+    showMessage({ status: "success", title: "Rate Matrix Saved" });
+    const rpModal = document.getElementById("RequestProposalModal");
+    await refreshLead(rpModal);
+  }
+
   function initSubItemModals() {
     const asm = document.getElementById("AncillaryServicesModal");
     if (asm) {
@@ -1948,6 +2875,9 @@
         addAncillary(this);
       });
       asm.querySelector("#asmCloseBtn").addEventListener("click", () => window.closeModal("AncillaryServicesModal"));
+      asm.querySelector("#asmAncillaryType").addEventListener("change", updateAncillaryPreview);
+      asm.querySelector("#asmUnit").addEventListener("change", updateAncillaryPreview);
+      asm.querySelector("#asmQuantity").addEventListener("input", updateAncillaryPreview);
     }
 
     const tlcm = document.getElementById("TopLoadCargoModal");
@@ -1974,6 +2904,14 @@
       cpm.querySelector("#cpmCloseBtn").addEventListener("click", () => window.closeModal("CharterPortsModal"));
       cpm.querySelector("#cpmPortChargeAccount").addEventListener("change", () => applyPortChargeAmountGating(cpm));
     }
+
+    const psm = document.getElementById("ProductSpecificationModal");
+    if (psm) {
+      psm.querySelector("#psmCancelBtn").addEventListener("click", cancelProductSpecification);
+      psm.querySelector("#psmSaveBtn").addEventListener("click", function () {
+        saveProductSpecification(this);
+      });
+    }
   }
 
   // ------------------------------------------------------------------
@@ -1992,6 +2930,7 @@
     rpmProposalRequestId = proposalRequestId ?? null;
     rpmSelectedOdLocationId = null;
     rpmOdCard = null;
+    rpmMatrixConfirmedKeys = new Set();
 
     await ensureProductLookupsLoaded();
     renderAll(modal, lead);
@@ -2012,23 +2951,69 @@
     modal.querySelector("#rpmAddSignatoryBtn").addEventListener("click", function () {
       addSignatory(this);
     });
+    modal.querySelector("#rpmSignatoryContact").addEventListener("change", () => {
+      signatoryContactChange(modal);
+    });
     modal.querySelector("#rpmAddOdBtn").addEventListener("click", function () {
-      addOdLocation(this);
+      openRpmAddOdModal();
     });
     modal.querySelector("#rpmSubmitBtn").addEventListener("click", function () {
       submitProposalRequest(this);
     });
 
-    bindProductSelector(modal);
-    modal.querySelector("#rpmAddProductBtn").addEventListener("click", function () {
-      submitProduct(modal, this);
-    });
-    modal.querySelector("#rpmPcContainerType").addEventListener("change", () => {
-      applyPcContainerTypeVisibility(modal);
-      populatePcContainerSizeOptions(modal);
-    });
-    modal.querySelector("#rpmPcDeliveryType").addEventListener("change", () => {
-      applyDispatchModeGating(modal, "rpmPcDeliveryType", "rpmPcDispatchOrigin", "rpmPcDispatchDestination");
+    if (document.getElementById("RpmAddOdModal")) {
+      document.getElementById("rpmAodmCancelBtn").addEventListener("click", () => window.closeModal("RpmAddOdModal"));
+      document.getElementById("rpmAodmSaveBtn").addEventListener("click", function () {
+        saveRpmAddOd(this);
+      });
+    }
+
+    modal.querySelector("#rpmAddContainerBtn").addEventListener("click", openRpmAddContainerModal);
+    modal.querySelector("#rpmAddRollingCargoBtn").addEventListener("click", openRpmAddRollingCargoModal);
+    modal.querySelector("#rpmAddLooseCargoBtn").addEventListener("click", openRpmAddLooseCargoModal);
+    modal.querySelector("#rpmAddTruckingBtn").addEventListener("click", openRpmAddTruckingModal);
+    modal.querySelector("#rpmAddCharterBtn").addEventListener("click", openRpmAddCharterModal);
+
+    if (document.getElementById("RpmAddContainerModal")) {
+      document.getElementById("rpmAcmCancelBtn").addEventListener("click", () => window.closeModal("RpmAddContainerModal"));
+      document.getElementById("rpmAcmSaveBtn").addEventListener("click", function () {
+        saveRpmContainer(this);
+      });
+      document.getElementById("rpmPcContainerType").addEventListener("change", () => {
+        applyPcContainerTypeVisibility();
+        populatePcContainerSizeOptions();
+      });
+      document.getElementById("rpmPcDeliveryType").addEventListener("change", () => {
+        applyDispatchModeGating(document.getElementById("RpmAddContainerModal"), "rpmPcDeliveryType", "rpmPcDispatchOrigin", "rpmPcDispatchDestination");
+      });
+    }
+    if (document.getElementById("RpmAddRollingCargoModal")) {
+      document.getElementById("rpmArcmCancelBtn").addEventListener("click", () => window.closeModal("RpmAddRollingCargoModal"));
+      document.getElementById("rpmArcmSaveBtn").addEventListener("click", function () {
+        saveRpmRollingCargo(this);
+      });
+    }
+    if (document.getElementById("RpmAddLooseCargoModal")) {
+      document.getElementById("rpmAlcmCancelBtn").addEventListener("click", () => window.closeModal("RpmAddLooseCargoModal"));
+      document.getElementById("rpmAlcmSaveBtn").addEventListener("click", function () {
+        saveRpmLooseCargo(this);
+      });
+    }
+    if (document.getElementById("RpmAddTruckingModal")) {
+      document.getElementById("rpmAtmCancelBtn").addEventListener("click", () => window.closeModal("RpmAddTruckingModal"));
+      document.getElementById("rpmAtmSaveBtn").addEventListener("click", function () {
+        saveRpmTrucking(this);
+      });
+    }
+    if (document.getElementById("RpmAddCharterModal")) {
+      document.getElementById("rpmAchmCancelBtn").addEventListener("click", () => window.closeModal("RpmAddCharterModal"));
+      document.getElementById("rpmAchmSaveBtn").addEventListener("click", function () {
+        saveRpmCharter(this);
+      });
+    }
+
+    modal.querySelector("#rpmSaveTermsConditionsBtn")?.addEventListener("click", function () {
+      saveTermsAndConditions(modal, this);
     });
 
     initSubItemModals();

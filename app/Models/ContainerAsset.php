@@ -41,10 +41,10 @@ class ContainerAsset extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'status' => 'integer',
-        'last_movement_at' => 'datetime:M d, Y, h:i A',
+        'last_movement_at' => 'datetime',
     ];
 
     public function containerVariant(): BelongsTo

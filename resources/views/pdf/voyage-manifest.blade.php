@@ -95,7 +95,7 @@
         <div class="company-name">ABC Logistics Corporation</div>
         <div class="title">Voyage Manifest - {{ $vessel->name }}</div>
         <p class="footnote">Consolidated load/unload list covering every leg of this vessel's current schedule.
-            Generated {{ now()->format('F d, Y g:i A') }}.</p>
+            Generated {{ now()->format('F d, Y h:i A') }}.</p>
     </div>
 
     @forelse ($legs as $leg)

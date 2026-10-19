@@ -1,3 +1,6 @@
 - [Prospect module untracked in git](project_prospect_module_untracked_in_git.md) — git diff/log show nothing for Prospect/ProposalRequest files; read current state directly instead
-- [Known test-suite baseline](project_broken_test_suite_sqlite_baseline.md) — 17 failed/42 passed (Auth/Booking/VesselVoyage/ClientMasterForm) is pre-existing, not a regression signal
+- [Known test-suite baseline](project_broken_test_suite_sqlite_baseline.md) — STALE as of 2026-10-20, see [[project_signatories_migration_breaks_full_suite]]
+- [Signatories migration breaks full suite](project_signatories_migration_breaks_full_suite.md) — unconditional dropForeign() on SQLite in a 2026-10-14 migration now fails 100% of tests, unrelated to most diffs under review
 - [Container catalog shared-name risk](project_container_catalog_shared_name_risk.md) — "CRM-only" relabels can leak into shared seeders (containers.name); check seeder diffs, not just CRM JS/blade
+- [Diff full files, not just brief scope](feedback_diff_full_files_not_just_brief_scope.md) — briefs can omit scope creep (e.g. smuggled role/privilege changes); diff whole files
+- [No factories for CRM/sales models](project_no_factories_for_crm_sales_models.md) — Prospect/ProposalRequest/ClientMaster/ClientProposal have no factories; use tinker SHOW COLUMNS to find required fields for throwaway tests

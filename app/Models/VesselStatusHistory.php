@@ -19,7 +19,7 @@ class VesselStatusHistory extends Model
     protected $casts = [
         'from_status' => 'integer',
         'to_status' => 'integer',
-        'recorded_at' => 'datetime:M d, Y, h:i A',
+        'recorded_at' => 'datetime',
     ];
 
     public function vessel(): BelongsTo

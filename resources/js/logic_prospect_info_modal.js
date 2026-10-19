@@ -190,6 +190,7 @@
       ["Business Type", company.type_of_business || EMPTY],
       ["Attending CSR", lead.user?.name || EMPTY],
       ["Relationship Manager", lead.relationship_manager?.name || EMPTY],
+      ["Created By", lead.creator?.name || EMPTY],
     ];
 
     modal.querySelector("#pimIdentitySummary").innerHTML = rows
@@ -201,6 +202,14 @@
       </div>`,
       )
       .join("");
+
+    // A prospect starts genuinely unassigned (assigned_to null) until
+    // Management staffs it via assignOwners() - no exception for whoever
+    // created it - so "Request for Proposal" stays disabled with an
+    // always-visible explanation rather than failing with a silent 403.
+    const hasAssignedCsr = Boolean(lead.assigned_to);
+    modal.querySelector("#pimRequestProposalBtn").disabled = !hasAssignedCsr;
+    modal.querySelector("#pimRequestProposalHint").classList.toggle("hidden", hasAssignedCsr);
   }
 
   async function loadSummaryEditLookups(modal) {
@@ -539,7 +548,7 @@
       `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dot} shrink-0"></span>${esc(typeLabel)}</span>`,
       flags.convanSize ? esc(c.container_size?.size ?? EMPTY) : NA,
       flags.temperature ? esc(c.minimum_temperature ?? EMPTY) : NA,
-      flags.revenueTon ? esc(c.revenue_ton ?? EMPTY) : NA,
+      flags.revenueTon ? esc(c.revenue_ton_unit ?? EMPTY) : NA,
       flags.revenueTon ? esc(c.cargo_measurement ?? EMPTY) : NA,
       esc(c.quantity ?? EMPTY),
       esc(c.frequency ?? EMPTY),
@@ -555,7 +564,8 @@
       esc(c.special_requirements ?? EMPTY),
       esc(c.booking_unit_type ?? EMPTY),
     ];
-    return `<tr>${cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("")}</tr>`;
+    const tds = cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("");
+    return `<tr data-id="${c.id}">${tds}<td class="px-3 py-2 align-top"><button type="button" class="pim-remove-container-row text-red-500 text-xs font-medium whitespace-nowrap">✕ Remove</button></td></tr>`;
   }
 
   function truckingRowHtml(t) {
@@ -578,7 +588,8 @@
       esc(t.general_cargo_description ?? EMPTY),
       esc(t.special_requirements ?? EMPTY),
     ];
-    return `<tr>${cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("")}</tr>`;
+    const tds = cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("");
+    return `<tr data-id="${t.id}">${tds}<td class="px-3 py-2 align-top"><button type="button" class="pim-remove-trucking-row text-red-500 text-xs font-medium whitespace-nowrap">✕ Remove</button></td></tr>`;
   }
 
   function charterRowHtml(c) {
@@ -605,43 +616,60 @@
         : EMPTY,
       weight,
     ];
-    return `<tr>${cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("")}</tr>`;
+    const tds = cells.map((v) => `<td class="px-3 py-2 align-top text-zinc-700 dark:text-zinc-200">${v}</td>`).join("");
+    return `<tr data-id="${c.id}">${tds}<td class="px-3 py-2 align-top"><button type="button" class="pim-remove-charter-row text-red-500 text-xs font-medium whitespace-nowrap">✕ Remove</button></td></tr>`;
+  }
+
+  // Shared DELETE for all three Requirements-tab tables - `kind` is the
+  // route segment (containers/truckings/charters), matching the append-one
+  // endpoints' own naming.
+  async function removeRequirementRow(kind, id) {
+    const lead = currentLead;
+    if (!lead) return;
+
+    const confirmed = await customConfirm("Remove this requirement?");
+    if (!confirmed) return;
+
+    const response = await apiCall({
+      mode: "DELETE",
+      url: `/api/crm/prospects/${lead.uuid}/proposalRequest/${kind}/${id}`,
+    });
+    if (!response.success) {
+      showMessage({ status: "error", title: "Error Removing", message: response.message ?? "" });
+      return;
+    }
+
+    showMessage({ status: "success", title: "Requirement Removed" });
+    await reloadProspectInfo(lead.uuid);
   }
 
   // "Prospect products" - owned directly by the prospect, independent of
-  // any Proposal Request.
+  // any Proposal Request. All three tables are permanently visible (per
+  // brief) - no row-count-based hiding, no separate "no requirements yet"
+  // message; an empty table with just its header row is itself the
+  // "nothing here" state.
   function renderRequirementsSummary(modal, lead) {
     const containers = lead.requirement_containers ?? [];
     const truckings = lead.requirement_truckings ?? [];
     const charters = lead.requirement_charters ?? [];
 
-    modal
-      .querySelector("#pimContainersTableWrap")
-      .classList.toggle("hidden", !containers.length);
-    modal.querySelector("#pimContainersTableBody").innerHTML = containers
-      .map(containerRowHtml)
-      .join("");
+    const cBody = modal.querySelector("#pimContainersTableBody");
+    cBody.innerHTML = containers.map(containerRowHtml).join("");
+    cBody.querySelectorAll(".pim-remove-container-row").forEach((btn) =>
+      btn.addEventListener("click", () => removeRequirementRow("containers", btn.closest("tr").dataset.id))
+    );
 
-    modal
-      .querySelector("#pimTruckingsTableWrap")
-      .classList.toggle("hidden", !truckings.length);
-    modal.querySelector("#pimTruckingsTableBody").innerHTML = truckings
-      .map(truckingRowHtml)
-      .join("");
+    const tBody = modal.querySelector("#pimTruckingsTableBody");
+    tBody.innerHTML = truckings.map(truckingRowHtml).join("");
+    tBody.querySelectorAll(".pim-remove-trucking-row").forEach((btn) =>
+      btn.addEventListener("click", () => removeRequirementRow("truckings", btn.closest("tr").dataset.id))
+    );
 
-    modal
-      .querySelector("#pimChartersTableWrap")
-      .classList.toggle("hidden", !charters.length);
-    modal.querySelector("#pimChartersTableBody").innerHTML = charters
-      .map(charterRowHtml)
-      .join("");
-
-    modal
-      .querySelector("#pimRequirementsEmpty")
-      ?.classList.toggle(
-        "hidden",
-        Boolean(containers.length || truckings.length || charters.length),
-      );
+    const chBody = modal.querySelector("#pimChartersTableBody");
+    chBody.innerHTML = charters.map(charterRowHtml).join("");
+    chBody.querySelectorAll(".pim-remove-charter-row").forEach((btn) =>
+      btn.addEventListener("click", () => removeRequirementRow("charters", btn.closest("tr").dataset.id))
+    );
   }
 
   // ------------------------------------------------------------------
@@ -741,7 +769,7 @@
     const links = [];
     if (cp.status === 2 || cp.status === 4) {
       links.push(
-        `<a href="/api/clientProposals/${cp.id}/pdf" class="text-[11px] font-medium text-orange-600 hover:text-orange-700">Download PDF</a>`,
+        `<a href="/api/clientProposals/${cp.id}/pdf" class="text-[11px] font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">Download PDF</a>`,
       );
     }
     if (
@@ -750,7 +778,7 @@
       /^(\/|https?:\/\/)/.test(cp.signed_document_path)
     ) {
       links.push(
-        `<a href="${esc(cp.signed_document_path)}" target="_blank" rel="noopener" class="text-[11px] font-medium text-orange-600 hover:text-orange-700">Download Signed Copy</a>`,
+        `<a href="${esc(cp.signed_document_path)}" target="_blank" rel="noopener" class="text-[11px] font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">Download Signed Copy</a>`,
       );
     }
 

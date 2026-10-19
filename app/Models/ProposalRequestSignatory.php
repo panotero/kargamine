@@ -9,11 +9,15 @@ class ProposalRequestSignatory extends Model
     protected $fillable = [
         'proposal_request_id',
         'prospect_contact_id',
+        'name',
+        'position',
+        'email',
+        'contact_number',
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:F j, Y',
-        'updated_at' => 'datetime:F j, Y',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function proposalRequest()

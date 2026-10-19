@@ -7,6 +7,7 @@ use App\Models\ListOfValue;
 use App\Models\ProposalRequest;
 use App\Models\Prospect;
 use App\Models\ProspectCompanyInfo;
+use App\Models\ProspectContactChannel;
 use App\Models\ProspectNote;
 use App\Services\ActivityService;
 use App\Services\FileUploadService;
@@ -195,6 +196,34 @@ class ProspectController extends Controller
             report($e);
         }
 
+        // Role-specific message per recipient (not a single TeamNotifier::notify()
+        // call to both ids) so a CSR-only or RM-only assignee isn't told they're
+        // "assigned" without knowing which role - and so the same person being
+        // both doesn't get double-notified.
+        $leadLabel = $lead->company->company_name ?? $lead->contact_name;
+
+        TeamNotifier::notify([$validated['assigned_to']], [
+            'type' => 'crm.prospect_assigned',
+            'title' => 'Prospect assigned to you',
+            'message' => "{$request->user()->name} assigned you as CSR for {$leadLabel}.",
+            'from_user_id' => $request->user()->id,
+            'notifiable' => $lead,
+            'link' => ['title' => 'View in CRM', 'url' => '/page_crm'],
+            'email_subject' => "You've been assigned — {$leadLabel}",
+        ]);
+
+        if ($validated['relationship_manager_id'] !== $validated['assigned_to']) {
+            TeamNotifier::notify([$validated['relationship_manager_id']], [
+                'type' => 'crm.prospect_assigned',
+                'title' => 'Prospect assigned to you',
+                'message' => "{$request->user()->name} assigned you as Relationship Manager for {$leadLabel}.",
+                'from_user_id' => $request->user()->id,
+                'notifiable' => $lead,
+                'link' => ['title' => 'View in CRM', 'url' => '/page_crm'],
+                'email_subject' => "You've been assigned — {$leadLabel}",
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $lead->fresh()->load('user:id,name', 'relationshipManager:id,name'),
@@ -299,7 +328,12 @@ class ProspectController extends Controller
             ]);
 
             if ($isNew) {
-                $lead->assigned_to = auth()->id();
+                // Permanent creator record, independent of assigned_to -
+                // the prospect starts genuinely unassigned (assigned_to AND
+                // relationship_manager_id both null) until Management
+                // deliberately staffs it via assignOwners(), with no
+                // exception for whoever created it.
+                $lead->created_by = auth()->id();
                 $lead->status = \App\Models\CrmStatus::where('status', 'PROSPECT')->first()?->id ?? 1;
                 $lead->status_updated_at = now();
             }
@@ -599,6 +633,7 @@ class ProspectController extends Controller
             'minimum_temperature' => ['nullable', 'numeric'],
             'quantity' => ['nullable', 'integer', 'min:0'],
             'revenue_ton' => ['nullable', 'numeric', 'min:0'],
+            'revenue_ton_unit' => ['nullable', 'in:CBM,MT'],
             'cargo_measurement' => ['nullable', 'string', 'max:255'],
             'declared_value_per_unit' => ['nullable', 'numeric', 'min:0'],
             'weight' => ['nullable', 'numeric', 'min:0'],
@@ -726,6 +761,7 @@ class ProspectController extends Controller
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
+            'charter_service_id' => ['nullable', 'integer', 'exists:charter_services,charter_service_id'],
             'charter_start_date' => ['nullable', 'date'],
             'charter_end_date' => ['nullable', 'date', 'after_or_equal:charter_start_date'],
             'declared_value' => ['nullable', 'numeric', 'min:0'],
@@ -752,6 +788,7 @@ class ProspectController extends Controller
 
         $charter = DB::transaction(function () use ($lead, $validated) {
             $charter = $lead->requirementCharters()->create([
+                'charter_service_id' => $validated['charter_service_id'] ?? null,
                 'charter_start_date' => $validated['charter_start_date'] ?? null,
                 'charter_end_date' => $validated['charter_end_date'] ?? null,
                 'declared_value' => $validated['declared_value'] ?? null,
@@ -949,13 +986,18 @@ class ProspectController extends Controller
 
         $validated = $request->validate([
             'prospect_contact_id' => [
-                'required',
+                'nullable',
                 'integer',
                 Rule::exists('prospect_contacts', 'id')->where(fn ($q) => $q->where('prospect_id', $lead->id)),
+                Rule::unique('proposal_request_signatories', 'prospect_contact_id')->where(fn ($q) => $q->where('proposal_request_id', $proposalRequest->id)),
             ],
+            'name' => ['required', 'string', 'max:255'],
+            'position' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $signatory = $proposalRequest->signatories()->firstOrCreate($validated);
+        $signatory = $proposalRequest->signatories()->create($validated);
 
         return response()->json([
             'success' => true,
@@ -1013,6 +1055,21 @@ class ProspectController extends Controller
             'address_country' => ['nullable', 'string', 'max:255'],
             'address_postal_code' => ['nullable', 'string', 'max:20'],
         ]);
+
+        // A manually-typed entry (no chip selected) has no prospect_location_id
+        // yet - without one it can never be picked as a product's origin/
+        // destination on the Products tab, since those columns FK straight to
+        // prospect_locations. Back it with a new prospect_locations row (not
+        // marked primary - this is a one-off capture, not a change to the
+        // prospect's designated primary address) so every O&D entry, manual
+        // or chip-selected, ends up equally selectable there.
+        if (empty($validated['prospect_location_id'])) {
+            $newProspectLocation = $lead->addresses()->create([
+                ...collect($validated)->except('prospect_location_id')->toArray(),
+                'is_primary' => false,
+            ]);
+            $validated['prospect_location_id'] = $newProspectLocation->id;
+        }
 
         $location = $proposalRequest->locations()->create($validated);
 
@@ -1083,10 +1140,81 @@ class ProspectController extends Controller
             ], 422);
         }
 
-        $proposalRequest->status = 'for_approval';
-        $proposalRequest->submitted_at = now();
-        $proposalRequest->submitted_by = $request->user()?->id;
-        $proposalRequest->save();
+        $proposal = DB::transaction(function () use ($proposalRequest, $lead, $request) {
+            // Authorized Signatories capture an editable name/position/email/
+            // contact_number snapshot at Add time (see
+            // storeProposalRequestSignatory()) - whatever's on that snapshot
+            // at submit time flows back into the real prospect_contacts
+            // record: updates the picked contact's position + email/mobile
+            // channels, or creates a brand new contact for a fully manual
+            // entry (no contact picked). Deliberately does NOT touch the
+            // contact's structured name fields (title/first/middle/last) -
+            // reconstructing those from the signatory's single free-text
+            // name string would be lossy/ambiguous, so a name edit here only
+            // ever affects this proposal's own signatory display.
+            foreach ($proposalRequest->signatories as $signatory) {
+                if ($signatory->prospect_contact_id) {
+                    $contact = $signatory->prospectContact;
+                    if (! $contact) {
+                        continue;
+                    }
+                    if ($signatory->position) {
+                        $contact->update(['position' => $signatory->position]);
+                    }
+                } else {
+                    $nameParts = preg_split('/\s+/', trim((string) $signatory->name), -1, PREG_SPLIT_NO_EMPTY);
+                    $lastName = count($nameParts) > 1 ? array_pop($nameParts) : '';
+                    $firstName = $nameParts ? implode(' ', $nameParts) : (string) $signatory->name;
+                    $contact = $lead->contacts()->create([
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                        'position' => $signatory->position,
+                    ]);
+                    $signatory->prospect_contact_id = $contact->id;
+                    $signatory->save();
+                }
+
+                if ($signatory->email) {
+                    ProspectContactChannel::updateOrCreate(
+                        ['prospect_contact_id' => $contact->id, 'channel_type' => 'email'],
+                        ['value' => $signatory->email, 'contact_type' => 'business']
+                    );
+                }
+                if ($signatory->contact_number) {
+                    ProspectContactChannel::updateOrCreate(
+                        ['prospect_contact_id' => $contact->id, 'channel_type' => 'mobile'],
+                        ['value' => $signatory->contact_number, 'contact_type' => 'business']
+                    );
+                }
+            }
+
+            $proposalRequest->status = 'for_approval';
+            $proposalRequest->submitted_at = now();
+            $proposalRequest->submitted_by = $request->user()?->id;
+            $proposalRequest->save();
+
+            // Bridges the submitted RFP into a lead-scoped ClientProposal so
+            // it enters the existing proposal approval workflow - mirrors
+            // ClientProposalController::storeForLead()'s code-generation
+            // exactly, but deliberately does NOT populate client_proposal_rates
+            // (that path/table is untouched by the RFP wizard).
+            $yearMonth = Carbon::now()->format('Ym');
+            $last = \App\Models\ClientProposal::where('code', 'like', "CPR-{$yearMonth}%")
+                ->orderByDesc('id')->lockForUpdate()->first();
+            $seq = $last ? ((int) substr($last->code, -4)) + 1 : 1;
+
+            return \App\Models\ClientProposal::create([
+                'uuid' => (string) Str::uuid(),
+                'code' => sprintf('CPR-%s-%04d', $yearMonth, $seq),
+                'prospect_id' => $lead->id,
+                'client_id' => null,
+                'proposal_request_id' => $proposalRequest->id,
+                'status' => \App\Models\ClientProposal::STATUS_PENDING,
+                'created_by' => $request->user()?->id,
+            ]);
+        });
+
+        app(ClientProposalController::class)->notifyProposalPending($proposal);
 
         try {
             $this->activityService->create(
@@ -1167,6 +1295,7 @@ class ProspectController extends Controller
             'companyDetail.prospectLocation',
             'signatories.prospectContact',
             'locations.prospectLocation',
+            'termsOfPayment',
         ];
     }
 
@@ -1254,8 +1383,8 @@ class ProspectController extends Controller
         if ($flags['temp'] && ($c['minimum_temperature'] ?? null) === null) {
             $errors[] = "Booking requirement #{$index}: minimum temperature is required.";
         }
-        if ($flags['revenueTon'] && ($c['revenue_ton'] ?? null) === null) {
-            $errors[] = "Booking requirement #{$index}: revenue ton is required.";
+        if ($flags['revenueTon'] && empty($c['revenue_ton_unit'])) {
+            $errors[] = "Booking requirement #{$index}: revenue ton unit is required.";
         }
         if (empty($c['service_type'])) {
             $errors[] = "Booking requirement #{$index}: service type is required.";
@@ -1479,37 +1608,7 @@ class ProspectController extends Controller
      */
     private function proposalRequestEagerLoadSuffixes(): array
     {
-        return [
-            'companyDetail.prospectLocation',
-            'signatories.prospectContact',
-            'locations.prospectLocation',
-            'productContainers.containerSize:id,size',
-            'productContainers.deliveryType:delivery_type_id,code,name',
-            'productContainers.originLocation',
-            'productContainers.destinationLocation',
-            'productContainers.originPort:port_id,location_id,name',
-            'productContainers.destinationPort:port_id,location_id,name',
-            'productContainers.ancillaryServices.cargoYard',
-            'productRollingCargo.deliveryType:delivery_type_id,code,name',
-            'productRollingCargo.originLocation',
-            'productRollingCargo.destinationLocation',
-            'productRollingCargo.originPort:port_id,location_id,name',
-            'productRollingCargo.destinationPort:port_id,location_id,name',
-            'productRollingCargo.ancillaryServices.cargoYard',
-            'productRollingCargo.topLoadCargo',
-            'productLooseCargo.deliveryType:delivery_type_id,code,name',
-            'productLooseCargo.originLocation',
-            'productLooseCargo.destinationLocation',
-            'productLooseCargo.originPort:port_id,location_id,name',
-            'productLooseCargo.destinationPort:port_id,location_id,name',
-            'productLooseCargo.ancillaryServices.cargoYard',
-            'productTruckings.originLocation',
-            'productTruckings.destinationLocation',
-            'productTruckings.ancillaryServices.cargoYard',
-            'productCharters.cargoItems',
-            'productCharters.ports.port:port_id,location_id,name',
-            'productCharters.ports.port.location:location_id,name',
-        ];
+        return ProposalRequest::fullTreeEagerLoadSuffixes();
     }
 
     public function show($uuid)
@@ -1526,6 +1625,7 @@ class ProspectController extends Controller
                 'crmStatus:id,status',
                 'user',
                 'relationshipManager:id,name',
+                'creator:id,name',
                 'containers.originPort:port_id,location_id,name',
                 'containers.originPort.location:location_id,name',
                 'containers.destinationPort:port_id,location_id,name',

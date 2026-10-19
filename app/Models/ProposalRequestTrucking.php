@@ -23,8 +23,8 @@ class ProposalRequestTrucking extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'declared_value_per_unit' => 'decimal:2',
         'weight' => 'decimal:2',
     ];

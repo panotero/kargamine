@@ -35,7 +35,7 @@
 
     <div class="px-5 pt-3 flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-700" id="rpmTabBar">
         <button type="button" data-rpm-tab="CompanyDetails"
-            class="rpm-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-orange-500 text-orange-600">
+            class="rpm-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-orange-500 text-orange-600 dark:text-orange-400">
             Company Details
         </button>
         <button type="button" data-rpm-tab="OriginDestination"
@@ -45,6 +45,14 @@
         <button type="button" data-rpm-tab="Products"
             class="rpm-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-transparent text-zinc-500 dark:text-zinc-400">
             Products
+        </button>
+        <button type="button" data-rpm-tab="BuildMatrix"
+            class="rpm-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-transparent text-zinc-500 dark:text-zinc-400">
+            Build Rate Matrix
+        </button>
+        <button type="button" data-rpm-tab="TermsConditions"
+            class="rpm-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-transparent text-zinc-500 dark:text-zinc-400">
+            Terms &amp; Conditions
         </button>
         <button type="button" data-rpm-tab="Confirmation"
             class="rpm-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-transparent text-zinc-500 dark:text-zinc-400">
@@ -102,17 +110,52 @@
                     </button>
                 </div>
 
-                {{-- ---- Authorized Signatory sub-section ---- --}}
+                {{-- ---- Authorized Signatory sub-section ----
+                     Picking a Contact prefills Name/Position/Email/Contact
+                     Number below (see signatoryContactChange() in
+                     logic_prospect_request_proposal.js) but every field
+                     stays fully editable, and the Contact picker itself is
+                     optional - leaving it blank and typing all four fields
+                     is a valid fully-manual signatory. Whatever's in these
+                     four fields at Add time is what gets saved on this
+                     signatory (its own snapshot, not re-read from the
+                     contact later) - and on final submit, that snapshot
+                     syncs back into the picked contact's
+                     position/email/mobile, or becomes a brand new contact
+                     if none was picked. See
+                     ProspectController::submitProposalRequest(). --}}
                 <div class="border-t dark:border-zinc-700 pt-4 space-y-3">
                     <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Authorized Signatory</p>
-                    <div class="flex items-end gap-2">
-                        <div class="flex-1">
-                            <label for="rpmSignatoryContact" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Contact</label>
-                            <select id="rpmSignatoryContact"
-                                class="rpmSignatoryDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                                <option value="">Select Contact</option>
-                            </select>
+                    <div>
+                        <label for="rpmSignatoryContact" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Contact</label>
+                        <select id="rpmSignatoryContact"
+                            class="rpmSignatoryDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                            <option value="">Select Contact (optional - or type below manually)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="rpmSignatoryName" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Name <span class="req-asterisk">*</span></label>
+                            <input type="text" id="rpmSignatoryName"
+                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
                         </div>
+                        <div>
+                            <label for="rpmSignatoryPosition" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Position</label>
+                            <input type="text" id="rpmSignatoryPosition"
+                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label for="rpmSignatoryEmail" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Email</label>
+                            <input type="email" id="rpmSignatoryEmail"
+                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label for="rpmSignatoryContactNumber" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Contact Number</label>
+                            <input type="text" id="rpmSignatoryContactNumber"
+                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
                         <button type="button" id="rpmAddSignatoryBtn"
                             class="text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
                             + Add Authorized
@@ -126,27 +169,12 @@
 
         {{-- ============ TAB: ORIGIN & DESTINATION ============ --}}
         <div class="rpm-tab-pane hidden space-y-3" data-rpm-pane="OriginDestination">
-            <div>
-                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2">Select a Location to Add</p>
-                <div id="rpmOdChips" class="flex flex-wrap gap-2"></div>
-                <p id="rpmOdChipsEmpty" class="hidden text-sm text-zinc-400 dark:text-zinc-500">This prospect has no saved addresses yet - fill out the form below manually.</p>
-            </div>
-
-            {{--
-                Live, editable address form - built from
-                window.prospectShared.locationCardHtml()/initLocationPsgcCascade()
-                (same helpers the Identity tab's own address cards and
-                AddLocationModal use), minus the Primary radio and Remove
-                button which don't apply to a single O&D entry. Clicking a
-                suggestion chip above autofills it (including the real
-                province->city->barangay cascade), but it's always visible
-                and editable/submittable on its own - manual entry with no
-                chip clicked is allowed. See
-                logic_prospect_request_proposal.js's renderOdChips()/
-                hydrateOdCard()/addOdLocation().
-            --}}
-            <div id="rpmOdCardWrap"></div>
-
+            {{-- The address form (chips + editable card) now lives in its
+                 own popup - see <x-rpm-add-od-modal /> and
+                 openRpmAddOdModal()/saveRpmAddOd() in
+                 logic_prospect_request_proposal.js - same "+Add via popup,
+                 appears in the list" pattern used for Locations on the
+                 Prospect Identity tab. --}}
             <div class="flex justify-end">
                 <button type="button" id="rpmAddOdBtn"
                     class="text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
@@ -196,11 +224,15 @@
         --}}
         <div class="rpm-tab-pane hidden space-y-6" data-rpm-pane="Products">
 
-            <p id="rpmProductsEmpty" class="hidden text-sm text-zinc-400 dark:text-zinc-500">No products added yet.</p>
-
             {{-- CONTAINER (CV/FR/RF) table --}}
-            <div id="rpmProductContainersTableWrap" class="hidden space-y-2">
-                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Containers</p>
+            <div id="rpmProductContainersTableWrap" class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Containers</p>
+                    <button type="button" id="rpmAddContainerBtn"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Add Container
+                    </button>
+                </div>
                 <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                     <table class="min-w-full text-xs">
                         <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -228,8 +260,14 @@
             </div>
 
             {{-- ROLLING CARGO table --}}
-            <div id="rpmProductRollingCargoTableWrap" class="hidden space-y-2">
-                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Rolling Cargo</p>
+            <div id="rpmProductRollingCargoTableWrap" class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Rolling Cargo</p>
+                    <button type="button" id="rpmAddRollingCargoBtn"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Add Rolling Cargo
+                    </button>
+                </div>
                 <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                     <table class="min-w-full text-xs">
                         <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -258,8 +296,14 @@
             </div>
 
             {{-- BREAK BULK CARGO (LC) table (same shape minus Top Load) --}}
-            <div id="rpmProductLooseCargoTableWrap" class="hidden space-y-2">
-                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Break Bulk Cargo (BB)</p>
+            <div id="rpmProductLooseCargoTableWrap" class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Break Bulk Cargo (BB)</p>
+                    <button type="button" id="rpmAddLooseCargoBtn"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Add Break Bulk Cargo
+                    </button>
+                </div>
                 <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                     <table class="min-w-full text-xs">
                         <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -287,8 +331,14 @@
             </div>
 
             {{-- TRUCKING table --}}
-            <div id="rpmProductTruckingsTableWrap" class="hidden space-y-2">
-                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Truckings</p>
+            <div id="rpmProductTruckingsTableWrap" class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Truckings</p>
+                    <button type="button" id="rpmAddTruckingBtn"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Add Trucking
+                    </button>
+                </div>
                 <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                     <table class="min-w-full text-xs">
                         <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -310,8 +360,14 @@
             </div>
 
             {{-- CHARTER table --}}
-            <div id="rpmProductChartersTableWrap" class="hidden space-y-2">
-                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Charters</p>
+            <div id="rpmProductChartersTableWrap" class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Charters</p>
+                    <button type="button" id="rpmAddCharterBtn"
+                        class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        + Add Charter
+                    </button>
+                </div>
                 <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                     <table class="min-w-full text-xs">
                         <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -343,513 +399,183 @@
                 intake-time requirement row (requirement_containers/
                 _truckings/_charters, already present on the wizard's
                 lead payload - no fetch). Clicking is a pure shortcut: it
-                switches to the matching product form below and prefills
-                only the overlapping fields, leaving it fully editable and
-                unsubmitted. Whole block hidden when the prospect has no
-                requirement rows at all - see
+                opens the matching product's own "+ Add" popup below,
+                pre-filled with the overlapping fields, leaving it fully
+                editable and unsubmitted. Whole block hidden when the
+                prospect has no requirement rows at all - see
                 logic_prospect_request_proposal.js's
                 renderProductsPrefillShortcuts()/applyProductPrefill().
             --}}
             <div id="rpmProductsPrefillWrap" class="hidden space-y-2">
                 <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Copy from Prospect Products</p>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400">Pick one of this prospect's own requirement rows to prefill a product form below with its overlapping fields. The form stays fully editable - review and complete it, then Add manually.</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Pick one of this prospect's own requirement rows to prefill a product's "+ Add" popup with its overlapping fields. The form stays fully editable - review and complete it, then Add manually.</p>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Location/route and ports aren't carried over - pick those in the form. For charter, cargo & ports are added after saving.</p>
                 <div id="rpmProductsPrefillChips" class="flex flex-wrap gap-2"></div>
             </div>
+        </div>
 
-            {{-- Product picker - one shared "Add" area, per brief mirroring the Requirements tab --}}
-            <div class="border-t dark:border-zinc-700 pt-4">
-                <label for="rpmProductSelect" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Product</label>
-                <select id="rpmProductSelect"
-                    class="w-full md:w-64 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                    <option value="">Select Product</option>
-                    <option value="container">Container</option>
-                    <option value="rolling_cargo">Rolling Cargo</option>
-                    <option value="loose_cargo">Break Bulk Cargo (BB)</option>
-                    <option value="trucking">Trucking</option>
-                    <option value="charter">Charter</option>
-                </select>
+        {{-- ============ TAB: BUILD RATE MATRIX ============ --}}
+        {{-- Lists every product added on the Products tab (all 5 types,
+             unmerged - one row per actual saved product, not the
+             merged/summarized line items used by the Confirmation recap).
+             Rate column is a session-only "reviewed" flag (not persisted -
+             real rate-matrix pricing is backend work planned separately,
+             see ProductSpecificationModal). Row click opens that product's
+             full spec + a sample fee breakdown. See
+             logic_prospect_request_proposal.js's renderBuildMatrix(). --}}
+        <div class="rpm-tab-pane hidden space-y-4" data-rpm-pane="BuildMatrix">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Every product added on the Products tab, one row each. Click a row to review its specification and rate breakdown.</p>
+
+            <p id="rpmMatrixEmpty" class="hidden text-sm text-zinc-400 dark:text-zinc-500">No products added yet — add some on the Products tab first.</p>
+
+            <div id="rpmMatrixTableWrap" class="hidden overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
+                <table class="min-w-full text-xs">
+                    <thead class="bg-zinc-50 dark:bg-zinc-800/50 text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                        <tr>
+                            <th class="px-3 py-2 text-left">Item No.</th>
+                            <th class="px-3 py-2 text-left">Rate</th>
+                            <th class="px-3 py-2 text-left">Product</th>
+                            <th class="px-3 py-2 text-left">Detail</th>
+                            <th class="px-3 py-2 text-left">Route</th>
+                            <th class="px-3 py-2 text-right">Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rpmMatrixTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- ============ TAB: TERMS & CONDITIONS ============ --}}
+        {{-- Static reference text only, sourced from "CSR Canva v16.pdf"
+             (pages 26-32) - the PDF frames each product type's clauses as a
+             "dropdown list" (i.e. selectable per-proposal), but building
+             that selection UI + persisting which ones were chosen is
+             deferred; this is read-only reference content for now, same
+             "placeholder now, full build later" treatment as Build Rate
+             Matrix. Shown unconditionally (all six product types), not
+             filtered to whatever was actually added on the Products tab. --}}
+        <div class="rpm-tab-pane hidden space-y-6" data-rpm-pane="TermsConditions">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Reference terms &amp; conditions per product type, for the assigned RM/CSR to apply when preparing the proposal. Sourced from the standard CSR reference document. Only sections matching products actually added on the Products tab are shown.</p>
+
+            <div id="rpmTcSectionConvan" class="space-y-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">For ConVans &amp; Flatracks</p>
+                <div>
+                    <label for="rpmTcTermConvan" class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Terms of Payment</label>
+                    <select id="rpmTcTermConvan" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For ConVans & Flatracks">
+                        <option value="">Select Terms of Payment</option>
+                    </select>
+                </div>
+                <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                    <li>Above rates do not apply to "Dangerous Cargoes".</li>
+                    <li>Above rates represent base rates and are subject to fuel surcharge adjustments.</li>
+                    <li>For TEU bookings, above rates apply for Tandem TEU pick up/delivery.</li>
+                    <li>For Flatrack bookings, above rates apply for Tandem Flatrack pick up/delivery.</li>
+                    <li>Maximum declared value is ₱<input type="text" inputmode="decimal" class="currency-input w-28 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500,000">/TEU, ₱<input type="text" inputmode="decimal" class="currency-input w-28 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500,000">/Flatrack, or ₱<input type="text" inputmode="decimal" class="currency-input w-28 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="1,000,000">/FEU HC.</li>
+                    <li>Additional valuation charge of <input type="number" step="0.01" class="w-16 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="0.50">% in excess of the above declared value limits.</li>
+                    <li>Two (<input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="2">) Days Free Storage upon vessel arrival at Destination; excess incurs ₱<input type="text" inputmode="decimal" class="currency-input w-20 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500">/day (TEU/Flatrack) or ₱<input type="text" inputmode="decimal" class="currency-input w-20 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="1,000">/day (FEU HC).</li>
+                    <li>Allowable load limit is <input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="18"> Tons per TEU/Flatrack/FEU HC to avoid off loading and penalties.</li>
+                    <li>Shipper will provide standard stacking configuration &amp; height for each SKU, and is fully liable for consequences of overloading or non-standard stacking.</li>
+                </ul>
             </div>
 
-            {{-- CONTAINER form (CV/FR/RF unified - Minimum Temperature only shown for RF) --}}
-            <div id="rpmProductPaneContainer" class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                <div id="rpmContainerForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label for="rpmPcContainerType" class="text-[11px] text-zinc-400 uppercase">Container Type</label>
-                        <select id="rpmPcContainerType" data-field="container_type"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="CV">Container Van (CV)</option>
-                            <option value="FR">Flatrack (FR)</option>
-                            <option value="RF">Reefer Van (RF)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmPcContainerSize" class="text-[11px] text-zinc-400 uppercase">Size</label>
-                        <select id="rpmPcContainerSize" data-field="container_size_id"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Size</option>
-                        </select>
-                    </div>
-                    <div class="rpm-field-min-temp hidden">
-                        <label for="rpmPcMinTemp" class="text-[11px] text-zinc-400 uppercase">Minimum Temperature (&deg;C)</label>
-                        <input type="number" step="0.1" id="rpmPcMinTemp" data-field="minimum_temperature"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmPcDeliveryType" class="text-[11px] text-zinc-400 uppercase">Service Type</label>
-                        <select id="rpmPcDeliveryType" data-field="service_type"
-                            class="rpmDeliveryTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Service Type</option>
-                        </select>
-                    </div>
-                    <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                        <label for="rpmPcQty" class="text-[11px] text-zinc-400 uppercase">Quantity (No. of Containers) <span class="req-asterisk">*</span></label>
-                        <input type="number" min="1" step="1" id="rpmPcQty" data-field="quantity"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
+            <div id="rpmTcSectionReefer" class="space-y-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">For Reefer Vans</p>
+                <div>
+                    <label for="rpmTcTermReefer" class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Terms of Payment</label>
+                    <select id="rpmTcTermReefer" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Reefer Vans">
+                        <option value="">Select Terms of Payment</option>
+                    </select>
+                </div>
+                <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                    <li>Above rates do not apply to "Dangerous Cargoes".</li>
+                    <li>Above rates represent base rates and are subject to fuel surcharge adjustments.</li>
+                    <li>Maximum declared value is ₱<input type="text" inputmode="decimal" class="currency-input w-28 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500,000">/Reefer Van; additional valuation charge of <input type="number" step="0.01" class="w-16 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="0.50">% in excess.</li>
+                    <li>Minimum Temperature: <input type="number" step="1" class="w-16 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="100"> degrees Celsius / Fahrenheit.</li>
+                    <li>Direct-to-truck delivery required for Reefer Vans upon vessel arrival.</li>
+                    <li>Allowable load limit per Reefer Van is <input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="18"> Tons to avoid off loading and penalties.</li>
+                    <li>Shipper will provide standard stacking configuration &amp; height for each SKU, and is fully liable for consequences of overloading or non-standard stacking.</li>
+                </ul>
+            </div>
 
-                    {{-- ROUTE - two-column, arrow-connected (see VISUALS.md) --}}
-                    <div class="md:col-span-3 space-y-1.5">
-                        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Route</p>
-                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
-                            <div class="flex flex-col md:flex-row items-stretch md:items-start gap-4">
-                                <div class="flex-1 space-y-3">
-                                    <div>
-                                        <label for="rpmPcOrigin" class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                                        <select id="rpmPcOrigin" data-field="origin_prospect_location_id"
-                                            class="rpmOdOriginDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Origin</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="rpmPcOriginPort" class="text-[11px] text-zinc-400 uppercase">Port of Origin</label>
-                                        <select id="rpmPcOriginPort" data-field="origin_port_id"
-                                            class="rpmPortDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Port</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="shrink-0 flex items-center justify-center py-1 md:py-0 md:pt-7">
-                                    <span class="inline-block rotate-90 md:rotate-0 text-orange-500 font-bold text-xl leading-none">&rarr;</span>
-                                </div>
-                                <div class="flex-1 space-y-3">
-                                    <div>
-                                        <label for="rpmPcDestination" class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                                        <select id="rpmPcDestination" data-field="destination_prospect_location_id"
-                                            class="rpmOdDestinationDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Destination</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="rpmPcDestinationPort" class="text-[11px] text-zinc-400 uppercase">Port of Destination</label>
-                                        <select id="rpmPcDestinationPort" data-field="destination_port_id"
-                                            class="rpmPortDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Port</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div id="rpmTcSectionRolling" class="space-y-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">For Rolling Cargoes</p>
+                <div>
+                    <label for="rpmTcTermRolling" class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Terms of Payment</label>
+                    <select id="rpmTcTermRolling" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Rolling Cargoes">
+                        <option value="">Select Terms of Payment</option>
+                    </select>
+                </div>
+                <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                    <li>Above rates do not apply to "Dangerous Cargoes".</li>
+                    <li>Above rates represent base rates and are subject to fuel surcharge adjustments.</li>
+                    <li>Above rates are estimates. Final charges will be based on actual measurements.</li>
+                    <li>Port charges for Cebu, CDO, Masbate &amp; Palawan are excluded from above rates and must be settled directly by the client.</li>
+                    <li>No passengers or unauthorized personnel are permitted inside or on the vehicle.</li>
+                    <li>Maximum declared value is ₱<input type="text" inputmode="decimal" class="currency-input w-28 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500,000">/unit; additional valuation charge of <input type="number" step="0.01" class="w-16 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="0.50">% in excess.</li>
+                    <li>Two (<input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="2">) Days Free Storage upon vessel arrival at Destination; excess incurs ₱<input type="text" inputmode="decimal" class="currency-input w-20 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500">/day/unit.</li>
+                </ul>
+            </div>
 
-                    <div>
-                        <label for="rpmPcCargoType" class="text-[11px] text-zinc-400 uppercase">Cargo Type</label>
-                        <select id="rpmPcCargoType" data-field="cargo_type"
-                            class="rpmCargoTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Cargo Type</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-3">
-                        <label for="rpmPcCargoDescription" class="text-[11px] text-zinc-400 uppercase">Cargo Description</label>
-                        <input type="text" id="rpmPcCargoDescription" data-field="cargo_description"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmPcDispatchOrigin" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode (Origin)</label>
-                        <select id="rpmPcDispatchOrigin" data-field="dispatch_mode_origin"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm disabled:opacity-40">
-                            <option value="single">Single</option>
-                            <option value="tandem">Tandem</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmPcDispatchDestination" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode (Destination)</label>
-                        <select id="rpmPcDispatchDestination" data-field="dispatch_mode_destination"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm disabled:opacity-40">
-                            <option value="single">Single</option>
-                            <option value="tandem">Tandem</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmPcTermsOfPayment" class="text-[11px] text-zinc-400 uppercase">Terms of Payment</label>
-                        <select id="rpmPcTermsOfPayment" data-field="terms_of_payment"
-                            class="rpmTermsOfPaymentDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
+            <div id="rpmTcSectionBreakbulk" class="space-y-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">For Break Bulk Cargo</p>
+                <div>
+                    <label for="rpmTcTermBreakbulk" class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Terms of Payment</label>
+                    <select id="rpmTcTermBreakbulk" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Break Bulk Cargo">
+                        <option value="">Select Terms of Payment</option>
+                    </select>
+                </div>
+                <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                    <li>Above rates do not apply to "Dangerous Cargoes".</li>
+                    <li>Above rates represent base rates and are subject to fuel surcharge adjustments.</li>
+                    <li>Above rates are estimates. Final charges will be based on actual measurements.</li>
+                    <li>Insurance coverage will be for the account of shipper/cargo owner.</li>
+                    <li>Two (<input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="2">) Days Free Storage upon vessel arrival at Destination; excess incurs ₱<input type="text" inputmode="decimal" class="currency-input w-20 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="500">/day/item unit.</li>
+                    <li>Shipper is fully liable for consequences of overloading or non-standard stacking.</li>
+                </ul>
+            </div>
+
+            <div id="rpmTcSectionTrucking" class="space-y-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">For Trucking</p>
+                <div>
+                    <label for="rpmTcTermTrucking" class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Terms of Payment</label>
+                    <select id="rpmTcTermTrucking" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Trucking">
+                        <option value="">Select Terms of Payment</option>
+                    </select>
+                </div>
+                <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                    <li>Above rates do not apply to "Dangerous Cargoes".</li>
+                    <li>Above rates represent base rates and are subject to fuel surcharge adjustments.</li>
+                    <li>Foul trip charges apply to all unsuccessful transport &amp; delivery attempts.</li>
+                    <li>Standard detention and demurrage fees will incur if waiting time at origin or destination exceeds the agreed threshold.</li>
+                    <li>Shipper is fully liable for consequences of overloading or non-standard stacking.</li>
+                </ul>
+            </div>
+
+            <div id="rpmTcSectionCharter" class="space-y-2">
+                <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">For Charter</p>
+                <div>
+                    <label for="rpmTcTermsOfPaymentCharter" class="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Terms of Payment</label>
+                    <select id="rpmTcTermsOfPaymentCharter" class="rpmCharterTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Charter">
+                        <option value="">Select Terms of Payment</option>
+                    </select>
+                </div>
+                <div class="text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
+                    <p>SHIPPING COMPANY shall provide fuel, oil, lubricant and other supply provisions necessary to transport the CHARTERER's equipment per the agreed terms. Other out-of-pocket expenses not incurred in the normal course of the charter shall be for the CHARTERER's account.</p>
+                    <p>Loading and unloading expenses shall be for the account of the CHARTERER. All CARGO loaded is accepted on the basis of the CHARTERER's load and count; CARGO shall be loaded, stowed/trimmed, and discharged by the CHARTERER at their risk and expense, under the Master's supervision.</p>
+                    <p>All arrastre, stevedoring, wharfage fees and other port charges related to the shipment of the CARGO shall be for the CHARTERER's account, unless otherwise specified. Damage to the VESSEL and its accessories duly certified by the Master as incurred during loading and/or unloading shall be for the CHARTERER's account.</p>
+                    <p>The CHARTERER shall undertake a suitability survey of the VESSEL; the start of loading shall be construed as the CHARTERER's final acceptance of the VESSEL, and SHIPPING COMPANY shall not be held responsible for any claims related to the CARGO thereafter.</p>
+                    <p>The VESSEL shall not be used for cargo restricted by local government authorities, nor loaded with cargo not government-approved and certified for transit, nor towed outside Philippine sheltered waters.</p>
+                    <p>Claims for damages or demurrage shall be computed and settled separately from the freight balance, unless otherwise agreed. Freight in full is deemed earned whether the VESSEL and/or CARGO is lost or not.</p>
+                    <p>LAYTIME allowed for loading and/or unloading is on a twenty-four (<input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="24">) hour basis, including Sundays and Holidays. Time spent waiting for berth, documents, or freight clearances counts as LAYTIME, for the CHARTERER's expense.</p>
+                    <p>Cargo Lien — the SHIPPING COMPANY has first lien over the CARGO for non-payment of freight, extra charges, damages, demurrage, or any amount due, including collection costs, and may place the CARGO in a warehouse to sell/dispose of it to recover its claim. The CHARTERER shall pay all balance due within twenty-four (<input type="number" step="1" class="w-14 inline-block mx-1 text-center border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 text-xs bg-white dark:bg-zinc-800 dark:text-zinc-100" value="24">) hours after the VESSEL secures berth at the unloading port and is ready to unload.</p>
+                    <p>Any deviation to save life, property, or the environment, or any reasonable deviation, shall not be deemed a violation of this Charter Party, and SHIPPING COMPANY shall not be liable for any resulting loss or damage.</p>
                 </div>
             </div>
 
-            {{-- ROLLING CARGO form --}}
-            <div id="rpmProductPaneRollingCargo" class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                <div id="rpmRollingCargoForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label for="rpmRcCargoType" class="text-[11px] text-zinc-400 uppercase">Cargo Type</label>
-                        <select id="rpmRcCargoType" data-field="cargo_type"
-                            class="rpmCargoTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Cargo Type</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="rpmRcCargoDetails" class="text-[11px] text-zinc-400 uppercase">Cargo Details</label>
-                        <input type="text" id="rpmRcCargoDetails" data-field="cargo_details"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmRcQuantity" class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                        <input type="number" id="rpmRcQuantity" data-field="cargo_quantity"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmRcUnits" class="text-[11px] text-zinc-400 uppercase">Units</label>
-                        <select id="rpmRcUnits" data-field="cargo_units"
-                            class="rpmUnitDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Unit</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmRcRevenueTonUnit" class="text-[11px] text-zinc-400 uppercase">Revenue Ton (RT) Unit</label>
-                        <select id="rpmRcRevenueTonUnit" data-field="revenue_ton_unit"
-                            class="rpmRtUnitDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
-                    <div>
-                        <label for="rpmRcRevenueTon" class="text-[11px] text-zinc-400 uppercase">Revenue Ton (RT)</label>
-                        <input type="number" step="0.01" id="rpmRcRevenueTon" data-field="revenue_ton"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmRcMeasurement" class="text-[11px] text-zinc-400 uppercase">Cargo Measurement</label>
-                        <input type="text" id="rpmRcMeasurement" data-field="cargo_measurement"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmRcDeliveryType" class="text-[11px] text-zinc-400 uppercase">Service Type</label>
-                        <select id="rpmRcDeliveryType" data-field="service_type"
-                            class="rpmDeliveryTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Service Type</option>
-                        </select>
-                    </div>
-                    {{-- ROUTE - two-column, arrow-connected (see VISUALS.md) --}}
-                    <div class="md:col-span-3 space-y-1.5">
-                        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Route</p>
-                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
-                            <div class="flex flex-col md:flex-row items-stretch md:items-start gap-4">
-                                <div class="flex-1 space-y-3">
-                                    <div>
-                                        <label for="rpmRcOrigin" class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                                        <select id="rpmRcOrigin" data-field="origin_prospect_location_id"
-                                            class="rpmOdOriginDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Origin</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="rpmRcOriginPort" class="text-[11px] text-zinc-400 uppercase">Port of Origin</label>
-                                        <select id="rpmRcOriginPort" data-field="origin_port_id"
-                                            class="rpmPortDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Port</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="shrink-0 flex items-center justify-center py-1 md:py-0 md:pt-7">
-                                    <span class="inline-block rotate-90 md:rotate-0 text-orange-500 font-bold text-xl leading-none">&rarr;</span>
-                                </div>
-                                <div class="flex-1 space-y-3">
-                                    <div>
-                                        <label for="rpmRcDestination" class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                                        <select id="rpmRcDestination" data-field="destination_prospect_location_id"
-                                            class="rpmOdDestinationDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Destination</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="rpmRcDestinationPort" class="text-[11px] text-zinc-400 uppercase">Port of Destination</label>
-                                        <select id="rpmRcDestinationPort" data-field="destination_port_id"
-                                            class="rpmPortDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Port</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="rpmRcTermsOfPayment" class="text-[11px] text-zinc-400 uppercase">Terms of Payment</label>
-                        <select id="rpmRcTermsOfPayment" data-field="terms_of_payment"
-                            class="rpmTermsOfPaymentDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
-                </div>
-            </div>
-
-            {{-- BREAK BULK CARGO (LC) form (same fields as Rolling Cargo) --}}
-            <div id="rpmProductPaneLooseCargo" class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                <div id="rpmLooseCargoForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label for="rpmLcCargoType" class="text-[11px] text-zinc-400 uppercase">Cargo Type</label>
-                        <select id="rpmLcCargoType" data-field="cargo_type"
-                            class="rpmCargoTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Cargo Type</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="rpmLcCargoDetails" class="text-[11px] text-zinc-400 uppercase">Cargo Details</label>
-                        <input type="text" id="rpmLcCargoDetails" data-field="cargo_details"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmLcQuantity" class="text-[11px] text-zinc-400 uppercase">Quantity</label>
-                        <input type="number" id="rpmLcQuantity" data-field="cargo_quantity"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmLcUnits" class="text-[11px] text-zinc-400 uppercase">Units</label>
-                        <select id="rpmLcUnits" data-field="cargo_units"
-                            class="rpmUnitDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Unit</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmLcRevenueTonUnit" class="text-[11px] text-zinc-400 uppercase">Revenue Ton (RT) Unit</label>
-                        <select id="rpmLcRevenueTonUnit" data-field="revenue_ton_unit"
-                            class="rpmRtUnitDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
-                    <div>
-                        <label for="rpmLcRevenueTon" class="text-[11px] text-zinc-400 uppercase">Revenue Ton (RT)</label>
-                        <input type="number" step="0.01" id="rpmLcRevenueTon" data-field="revenue_ton"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmLcMeasurement" class="text-[11px] text-zinc-400 uppercase">Cargo Measurement</label>
-                        <input type="text" id="rpmLcMeasurement" data-field="cargo_measurement"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmLcDeliveryType" class="text-[11px] text-zinc-400 uppercase">Service Type</label>
-                        <select id="rpmLcDeliveryType" data-field="service_type"
-                            class="rpmDeliveryTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Service Type</option>
-                        </select>
-                    </div>
-                    {{-- ROUTE - two-column, arrow-connected (see VISUALS.md) --}}
-                    <div class="md:col-span-3 space-y-1.5">
-                        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Route</p>
-                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
-                            <div class="flex flex-col md:flex-row items-stretch md:items-start gap-4">
-                                <div class="flex-1 space-y-3">
-                                    <div>
-                                        <label for="rpmLcOrigin" class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                                        <select id="rpmLcOrigin" data-field="origin_prospect_location_id"
-                                            class="rpmOdOriginDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Origin</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="rpmLcOriginPort" class="text-[11px] text-zinc-400 uppercase">Port of Origin</label>
-                                        <select id="rpmLcOriginPort" data-field="origin_port_id"
-                                            class="rpmPortDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Port</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="shrink-0 flex items-center justify-center py-1 md:py-0 md:pt-7">
-                                    <span class="inline-block rotate-90 md:rotate-0 text-orange-500 font-bold text-xl leading-none">&rarr;</span>
-                                </div>
-                                <div class="flex-1 space-y-3">
-                                    <div>
-                                        <label for="rpmLcDestination" class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                                        <select id="rpmLcDestination" data-field="destination_prospect_location_id"
-                                            class="rpmOdDestinationDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Destination</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="rpmLcDestinationPort" class="text-[11px] text-zinc-400 uppercase">Port of Destination</label>
-                                        <select id="rpmLcDestinationPort" data-field="destination_port_id"
-                                            class="rpmPortDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                            <option value="">Select Port</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="rpmLcTermsOfPayment" class="text-[11px] text-zinc-400 uppercase">Terms of Payment</label>
-                        <select id="rpmLcTermsOfPayment" data-field="terms_of_payment"
-                            class="rpmTermsOfPaymentDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
-                </div>
-            </div>
-
-            {{-- TRUCKING form --}}
-            <div id="rpmProductPaneTrucking" class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                <div id="rpmTruckingForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label for="rpmTrTruckingCargoType" class="text-[11px] text-zinc-400 uppercase">Trucking Cargo Type</label>
-                        <select id="rpmTrTruckingCargoType" data-field="trucking_cargo_type"
-                            class="rpmTruckingCargoTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Cargo Type</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmTrDispatchMode" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode</label>
-                        <select id="rpmTrDispatchMode" data-field="dispatch_mode"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="single">Single</option>
-                            <option value="tandem">Tandem</option>
-                        </select>
-                    </div>
-                    <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                        <label for="rpmTrQty" class="text-[11px] text-zinc-400 uppercase">Quantity (No. of Units) <span class="req-asterisk">*</span></label>
-                        <input type="number" min="1" step="1" id="rpmTrQty" data-field="quantity"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-
-                    {{-- ROUTE - two-column, arrow-connected (no ports for Trucking) --}}
-                    <div class="md:col-span-3 space-y-1.5">
-                        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Route</p>
-                        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
-                            <div class="flex flex-col md:flex-row items-stretch md:items-start gap-4">
-                                <div class="flex-1">
-                                    <label for="rpmTrOrigin" class="text-[11px] text-zinc-400 uppercase">Origin</label>
-                                    <select id="rpmTrOrigin" data-field="origin_prospect_location_id"
-                                        class="rpmOdOriginDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                        <option value="">Select Origin</option>
-                                    </select>
-                                </div>
-                                <div class="shrink-0 flex items-center justify-center py-1 md:py-0 md:pt-6">
-                                    <span class="inline-block rotate-90 md:rotate-0 text-orange-500 font-bold text-xl leading-none">&rarr;</span>
-                                </div>
-                                <div class="flex-1">
-                                    <label for="rpmTrDestination" class="text-[11px] text-zinc-400 uppercase">Destination</label>
-                                    <select id="rpmTrDestination" data-field="destination_prospect_location_id"
-                                        class="rpmOdDestinationDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                                        <option value="">Select Destination</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="rpmTrCargoType" class="text-[11px] text-zinc-400 uppercase">Cargo Type</label>
-                        <select id="rpmTrCargoType" data-field="cargo_type"
-                            class="rpmCargoTypeDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select Cargo Type</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="rpmTrTermsOfPayment" class="text-[11px] text-zinc-400 uppercase">Terms of Payment</label>
-                        <select id="rpmTrTermsOfPayment" data-field="terms_of_payment"
-                            class="rpmTermsOfPaymentDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
-                    <div class="md:col-span-3">
-                        <label for="rpmTrCargoDescription" class="text-[11px] text-zinc-400 uppercase">Cargo Description</label>
-                        <input type="text" id="rpmTrCargoDescription" data-field="cargo_description"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                </div>
-            </div>
-
-            {{-- CHARTER form (main fields only - Cargo Info/Ports added afterward via View) --}}
-            <div id="rpmProductPaneCharter" class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                <div id="rpmCharterForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label for="rpmChVesselName" class="text-[11px] text-zinc-400 uppercase">Vessel Name</label>
-                        <input type="text" id="rpmChVesselName" data-field="vessel_name"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChDeadWeight" class="text-[11px] text-zinc-400 uppercase">Vessel Dead Weight</label>
-                        <input type="number" step="0.01" id="rpmChDeadWeight" data-field="vessel_dead_weight"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChLoadingDate" class="text-[11px] text-zinc-400 uppercase">Loading Date</label>
-                        <input type="date" id="rpmChLoadingDate" data-field="loading_date"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChStartDate" class="text-[11px] text-zinc-400 uppercase">Charter Start Date</label>
-                        <input type="date" id="rpmChStartDate" data-field="charter_start_date"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChEndDate" class="text-[11px] text-zinc-400 uppercase">Charter End Date</label>
-                        <input type="date" id="rpmChEndDate" data-field="charter_end_date"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChLaytimeLoading" class="text-[11px] text-zinc-400 uppercase">Laytime - Loading (days)</label>
-                        <input type="number" id="rpmChLaytimeLoading" data-field="laytime_loading_days"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChLaytimeUnloading" class="text-[11px] text-zinc-400 uppercase">Laytime - Unloading (days)</label>
-                        <input type="number" id="rpmChLaytimeUnloading" data-field="laytime_unloading_days"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div class="flex items-center gap-2 mt-5">
-                        <input type="checkbox" id="rpmChDemurrage" data-field="demurrage_charges" class="rounded border-zinc-300 dark:border-zinc-700">
-                        <label for="rpmChDemurrage" class="text-sm text-zinc-700 dark:text-zinc-200">Demurrage Charges</label>
-                    </div>
-                    <div class="flex items-center gap-2 mt-5">
-                        <input type="checkbox" id="rpmChLashing" data-field="lashing_service" class="rounded border-zinc-300 dark:border-zinc-700">
-                        <label for="rpmChLashing" class="text-sm text-zinc-700 dark:text-zinc-200">Lashing Service</label>
-                    </div>
-                    <div class="flex items-center gap-2 mt-5">
-                        <input type="checkbox" id="rpmChInsurance" data-field="insurance_services" class="rounded border-zinc-300 dark:border-zinc-700">
-                        <label for="rpmChInsurance" class="text-sm text-zinc-700 dark:text-zinc-200">Insurance Services</label>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="rpmChOtherCharges" class="text-[11px] text-zinc-400 uppercase">Other Charges</label>
-                        <input type="text" id="rpmChOtherCharges" data-field="other_charges"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChTermsOfPayment" class="text-[11px] text-zinc-400 uppercase">Terms of Payment</label>
-                        <select id="rpmChTermsOfPayment" data-field="terms_of_payment"
-                            class="rpmCharterTermsOfPaymentDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></select>
-                    </div>
-                    <div>
-                        <label for="rpmChDeclaredValue" class="text-[11px] text-zinc-400 uppercase">Declared Value</label>
-                        <input type="number" step="0.01" id="rpmChDeclaredValue" data-field="declared_value"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label for="rpmChWeight" class="text-[11px] text-zinc-400 uppercase">Weight</label>
-                        <div class="flex gap-2">
-                            <input type="number" step="0.01" id="rpmChWeight" data-field="weight"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                            <select id="rpmChWeightUnit" data-field="weight_unit"
-                                class="w-24 shrink-0 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-2 text-sm">
-                                <option value="kg">kg</option>
-                                <option value="mt">MT</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="md:col-span-3">
-                        <label for="rpmChCargoManifest" class="text-[11px] text-zinc-400 uppercase">Cargo Manifest</label>
-                        {{-- Prepared for a future upload endpoint - deliberately not wired to anything yet. --}}
-                        <input type="file" id="rpmChCargoManifest"
-                            class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end">
-                <button type="button" id="rpmAddProductBtn"
+            <div class="border-t dark:border-zinc-700 pt-4 flex justify-end">
+                <button type="button" id="rpmSaveTermsConditionsBtn"
                     class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
-                    + Add
+                    Save Terms of Payment
                 </button>
             </div>
         </div>
@@ -869,7 +595,14 @@
     </div>
 </x-modal>
 
+<x-rpm-add-od-modal />
+<x-rpm-add-container-modal />
+<x-rpm-add-rolling-cargo-modal />
+<x-rpm-add-loose-cargo-modal />
+<x-rpm-add-trucking-modal />
+<x-rpm-add-charter-modal />
 <x-ancillary-services-modal />
 <x-top-load-cargo-modal />
 <x-charter-cargo-info-modal />
 <x-charter-ports-modal />
+<x-product-specification-modal />

@@ -10,8 +10,11 @@ class Contract extends Model
 {
     // Status constants - mirrors the integer status style used on `proposals`
     public const STATUS_DRAFT = 1;
+
     public const STATUS_ACTIVE = 2;
+
     public const STATUS_EXPIRED = 3;
+
     public const STATUS_TERMINATED = 4;
 
     protected $fillable = [
@@ -28,14 +31,13 @@ class Contract extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
-        'signed_date' => 'datetime:M d, Y, h:i A',
-        'valid_from' => 'datetime:M d, Y, h:i A',
-        'valid_to' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'signed_date' => 'datetime',
+        'valid_from' => 'datetime',
+        'valid_to' => 'datetime',
         'status' => 'integer',
     ];
-
 
     protected static function booted(): void
     {

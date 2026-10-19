@@ -39,6 +39,17 @@
     7: "bg-amber-100 text-amber-600",
   };
 
+  // Humanized labels for the RFP wizard's product_rates[].product_type -
+  // that payload only carries the raw type code, no product/detail/route
+  // labels (those live on the separate product rows, not included here).
+  const RFP_PRODUCT_TYPE_LABEL = {
+    container: "Container",
+    rolling_cargo: "Rolling Cargo",
+    loose_cargo: "Loose Cargo",
+    trucking: "Trucking",
+    charter: "Charter",
+  };
+
   let currentProposalId = null;
   let currentProposalLead = null;
   let currentProposalDetail = null;
@@ -186,9 +197,54 @@
       decisionInfo.classList.add("hidden");
     }
 
-    document.getElementById("cpmRatesBody").innerHTML = p.rates.map((r) => {
-      const ancillary = r.ancillary_services ?? [];
-      const ancillaryRow = ancillary.length ? `
+    // RFP-sourced proposals (proposal_request_id set, and the request
+    // actually carries saved product_rates) render from that shape instead
+    // of the legacy p.rates path - the two column sets are different
+    // (product_rates has no product/detail/route labels, only product_type/
+    // item_no/base/adjustment/total + a fee_breakdown), so this swaps
+    // between two separate static <table>s (#cpmLegacyRatesTable /
+    // #cpmRfpRatesTable) rather than reshaping one table's columns in JS.
+    // The p.rates path below (ELSE) is untouched from before this branch.
+    const pr = p.proposal_request ?? null;
+    const useRfpRates = Boolean(p.proposal_request_id) && Boolean(pr?.product_rates?.length);
+    const legacyRatesTable = document.getElementById("cpmLegacyRatesTable");
+    const rfpRatesTable = document.getElementById("cpmRfpRatesTable");
+
+    if (useRfpRates) {
+      legacyRatesTable?.classList.add("hidden");
+      rfpRatesTable?.classList.remove("hidden");
+
+      document.getElementById("cpmRfpRatesBody").innerHTML = pr.product_rates.map((r) => {
+        const feeLines = r.fee_breakdown ?? [];
+        const feeBreakdownRow = feeLines.length ? `
+                <tr class="border-t">
+                    <td colspan="5" class="py-1 pb-2 pl-4">
+                        <div class="space-y-0.5">
+                            ${feeLines.map((f) => `
+                            <div class="flex justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span>${f.detail ?? "-"}</span>
+                                <span>Base ${Number(f.base ?? 0).toLocaleString()} ${f.adjustment ? `/ Adj. ${f.adjustment > 0 ? "+" : ""}${Number(f.adjustment).toLocaleString()}` : ""}</span>
+                            </div>`).join("")}
+                        </div>
+                    </td>
+                </tr>` : "";
+
+        return `
+            <tr class="border-t">
+                <td class="py-1.5 font-mono">${r.item_no ?? "-"}</td>
+                <td class="py-1.5">${RFP_PRODUCT_TYPE_LABEL[r.product_type] ?? r.product_type ?? "-"}</td>
+                <td class="py-1.5 text-right">${Number(r.base_rate ?? 0).toLocaleString()}</td>
+                <td class="py-1.5 text-right">${rfpAdjustmentDisplay(r.adjustment)}</td>
+                <td class="py-1.5 text-right font-semibold">${Number(r.total_rate ?? 0).toLocaleString()}</td>
+            </tr>${feeBreakdownRow}`;
+      }).join("");
+    } else {
+      rfpRatesTable?.classList.add("hidden");
+      legacyRatesTable?.classList.remove("hidden");
+
+      document.getElementById("cpmRatesBody").innerHTML = p.rates.map((r) => {
+        const ancillary = r.ancillary_services ?? [];
+        const ancillaryRow = ancillary.length ? `
                 <tr class="border-t">
                     <td colspan="6" class="py-1 text-[11px] text-zinc-500">
                         <span class="font-semibold">Ancillary Services:</span>
@@ -196,7 +252,7 @@
                     </td>
                 </tr>` : "";
 
-      return `
+        return `
             <tr class="border-t">
                 <td class="py-1.5">
                     ${r.origin_port ? (r.origin_port.location?.name ?? "-") + " - " + r.origin_port.name : "-"}${r.origin_pickup_area ? ` <span class="text-zinc-400">(Pickup: ${r.origin_pickup_area.area_name})</span>` : ""}
@@ -208,7 +264,50 @@
                 <td class="py-1.5 text-right">${adjustmentDisplay(r.discount_type, r.discount_value)}</td>
                 <td class="py-1.5 text-right font-semibold">${Number(r.final_rate).toLocaleString()}</td>
             </tr>${ancillaryRow}`;
-    }).join("");
+      }).join("");
+    }
+
+    // RFP Terms & Conditions recap (Terms of Payment + grouped Ancillary
+    // Service fees) - only rendered/shown when this proposal actually came
+    // from an RFP request that carries this data; fully hidden otherwise.
+    const rfpTermsSection = document.getElementById("cpmRfpTerms");
+    if (rfpTermsSection) {
+      const hasStandardTop = Boolean(pr?.terms_of_payment_standard);
+      const hasCharterTop = Boolean(pr?.terms_of_payment_charter);
+      const ancillaryFees = pr?.ancillary_fees ?? [];
+
+      const topWrap = document.getElementById("cpmRfpTermsOfPayment");
+      document.getElementById("cpmRfpTopStandardWrap")?.classList.toggle("hidden", !hasStandardTop);
+      document.getElementById("cpmRfpTopCharterWrap")?.classList.toggle("hidden", !hasCharterTop);
+      if (hasStandardTop) document.getElementById("cpmRfpTopStandard").textContent = pr.terms_of_payment_standard;
+      if (hasCharterTop) document.getElementById("cpmRfpTopCharter").textContent = pr.terms_of_payment_charter;
+      topWrap?.classList.toggle("hidden", !hasStandardTop && !hasCharterTop);
+
+      const ancillaryWrap = document.getElementById("cpmRfpAncillaryWrap");
+      if (ancillaryFees.length) {
+        const bySection = {};
+        ancillaryFees.forEach((f) => {
+          if (!bySection[f.section]) bySection[f.section] = [];
+          bySection[f.section].push(f);
+        });
+        document.getElementById("cpmRfpAncillaryBody").innerHTML = Object.keys(bySection).map((section) => `
+            <div>
+                <p class="text-xs font-semibold text-zinc-600 dark:text-zinc-300 mb-1">${section}</p>
+                <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl divide-y divide-zinc-100 dark:divide-zinc-700">
+                    ${bySection[section].map((f) => `
+                    <div class="flex justify-between px-3 py-1.5 text-xs">
+                        <span class="text-zinc-500 dark:text-zinc-400">${f.service_name}</span>
+                        <span class="font-medium text-zinc-800 dark:text-zinc-100">${Number(f.fee_amount ?? 0).toLocaleString()}</span>
+                    </div>`).join("")}
+                </div>
+            </div>`).join("");
+        ancillaryWrap?.classList.remove("hidden");
+      } else {
+        ancillaryWrap?.classList.add("hidden");
+      }
+
+      rfpTermsSection.classList.toggle("hidden", !hasStandardTop && !hasCharterTop && !ancillaryFees.length);
+    }
 
     const additionalCharges = [
       ["include_special_charges", "Special Charges"],
@@ -318,6 +417,17 @@
     return adjustmentDisplay(values.discount_type, values.discount_value);
   }
 
+  // RFP rate matrix's adjustment is a plain signed number (not a
+  // type+value pair like the legacy discount_type/discount_value above) -
+  // sign-cue it so a negative clearly reads as a reduction rather than
+  // looking like a typo'd positive number.
+  function rfpAdjustmentDisplay(value) {
+    const num = Number(value ?? 0);
+    if (num === 0) return "0.00";
+    const sign = num > 0 ? "+" : "−";
+    return `${sign}${Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
   function describeRateChange(rate) {
     const original = ccOriginalValues(rate);
     const current = rateOverrides[rate.id];
@@ -361,7 +471,7 @@
                 <td class="py-1.5 px-2">${lane}</td>
                 <td class="py-1.5 px-2">${variant}</td>
                 <td class="py-1.5 px-2">
-                    <input type="number" min="1" step="1" placeholder="None" class="cc-input-minqty w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ""}">
+                    <input type="text" inputmode="numeric" placeholder="None" class="cc-input-minqty currency-input w-16 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${values.min_van_qty ?? ""}">
                 </td>
                 <td class="py-1.5 px-2">
                     <input type="text" inputmode="decimal" class="cc-input-base currency-input w-24 border rounded px-1.5 py-1 text-xs text-right dark:text-zinc-900" value="${formatCurrencyDisplay(values.base_rate)}">
@@ -531,7 +641,7 @@
       }
 
       if (e.target.closest(".cc-apply-btn")) {
-        const minQtyRaw = row.querySelector(".cc-input-minqty").value;
+        const minQtyRaw = parseCurrencyValue(row.querySelector(".cc-input-minqty").value);
         const newValues = {
           min_van_qty: minQtyRaw === "" ? null : Number(minQtyRaw),
           base_rate: Number(parseCurrencyValue(row.querySelector(".cc-input-base").value)),

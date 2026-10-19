@@ -203,10 +203,12 @@
                 {
                     title: "Valid From",
                     key: "valid_from",
+                    render: (r) => r.valid_from ? formatDate(r.valid_from) : '-',
                 },
                 {
                     title: "Valid To",
                     key: "valid_to",
+                    render: (r) => r.valid_to ? formatDate(r.valid_to) : '-',
                 },
                 {
                     title: "Status",
@@ -275,9 +277,9 @@
             document.getElementById('vcInfoContainer').innerHTML = `
                 <div><span class="text-zinc-400">Source Proposal:</span> <div class="font-medium">${contract.proposal?.code ?? '-'}</div></div>
                 <div><span class="text-zinc-400">Prepared By:</span> <div class="font-medium">${contract.creator?.name ?? '-'}</div></div>
-                <div><span class="text-zinc-400">Signed Date:</span> <div class="font-medium">${contract.signed_date ?? '-'}</div></div>
-                <div><span class="text-zinc-400">Valid From:</span> <div class="font-medium">${contract.valid_from}</div></div>
-                <div><span class="text-zinc-400">Valid To:</span> <div class="font-medium">${contract.valid_to}</div></div>
+                <div><span class="text-zinc-400">Signed Date:</span> <div class="font-medium">${contract.signed_date ? formatDate(contract.signed_date) : '-'}</div></div>
+                <div><span class="text-zinc-400">Valid From:</span> <div class="font-medium">${formatDate(contract.valid_from)}</div></div>
+                <div><span class="text-zinc-400">Valid To:</span> <div class="font-medium">${formatDate(contract.valid_to)}</div></div>
             `;
 
             const rateRows = (contract.rates ?? []).map((r) => `

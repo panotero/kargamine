@@ -69,7 +69,7 @@
         {{-- ============== RAIL: TAB NAV ============== --}}
         <div class="w-[13rem] shrink-0 flex flex-col gap-1.5" id="pmTabRail">
             <button type="button" id="pmTabBtnIdentity" data-pm-tab="Identity"
-                class="pm-tab-btn w-full px-3 py-2 rounded-lg text-sm font-semibold border-2 flex items-center gap-2 text-left border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-950/20">
+                class="pm-tab-btn w-full px-3 py-2 rounded-lg text-sm font-semibold border-2 flex items-center gap-2 text-left border-orange-500 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20">
                 <span
                     class="pm-tab-indicator flex items-center justify-center w-5 h-5 rounded-full shrink-0 text-[11px] font-bold"></span>
                 <span>Prospect Identity</span>
@@ -94,6 +94,8 @@
             {{-- ============ TAB 1: PROSPECT IDENTITY ============ --}}
             <div class="pm-tab-pane space-y-6" data-pm-pane="Identity">
                 <form id="pmIdentityForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-6">
 
                     {{-- Prospect Source --}}
                     <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3 relative">
@@ -131,16 +133,16 @@
                                 Which platform?
                             </p>
                             <div class="grid grid-cols-2 gap-2">
-                                <button type="button"
+                                <button type="button" aria-pressed="false"
                                     class="pm-social-platform-btn text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-orange-400 dark:hover:border-orange-500 text-zinc-700 dark:text-zinc-200"
                                     data-platform="Facebook">Facebook</button>
-                                <button type="button"
+                                <button type="button" aria-pressed="false"
                                     class="pm-social-platform-btn text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-orange-400 dark:hover:border-orange-500 text-zinc-700 dark:text-zinc-200"
                                     data-platform="Instagram">Instagram</button>
-                                <button type="button"
+                                <button type="button" aria-pressed="false"
                                     class="pm-social-platform-btn text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-orange-400 dark:hover:border-orange-500 text-zinc-700 dark:text-zinc-200"
                                     data-platform="Tiktok">Tiktok</button>
-                                <button type="button"
+                                <button type="button" aria-pressed="false"
                                     class="pm-social-platform-btn text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-orange-400 dark:hover:border-orange-500 text-zinc-700 dark:text-zinc-200"
                                     data-platform="Website">Website</button>
                             </div>
@@ -200,19 +202,23 @@
                         <p id="pmAttendingCsr" class="text-sm font-medium text-zinc-800 dark:text-zinc-100 mt-2">
                             {{ Auth::user()->name }}</p>
                     </div>
+                </div>
 
-                    {{-- Locations --}}
-                    <div class="border-t dark:border-zinc-700 pt-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <p class="font-semibold text-zinc-700 dark:text-zinc-200 text-sm">Location(s) <span
-                                    class="req-asterisk">*</span></p>
-                            <button type="button" id="pmAddLocationBtn"
-                                class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
-                                + Add Location
-                            </button>
-                        </div>
-                        <div id="pmLocationsContainer" class="space-y-4"></div>
+                {{-- Locations: right column. Added via the <x-pm-add-location-modal />
+                     popup (see #pmAddLocationBtn's binding in logic_prospect_modal.js)
+                     and rendered as a summary list, not inline editable cards. --}}
+                <div class="md:border-l md:pl-6 dark:border-zinc-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-semibold text-zinc-700 dark:text-zinc-200 text-sm">Location(s) <span
+                                class="req-asterisk">*</span></p>
+                        <button type="button" id="pmAddLocationBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                            + Add Location
+                        </button>
                     </div>
+                    <div id="pmLocationsContainer" class="space-y-2"></div>
+                </div>
+                </div>
 
                     <div class="flex justify-end gap-2 pt-4 border-t dark:border-zinc-700">
                         <button type="button" id="pmSaveIdentityBtn"
@@ -262,18 +268,25 @@
 
                 {{--
                     Product tables - Freight (Container), Trucking, Charter -
-                    each hidden until its first row is added (per brief:
-                    "initially there is no table on the tab"). Independent of
-                    which product is currently selected below; all three stay
-                    visible together once populated. Column order in each
-                    MUST stay in sync with its *TableRowHtml()` `cells` array
-                    in logic_prospect_modal.js.
+                    always visible (each with its own "+ Add" button that
+                    opens that product's own popup - see
+                    <x-pm-add-freight-modal />/<x-pm-add-trucking-modal />/
+                    <x-pm-add-charter-modal /> and openPmAddFreightModal()/
+                    openPmAddTruckingModal()/openPmAddCharterModal() in
+                    logic_prospect_modal.js). Column order in each MUST stay
+                    in sync with its *TableRowHtml()` `cells` array there.
                 --}}
-                <div id="pmContainersTableWrap" class="hidden space-y-2">
-                    <div class="flex justify-between items-baseline">
+                <div id="pmContainersTableWrap" class="space-y-2">
+                    <div class="flex justify-between items-center">
                         <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                             Freights</p>
-                        <span class="text-[11px] text-zinc-400 dark:text-zinc-500">scroll for more &rarr;</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[11px] text-zinc-400 dark:text-zinc-500">scroll for more &rarr;</span>
+                            <button type="button" id="pmAddFreightBtn"
+                                class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                                + Add Freight
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         <table class="min-w-full text-xs border-separate border-spacing-0">
@@ -304,9 +317,15 @@
                     </div>
                 </div>
 
-                <div id="pmTruckingsTableWrap" class="hidden space-y-2">
-                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Truckings</p>
+                <div id="pmTruckingsTableWrap" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Truckings</p>
+                        <button type="button" id="pmAddTruckingBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                            + Add Trucking
+                        </button>
+                    </div>
                     <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         <table class="min-w-full text-xs">
                             <thead
@@ -332,9 +351,15 @@
                     </div>
                 </div>
 
-                <div id="pmChartersTableWrap" class="hidden space-y-2">
-                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Charters</p>
+                <div id="pmChartersTableWrap" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Charters</p>
+                        <button type="button" id="pmAddCharterBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                            + Add Charter
+                        </button>
+                    </div>
                     <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         <table class="min-w-full text-xs">
                             <thead
@@ -353,368 +378,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                {{--
-                    Product picker - one "Add Requirement" area shared by all
-                    three products. Starts blank (no pane shown, per brief)
-                    and swaps which pane is visible on change - see
-                    bindProductSelector() in logic_prospect_modal.js.
-                --}}
-                <div class="border-t dark:border-zinc-700 pt-4">
-                    <label for="pmRequirementProduct"
-                        class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                        Product
-                    </label>
-                    <select id="pmRequirementProduct"
-                        class="w-full md:w-64 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                        <option value="">Select Product</option>
-                        <option value="freight">Freight</option>
-                        <option value="trucking">Trucking</option>
-                        <option value="charter">Charter</option>
-                    </select>
-                </div>
-
-                {{-- Freight (Container) pane --}}
-                <div id="pmProductPaneFreight"
-                    class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                    <p class="font-semibold text-zinc-700 dark:text-zinc-200 text-sm">Add Booking Requirement</p>
-
-                    <div id="pmContainerForm" class="space-y-4">
-                        <div class="grid grid-cols-1 gap-3">
-                            <div>
-                                <p
-                                    class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
-                                    Container &amp; Quantity</p>
-                            </div>
-
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmContainerType" class="text-[11px] text-zinc-400 uppercase">Container
-                                    Type <span class="req-asterisk">*</span></label>
-                                <select id="pmContainerType" data-field="container_type"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Type</option>
-                                </select>
-                            </div>
-                            <div
-                                class="field-convan-size hidden border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmContainerSize" class="text-[11px] text-zinc-400 uppercase">Size <span
-                                        class="req-asterisk">*</span></label>
-                                <select id="pmContainerSize" data-field="container_size_id"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Size</option>
-                                </select>
-                            </div>
-                            <div
-                                class="field-temperature hidden border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmMinTemp" class="text-[11px] text-zinc-400 uppercase">Minimum Temperature
-                                    (&deg;C) <span class="req-asterisk">*</span></label>
-                                <input type="number" step="0.1" id="pmMinTemp" data-field="minimum_temperature"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div
-                                class="field-revenue-ton hidden border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmRevenueTon" class="text-[11px] text-zinc-400 uppercase"
-                                    title="Billing unit for cargo with no fixed container size - whichever is greater, weight or space taken up.">Revenue Ton (RT)
-                                    Unit <span class="req-asterisk">*</span> <span class="text-zinc-300 dark:text-zinc-600">ⓘ</span></label>
-                                <input type="number" step="0.01" id="pmRevenueTon" data-field="revenue_ton"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div
-                                class="field-revenue-ton hidden border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmCargoMeasurement" class="text-[11px] text-zinc-400 uppercase">Cargo
-                                    Measurement</label>
-                                <input type="text" id="pmCargoMeasurement" data-field="cargo_measurement"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmContainerQuantity" class="text-[11px] text-zinc-400 uppercase">Quantity
-                                    <span class="req-asterisk">*</span></label>
-                                <input type="number" id="pmContainerQuantity" data-field="quantity"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmContainerFrequency"
-                                    class="text-[11px] text-zinc-400 uppercase">Frequency</label>
-                                <select id="pmContainerFrequency" data-field="frequency"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">-</option>
-                                    <option value="daily">Daily</option>
-                                    <option value="Weekly">Weekly</option>
-                                    <option value="Monthly">Monthly</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div
-                            class="grid grid-cols-1 gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-700">
-                            <div>
-                                <p
-                                    class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
-                                    Service &amp; Route</p>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmDeliveryType" class="text-[11px] text-zinc-400 uppercase"
-                                    title="Door = picked up/delivered at the client's own address. Pier = handled only at the port.">Service Type
-                                    <span class="req-asterisk">*</span> <span class="text-zinc-300 dark:text-zinc-600">ⓘ</span></label>
-                                <select id="pmDeliveryType" data-field="service_type"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Service Type</option>
-                                </select>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmOriginLocation" class="text-[11px] text-zinc-400 uppercase">Origin <span
-                                        class="req-asterisk">*</span></label>
-                                <select id="pmOriginLocation" data-field="origin_location_id"
-                                    class="pmOriginLocationSelect w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Location</option>
-                                </select>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmDestinationLocation"
-                                    class="text-[11px] text-zinc-400 uppercase">Destination <span
-                                        class="req-asterisk">*</span></label>
-                                <select id="pmDestinationLocation" data-field="destination_location_id"
-                                    class="pmDestinationLocationSelect w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Location</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div
-                            class="grid grid-cols-1 gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-700">
-                            <div>
-                                <p
-                                    class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
-                                    Cargo Details</p>
-                            </div>
-                            <div>
-                                <label for="pmCargoType" class="text-[11px] text-zinc-400 uppercase">Cargo
-                                    Type</label>
-                                <select id="pmCargoType" data-field="cargo_type"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Cargo Type</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="pmDeclaredValue" class="text-[11px] text-zinc-400 uppercase">Declared
-                                    Value per Unit</label>
-                                <input type="text" inputmode="decimal" id="pmDeclaredValue"
-                                    data-field="declared_value_per_unit"
-                                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label for="pmWeight" class="text-[11px] text-zinc-400 uppercase">Weight</label>
-                                <div class="flex gap-2">
-                                    <input type="number" step="0.01" id="pmWeight" data-field="weight"
-                                        class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <select id="pmWeightUnit" data-field="weight_unit"
-                                        class="w-28 shrink-0 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                        <option value="">Unit</option>
-                                        <option value="kg">Kilogram</option>
-                                        <option value="mt">Metric Ton</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmGeneralCargoDescription"
-                                    class="text-[11px] text-zinc-400 uppercase">General Cargo Description <span
-                                        class="req-asterisk">*</span></label>
-                                <textarea id="pmGeneralCargoDescription" data-field="general_cargo_description" rows="2"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-                            </div>
-                            <div>
-                                <label for="pmSpecialRequirements" class="text-[11px] text-zinc-400 uppercase">Special
-                                    Requirements</label>
-                                <textarea id="pmSpecialRequirements" data-field="special_requirements" rows="2"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Trucking pane --}}
-                <div id="pmProductPaneTrucking"
-                    class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-3">
-                    <p class="font-semibold text-zinc-700 dark:text-zinc-200 text-sm">Add Trucking Requirement</p>
-
-                    <div id="pmTruckingForm" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmTruckingCargoType" class="text-[11px] text-zinc-400 uppercase">Trucking
-                                    Cargo Type <span class="req-asterisk">*</span></label>
-                                <select id="pmTruckingCargoType" data-field="trucking_cargo_type"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Type</option>
-                                </select>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmTruckingQuantity" class="text-[11px] text-zinc-400 uppercase">Quantity
-                                    <span class="req-asterisk">*</span></label>
-                                <input type="number" id="pmTruckingQuantity" data-field="quantity"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label for="pmTruckingFrequency"
-                                    class="text-[11px] text-zinc-400 uppercase">Frequency</label>
-                                <select id="pmTruckingFrequency" data-field="frequency"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">-</option>
-                                    <option value="daily">Daily</option>
-                                    <option value="Weekly">Weekly</option>
-                                    <option value="Monthly">Monthly</option>
-                                </select>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmDispatchMode" class="text-[11px] text-zinc-400 uppercase"
-                                    title="Single = one truck. Tandem = two trucks working together, for heavier/oversized loads.">Dispatch Mode
-                                    <span class="req-asterisk">*</span> <span class="text-zinc-300 dark:text-zinc-600">ⓘ</span></label>
-                                <select id="pmDispatchMode" data-field="dispatch_mode"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Mode</option>
-                                    <option value="single">Single</option>
-                                    <option value="tandem">Tandem</option>
-                                </select>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmTruckingOrigin" class="text-[11px] text-zinc-400 uppercase">Origin <span
-                                        class="req-asterisk">*</span></label>
-                                <select id="pmTruckingOrigin" data-field="origin_location_id"
-                                    class="pmTruckingOriginSelect w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Location</option>
-                                </select>
-                            </div>
-                            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmTruckingDestination"
-                                    class="text-[11px] text-zinc-400 uppercase">Destination <span
-                                        class="req-asterisk">*</span></label>
-                                <select id="pmTruckingDestination" data-field="destination_location_id"
-                                    class="pmTruckingDestinationSelect w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Location</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="pmTruckingDeclaredValue"
-                                    class="text-[11px] text-zinc-400 uppercase">Declared Value per Unit</label>
-                                <input type="text" inputmode="decimal" id="pmTruckingDeclaredValue"
-                                    data-field="declared_value_per_unit"
-                                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="text-[11px] text-zinc-400 uppercase">Weight</label>
-                                <div class="flex gap-2">
-                                    <input type="number" step="0.01" id="pmTruckingWeight" data-field="weight"
-                                        class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <select id="pmTruckingWeightUnit" data-field="weight_unit"
-                                        class="w-28 shrink-0 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                        <option value="">Unit</option>
-                                        <option value="kg">Kilogram</option>
-                                        <option value="mt">Metric Ton</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="pmTruckingCargoTypeGeneral"
-                                    class="text-[11px] text-zinc-400 uppercase">General Cargo Type</label>
-                                <select id="pmTruckingCargoTypeGeneral" data-field="cargo_type"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Select Cargo Type</option>
-                                </select>
-                            </div>
-                            <div class="md:col-span-3 border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                                <label for="pmTruckingCargoDescription"
-                                    class="text-[11px] text-zinc-400 uppercase">Cargo Description <span
-                                        class="req-asterisk">*</span></label>
-                                <textarea id="pmTruckingCargoDescription" data-field="general_cargo_description" rows="2"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-                            </div>
-                            <div class="md:col-span-3">
-                                <label for="pmTruckingSpecialRequirements"
-                                    class="text-[11px] text-zinc-400 uppercase">Special Requirements</label>
-                                <textarea id="pmTruckingSpecialRequirements" data-field="special_requirements" rows="2"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Charter pane - each booking owns its own repeatable
-                     Cargo list and Port list, entered inline here and
-                     summarized as one table row (see charterTableRowHtml()). --}}
-                <div id="pmProductPaneCharter"
-                    class="hidden border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded-xl p-4 space-y-4">
-                    <p class="font-semibold text-zinc-700 dark:text-zinc-200 text-sm">Add Charter Requirement</p>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <p
-                                class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                                Cargo <span class="req-asterisk">*</span></p>
-                            <button type="button" id="pmAddCharterCargoBtn"
-                                class="text-xs px-2 py-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
-                                + Add Cargo
-                            </button>
-                        </div>
-                        <div id="pmCharterCargoContainer" class="space-y-2"></div>
-                    </div>
-
-                    <div class="border-t dark:border-zinc-700 pt-3">
-                        <div class="flex justify-between items-center mb-2">
-                            <p
-                                class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                                Ports <span class="req-asterisk">*</span></p>
-                            <button type="button" id="pmAddCharterPortBtn"
-                                class="text-xs px-2 py-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
-                                + Add Port
-                            </button>
-                        </div>
-                        <div id="pmCharterPortsContainer" class="space-y-2"></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 border-t dark:border-zinc-700 pt-3">
-                        <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                            <label for="pmCharterStartDate" class="text-[11px] text-zinc-400 uppercase">Charter Start
-                                Date <span class="req-asterisk">*</span></label>
-                            <input type="date" id="pmCharterStartDate" data-field="charter_start_date"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                        </div>
-                        <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
-                            <label for="pmCharterEndDate" class="text-[11px] text-zinc-400 uppercase">Charter End Date
-                                <span class="req-asterisk">*</span></label>
-                            <input type="date" id="pmCharterEndDate" data-field="charter_end_date"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                        </div>
-                        <div>
-                            <label for="pmCharterDeclaredValue" class="text-[11px] text-zinc-400 uppercase">Declared
-                                Value</label>
-                            <input type="text" inputmode="decimal" id="pmCharterDeclaredValue"
-                                data-field="declared_value"
-                                class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                        </div>
-                        <div class="md:col-span-3">
-                            <label class="text-[11px] text-zinc-400 uppercase">Weight</label>
-                            <div class="flex gap-2 md:w-1/3">
-                                <input type="number" step="0.01" id="pmCharterWeight" data-field="weight"
-                                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                <select id="pmCharterWeightUnit" data-field="weight_unit"
-                                    class="w-28 shrink-0 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
-                                    <option value="">Unit</option>
-                                    <option value="kg">Kilogram</option>
-                                    <option value="mt">Metric Ton</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Shared submit - routes to the currently-selected
-                     product's add function, see #pmRequirementProduct's
-                     change handler / pmAddRequirementBtn's click handler. --}}
-                <div id="pmAddRequirementBtnWrap" class="hidden flex justify-end pt-2">
-                    <button type="button" id="pmAddRequirementBtn"
-                        class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        + Add Requirement
-                    </button>
                 </div>
             </div>
         </div>

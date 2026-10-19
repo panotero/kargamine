@@ -164,8 +164,9 @@
     if (!modal || !currentLead) return;
 
     modal.querySelector("#prsmCode").textContent = pr.code ?? "";
-    modal.querySelector("#prsmRecap").innerHTML =
-      window.buildProposalRequestRecapHtml?.(currentLead, pr) ?? "";
+    const recap = modal.querySelector("#prsmRecap");
+    recap.innerHTML = window.buildProposalRequestRecapHtml?.(currentLead, pr) ?? "";
+    window.wireMatrixBreakdownToggles?.(recap);
 
     const actions = modal.querySelector("#prsmActions");
     actions.innerHTML =

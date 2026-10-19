@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientFinance extends Model
@@ -27,8 +26,8 @@ class ClientFinance extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'tin_registration_date' => 'date',
         'tax_percent' => 'decimal:2',
         'withholding_tax_percent' => 'decimal:2',

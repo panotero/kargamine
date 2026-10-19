@@ -27,8 +27,8 @@ class ClientMaster extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'is_complete' => 'boolean',
         'always_route_atw' => 'boolean',
     ];
@@ -80,7 +80,7 @@ class ClientMaster extends Model
             $q->whereIn('sales_rep_id', $userIds)
                 ->orWhere(function ($q) use ($userIds) {
                     $q->whereNull('sales_rep_id')
-                        ->whereHas('prospect', fn($q) => $q->whereIn('assigned_to', $userIds));
+                        ->whereHas('prospect', fn ($q) => $q->whereIn('assigned_to', $userIds));
                 });
         });
     }
@@ -99,14 +99,14 @@ class ClientMaster extends Model
     public static function generateNextCustomerCode(): string
     {
         return DB::transaction(function () {
-            $prefix = 'CM-' . now()->format('Y') . '-';
+            $prefix = 'CM-'.now()->format('Y').'-';
 
             $maxSequenceIn = function (string $table) use ($prefix) {
                 return DB::table($table)
                     ->where('customer_code', 'like', "{$prefix}%")
                     ->lockForUpdate()
                     ->pluck('customer_code')
-                    ->map(fn($code) => (int) substr($code, strlen($prefix)))
+                    ->map(fn ($code) => (int) substr($code, strlen($prefix)))
                     ->max() ?? 0;
             };
 
@@ -114,7 +114,7 @@ class ClientMaster extends Model
 
             do {
                 $seq++;
-                $candidate = $prefix . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+                $candidate = $prefix.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
             } while (
                 self::where('customer_code', $candidate)->exists()
                 || Prospect::where('customer_code', $candidate)->exists()

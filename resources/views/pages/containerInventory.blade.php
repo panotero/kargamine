@@ -719,7 +719,7 @@
                 <div class="border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2">
                     <div class="flex justify-between">
                         <span class="font-medium">${h.status_at_time}</span>
-                        <span class="text-zinc-400">${h.recorded_at ?? ''}</span>
+                        <span class="text-zinc-400">${h.recorded_at ? formatDateTime(h.recorded_at) : ''}</span>
                     </div>
                     <div class="text-zinc-500">${h.port ? (h.port.location?.name ?? '-') + ' - ' + h.port.name : '-'}${h.pier_reference ? ' · ' + h.pier_reference : ''}
                         · ${h.source} ${h.recorded_by ? '· ' + (h.recorded_by.name ?? '') : ''}</div>

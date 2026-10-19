@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             NavIconSeeder::class,
             NavMenuSeeder::class,
             UserSeeder::class,
+            TeamSeeder::class,
+            TestUserSeeder::class,
             Setting_roleSeeder::class,
             PermissionSeeder::class,
 

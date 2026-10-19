@@ -413,6 +413,11 @@ window.apiCall = async function apiCall({
       method,
       headers,
       credentials: "include",
+      // Laravel's JSON responses carry no Cache-Control header, so a GET to
+      // the same URL shortly after a mutation (e.g. reloading a prospect
+      // right after adding an address) can be served stale from the
+      // browser's heuristic HTTP cache instead of hitting the server again.
+      cache: "no-store",
     };
 
     // Attach body

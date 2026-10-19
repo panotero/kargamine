@@ -101,6 +101,14 @@ Established in the Prospect modal (`components/prospect-modal.blade.php`, 4 tabs
 - **Right pane:** a tab bar plus one shared scroll region — not five separately-scrolling cards. Order tabs by what's highest-stakes for the task at hand, not by data-model order (e.g. Proposals before Requirements before Activity, because this modal only opens for deals already past qualification).
 - **Header stat strip:** 3–5 "ask this first" facts, horizontal row divided by thin vertical borders, small uppercase label above a bold value. Reserve for facts that would otherwise require opening a sub-section to find.
 
+### Right-rail summary + tab content — read-only record detail modals
+
+Established in `components/prospect-info-modal.blade.php` ("Contact Summary" rail), now also applied to `components/proposal-request-info-modal.blade.php` ("Request Details" rail). Use for a read-only (or mostly-read-only) "open this record and look around" modal that has both (a) a handful of top-level reference facts plus primary actions, and (b) several tabbed sections of child data. Distinct from the "Rail + tabbed pane" pattern above, which is for a record's own multi-step CREATE/EDIT form — there, the rail *is* the tab navigation, not a summary card.
+
+- **Right column** (fixed width, `w-full md:w-[19rem] shrink-0`): a summary card of key facts (plus an inline Edit affordance if the record is editable here), then the primary action button(s) below a `border-t` divider, then any secondary read-only lists (e.g. Activity & History) each in their own `border-t`-divided block further down.
+- **Left column** (`flex-1 min-w-0`): the tab bar plus one shared scroll region for the record's working/child data — same tab-content conventions as the pattern above.
+- DOM order determines side in a plain `flex flex-col md:flex-row` container — content div first, rail div second. No `flex-row-reverse`/`order-*` needed, and don't reach for one; keep new modals of this shape in that same markup order so it stays a plain reading-order match for the visual order.
+
 ### Guided multi-step wizard — long forms
 
 Established in the (now-retired) New Lead page form `crmLeadForm.blade.php`; the CRM intake it served was replaced by the rail+tabs Prospect modal (see above). The wizard/stepper pattern below still stands for any future long single-page form. Use once a single logical save spans roughly 15+ fields across genuinely distinct sub-topics.

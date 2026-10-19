@@ -10,8 +10,8 @@ class ContainerVariant extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function container()

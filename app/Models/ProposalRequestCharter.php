@@ -8,6 +8,7 @@ class ProposalRequestCharter extends Model
 {
     protected $fillable = [
         'prospect_id',
+        'charter_service_id',
         'charter_start_date',
         'charter_end_date',
         'declared_value',
@@ -16,8 +17,8 @@ class ProposalRequestCharter extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'charter_start_date' => 'date:Y-m-d',
         'charter_end_date' => 'date:Y-m-d',
         'declared_value' => 'decimal:2',
@@ -27,6 +28,11 @@ class ProposalRequestCharter extends Model
     public function prospect()
     {
         return $this->belongsTo(Prospect::class, 'prospect_id');
+    }
+
+    public function charterService()
+    {
+        return $this->belongsTo(CharterService::class, 'charter_service_id', 'charter_service_id');
     }
 
     public function cargoItems()

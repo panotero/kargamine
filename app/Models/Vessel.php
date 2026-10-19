@@ -51,8 +51,8 @@ class Vessel extends Model
     protected $casts = [
         'status' => 'integer',
         'date_manufactured' => 'date:Y-m-d',
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function homePort(): BelongsTo

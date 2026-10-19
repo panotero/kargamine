@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class ProposalInfo extends Model
 {
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     use HasFactory;
@@ -29,6 +29,7 @@ class ProposalInfo extends Model
         'origin_service_type',
         'destination_service_type',
     ];
+
     protected $with = [
         'routeFrom',
         'routeTo',
@@ -49,11 +50,13 @@ class ProposalInfo extends Model
 
         return $this->belongsTo(Route::class, 'route_from', 'port_id');
     }
+
     public function routeTo()
     {
 
         return $this->belongsTo(Route::class, 'route_to', 'port_id');
     }
+
     public function vanClass()
     {
 
@@ -65,16 +68,19 @@ class ProposalInfo extends Model
 
         return $this->belongsTo(VanType::class, 'container_type', 'id');
     }
+
     public function vanSize()
     {
 
         return $this->belongsTo(VanSize::class, 'container_size', 'id');
     }
+
     public function serviceOrigin()
     {
 
         return $this->belongsTo(Service::class, 'origin_service_type', 'id');
     }
+
     public function serviceDestination()
     {
 

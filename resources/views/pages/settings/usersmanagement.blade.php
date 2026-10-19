@@ -357,7 +357,7 @@
                     {
                         title: "Created At",
                         key: "created_at",
-
+                        render: (row) => formatDateTime(row.created_at),
                     },
 
                     {

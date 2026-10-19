@@ -17,6 +17,7 @@ class ProposalRequestContainer extends Model
         'quantity',
         'minimum_temperature',
         'revenue_ton',
+        'revenue_ton_unit',
         'cargo_measurement',
         'cargo_type',
         'general_cargo_description',
@@ -29,8 +30,8 @@ class ProposalRequestContainer extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'declared_value_per_unit' => 'decimal:2',
         'minimum_temperature' => 'decimal:2',
         'revenue_ton' => 'decimal:2',

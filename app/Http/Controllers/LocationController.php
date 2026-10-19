@@ -12,7 +12,12 @@ class LocationController extends Controller
     public function index(Request $request)
     {
         $locations = Location::query()
-            ->when($request->filled('search'), fn($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->filled('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
+            ->when($request->filled('has_ports'), fn ($q) => $request->boolean('has_ports')
+                ? $q->whereHas('ports') : $q->whereDoesntHave('ports'))
+            ->when($request->filled('has_serviceable_area'), fn ($q) => $request->boolean('has_serviceable_area')
+                ? $q->whereHas('serviceableAreas') : $q->whereDoesntHave('serviceableAreas'))
             ->withCount(['ports', 'serviceableAreas'])
             ->orderBy('name')
             ->paginate($request->get('per_page', 25));

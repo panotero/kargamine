@@ -9,6 +9,7 @@ class ChargeType extends Model
 {
     // Where this charge type can be used
     public const APPLICABLE_PORT = 'PORT';       // usable in Port Charges (tied to a specific port)
+
     public const APPLICABLE_GENERAL = 'GENERAL'; // usable in General Charges (applies to every booking)
 
     protected $primaryKey = 'charge_type_id';
@@ -16,8 +17,8 @@ class ChargeType extends Model
     protected $fillable = ['code', 'name', 'applicable_to', 'is_active'];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 

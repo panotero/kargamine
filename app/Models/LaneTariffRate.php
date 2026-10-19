@@ -20,10 +20,10 @@ class LaneTariffRate extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
-        'effective_date' => 'date:M d, Y',
-        'end_date' => 'date:M d, Y',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'effective_date' => 'date',
+        'end_date' => 'date',
         'is_active' => 'boolean',
     ];
 
@@ -43,6 +43,7 @@ class LaneTariffRate extends Model
     {
         return (float) $this->frt + (float) $this->bsc + $this->total_adjustment;
     }
+
     public function prices()
     {
         return $this->hasMany(LaneTariffRatePrice::class, 'lane_tariff_rate_id', 'rate_id');

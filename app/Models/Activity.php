@@ -10,10 +10,11 @@ class Activity extends Model
     use HasFactory;
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'involved_office' => 'array',
     ];
+
     protected $fillable = [
         'action',
         'office_id',
@@ -27,6 +28,7 @@ class Activity extends Model
         'routed_to',
         'final_remarks',
     ];
+
     protected $table = 'activities';
 
     public function user()
@@ -53,6 +55,7 @@ class Activity extends Model
     {
         return $this->belongsTo(User::class, 'from_user_id', 'id');
     }
+
     public function recipient()
     {
 

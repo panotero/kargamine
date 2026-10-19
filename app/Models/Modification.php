@@ -10,6 +10,7 @@ class Modification extends Model
     use HasFactory;
 
     protected $primaryKey = 'modification_id';
+
     protected $fillable = [
         'document_id',
         'modified_by',

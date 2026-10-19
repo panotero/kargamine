@@ -28,8 +28,8 @@
             </div>
             <div>
                 <label for="tlcmQuantity" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Quantity</label>
-                <input type="number" id="tlcmQuantity"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                <input type="text" inputmode="numeric" id="tlcmQuantity"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
             </div>
             <div>
                 <label for="tlcmUnits" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Units</label>
@@ -40,8 +40,8 @@
             </div>
             <div>
                 <label for="tlcmRevenueTon" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Revenue Ton (RT)</label>
-                <input type="number" step="0.01" id="tlcmRevenueTon"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                <input type="text" inputmode="decimal" id="tlcmRevenueTon"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
             </div>
             <div>
                 <label for="tlcmRevenueTonUnit" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Revenue Ton (RT) Unit</label>
@@ -68,7 +68,7 @@
 
         <div class="flex justify-end pt-2">
             <button type="button" id="tlcmCloseBtn"
-                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium">
+                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 Close
             </button>
         </div>

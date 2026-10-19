@@ -105,6 +105,11 @@
 </div>
 
 <x-prospect-modal />
+<x-pm-add-location-modal />
+<x-pm-add-contact-modal />
+<x-pm-add-freight-modal />
+<x-pm-add-trucking-modal />
+<x-pm-add-charter-modal />
 <x-prospect-info-modal />
 
 {{--

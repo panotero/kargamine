@@ -19,7 +19,7 @@
         <div id="almLocationCardWrap"></div>
         <div class="flex justify-end gap-2 pt-2">
             <button type="button" id="almCancelBtn"
-                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium">
+                class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 Cancel
             </button>
             <button type="button" id="almSaveBtn"

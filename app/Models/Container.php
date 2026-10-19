@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Exceptions\ProtectedRecordException;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Container extends Model
@@ -12,8 +11,8 @@ class Container extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function type()
@@ -152,7 +151,7 @@ class Container extends Model
             ]]);
         }
 
-        $comboKey = fn ($sizeId, $classId) => $sizeId . '-' . $classId;
+        $comboKey = fn ($sizeId, $classId) => $sizeId.'-'.$classId;
 
         $existingByCombo = $this->variants()->get()
             ->keyBy(fn ($variant) => $comboKey($variant->container_size_id, $variant->container_class_id));

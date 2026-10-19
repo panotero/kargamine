@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\DB;
 class BookingInvoice extends Model
 {
     public const STATUS_DRAFT = 1;
+
     public const STATUS_SENT = 2;
+
     public const STATUS_PAID = 3;
+
     public const STATUS_VOID = 4;
 
     public const STATUS_LABELS = [
@@ -30,11 +33,11 @@ class BookingInvoice extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'status' => 'integer',
         'amount' => 'decimal:2',
-        'due_date' => 'date:M d, Y',
+        'due_date' => 'date',
     ];
 
     /**

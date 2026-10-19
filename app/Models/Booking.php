@@ -15,10 +15,15 @@ class Booking extends Model
     protected $primaryKey = 'booking_id';
 
     public const STATUS_DRAFT = 1;
+
     public const STATUS_CONFIRMED = 2;
+
     public const STATUS_IN_TRANSIT = 3;
+
     public const STATUS_DELIVERED = 4;
+
     public const STATUS_COMPLETED = 5;
+
     public const STATUS_CANCELLED = 6;
 
     public const STATUS_LABELS = [
@@ -38,13 +43,13 @@ class Booking extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'status' => 'integer',
         'trucking_snapshot' => 'decimal:2',
         'vat_amount_snapshot' => 'decimal:2',
         'grand_total_snapshot' => 'decimal:2',
-        'booking_date' => 'date:M d, Y',
+        'booking_date' => 'date',
     ];
 
     public function uniqueIds(): array

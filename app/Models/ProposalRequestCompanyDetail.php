@@ -13,8 +13,8 @@ class ProposalRequestCompanyDetail extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:F j, Y',
-        'updated_at' => 'datetime:F j, Y',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function proposalRequest()

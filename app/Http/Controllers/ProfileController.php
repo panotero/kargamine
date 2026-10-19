@@ -60,7 +60,7 @@ class ProfileController extends Controller
     public function updateFontSize(Request $request)
     {
         $validated = $request->validate([
-            'font_size' => ['required', 'string', 'in:small,medium,large'],
+            'font_size' => ['required', 'string', 'in:small,medium,large,extra_large'],
         ]);
 
         Auth::user()->update(['font_size' => $validated['font_size']]);

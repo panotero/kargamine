@@ -4,14 +4,16 @@ namespace App\Models;
 
 use App\Services\TeamService;
 use App\Support\RoleHelper;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientContract extends Model
 {
     public const STATUS_DRAFT = 1;
+
     public const STATUS_ACTIVE = 2;
+
     public const STATUS_EXPIRED = 3;
+
     public const STATUS_TERMINATED = 4;
 
     public const STATUS_LABELS = [
@@ -41,13 +43,13 @@ class ClientContract extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
-        'signed_date' => 'date:M d, Y',
-        'valid_from' => 'date:M d, Y',
-        'valid_to' => 'date:M d, Y',
-        'terminated_at' => 'datetime:M d, Y, h:i A',
-        'decided_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'signed_date' => 'date',
+        'valid_from' => 'date',
+        'valid_to' => 'date',
+        'terminated_at' => 'datetime',
+        'decided_at' => 'datetime',
     ];
 
     // Computed permission flag travels with every JSON response, so the
@@ -92,7 +94,7 @@ class ClientContract extends Model
      */
     public function canBeApprovedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -100,13 +102,13 @@ class ClientContract extends Model
             return true;
         }
 
-        if (!$user->is_team_leader || !$user->team_id) {
+        if (! $user->is_team_leader || ! $user->team_id) {
             return false;
         }
 
         $ownerTeamId = $this->ownerUser()?->team_id;
 
-        if (!$ownerTeamId) {
+        if (! $ownerTeamId) {
             return false;
         }
 

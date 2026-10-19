@@ -1,0 +1,1 @@
+- [Maintenance page label convention](project_maintenance_page_label_convention.md) — maintenance.blade.php uses sentence-case labels by deliberate exception, not VISUALS.md uppercase; required-accent convention still applies

@@ -92,7 +92,7 @@ window.initCrmLogic = function initCrmLogic() {
             <span class="text-[11px] font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400">No leads yet</span>
             <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Once you add your first lead, it'll show up here.</p>
             <button type="button" id="crmEmptyNewLeadBtn"
-                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 + New Lead
             </button>
         </div>`;
@@ -103,7 +103,7 @@ window.initCrmLogic = function initCrmLogic() {
             <span class="text-[11px] font-semibold uppercase tracking-widest text-orange-600 dark:text-orange-400">No leads match these filters</span>
             <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Try widening your search or clearing the active filters.</p>
             <button type="button" id="crmEmptyClearFiltersBtn"
-                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">
+                class="mt-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Clear Filters
             </button>
         </div>`;

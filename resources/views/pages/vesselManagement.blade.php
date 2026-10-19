@@ -143,18 +143,18 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-zinc-500 mb-1">Capacity (TEU)</label>
-                    <input type="number" min="0" name="capacity_teu"
-                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                    <input type="text" inputmode="numeric" name="capacity_teu"
+                        class="currency-input w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-zinc-500 mb-1">Gross Tonnage</label>
-                    <input type="number" min="0" step="0.01" name="gross_tonnage"
-                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                    <input type="text" inputmode="decimal" name="gross_tonnage"
+                        class="currency-input w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-zinc-500 mb-1">Deadweight Tonnage</label>
-                    <input type="number" min="0" step="0.01" name="deadweight_tonnage"
-                        class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                    <input type="text" inputmode="decimal" name="deadweight_tonnage"
+                        class="currency-input w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-zinc-500 mb-1">Length Overall (m)</label>
@@ -257,8 +257,8 @@
                     class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
                 <input type="text" name="performed_by" placeholder="Performed by / contractor"
                     class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
-                <input type="number" min="0" step="0.01" name="cost" placeholder="Cost"
-                    class="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
+                <input type="text" inputmode="decimal" name="cost" placeholder="Cost"
+                    class="currency-input rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
                 <input type="text" name="description" placeholder="Description"
                     class="col-span-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm">
                 <button type="submit" class="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-3 py-2">Log Record</button>
@@ -417,6 +417,9 @@
             const id = formData.get('id');
             const payload = Object.fromEntries(formData.entries());
             delete payload.id;
+            ['capacity_teu', 'gross_tonnage', 'deadweight_tonnage'].forEach((field) => {
+                if (field in payload) payload[field] = parseCurrencyValue(payload[field]);
+            });
 
             const response = await apiCall({
                 mode: id ? 'PUT' : 'POST',
@@ -561,11 +564,13 @@
         document.getElementById('vdMaintenanceForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+            const maintenancePayload = Object.fromEntries(formData.entries());
+            if ('cost' in maintenancePayload) maintenancePayload.cost = parseCurrencyValue(maintenancePayload.cost);
 
             const response = await apiCall({
                 mode: 'POST',
                 isJson: true,
-                payload: Object.fromEntries(formData.entries()),
+                payload: maintenancePayload,
                 url: `/api/vessels/${currentVesselId}/maintenance-records`,
                 button: this.querySelector('button[type="submit"]'),
             });

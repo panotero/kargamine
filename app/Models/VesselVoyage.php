@@ -19,10 +19,10 @@ class VesselVoyage extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
-        'estimated_departure_at' => 'datetime:M d, Y, h:i A',
-        'estimated_arrival_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'estimated_departure_at' => 'datetime',
+        'estimated_arrival_at' => 'datetime',
     ];
 
     public function vessel(): BelongsTo

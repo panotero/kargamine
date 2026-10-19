@@ -8,15 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class UserStatus extends Model
 {
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     use HasFactory;
+
     protected $table = 'user_status';
+
     protected $fillable = [
         'name',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 }

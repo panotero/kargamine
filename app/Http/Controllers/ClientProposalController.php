@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClientMaster;
 use App\Models\ClientProposal;
 use App\Models\ClientProposalRate;
+use App\Models\ClientProposalSignedRate;
 use App\Models\Container;
 use App\Models\ContainerVariant;
 use App\Models\Lane;
@@ -74,6 +75,8 @@ class ClientProposalController extends Controller
             'decidedBy:id,name',
             'activeContract',
             'prospect.user:id,name,team_id',
+            'proposalRequest.productRates',
+            'proposalRequest.ancillaryFees',
         ])->where('client_id', $client->id)
             ->orderByDesc('created_at')
             ->paginate($request->get('per_page', 5))
@@ -89,12 +92,13 @@ class ClientProposalController extends Controller
     {
         // Team-scoped visibility, same rule as the CRM lead list: a regular
         // member only sees proposals for their own leads; a team leader sees
-        // their team's subtree; superadmin bypasses entirely. A proposal's
-        // "owner" is its lead's assigned rep - checked via the proposal's own
-        // prospect_id first, falling back to the client's originating lead for
-        // proposals created via the client-scoped store() path (which never
-        // sets prospect_id directly).
-        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
+        // their team's subtree; superadmin/developer bypass entirely (so QA
+        // can see and act on every proposal regardless of team assignment).
+        // A proposal's "owner" is its lead's assigned rep - checked via the
+        // proposal's own prospect_id first, falling back to the client's
+        // originating lead for proposals created via the client-scoped
+        // store() path (which never sets prospect_id directly).
+        $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin', 'developer'])
             ? null
             : TeamService::accessibleUserIds($request->user());
 
@@ -112,6 +116,8 @@ class ClientProposalController extends Controller
             'creator:id,name',
             'decidedBy:id,name',
             'prospect.user:id,name,team_id',
+            'proposalRequest.productRates',
+            'proposalRequest.ancillaryFees',
         ])
             ->tap($visibilityScope)
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -176,6 +182,8 @@ class ClientProposalController extends Controller
             'rates.containerSize',
             'rates.ancillaryServices',
             'activeContract',
+            'proposalRequest.productRates',
+            'proposalRequest.ancillaryFees',
         ]);
 
         return response()->json(['success' => true, 'data' => $proposal]);
@@ -473,20 +481,66 @@ class ClientProposalController extends Controller
             return response()->json(['success' => false, 'message' => 'Only approved proposals can be marked as signed.'], 422);
         }
 
+        // Rate lines can still be deleted after approval (destroyRate has no
+        // status guard), so without this check a proposal could be signed
+        // with zero rates - producing an empty signed-rate snapshot below
+        // that doesn't match what's actually in the signed PDF.
+        if ($proposal->rates()->doesntExist()) {
+            return response()->json(['success' => false, 'message' => 'This proposal has no rate lines - add at least one before marking it as signed.'], 422);
+        }
+
         $validated = $request->validate([
             'signed_document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
 
-        $path = $this->fileUploadService->uploadFile(
+        $paths = $this->fileUploadService->uploadFile(
             [$validated['signed_document']], // must be array
             'uploads/doc/pdf'
         );
 
-        $proposal->update([
-            'signed_document_path' => $path,
-            'signed_at' => now(),
-            'status' => ClientProposal::STATUS_ACCEPTED,
-        ]);
+        DB::transaction(function () use ($proposal, $paths) {
+            $proposal->update([
+                'signed_document_path' => $paths[0] ?? null,
+                'signed_at' => now(),
+                'status' => ClientProposal::STATUS_ACCEPTED,
+            ]);
+
+            // Immutable snapshot of exactly the rate lines shown in the
+            // signed PDF - rates() can still change after Accepted (e.g.
+            // destroyRate has no status guard), so this is the durable
+            // record. See App\Models\ClientProposalSignedRate.
+            $proposal->load('rates.ancillaryServices');
+
+            foreach ($proposal->rates as $rate) {
+                ClientProposalSignedRate::create([
+                    'client_proposal_id' => $proposal->id,
+                    'source_rate_id' => $rate->id,
+                    'origin_port_id' => $rate->origin_port_id,
+                    'origin_pickup_area_id' => $rate->origin_pickup_area_id,
+                    'destination_port_id' => $rate->destination_port_id,
+                    'destination_pickup_area_id' => $rate->destination_pickup_area_id,
+                    'container_id' => $rate->container_id,
+                    'container_class_id' => $rate->container_class_id,
+                    'container_size_id' => $rate->container_size_id,
+                    'container_variant_id' => $rate->container_variant_id,
+                    'min_van_qty' => $rate->min_van_qty,
+                    'base_rate' => $rate->base_rate,
+                    'discount_type' => $rate->discount_type,
+                    'discount_value' => $rate->discount_value,
+                    'final_rate' => $rate->final_rate,
+                    'include_special_charges' => $proposal->include_special_charges,
+                    'include_port_charges' => $proposal->include_port_charges,
+                    'include_handling_fee' => $proposal->include_handling_fee,
+                    'include_general_charges' => $proposal->include_general_charges,
+                    'ancillary_services' => $rate->ancillaryServices->map(fn ($service) => [
+                        'required_service' => $service->required_service,
+                        'location' => $service->location,
+                        'unit' => $service->unit,
+                        'quantity' => $service->quantity,
+                    ])->all() ?: null,
+                ]);
+            }
+        });
 
         $proposal->proposalRequest?->update(['status' => 'signed']);
 
@@ -607,8 +661,13 @@ class ClientProposalController extends Controller
      * assigned Relationship Manager directly, since RM approval is now a
      * per-deal identity (prospects.relationship_manager_id), not a team
      * lookup. Silently skipped if no RM is assigned yet.
+     *
+     * Public (not protected) so ProspectController::submitProposalRequest()
+     * can reuse this exact notification shape when it creates the
+     * lead-scoped ClientProposal bridged from a submitted RFP, instead of
+     * duplicating the logic.
      */
-    protected function notifyProposalPending(ClientProposal $proposal): void
+    public function notifyProposalPending(ClientProposal $proposal): void
     {
         $owner = $proposal->ownerUser();
         $rm = $proposal->assignedRelationshipManager();

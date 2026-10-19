@@ -86,7 +86,7 @@
             <p class="text-sm text-zinc-500 dark:text-zinc-400">Choose how large text and controls appear across the app.</p>
         </div>
 
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-4 gap-4">
             <button type="button" id="fontSizeSmallBtn" data-font-size="small"
                 class="font-size-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
                 <div class="font-size-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
@@ -112,6 +112,15 @@
                     <span class="font-bold text-zinc-500 dark:text-zinc-400" style="font-size: 1.9rem;">Aa</span>
                 </div>
                 <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Large</span>
+            </button>
+
+            <button type="button" id="fontSizeExtraLargeBtn" data-font-size="extra_large"
+                class="font-size-option relative flex flex-col items-center gap-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl p-4 transition">
+                <div class="font-size-spinner hidden absolute top-2 right-2 w-4 h-4 border-2 border-zinc-300 dark:border-zinc-600 border-t-orange-500 rounded-full animate-spin"></div>
+                <div class="w-full h-16 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                    <span class="font-bold text-zinc-500 dark:text-zinc-400" style="font-size: 2.3rem;">Aa</span>
+                </div>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Extra Large</span>
             </button>
         </div>
     </div>
@@ -294,6 +303,7 @@
             small: document.getElementById('fontSizeSmallBtn'),
             medium: document.getElementById('fontSizeMediumBtn'),
             large: document.getElementById('fontSizeLargeBtn'),
+            extra_large: document.getElementById('fontSizeExtraLargeBtn'),
         };
 
         function setActiveFontSizeOption(fontSize) {

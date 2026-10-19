@@ -18,8 +18,11 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     public const STATUS_ACTIVE = 0;
+
     public const STATUS_INACTIVE = 1;
+
     protected $primaryKey = 'id';
+
     protected $fillable = [
         'name',
         'email',
@@ -66,10 +69,10 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime:M d, Y, h:i A',
+        'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'is_team_leader' => 'boolean',
         'must_change_password' => 'boolean',
     ];

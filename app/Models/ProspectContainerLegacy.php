@@ -34,8 +34,8 @@ class ProspectContainerLegacy extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'dangerous_cargo' => 'boolean',
         'declared_value_per_unit' => 'decimal:2',
         'minimum_temperature' => 'decimal:2',

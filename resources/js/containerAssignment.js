@@ -60,7 +60,7 @@ window.initContainerAssignmentPage = function initContainerAssignmentPage() {
       { title: "Route", key: "lines", render: routeSummary },
       { title: "Container Type", key: "lines", render: containerTypeSummary },
       { title: "Assignment", key: "lines", render: assignmentProgress },
-      { title: "Booking Date", key: "booking_date" },
+      { title: "Booking Date", key: "booking_date", render: (r) => (r.booking_date ? formatDate(r.booking_date) : "-") },
       { title: "Grand Total", key: "grand_total_snapshot", render: (r) => money(r.grand_total_snapshot) },
     ];
 

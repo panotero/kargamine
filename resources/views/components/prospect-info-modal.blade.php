@@ -16,9 +16,10 @@
     instead, see resources/js/logic_proposal_requests_mine.js) - alongside
     a tabbed main area: Locations / Contacts / Requirements. Each of those
     list tabs has its own "+ Add" button that opens a genuinely separate,
-    dedicated modal (AddLocationModal/AddContactModal/AddRequirementModal -
-    NOT a reopened ProspectModal form) - see
-    resources/js/logic_prospect_add_modals.js. Saving in any of them
+    dedicated modal (AddLocationModal/AddContactModal, and - since the
+    Requirements tab has three independent tables - PimAddFreightModal/
+    PimAddTruckingModal/PimAddCharterModal - NOT a reopened ProspectModal
+    form) - see resources/js/logic_prospect_add_modals.js. Saving in any of them
     refreshes this modal's data and the relevant tab immediately.
 
     Opened via window.openProspectInfoModal(lead) - takes the
@@ -47,7 +48,7 @@
 
             <div class="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-700 mb-4" id="pimTabBar">
                 <button type="button" id="pimTabBtnLocations" data-pim-tab="Locations"
-                    class="pim-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-orange-500 text-orange-600">
+                    class="pim-tab-btn px-3 py-2 text-sm font-medium border-b-2 -mb-px border-orange-500 text-orange-600 dark:text-orange-400">
                     Locations
                 </button>
                 <button type="button" id="pimTabBtnContacts" data-pim-tab="Contacts"
@@ -89,33 +90,18 @@
             {{-- ============ TAB: REQUIREMENTS ============ --}}
             <div class="pim-tab-pane hidden space-y-6" data-pim-pane="Requirements">
 
-                <div class="flex justify-between  gap-4">
-                    <div
-                        class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4 flex-1 items-center">
-                        <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                            Initial Information
-                        </p>
-                        <p class="text-sm text-zinc-600 dark:text-zinc-300 mt-0.5">
-                            Freight, trucking, and charter requirements for this prospect.
-                        </p>
-                    </div>
-                    <div class="items-start">
-                        <button type="button" id="pimAddRequirementBtn"
-                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 shrink-0">
-                            Edit Requirement
+                {{-- Freights (Container) - always visible, own "+ Add Freight"
+                     trigger (see pim-add-freight-modal.blade.php /
+                     openPimAddFreightModal() in logic_prospect_add_modals.js). --}}
+                <div id="pimContainersTableWrap" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Freights</p>
+                        <button type="button" id="pimAddFreightBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                            + Add Freight
                         </button>
-
                     </div>
-                </div>
-
-                <p id="pimRequirementsEmpty" class="hidden text-sm text-zinc-400 dark:text-zinc-500">
-                    No requirements added yet.
-                </p>
-
-                {{-- Freights (Container) - read-only, same columns as the form's table minus Actions --}}
-                <div id="pimContainersTableWrap" class="hidden space-y-2">
-                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Freights</p>
                     <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         <table class="min-w-full text-xs">
                             <thead
@@ -137,6 +123,7 @@
                                     <th class="px-3 py-2 text-left">Cargo Description</th>
                                     <th class="px-3 py-2 text-left">Special Requirements</th>
                                     <th class="px-3 py-2 text-left">Booking Unit Type</th>
+                                    <th class="px-3 py-2 text-left">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="pimContainersTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-700">
@@ -145,10 +132,16 @@
                     </div>
                 </div>
 
-                {{-- Truckings - read-only --}}
-                <div id="pimTruckingsTableWrap" class="hidden space-y-2">
-                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Truckings</p>
+                {{-- Truckings --}}
+                <div id="pimTruckingsTableWrap" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Truckings</p>
+                        <button type="button" id="pimAddTruckingBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                            + Add Trucking
+                        </button>
+                    </div>
                     <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         <table class="min-w-full text-xs">
                             <thead
@@ -165,6 +158,7 @@
                                     <th class="px-3 py-2 text-left">Cargo Type</th>
                                     <th class="px-3 py-2 text-left">Cargo Description</th>
                                     <th class="px-3 py-2 text-left">Special Requirements</th>
+                                    <th class="px-3 py-2 text-left">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="pimTruckingsTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-700">
@@ -173,10 +167,16 @@
                     </div>
                 </div>
 
-                {{-- Charters - read-only --}}
-                <div id="pimChartersTableWrap" class="hidden space-y-2">
-                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        Charters</p>
+                {{-- Charters --}}
+                <div id="pimChartersTableWrap" class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            Charters</p>
+                        <button type="button" id="pimAddCharterBtn"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
+                            + Add Charter
+                        </button>
+                    </div>
                     <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         <table class="min-w-full text-xs">
                             <thead
@@ -188,6 +188,7 @@
                                     <th class="px-3 py-2 text-left">End Date</th>
                                     <th class="px-3 py-2 text-left">Declared Value</th>
                                     <th class="px-3 py-2 text-left">Weight</th>
+                                    <th class="px-3 py-2 text-left">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="pimChartersTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-700">
@@ -207,7 +208,7 @@
                 <div class="flex justify-end">
                     <button type="button" id="pimAddOdBtn"
                         class="text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">
-                        + Add
+                        + Add Origin/Destination
                     </button>
                 </div>
                 <div class="overflow-x-auto border border-zinc-200 dark:border-zinc-700 rounded-xl">
@@ -241,7 +242,7 @@
                 <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Contact
                     Summary</p>
                 <button type="button" id="pimSummaryEditBtn"
-                    class="text-xs font-medium text-orange-600 hover:text-orange-700">Edit</button>
+                    class="text-xs font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">Edit</button>
             </div>
 
             {{-- Read-only view --}}
@@ -280,7 +281,7 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" id="pimSummaryCancelBtn"
-                        class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium">
+                        class="text-sm px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800">
                         Cancel
                     </button>
                     <button type="button" id="pimSummarySaveBtn" disabled
@@ -293,12 +294,19 @@
             {{-- Mints a ProposalRequest and confirms via toast - that's the
                  TEMP CSR's whole job here. Filling it out happens on the
                  assigned CSR/Relationship Manager's "My Requests" page
-                 instead (see logic_proposal_requests_mine.js). --}}
-            <div class="border-t dark:border-zinc-700 pt-3">
+                 instead (see logic_proposal_requests_mine.js). Disabled
+                 until Management has assigned a CSR (assigned_to) - a
+                 prospect starts genuinely unassigned now, with no
+                 exception for whoever created it, so this needs an
+                 always-visible explanation rather than a silent 403. --}}
+            <div class="border-t dark:border-zinc-700 pt-3 space-y-1.5">
                 <button type="button" id="pimRequestProposalBtn"
-                    class="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    class="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-orange-500">
                     Request for Proposal
                 </button>
+                <p id="pimRequestProposalHint" class="hidden text-xs text-zinc-400 dark:text-zinc-500 text-center">
+                    Awaiting CSR assignment from Management
+                </p>
             </div>
 
             {{-- REQUESTED PROPOSALS & ACTIVITY/HISTORY - rendered into the
@@ -326,5 +334,7 @@
 
 <x-add-location-modal />
 <x-add-contact-modal />
-<x-add-requirement-modal />
+<x-pim-add-freight-modal />
+<x-pim-add-trucking-modal />
+<x-pim-add-charter-modal />
 <x-add-origin-destination-modal />

@@ -8,7 +8,9 @@ use App\Models\ProposalRequestProductAncillaryService;
 use App\Models\ProposalRequestProductCharter;
 use App\Models\ProposalRequestProductRollingCargo;
 use App\Models\Prospect;
+use App\Models\SpecialCharge;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
@@ -217,6 +219,7 @@ class ProposalRequestProductController extends Controller
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
+            'charter_service_id' => ['nullable', 'integer', 'exists:charter_services,charter_service_id'],
             'vessel_name' => ['nullable', 'string'],
             'vessel_dead_weight' => ['nullable', 'numeric', 'min:0'],
             'charter_start_date' => ['nullable', 'date'],
@@ -393,6 +396,130 @@ class ProposalRequestProductController extends Controller
     }
 
     // ------------------------------------------------------------------
+    // RATE MATRIX (one row per priced product line, upserted by
+    // product_type + product_id)
+    // ------------------------------------------------------------------
+    public function storeProductRate(Request $request, $uuid, $proposalRequestId)
+    {
+        $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectOwnership($lead, $request->user());
+        $this->authorizeProspectFullyAssigned($lead);
+        $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
+
+        $validated = $request->validate([
+            'product_type' => ['required', Rule::in(['container', 'rolling_cargo', 'loose_cargo', 'trucking', 'charter'])],
+            'product_id' => ['required', 'integer', 'min:1'],
+            'item_no' => ['required', 'string'],
+            'base_rate' => ['required', 'numeric'],
+            'adjustment' => ['required', 'numeric'],
+            'total_rate' => ['required', 'numeric'],
+            'fee_breakdown' => ['nullable', 'array'],
+            'fee_breakdown.*.detail' => ['nullable', 'string'],
+            'fee_breakdown.*.base' => ['nullable', 'numeric'],
+            'fee_breakdown.*.adjustment' => ['nullable', 'numeric'],
+            // Ancillary Services pricing - edited here (Build Rate Matrix),
+            // never on the Products tab, which only ever sets quantity at
+            // add time. Saved in the same request/transaction as the rate
+            // itself so the two tables in ProductSpecificationModal share
+            // one Save button.
+            'ancillary_adjustments' => ['nullable', 'array'],
+            'ancillary_adjustments.*.id' => ['required', 'integer'],
+            'ancillary_adjustments.*.quantity' => ['required', 'numeric', 'min:0'],
+            'ancillary_adjustments.*.base_value' => ['required', 'numeric'],
+            'ancillary_adjustments.*.adjustment' => ['nullable', 'numeric'],
+        ]);
+
+        $row = DB::transaction(function () use ($proposalRequest, $validated) {
+            $rateRow = $proposalRequest->productRates()->updateOrCreate(
+                [
+                    'product_type' => $validated['product_type'],
+                    'product_id' => $validated['product_id'],
+                ],
+                [
+                    'item_no' => $validated['item_no'],
+                    'base_rate' => $validated['base_rate'],
+                    'adjustment' => $validated['adjustment'],
+                    'total_rate' => $validated['total_rate'],
+                    'fee_breakdown' => $validated['fee_breakdown'] ?? null,
+                ]
+            );
+
+            $relation = $this->ancillaryableRelationMap()[$validated['product_type']] ?? null;
+
+            if ($relation && ! empty($validated['ancillary_adjustments'])) {
+                $product = $proposalRequest->{$relation}()->where('id', $validated['product_id'])->first();
+                $validIds = $product ? $product->ancillaryServices()->pluck('id')->all() : [];
+
+                foreach ($validated['ancillary_adjustments'] as $adj) {
+                    if (! in_array($adj['id'], $validIds, true)) {
+                        continue;
+                    }
+                    $baseValue = (float) $adj['base_value'];
+                    $quantity = (float) $adj['quantity'];
+                    $adjustment = (float) ($adj['adjustment'] ?? 0);
+                    ProposalRequestProductAncillaryService::where('id', $adj['id'])->update([
+                        'base_value' => $baseValue,
+                        'quantity' => $quantity,
+                        'adjustment' => $adjustment,
+                        'total_value' => round($baseValue * $quantity + $adjustment, 2),
+                    ]);
+                }
+            }
+
+            return $rateRow;
+        });
+
+        return response()->json(['success' => true, 'data' => $row]);
+    }
+
+    // ------------------------------------------------------------------
+    // TERMS & CONDITIONS (Terms of Payment + ancillary fee grid)
+    // ------------------------------------------------------------------
+    public function storeTermsAndConditions(Request $request, $uuid, $proposalRequestId)
+    {
+        $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectOwnership($lead, $request->user());
+        $this->authorizeProspectFullyAssigned($lead);
+        $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
+
+        $validated = $request->validate([
+            'terms_of_payment' => ['nullable', 'array'],
+            'terms_of_payment.*.section' => ['required', 'string'],
+            'terms_of_payment.*.terms_of_payment' => ['required', 'string'],
+            'ancillary_fees' => ['nullable', 'array'],
+            'ancillary_fees.*.section' => ['required', 'string'],
+            'ancillary_fees.*.service_name' => ['required', 'string'],
+            'ancillary_fees.*.fee_amount' => ['nullable', 'numeric'],
+        ]);
+
+        DB::transaction(function () use ($proposalRequest, $validated) {
+            foreach ($validated['terms_of_payment'] ?? [] as $term) {
+                $proposalRequest->termsOfPayment()->updateOrCreate(
+                    ['section' => $term['section']],
+                    ['terms_of_payment' => $term['terms_of_payment']]
+                );
+            }
+
+            foreach ($validated['ancillary_fees'] ?? [] as $fee) {
+                $proposalRequest->ancillaryFees()->updateOrCreate(
+                    [
+                        'section' => $fee['section'],
+                        'service_name' => $fee['service_name'],
+                    ],
+                    [
+                        'fee_amount' => $fee['fee_amount'] ?? 0,
+                    ]
+                );
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $proposalRequest->fresh()->load(['productRates', 'ancillaryFees', 'termsOfPayment']),
+        ]);
+    }
+
+    // ------------------------------------------------------------------
     // ANCILLARY SERVICES (polymorphic - Container/Rolling/Loose/Trucking)
     // ------------------------------------------------------------------
     private function ancillaryableRelationMap(): array
@@ -415,10 +542,11 @@ class ProposalRequestProductController extends Controller
         $validated = $request->validate([
             'ancillaryable_type' => ['required', Rule::in(array_keys($this->ancillaryableRelationMap()))],
             'ancillaryable_id' => ['required', 'integer'],
-            'ancillary_type' => ['nullable', 'string'],
+            'special_charge_id' => ['required', 'integer', 'exists:special_charges,special_charge_id'],
             'cargo_yard_id' => ['nullable', 'integer', 'exists:cargo_yards,cargo_yard_id'],
             'ancillary_unit' => ['nullable', 'string'],
             'ancillary_remarks' => ['nullable', 'string'],
+            'quantity' => ['required', 'numeric', 'min:0'],
         ]);
 
         $relation = $this->ancillaryableRelationMap()[$validated['ancillaryable_type']];
@@ -428,9 +556,30 @@ class ProposalRequestProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid product row.'], 422);
         }
 
-        $row = ProposalRequestProductAncillaryService::create($validated);
+        // Type and base value are a snapshot of the picked SpecialCharge at
+        // add time, not a live client-sent value - keeps displaying
+        // correctly even if the catalog entry is later renamed/deleted.
+        $charge = SpecialCharge::findOrFail($validated['special_charge_id']);
+        $quantity = $validated['quantity'];
+        $baseValue = (float) ($charge->rates()
+            ->where('unit', $validated['ancillary_unit'] ?? null)
+            ->value('base_value') ?? 0);
 
-        return response()->json(['success' => true, 'data' => $row->load('cargoYard')]);
+        $row = ProposalRequestProductAncillaryService::create([
+            'ancillaryable_type' => $validated['ancillaryable_type'],
+            'ancillaryable_id' => $validated['ancillaryable_id'],
+            'special_charge_id' => $charge->special_charge_id,
+            'ancillary_type' => $charge->name,
+            'cargo_yard_id' => $validated['cargo_yard_id'] ?? null,
+            'ancillary_unit' => $validated['ancillary_unit'] ?? null,
+            'ancillary_remarks' => $validated['ancillary_remarks'] ?? null,
+            'base_value' => $baseValue,
+            'quantity' => $quantity,
+            'adjustment' => 0,
+            'total_value' => round($baseValue * $quantity, 2),
+        ]);
+
+        return response()->json(['success' => true, 'data' => $row->load(['cargoYard', 'specialCharge'])]);
     }
 
     public function destroyAncillaryService(Request $request, $uuid, $proposalRequestId, $id)

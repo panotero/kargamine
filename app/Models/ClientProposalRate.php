@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientProposalRate extends Model
 {
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected $fillable = [
@@ -33,34 +32,42 @@ class ClientProposalRate extends Model
     {
         return $this->belongsTo(ClientProposal::class, 'proposal_id');
     }
+
     public function originPort()
     {
         return $this->belongsTo(Port::class, 'origin_port_id', 'port_id');
     }
+
     public function destinationPort()
     {
         return $this->belongsTo(Port::class, 'destination_port_id', 'port_id');
     }
+
     public function originPickupArea()
     {
         return $this->belongsTo(ServiceableArea::class, 'origin_pickup_area_id', 'area_id');
     }
+
     public function destinationPickupArea()
     {
         return $this->belongsTo(ServiceableArea::class, 'destination_pickup_area_id', 'area_id');
     }
+
     public function container()
     {
         return $this->belongsTo(Container::class);
     }
+
     public function containerClass()
     {
         return $this->belongsTo(ContainerClass::class, 'container_class_id');
     }
+
     public function containerSize()
     {
         return $this->belongsTo(ContainerSize::class, 'container_size_id');
     }
+
     public function variant()
     {
         return $this->belongsTo(ContainerVariant::class, 'container_variant_id');

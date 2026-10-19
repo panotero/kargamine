@@ -214,6 +214,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo/{rollingCargoId}/topLoad/{id}', [ProposalRequestProductController::class, 'destroyTopLoadCargo']);
         Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/ancillaryServices', [ProposalRequestProductController::class, 'storeAncillaryService']);
         Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/ancillaryServices/{id}', [ProposalRequestProductController::class, 'destroyAncillaryService']);
+
+        // Request for Proposal wizard's Rate Matrix + Terms & Conditions tabs.
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/productRates', [ProposalRequestProductController::class, 'storeProductRate']);
+        Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/termsAndConditions', [ProposalRequestProductController::class, 'storeTermsAndConditions']);
     });
 
     Route::prefix('listofval')->group(function () {

@@ -16,6 +16,21 @@
   // every SPA fragment load, so per-element listeners never stack.
   let docClickBound = false;
 
+  // Identity tab's Locations list - plain in-memory state, not read back out
+  // of the DOM. Populated by hydrateIdentityForm()/resetIdentityForm(),
+  // mutated by savePmLocation()/removePmLocationAt() (see the LOCATIONS
+  // section below), and read by collectLocations() when "Save Prospect
+  // Identity" submits the whole tab in one go.
+  let pmLocations = [];
+
+  // Contact Information tab's Contacts list - same plain in-memory-state
+  // idea as pmLocations above, but this tab still submits itself
+  // independently (its own "Save Contact Information" button / POST
+  // .../contacts endpoint, see saveContacts()) rather than bundling with a
+  // sibling tab's save. Populated by hydrateContactsTab()/resetContactsForm(),
+  // mutated by savePmContact()/removePmContactAt(), read by collectContacts().
+  let pmContacts = [];
+
   // Fixed Service Type list (replaces the old Delivery Type LOV-backed
   // select on the Requirements container form - the value IS the label
   // string, POSTed as `service_type`, not an id).
@@ -76,12 +91,6 @@
   ];
   const WEIGHT_UNIT_LABEL = { kg: "kg", mt: "MT" };
   const DISPATCH_MODE_LABEL = { single: "Single", tandem: "Tandem" };
-  // #pmRequirementProduct option value -> its pane id (see bindProductSelector()).
-  const PRODUCT_PANES = {
-    freight: "pmProductPaneFreight",
-    trucking: "pmProductPaneTrucking",
-    charter: "pmProductPaneCharter",
-  };
   const TYPE_FIELD_VISIBILITY = {
     CV: { convanSize: true, temperature: false, revenueTon: false },
     FR: { convanSize: true, temperature: false, revenueTon: false },
@@ -130,6 +139,16 @@
   // Charter, which is genuinely Port-level).
   let locationsOptionsHtml = "";
   let portsOptionsHtml = "";
+  // Charter Type - optional dropdown on the three Add-Charter modals,
+  // sourced from the charterServices catalog (maintenance.blade.php's
+  // Products tab > Charter pill). Same fetch-once/cache pattern as the
+  // other lookups here.
+  let charterServiceOptionsHtml = "";
+  // Raw port rows (kept alongside the pre-built portsOptionsHtml string
+  // above) so getPortsOptionsHtmlForArea() below can filter by the
+  // selected Origin/Destination's serviceable area instead of just
+  // rendering every port.
+  let portsRaw = [];
   // Class/size lists are owned per-Container (see Container::syncCatalog())
   // and keyed here by Container.code, matching CONTAINER_TYPES' values.
   let containerCatalogByCode = {};
@@ -282,13 +301,15 @@
   // (Charter port calls). Fetched once ever (see containerLookupsPromise)
   // since none of this master data changes mid-session.
   async function loadContainerLookups() {
-    const [containersRes, deliveryTypesRes, locationsRes, portsRes] = await Promise.all([
+    const [containersRes, deliveryTypesRes, locationsRes, portsRes, charterServicesRes] = await Promise.all([
       apiCall({ mode: "GET", url: "/api/containers?per_page=200" }),
       apiCall({ mode: "GET", url: "/api/deliveryTypes?per_page=200" }),
       apiCall({ mode: "GET", url: "/api/locations?per_page=200" }),
       apiCall({ mode: "GET", url: "/api/ports?per_page=200" }),
+      apiCall({ mode: "GET", url: "/api/charterServices?is_active=1&per_page=200" }),
       fillCargoTypeOptions(),
       fillTruckingCargoTypeOptions(),
+      fillAddressTypeOptions(),
     ]);
 
     if (containersRes.success) {
@@ -311,10 +332,48 @@
         .join("");
     }
     if (portsRes.success) {
-      portsOptionsHtml = portsRes.data.data
-        .map((p) => `<option value="${p.port_id}">${p.location?.name ?? "-"} - ${p.name}</option>`)
+      portsRaw = portsRes.data.data;
+      portsOptionsHtml = portsRaw.map((p) => `<option value="${p.port_id}">${p.location?.name ?? "-"} - ${p.name}</option>`).join("");
+    }
+    if (charterServicesRes.success) {
+      charterServiceOptionsHtml = charterServicesRes.data.data
+        .map((c) => `<option value="${c.charter_service_id}">${c.name}</option>`)
         .join("");
     }
+  }
+
+  // Splits a Serviceable Area's "{Province} - {Municipality}" string (see
+  // maintenance.blade.php's Location modal) into its two parts, trimmed.
+  // Legacy freeform areas saved before that format existed (no " - ") are
+  // returned as null and simply never match anything below.
+  function parseServiceableArea(areaName) {
+    const parts = (areaName || "").split(" - ");
+    if (parts.length !== 2) return null;
+    return { province: parts[0].trim().toLowerCase(), municipality: parts[1].trim().toLowerCase() };
+  }
+
+  // Ports for whichever Location's Serviceable Areas include the given
+  // province/municipality (an Origin or Destination's own
+  // address_province/address_town_city) - used by the Request for
+  // Proposal wizard's Products tab so Port dropdowns only show ports that
+  // actually service the selected route (see
+  // logic_prospect_request_proposal.js's applyPortFilterForSide()).
+  // Falls back to every port when nothing's selected yet or nothing
+  // matches - this filter is a convenience, never a hard block.
+  function getPortsOptionsHtmlForArea(provinceName, cityName) {
+    const province = (provinceName || "").trim().toLowerCase();
+    const municipality = (cityName || "").trim().toLowerCase();
+    if (!province || !municipality) return portsOptionsHtml;
+
+    const matches = portsRaw.filter((p) =>
+      (p.location?.serviceable_areas ?? []).some((a) => {
+        const parsed = parseServiceableArea(a.area_name);
+        return parsed && parsed.province === province && parsed.municipality === municipality;
+      })
+    );
+    if (!matches.length) return portsOptionsHtml;
+
+    return matches.map((p) => `<option value="${p.port_id}">${p.location?.name ?? "-"} - ${p.name}</option>`).join("");
   }
 
   function ensureContainerLookupsLoaded() {
@@ -438,8 +497,10 @@
     modal.querySelectorAll(".pm-social-platform-btn").forEach((btn) => {
       btn.addEventListener("click", function () {
         modal.querySelector("#pmSourceSocialPlatform").value = this.dataset.platform;
-        modal.querySelectorAll(".pm-social-platform-btn").forEach((b) =>
-          b.classList.toggle("border-orange-500", b === this));
+        modal.querySelectorAll(".pm-social-platform-btn").forEach((b) => {
+          b.classList.toggle("border-orange-500", b === this);
+          b.setAttribute("aria-pressed", b === this ? "true" : "false");
+        });
         modal.querySelector("#pmSocialMediaPopover")?.classList.add("hidden");
         updateSourceDetailSummary(modal);
       });
@@ -670,94 +731,115 @@
     }
   }
 
-  // Async: callers that only need the card inserted (button click, form
-  // reset) can call this without awaiting - the DOM insert above happens
-  // synchronously before the first await either way. Callers that need to
-  // hydrate saved province/city/barangay values afterward (see
-  // hydrateIdentityForm()) MUST await it - initLocationPsgcCascade() only
-  // finishes populating the province <select> (and setting
-  // card._locationLookups, which the city/barangay cascade needs) once its
-  // first PSGC fetch resolves, so hydrating before that resolves silently
-  // fails to fill any of the three fields.
-  async function addLocationCard(modal) {
-    const wrap = modal.querySelector("#pmLocationsContainer");
-    const index = wrap.children.length;
-    wrap.insertAdjacentHTML("beforeend", locationCardHtml(index));
-    const card = wrap.lastElementChild;
+  function escLocation(v) {
+    return String(v ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[c]));
+  }
 
-    // Default address_type to "Main Office" on add, per brief.
+  // Same formatting idea as logic_prospect_info_modal.js's/
+  // logic_prospect_add_modals.js's own formatLocationLabel() - duplicated
+  // rather than shared, matching how those two already duplicate it between
+  // themselves instead of exposing it via window.prospectShared.
+  function formatPmLocationLabel(loc) {
+    const line = [loc.address_no, loc.address_building, loc.address_street, loc.address_barangay, loc.address_town_city, loc.address_province]
+      .filter(Boolean)
+      .join(", ") || "Unnamed location";
+    return loc.address_type ? `${escLocation(loc.address_type)} — ${escLocation(line)}` : escLocation(line);
+  }
+
+  // Renders #pmLocationsContainer from the pmLocations in-memory array - a
+  // summary row per location (same visual shape as ProspectInfoModal's own
+  // renderLocationsSummary()), or - since at least one location is required
+  // to complete this tab - VISUALS.md's "prompting" empty state (an
+  // actionable gap, not a quiet "nothing here yet") with its own embedded
+  // CTA when the list is empty.
+  function renderPmLocationsList(modal) {
+    const wrap = modal.querySelector("#pmLocationsContainer");
+
+    if (!pmLocations.length) {
+      wrap.innerHTML = `
+        <div class="border border-dashed border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/10 rounded-xl p-4 text-center">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">No locations yet. Add at least one to complete this tab.</p>
+            <button type="button" id="pmLocationsEmptyAddBtn"
+                class="mt-2 text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium">
+                + Add Location
+            </button>
+        </div>`;
+      wrap.querySelector("#pmLocationsEmptyAddBtn")?.addEventListener("click", () => openPmAddLocationModal(modal));
+      return;
+    }
+
+    wrap.innerHTML = pmLocations
+      .map(
+        (loc, index) => `
+      <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 flex justify-between items-start gap-3">
+          <div>
+              <p class="text-sm text-zinc-800 dark:text-zinc-100">${formatPmLocationLabel(loc)}</p>
+              <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Postal Code: ${escLocation(loc.address_postal_code || "—")}${loc.is_primary ? " · Primary" : ""}</p>
+          </div>
+          <button type="button" class="pm-remove-location-row text-red-500 text-xs font-medium shrink-0" data-index="${index}">✕ Remove</button>
+      </div>`,
+      )
+      .join("");
+
+    wrap.querySelectorAll(".pm-remove-location-row").forEach((btn) => {
+      btn.addEventListener("click", () => removePmLocationAt(modal, Number(btn.dataset.index)));
+    });
+  }
+
+  function removePmLocationAt(modal, index) {
+    pmLocations.splice(index, 1);
+    renderPmLocationsList(modal);
+  }
+
+  // Opens <x-pm-add-location-modal /> with one fresh, blank address card -
+  // no Remove button (there's only ever one card in this popup), Primary
+  // pre-checked only if this would be the very first location.
+  async function openPmAddLocationModal(modal) {
+    const wrap = document.getElementById("pmAlmLocationCardWrap");
+    wrap.innerHTML = locationCardHtml(0);
+    const card = wrap.firstElementChild;
+    card.querySelector(".pm-remove-location")?.remove();
+
     const typeSelect = card.querySelector('[data-field="address_type"]');
     typeSelect.value = "Main Office";
 
-    if (index === 0) card.querySelector(".pm-primary-radio").checked = true;
-
-    card.querySelector(".pm-remove-location").addEventListener("click", () => card.remove());
+    if (!pmLocations.length) card.querySelector(".pm-primary-radio").checked = true;
 
     await initLocationPsgcCascade(card);
 
-    return card;
+    window.initModal({ modalId: "PmAddLocationModal" });
   }
 
-  async function hydrateLocationCard(card, address) {
-    ["address_no", "address_building", "address_street", "address_postal_code"].forEach((field) => {
-      const el = card.querySelector(`[data-field="${field}"]`);
-      if (el) el.value = address[field] ?? "";
+  function savePmLocation(modal) {
+    const card = document.querySelector("#pmAlmLocationCardWrap .pm-location-card");
+    if (!card) return;
+
+    const obj = {};
+    card.querySelectorAll("[data-field]").forEach((el) => {
+      obj[el.dataset.field] = el.value;
     });
+    obj.is_primary = card.querySelector(".pm-primary-radio")?.checked ?? false;
 
-    const typeSelect = card.querySelector('[data-field="address_type"]');
-    if (typeSelect) typeSelect.value = address.address_type ?? "";
-
-    const countrySelect = card.querySelector('[data-field="address_country"]');
-    if (countrySelect) countrySelect.value = address.address_country || "Philippines";
-
-    card.querySelector(".pm-primary-radio").checked = Boolean(address.is_primary);
-
-    const { loadCities, loadBarangays } = card._locationLookups ?? {};
-    const provinceSelect = card.querySelector('[data-field="address_province"]');
-    const citySelect = card.querySelector('[data-field="address_town_city"]');
-    const barangaySelect = card.querySelector('[data-field="address_barangay"]');
-
-    if (address.address_province && provinceSelect) {
-      provinceSelect.value = address.address_province;
-      refreshSearchable(provinceSelect);
-
-      if (provinceSelect.tagName === "SELECT" && loadCities) {
-        const provinceCode = provinceSelect.selectedOptions[0]?.dataset.code;
-        await loadCities(provinceCode);
-
-        const freshCitySelect = card.querySelector('[data-field="address_town_city"]');
-        if (address.address_town_city && freshCitySelect) {
-          freshCitySelect.value = address.address_town_city;
-          refreshSearchable(freshCitySelect);
-
-          if (freshCitySelect.tagName === "SELECT" && loadBarangays) {
-            const cityCode = freshCitySelect.selectedOptions[0]?.dataset.code;
-            await loadBarangays(cityCode);
-
-            const freshBarangaySelect = card.querySelector('[data-field="address_barangay"]');
-            if (address.address_barangay && freshBarangaySelect) {
-              freshBarangaySelect.value = address.address_barangay;
-              refreshSearchable(freshBarangaySelect);
-            }
-          }
-        }
-      } else {
-        // Already degraded to manual text inputs - just fill the values.
-        if (address.address_town_city && citySelect) citySelect.value = address.address_town_city;
-        if (address.address_barangay && barangaySelect) barangaySelect.value = address.address_barangay;
-      }
+    if (!obj.address_province || !obj.address_town_city) {
+      showMessage({ status: "error", title: "Province and Town/City are required." });
+      return;
     }
+
+    if (obj.is_primary) pmLocations.forEach((loc) => (loc.is_primary = false));
+
+    pmLocations.push(obj);
+    renderPmLocationsList(modal);
+    window.closeModal("PmAddLocationModal");
   }
 
   function collectLocations(modal) {
-    return Array.from(modal.querySelectorAll(".pm-location-card")).map((card) => {
-      const obj = {};
-      card.querySelectorAll("[data-field]").forEach((el) => {
-        obj[el.dataset.field] = el.value;
-      });
-      obj.is_primary = card.querySelector(".pm-primary-radio")?.checked ?? false;
-      return obj;
-    });
+    return pmLocations;
   }
 
   // ------------------------------------------------------------------
@@ -818,18 +900,110 @@
     });
   }
 
+  // "mobile"/"landline" channels get the live .phone-input formatter;
+  // "email" never does - the channel_type select toggles the class (and
+  // reformats the current value) on every change, see bindChannelTypeToggle().
+  const PHONE_CHANNEL_TYPES = ["mobile", "landline"];
+
   function channelRowHtml() {
     return `
     <div class="pm-channel-row flex items-center gap-2">
         <select data-field="channel_type" class="w-32 shrink-0 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             ${CHANNEL_TYPES.map((t) => `<option value="${t.value}">${t.label}</option>`).join("")}
         </select>
-        <input type="text" data-field="value" placeholder="Number or email" class="flex-1 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+        <div class="flex items-center gap-1 flex-1">
+            <span class="pm-channel-mobile-prefix hidden text-sm text-zinc-500 dark:text-zinc-400">+63</span>
+            <input type="text" data-field="value" placeholder="Number or email" class="phone-input flex-1 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+        </div>
         <select data-field="contact_type" class="w-28 shrink-0 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             ${CONTACT_TYPES.map((t) => `<option value="${t.value}">${t.label}</option>`).join("")}
         </select>
         <button type="button" class="pm-remove-channel text-red-500 text-xs font-medium shrink-0">✕</button>
     </div>`;
+  }
+
+  // PH mobile number: digits-only, capped to 11 chars if it starts with "0"
+  // (0 + 10-digit subscriber number) else 10 chars (bare subscriber number,
+  // no leading 0) - the +63 prefix is shown separately (.pm-channel-mobile-prefix)
+  // and never typed into/stored in this value. Deliberately a new helper, not
+  // a tweak to the shared global formatPhoneDisplay()/.phone-input in
+  // customFunctions.js - that one is used by landline rows here and by other
+  // forms (e.g. clientMasterForm.blade.php) that must keep their current
+  // uncapped behavior.
+  function formatPmMobileDisplay(value) {
+    let digits = String(value ?? "").replace(/\D/g, "");
+    digits = digits.startsWith("0") ? digits.slice(0, 11) : digits.slice(0, 10);
+    if (digits === "") return "";
+    if (digits.startsWith("0")) {
+      return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`.trim();
+    }
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 10)}`.trim();
+  }
+
+  let pmMobileInputBound = false;
+  function bindPmMobileInputFormatter() {
+    if (pmMobileInputBound) return;
+    pmMobileInputBound = true;
+    document.addEventListener(
+      "input",
+      (e) => {
+        if (!e.target.matches || !e.target.matches(".pm-mobile-input")) return;
+        const el = e.target;
+        const cursorPos = el.selectionStart ?? el.value.length;
+        const digitsBeforeCursor = el.value.slice(0, cursorPos).replace(/\D/g, "").length;
+
+        const formatted = formatPmMobileDisplay(el.value);
+        if (formatted === el.value) return;
+        el.value = formatted;
+
+        let newPos = formatted.length;
+        if (digitsBeforeCursor === 0) {
+          newPos = 0;
+        } else {
+          let seen = 0;
+          for (let i = 0; i < formatted.length; i++) {
+            if (formatted[i] !== " ") {
+              seen++;
+              if (seen === digitsBeforeCursor) {
+                newPos = i + 1;
+                break;
+              }
+            }
+          }
+        }
+        el.setSelectionRange(newPos, newPos);
+      },
+      true
+    );
+  }
+
+  function isValidPmEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  // Toggles .phone-input/.pm-mobile-input on/off the shared value input (and
+  // the +63 prefix label) as channel_type changes, reformatting the current
+  // value immediately when switching INTO a phone type - switching to email
+  // just drops both classes/the prefix, an email address is left exactly as
+  // typed.
+  function bindChannelTypeToggle(row) {
+    const typeSelect = row.querySelector('[data-field="channel_type"]');
+    const valueInput = row.querySelector('[data-field="value"]');
+    const prefix = row.querySelector(".pm-channel-mobile-prefix");
+
+    const applyToggle = () => {
+      const isMobile = typeSelect.value === "mobile";
+      const isLandline = typeSelect.value === "landline";
+      valueInput.classList.toggle("pm-mobile-input", isMobile);
+      valueInput.classList.toggle("phone-input", isLandline);
+      prefix?.classList.toggle("hidden", !isMobile);
+      if (isMobile) valueInput.value = formatPmMobileDisplay(valueInput.value);
+      else if (isLandline) valueInput.value = formatPhoneDisplay(valueInput.value);
+    };
+
+    typeSelect.addEventListener("change", applyToggle);
+    applyToggle();
+    bindPmMobileInputFormatter();
   }
 
   function addChannelRow(card, prefill) {
@@ -842,6 +1016,7 @@
       row.querySelector('[data-field="value"]').value = prefill.value ?? "";
       row.querySelector('[data-field="contact_type"]').value = prefill.contact_type ?? "personal";
     }
+    bindChannelTypeToggle(row);
     return row;
   }
 
@@ -893,77 +1068,179 @@
     </div>`;
   }
 
-  function addContactCard(modal) {
-    const wrap = modal.querySelector("#pmContactsContainer");
-    wrap.insertAdjacentHTML("beforeend", contactCardHtml());
-    const card = wrap.lastElementChild;
+  // Flattens the server's contact shape (already {title, first_name,
+  // middle_name, last_name, position, channels:[{channel_type,value,
+  // contact_type}], location_ids:[...]} per ProspectController::saveContacts()'s
+  // response reshaping) into the same plain-object shape pmContacts holds
+  // client-side - a pass-through, not a transformation.
+  function mapServerContact(c) {
+    return {
+      title: c.title ?? null,
+      first_name: c.first_name ?? "",
+      middle_name: c.middle_name ?? null,
+      last_name: c.last_name ?? "",
+      position: c.position ?? null,
+      channels: (c.channels ?? []).map((ch) => ({
+        channel_type: ch.channel_type,
+        value: ch.value,
+        contact_type: ch.contact_type,
+      })),
+      location_ids: c.location_ids ?? [],
+    };
+  }
 
-    card.querySelector(".pm-remove-contact").addEventListener("click", () => card.remove());
+  const CHANNEL_TYPE_LABEL = Object.fromEntries(CHANNEL_TYPES.map((t) => [t.value, t.label]));
+  const CONTACT_TYPE_LABEL = Object.fromEntries(CONTACT_TYPES.map((t) => [t.value, t.label]));
+
+  function formatPmChannelLine(ch) {
+    const label = CHANNEL_TYPE_LABEL[ch.channel_type] ?? ch.channel_type;
+    const displayValue = ch.channel_type === "mobile" ? `+63 ${formatPmMobileDisplay(ch.value)}` : ch.value;
+    return `${escLocation(label)}: ${escLocation(displayValue)} (${escLocation(CONTACT_TYPE_LABEL[ch.contact_type] ?? ch.contact_type)})`;
+  }
+
+  // Renders #pmContactsContainer from the pmContacts in-memory array - same
+  // idea as renderPmLocationsList(): a summary row per contact (mirroring
+  // ProspectInfoModal's own renderContactsSummary()), or VISUALS.md's
+  // "prompting" empty state (at least one contact is required to complete
+  // this tab, same gate as Locations: Prospect::stageCompletionFlags()'s
+  // `contacts()->exists()`).
+  function renderPmContactsList(modal) {
+    const wrap = modal.querySelector("#pmContactsContainer");
+
+    if (!pmContacts.length) {
+      wrap.innerHTML = `
+        <div class="border border-dashed border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/10 rounded-xl p-4 text-center">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">No contact persons yet. Add at least one to complete this tab.</p>
+            <button type="button" id="pmContactsEmptyAddBtn"
+                class="mt-2 text-xs px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium">
+                + Add Contact
+            </button>
+        </div>`;
+      wrap.querySelector("#pmContactsEmptyAddBtn")?.addEventListener("click", () => openPmAddContactModal(modal));
+      return;
+    }
+
+    wrap.innerHTML = pmContacts
+      .map((contact, index) => {
+        const name = [contact.title, contact.first_name, contact.middle_name, contact.last_name].filter(Boolean).join(" ");
+        const channelsHtml = contact.channels.length
+          ? contact.channels.map((ch) => `<li>${formatPmChannelLine(ch)}</li>`).join("")
+          : `<li>—</li>`;
+        const locationId = (contact.location_ids ?? [])[0];
+        const location = locationId != null ? currentProspectLocations.find((loc) => loc.id === locationId) : null;
+        const addressLine = location ? formatLocationLabel(location) : "—";
+
+        return `
+      <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 flex justify-between items-start gap-3">
+          <div>
+              <p class="text-sm text-zinc-800 dark:text-zinc-100">${escLocation(name || "—")}</p>
+              <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">${escLocation(contact.position || "—")}</p>
+              <ul class="text-xs text-zinc-500 dark:text-zinc-400 list-disc list-inside mt-1">${channelsHtml}</ul>
+              <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Address: ${escLocation(addressLine)}</p>
+          </div>
+          <button type="button" class="pm-remove-contact-row text-red-500 text-xs font-medium shrink-0" data-index="${index}">✕ Remove</button>
+      </div>`;
+      })
+      .join("");
+
+    wrap.querySelectorAll(".pm-remove-contact-row").forEach((btn) => {
+      btn.addEventListener("click", () => removePmContactAt(modal, Number(btn.dataset.index)));
+    });
+  }
+
+  function removePmContactAt(modal, index) {
+    pmContacts.splice(index, 1);
+    renderPmContactsList(modal);
+  }
+
+  // Opens <x-pm-add-contact-modal /> with one fresh, blank contact card - no
+  // Remove button (there's only ever one card in this popup), one blank
+  // channel row seeded, address dropdown built from this prospect's own
+  // saved locations (currentProspectLocations) exactly like the old inline
+  // addContactCard() did.
+  function openPmAddContactModal(modal) {
+    const wrap = document.getElementById("pmAcmContactCardWrap");
+    wrap.innerHTML = contactCardHtml();
+    const card = wrap.firstElementChild;
+    card.querySelector(".pm-remove-contact")?.remove();
     card.querySelector(".pm-add-channel").addEventListener("click", () => addChannelRow(card));
     card.querySelector(".pm-contact-addresses").innerHTML = addressDropdownHtml(null);
     makeSearchableSelect(card.querySelector(".pmContactTitleDropdown"));
 
     addChannelRow(card);
 
-    return card;
+    window.initModal({ modalId: "PmAddContactModal" });
   }
 
-  function hydrateContactCard(card, contact) {
-    ["title", "first_name", "middle_name", "last_name", "position"].forEach((field) => {
-      const el = card.querySelector(`[data-field="${field}"]`);
-      if (el) el.value = contact[field] ?? "";
-    });
-    refreshSearchable(card.querySelector(".pmContactTitleDropdown"));
+  function savePmContact(modal) {
+    const card = document.querySelector("#pmAcmContactCardWrap .pm-contact-card");
+    if (!card) return;
 
-    card.querySelector(".pm-channels-container").innerHTML = "";
-    const channels = contact.channels ?? [];
-    channels.forEach((ch) => addChannelRow(card, ch));
-    if (!channels.length) addChannelRow(card);
+    const get = (field) => card.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
 
-    const locationId = (contact.location_ids ?? [])[0] ?? null;
-    card.querySelector(".pm-contact-addresses").innerHTML = addressDropdownHtml(locationId);
+    const channels = Array.from(card.querySelectorAll(".pm-channel-row"))
+      .map((row) => {
+        const channel_type = row.querySelector('[data-field="channel_type"]').value;
+        const rawValue = row.querySelector('[data-field="value"]').value.trim();
+        return {
+          channel_type,
+          value: PHONE_CHANNEL_TYPES.includes(channel_type) ? parsePhoneValue(rawValue) : rawValue,
+          contact_type: row.querySelector('[data-field="contact_type"]').value,
+        };
+      })
+      .filter((ch) => ch.value);
+
+    const selectedLocation = card.querySelector(".pm-contact-location-select")?.value;
+    const location_ids = selectedLocation ? [Number(selectedLocation)] : [];
+
+    const contact = {
+      title: get("title") || null,
+      first_name: get("first_name"),
+      middle_name: get("middle_name") || null,
+      last_name: get("last_name"),
+      position: get("position") || null,
+      channels,
+      location_ids,
+    };
+
+    if (!contact.first_name || !contact.last_name) {
+      showMessage({ status: "error", title: "A First Name and Last Name are required." });
+      return;
+    }
+
+    const mobileChannels = channels.filter((ch) => ch.channel_type === "mobile");
+    if (!mobileChannels.length) {
+      showMessage({ status: "error", title: "At least one Mobile Number is required." });
+      return;
+    }
+    if (mobileChannels.some((ch) => ch.value.length !== 10 && ch.value.length !== 11)) {
+      showMessage({ status: "error", title: "Mobile Number must be 10 or 11 digits." });
+      return;
+    }
+
+    const emailChannels = channels.filter((ch) => ch.channel_type === "email");
+    if (emailChannels.some((ch) => !isValidPmEmail(ch.value))) {
+      showMessage({ status: "error", title: "Enter a valid Email address." });
+      return;
+    }
+
+    pmContacts.push(contact);
+    renderPmContactsList(modal);
+    window.closeModal("PmAddContactModal");
   }
 
   function resetContactsForm(modal) {
-    modal.querySelector("#pmContactsContainer").innerHTML = "";
-    addContactCard(modal);
+    pmContacts = [];
+    renderPmContactsList(modal);
   }
 
   function hydrateContactsTab(modal, lead) {
-    const wrap = modal.querySelector("#pmContactsContainer");
-    wrap.innerHTML = "";
-    const contacts = lead.contacts ?? [];
-    contacts.forEach((c) => hydrateContactCard(addContactCard(modal), c));
-    if (!contacts.length) addContactCard(modal);
+    pmContacts = lead.contacts?.length ? lead.contacts.map(mapServerContact) : [];
+    renderPmContactsList(modal);
   }
 
   function collectContacts(modal) {
-    return Array.from(modal.querySelectorAll(".pm-contact-card")).map((card) => {
-      const get = (field) => card.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
-
-      const channels = Array.from(card.querySelectorAll(".pm-channel-row"))
-        .map((row) => ({
-          channel_type: row.querySelector('[data-field="channel_type"]').value,
-          value: row.querySelector('[data-field="value"]').value.trim(),
-          contact_type: row.querySelector('[data-field="contact_type"]').value,
-        }))
-        // Drop untouched/empty rows rather than erroring on them - the
-        // backend requires a value on any channel actually submitted.
-        .filter((ch) => ch.value);
-
-      const selectedLocation = card.querySelector(".pm-contact-location-select")?.value;
-      const location_ids = selectedLocation ? [Number(selectedLocation)] : [];
-
-      return {
-        title: get("title") || null,
-        first_name: get("first_name"),
-        middle_name: get("middle_name") || null,
-        last_name: get("last_name"),
-        position: get("position") || null,
-        channels,
-        location_ids,
-      };
-    });
+    return pmContacts;
   }
 
   async function saveContacts(modal, button) {
@@ -997,11 +1274,8 @@
 
     showMessage({ status: "success", title: "Contact Information Saved" });
 
-    const wrap = modal.querySelector("#pmContactsContainer");
-    wrap.innerHTML = "";
-    const savedContacts = response.data.contacts ?? [];
-    savedContacts.forEach((c) => hydrateContactCard(addContactCard(modal), c));
-    if (!savedContacts.length) addContactCard(modal);
+    pmContacts = (response.data.contacts ?? []).map(mapServerContact);
+    renderPmContactsList(modal);
 
     await refreshStageCompletion(modal);
   }
@@ -1009,8 +1283,13 @@
   // ------------------------------------------------------------------
   // TAB 3: PROSPECT REQUIREMENTS (Proposal Request + container table)
   // ------------------------------------------------------------------
-  function fillContainerTypeSelect(modal) {
-    const select = modal.querySelector("#pmContainerType");
+  // These option-fill targets all now live inside the standalone
+  // <x-pm-add-freight-modal />/<x-pm-add-trucking-modal /> popups, not
+  // nested in #ProspectModal - document.getElementById works the same
+  // regardless of which modal element actually contains them (page-unique
+  // ids), so no modal param is needed here anymore.
+  function fillContainerTypeSelect() {
+    const select = document.getElementById("pmContainerType");
     if (!select) return;
     select.insertAdjacentHTML(
       "beforeend",
@@ -1018,75 +1297,93 @@
     );
   }
 
-  function applyContainerLookupsToDom(modal) {
-    const cargoSelect = modal.querySelector("#pmCargoType");
+  function applyContainerLookupsToDom() {
+    const cargoSelect = document.getElementById("pmCargoType");
     if (cargoSelect) cargoSelect.innerHTML = cargoTypeOptionsHtml;
 
     // Service Type is now the fixed 4-value list, not the Delivery Types
     // LOV (deliveryTypesOptionsHtml is still fetched/cached above but no
     // longer applied to this select - kept in case another consumer needs it).
-    const deliveryTypeSelect = modal.querySelector("#pmDeliveryType");
+    const deliveryTypeSelect = document.getElementById("pmDeliveryType");
     if (deliveryTypeSelect) deliveryTypeSelect.innerHTML = serviceTypeOptionsHtml;
 
-    const originSelect = modal.querySelector("#pmOriginLocation");
+    const originSelect = document.getElementById("pmOriginLocation");
     if (originSelect) originSelect.innerHTML = `<option value="">Select Location</option>${locationsOptionsHtml}`;
-    const destinationSelect = modal.querySelector("#pmDestinationLocation");
+    const destinationSelect = document.getElementById("pmDestinationLocation");
     if (destinationSelect) destinationSelect.innerHTML = `<option value="">Select Location</option>${locationsOptionsHtml}`;
     [originSelect, destinationSelect].forEach((el) => makeSearchableSelect(el));
 
-    const truckingCargoTypeSelect = modal.querySelector("#pmTruckingCargoType");
+    const truckingCargoTypeSelect = document.getElementById("pmTruckingCargoType");
     if (truckingCargoTypeSelect) truckingCargoTypeSelect.innerHTML = truckingCargoTypeOptionsHtml;
-    const truckingGeneralCargoSelect = modal.querySelector("#pmTruckingCargoTypeGeneral");
+    const truckingGeneralCargoSelect = document.getElementById("pmTruckingCargoTypeGeneral");
     if (truckingGeneralCargoSelect) truckingGeneralCargoSelect.innerHTML = cargoTypeOptionsHtml;
 
-    const truckingOrigin = modal.querySelector("#pmTruckingOrigin");
+    const truckingOrigin = document.getElementById("pmTruckingOrigin");
     if (truckingOrigin) truckingOrigin.innerHTML = `<option value="">Select Location</option>${locationsOptionsHtml}`;
-    const truckingDestination = modal.querySelector("#pmTruckingDestination");
+    const truckingDestination = document.getElementById("pmTruckingDestination");
     if (truckingDestination) truckingDestination.innerHTML = `<option value="">Select Location</option>${locationsOptionsHtml}`;
     [truckingOrigin, truckingDestination].forEach((el) => makeSearchableSelect(el));
+
+    const charterServiceSelect = document.getElementById("pmCharterServiceId");
+    if (charterServiceSelect) {
+      charterServiceSelect.innerHTML = `<option value="">Select Charter Type (optional)</option>${charterServiceOptionsHtml}`;
+    }
   }
 
   // Fires once per SPA page load (called from initProspectModal(), not per
   // tab-click) - the type select is a static list, containers/delivery
   // types/cargo-type/locations/ports are cached network fetches (see
   // ensureContainerLookupsLoaded()).
-  async function initRequirementsLookups(modal) {
-    fillContainerTypeSelect(modal);
+  async function initRequirementsLookups() {
+    fillContainerTypeSelect();
     await ensureContainerLookupsLoaded();
-    applyContainerLookupsToDom(modal);
+    applyContainerLookupsToDom();
   }
 
-  function applyContainerTypeVisibility(modal) {
-    const type = modal.querySelector("#pmContainerType").value;
+  // These Freight form fields now live inside <x-pm-add-freight-modal />
+  // (a standalone popup, not nested in #ProspectModal) - a page-unique id
+  // is just as unambiguous to query via document.getElementById/
+  // querySelector directly, so there's no need to scope these through the
+  // modal param anymore.
+  function applyContainerTypeVisibility() {
+    const type = document.getElementById("pmContainerType").value;
     const flags = TYPE_FIELD_VISIBILITY[type] || {};
-    modal.querySelector(".field-convan-size")?.classList.toggle("hidden", !flags.convanSize);
-    modal.querySelector(".field-temperature")?.classList.toggle("hidden", !flags.temperature);
-    modal.querySelectorAll(".field-revenue-ton").forEach((el) => el.classList.toggle("hidden", !flags.revenueTon));
+
+    // Per brief: the rest of the Add Freight form stays hidden until a
+    // Container Type is picked - Type is the one field that determines
+    // which other fields even apply (see TYPE_FIELD_VISIBILITY), so it must
+    // be answered first.
+    document.getElementById("pmFreightRestOfForm")?.classList.toggle("hidden", !type);
+    document.getElementById("pmFreightLockedHint")?.classList.toggle("hidden", Boolean(type));
+
+    document.querySelector(".field-convan-size")?.classList.toggle("hidden", !flags.convanSize);
+    document.querySelector(".field-temperature")?.classList.toggle("hidden", !flags.temperature);
+    document.querySelectorAll(".field-revenue-ton").forEach((el) => el.classList.toggle("hidden", !flags.revenueTon));
   }
 
-  function populateContainerClassSizeOptions(modal) {
-    const type = modal.querySelector("#pmContainerType").value;
+  function populateContainerClassSizeOptions() {
+    const type = document.getElementById("pmContainerType").value;
     const catalog = containerCatalogByCode[type] ?? { sizes: [], classes: [] };
 
-    const sizeSelect = modal.querySelector("#pmContainerSize");
+    const sizeSelect = document.getElementById("pmContainerSize");
     if (sizeSelect) {
       sizeSelect.innerHTML =
         '<option value="">Select Size</option>' + catalog.sizes.map((s) => `<option value="${s.id}">${s.size}</option>`).join("");
     }
   }
 
-  // One-time bindings for the single (non-repeatable) Add Booking
-  // Requirement form - called once from initProspectModal(), same as the
-  // Identity tab's static field listeners.
-  function bindContainerFormCascades(modal) {
-    modal.querySelector("#pmContainerType")?.addEventListener("change", () => {
-      applyContainerTypeVisibility(modal);
-      populateContainerClassSizeOptions(modal);
+  // One-time binding for the single (non-repeatable) Add Freight form -
+  // called once from initProspectModal(), same as the Identity tab's
+  // static field listeners.
+  function bindContainerFormCascades() {
+    document.getElementById("pmContainerType")?.addEventListener("change", () => {
+      applyContainerTypeVisibility();
+      populateContainerClassSizeOptions();
     });
   }
 
-  function collectContainerFormPayload(modal) {
-    const form = modal.querySelector("#pmContainerForm");
+  function collectContainerFormPayload() {
+    const form = document.getElementById("pmContainerForm");
     const obj = {};
     form.querySelectorAll("[data-field]").forEach((el) => {
       if (el.type === "checkbox") {
@@ -1097,26 +1394,28 @@
         obj[el.dataset.field] = el.value;
       }
     });
-    const typeSelect = modal.querySelector("#pmContainerType");
+    const typeSelect = document.getElementById("pmContainerType");
     obj.booking_unit_type = typeSelect.options[typeSelect.selectedIndex]?.textContent ?? "";
     return obj;
   }
 
-  function resetContainerForm(modal) {
-    const form = modal.querySelector("#pmContainerForm");
+  function resetContainerForm() {
+    const form = document.getElementById("pmContainerForm");
     form.querySelectorAll("input[type=text], input[type=number], textarea").forEach((el) => (el.value = ""));
     form.querySelectorAll("select").forEach((el) => (el.selectedIndex = 0));
 
-    applyContainerTypeVisibility(modal);
-    populateContainerClassSizeOptions(modal);
+    applyContainerTypeVisibility();
+    populateContainerClassSizeOptions();
   }
 
-  // Shows/hides a product's table wrap based on whether it has any rows -
-  // per brief, "initially there is no table on the tab" for each of
-  // Container/Trucking/Charter; the table only appears once its first row
-  // is added.
-  function toggleTableWrap(modal, wrapId, hasRows) {
-    modal.querySelector(`#${wrapId}`)?.classList.toggle("hidden", !hasRows);
+  // Opens <x-pm-add-freight-modal /> with a freshly-reset form.
+  function openPmAddFreightModal() {
+    if (!currentProspectUuid) {
+      showMessage({ status: "error", title: "Save Prospect Identity first." });
+      return;
+    }
+    resetContainerForm();
+    window.initModal({ modalId: "PmAddFreightModal" });
   }
 
   // Renders one saved container as a table row - `-` (hyphen) for a field
@@ -1144,7 +1443,7 @@
       c.origin_location?.name ?? EMPTY,
       c.destination_location?.name ?? EMPTY,
       flags.temperature ? (c.minimum_temperature ?? EMPTY) : NA,
-      flags.revenueTon ? (c.revenue_ton ?? EMPTY) : NA,
+      flags.revenueTon ? (c.revenue_ton_unit ?? EMPTY) : NA,
       flags.revenueTon ? (c.cargo_measurement ?? EMPTY) : NA,
       c.frequency ?? EMPTY,
       c.service_type ?? EMPTY,
@@ -1176,8 +1475,6 @@
       }
 
       row.remove();
-      const tbody = modal.querySelector("#pmContainersTableBody");
-      toggleTableWrap(modal, "pmContainersTableWrap", Boolean(tbody.querySelector(".pm-container-row")));
 
       await refreshStageCompletion(modal);
     });
@@ -1188,43 +1485,21 @@
     tbody.innerHTML = "";
     containers.forEach((c) => tbody.insertAdjacentHTML("beforeend", containerTableRowHtml(c)));
     tbody.querySelectorAll(".pm-container-row").forEach((row) => bindContainerRowRemove(modal, row));
-    toggleTableWrap(modal, "pmContainersTableWrap", containers.length > 0);
   }
 
   function appendContainerRow(modal, container) {
     const tbody = modal.querySelector("#pmContainersTableBody");
     tbody.insertAdjacentHTML("beforeend", containerTableRowHtml(container));
     bindContainerRowRemove(modal, tbody.lastElementChild);
-    toggleTableWrap(modal, "pmContainersTableWrap", true);
-  }
-
-  // One "Add Requirement" area shared by Freight/Trucking/Charter - picking
-  // a product swaps which pane is visible (and reveals the shared submit
-  // button); blank shows none, per brief.
-  function bindProductSelector(modal) {
-    modal.querySelector("#pmRequirementProduct").addEventListener("change", function () {
-      Object.entries(PRODUCT_PANES).forEach(([key, paneId]) => {
-        modal.querySelector(`#${paneId}`)?.classList.toggle("hidden", key !== this.value);
-      });
-      modal.querySelector("#pmAddRequirementBtnWrap")?.classList.toggle("hidden", !this.value);
-    });
-  }
-
-  function resetProductSelector(modal) {
-    const select = modal.querySelector("#pmRequirementProduct");
-    select.value = "";
-    Object.values(PRODUCT_PANES).forEach((paneId) => modal.querySelector(`#${paneId}`)?.classList.add("hidden"));
-    modal.querySelector("#pmAddRequirementBtnWrap")?.classList.add("hidden");
   }
 
   function resetRequirementsForm(modal) {
-    resetContainerForm(modal);
+    resetContainerForm();
     renderContainersTable(modal, []);
-    resetTruckingForm(modal);
+    resetTruckingForm();
     renderTruckingsTable(modal, []);
-    resetCharterForm(modal);
+    resetCharterForm();
     renderChartersTable(modal, []);
-    resetProductSelector(modal);
   }
 
   // "Prospect products" - owned directly by the prospect, independent of
@@ -1242,7 +1517,7 @@
       return;
     }
 
-    const payload = collectContainerFormPayload(modal);
+    const payload = collectContainerFormPayload();
 
     const response = await apiCall({
       mode: "POST",
@@ -1263,16 +1538,17 @@
     }
 
     appendContainerRow(modal, response.data.container);
-    resetContainerForm(modal);
+    resetContainerForm();
     showMessage({ status: "success", title: "Booking Requirement Added" });
     await refreshStageCompletion(modal);
+    window.closeModal("PmAddFreightModal");
   }
 
   // ------------------------------------------------------------------
   // TAB 3 (cont'd): TRUCKING - second "product", flat single-row form.
   // ------------------------------------------------------------------
-  function collectTruckingFormPayload(modal) {
-    const form = modal.querySelector("#pmTruckingForm");
+  function collectTruckingFormPayload() {
+    const form = document.getElementById("pmTruckingForm");
     const obj = {};
     form.querySelectorAll("[data-field]").forEach((el) => {
       obj[el.dataset.field] = el.classList.contains("currency-input") ? parseCurrencyValue(el.value) : el.value;
@@ -1280,10 +1556,20 @@
     return obj;
   }
 
-  function resetTruckingForm(modal) {
-    const form = modal.querySelector("#pmTruckingForm");
+  function resetTruckingForm() {
+    const form = document.getElementById("pmTruckingForm");
     form.querySelectorAll("input[type=text], input[type=number], textarea").forEach((el) => (el.value = ""));
     form.querySelectorAll("select").forEach((el) => (el.selectedIndex = 0));
+  }
+
+  // Opens <x-pm-add-trucking-modal /> with a freshly-reset form.
+  function openPmAddTruckingModal() {
+    if (!currentProspectUuid) {
+      showMessage({ status: "error", title: "Save Prospect Identity first." });
+      return;
+    }
+    resetTruckingForm();
+    window.initModal({ modalId: "PmAddTruckingModal" });
   }
 
   function truckingTableRowHtml(t) {
@@ -1325,8 +1611,6 @@
       }
 
       row.remove();
-      const tbody = modal.querySelector("#pmTruckingsTableBody");
-      toggleTableWrap(modal, "pmTruckingsTableWrap", Boolean(tbody.querySelector(".pm-trucking-row")));
 
       await refreshStageCompletion(modal);
     });
@@ -1337,14 +1621,12 @@
     tbody.innerHTML = "";
     truckings.forEach((t) => tbody.insertAdjacentHTML("beforeend", truckingTableRowHtml(t)));
     tbody.querySelectorAll(".pm-trucking-row").forEach((row) => bindTruckingRowRemove(modal, row));
-    toggleTableWrap(modal, "pmTruckingsTableWrap", truckings.length > 0);
   }
 
   function appendTruckingRow(modal, trucking) {
     const tbody = modal.querySelector("#pmTruckingsTableBody");
     tbody.insertAdjacentHTML("beforeend", truckingTableRowHtml(trucking));
     bindTruckingRowRemove(modal, tbody.lastElementChild);
-    toggleTableWrap(modal, "pmTruckingsTableWrap", true);
   }
 
   async function addTruckingRow(modal, button) {
@@ -1353,7 +1635,7 @@
       return;
     }
 
-    const payload = collectTruckingFormPayload(modal);
+    const payload = collectTruckingFormPayload();
 
     const response = await apiCall({
       mode: "POST",
@@ -1374,9 +1656,10 @@
     }
 
     appendTruckingRow(modal, response.data.trucking);
-    resetTruckingForm(modal);
+    resetTruckingForm();
     showMessage({ status: "success", title: "Trucking Requirement Added" });
     await refreshStageCompletion(modal);
+    window.closeModal("PmAddTruckingModal");
   }
 
   // ------------------------------------------------------------------
@@ -1396,8 +1679,8 @@
     </div>`;
   }
 
-  function addCharterCargoRow(modal) {
-    const wrap = modal.querySelector("#pmCharterCargoContainer");
+  function addCharterCargoRow() {
+    const wrap = document.getElementById("pmCharterCargoContainer");
     wrap.insertAdjacentHTML("beforeend", charterCargoRowHtml());
     const row = wrap.lastElementChild;
     row.querySelector(".pm-remove-charter-cargo").addEventListener("click", () => row.remove());
@@ -1417,67 +1700,78 @@
 
   // Re-labels every port row "PORT 1", "PORT 2"... in DOM order - called
   // after every add/remove so the numbering never has a gap.
-  function renumberCharterPortRows(modal) {
-    modal.querySelectorAll("#pmCharterPortsContainer .pm-charter-port-row").forEach((row, index) => {
+  function renumberCharterPortRows() {
+    document.querySelectorAll("#pmCharterPortsContainer .pm-charter-port-row").forEach((row, index) => {
       row.querySelector(".pm-charter-port-label").textContent = `PORT ${index + 1}`;
     });
   }
 
-  function addCharterPortRow(modal) {
-    const wrap = modal.querySelector("#pmCharterPortsContainer");
+  function addCharterPortRow() {
+    const wrap = document.getElementById("pmCharterPortsContainer");
     wrap.insertAdjacentHTML("beforeend", charterPortRowHtml());
     const row = wrap.lastElementChild;
     makeSearchableSelect(row.querySelector(".pmCharterPortSelect"));
     row.querySelector(".pm-remove-charter-port").addEventListener("click", () => {
       row.remove();
-      renumberCharterPortRows(modal);
+      renumberCharterPortRows();
     });
-    renumberCharterPortRows(modal);
+    renumberCharterPortRows();
     return row;
   }
 
-  function collectCharterCargoRows(modal) {
-    return Array.from(modal.querySelectorAll(".pm-charter-cargo-row")).map((row) => ({
+  function collectCharterCargoRows() {
+    return Array.from(document.querySelectorAll(".pm-charter-cargo-row")).map((row) => ({
       cargo_type: row.querySelector('[data-field="cargo_type"]').value,
       general_cargo_description: row.querySelector('[data-field="general_cargo_description"]').value,
       special_requirements: row.querySelector('[data-field="special_requirements"]').value,
     }));
   }
 
-  function collectCharterPortRows(modal) {
-    return Array.from(modal.querySelectorAll(".pm-charter-port-row")).map((row) => ({
+  function collectCharterPortRows() {
+    return Array.from(document.querySelectorAll(".pm-charter-port-row")).map((row) => ({
       port_id: row.querySelector('[data-field="port_id"]').value,
     }));
   }
 
-  function collectCharterFormPayload(modal) {
-    const get = (id) => modal.querySelector(id)?.value ?? "";
+  function collectCharterFormPayload() {
+    const get = (id) => document.getElementById(id)?.value ?? "";
     return {
-      charter_start_date: get("#pmCharterStartDate"),
-      charter_end_date: get("#pmCharterEndDate"),
-      declared_value: parseCurrencyValue(get("#pmCharterDeclaredValue")),
-      weight: get("#pmCharterWeight"),
-      weight_unit: get("#pmCharterWeightUnit"),
-      cargo: collectCharterCargoRows(modal),
-      ports: collectCharterPortRows(modal),
+      charter_start_date: get("pmCharterStartDate"),
+      charter_end_date: get("pmCharterEndDate"),
+      declared_value: parseCurrencyValue(get("pmCharterDeclaredValue")),
+      weight: parseCurrencyValue(get("pmCharterWeight")),
+      weight_unit: get("pmCharterWeightUnit"),
+      charter_service_id: get("pmCharterServiceId") || null,
+      cargo: collectCharterCargoRows(),
+      ports: collectCharterPortRows(),
     };
   }
 
   // Unlike resetContainerForm/resetTruckingForm, this also reseeds ONE
-  // blank cargo row and ONE "PORT 1" row (mirrors addContactCard()/
-  // addLocationCard() always leaving one card ready on Tabs 1/2).
-  function resetCharterForm(modal) {
-    modal.querySelector("#pmCharterStartDate").value = "";
-    modal.querySelector("#pmCharterEndDate").value = "";
-    modal.querySelector("#pmCharterDeclaredValue").value = "";
-    modal.querySelector("#pmCharterWeight").value = "";
-    modal.querySelector("#pmCharterWeightUnit").selectedIndex = 0;
+  // blank cargo row and ONE "PORT 1" row.
+  function resetCharterForm() {
+    document.getElementById("pmCharterStartDate").value = "";
+    document.getElementById("pmCharterEndDate").value = "";
+    document.getElementById("pmCharterDeclaredValue").value = "";
+    document.getElementById("pmCharterWeight").value = "";
+    document.getElementById("pmCharterWeightUnit").selectedIndex = 0;
+    document.getElementById("pmCharterServiceId").value = "";
 
-    modal.querySelector("#pmCharterCargoContainer").innerHTML = "";
-    addCharterCargoRow(modal);
+    document.getElementById("pmCharterCargoContainer").innerHTML = "";
+    addCharterCargoRow();
 
-    modal.querySelector("#pmCharterPortsContainer").innerHTML = "";
-    addCharterPortRow(modal);
+    document.getElementById("pmCharterPortsContainer").innerHTML = "";
+    addCharterPortRow();
+  }
+
+  // Opens <x-pm-add-charter-modal /> with a freshly-reset form.
+  function openPmAddCharterModal() {
+    if (!currentProspectUuid) {
+      showMessage({ status: "error", title: "Save Prospect Identity first." });
+      return;
+    }
+    resetCharterForm();
+    window.initModal({ modalId: "PmAddCharterModal" });
   }
 
   function charterTableRowHtml(c) {
@@ -1521,8 +1815,6 @@
       }
 
       row.remove();
-      const tbody = modal.querySelector("#pmChartersTableBody");
-      toggleTableWrap(modal, "pmChartersTableWrap", Boolean(tbody.querySelector(".pm-charter-row")));
 
       await refreshStageCompletion(modal);
     });
@@ -1533,14 +1825,12 @@
     tbody.innerHTML = "";
     charters.forEach((c) => tbody.insertAdjacentHTML("beforeend", charterTableRowHtml(c)));
     tbody.querySelectorAll(".pm-charter-row").forEach((row) => bindCharterRowRemove(modal, row));
-    toggleTableWrap(modal, "pmChartersTableWrap", charters.length > 0);
   }
 
   function appendCharterRow(modal, charter) {
     const tbody = modal.querySelector("#pmChartersTableBody");
     tbody.insertAdjacentHTML("beforeend", charterTableRowHtml(charter));
     bindCharterRowRemove(modal, tbody.lastElementChild);
-    toggleTableWrap(modal, "pmChartersTableWrap", true);
   }
 
   async function addCharter(modal, button) {
@@ -1549,7 +1839,7 @@
       return;
     }
 
-    const payload = collectCharterFormPayload(modal);
+    const payload = collectCharterFormPayload();
 
     const response = await apiCall({
       mode: "POST",
@@ -1570,9 +1860,10 @@
     }
 
     appendCharterRow(modal, response.data.charter);
-    resetCharterForm(modal);
+    resetCharterForm();
     showMessage({ status: "success", title: "Charter Requirement Added" });
     await refreshStageCompletion(modal);
+    window.closeModal("PmAddCharterModal");
   }
 
   // ------------------------------------------------------------------
@@ -1645,11 +1936,14 @@
     deriveClientTypeFromBusinessType(modal);
     modal.querySelector("#pmSourceDetailSummary").classList.add("hidden");
     modal.querySelector("#pmSourceSocialPlatform").value = "";
-    modal.querySelectorAll(".pm-social-platform-btn").forEach((b) => b.classList.remove("border-orange-500"));
+    modal.querySelectorAll(".pm-social-platform-btn").forEach((b) => {
+      b.classList.remove("border-orange-500");
+      b.setAttribute("aria-pressed", "false");
+    });
     modal.querySelector("#pmAttendingCsr").textContent = modal.dataset.currentUserName || "-";
-    modal.querySelector("#pmLocationsContainer").innerHTML = "";
     closeAllSourcePopovers(modal);
-    addLocationCard(modal);
+    pmLocations = [];
+    renderPmLocationsList(modal);
   }
 
   async function hydrateIdentityForm(modal, lead) {
@@ -1663,13 +1957,8 @@
 
     decodeSourceIntoForm(modal, lead.source);
 
-    const wrap = modal.querySelector("#pmLocationsContainer");
-    wrap.innerHTML = "";
-    const addresses = lead.addresses?.length ? lead.addresses : [{ is_primary: true }];
-    for (const address of addresses) {
-      const card = await addLocationCard(modal);
-      await hydrateLocationCard(card, address);
-    }
+    pmLocations = lead.addresses?.length ? [...lead.addresses] : [];
+    renderPmLocationsList(modal);
   }
 
   async function saveIdentity(modal, button) {
@@ -2217,9 +2506,14 @@
     bindTabs(modal);
     bindClientTypeToggle(modal);
     bindSourcePopovers(modal);
-    bindContainerFormCascades(modal);
+    bindContainerFormCascades();
 
-    modal.querySelector("#pmAddLocationBtn").addEventListener("click", () => addLocationCard(modal));
+    modal.querySelector("#pmAddLocationBtn").addEventListener("click", () => openPmAddLocationModal(modal));
+
+    if (document.getElementById("PmAddLocationModal")) {
+      document.getElementById("pmAlmCancelBtn").addEventListener("click", () => window.closeModal("PmAddLocationModal"));
+      document.getElementById("pmAlmSaveBtn").addEventListener("click", () => savePmLocation(modal));
+    }
 
     modal.querySelector("#pmMinimizeBtn").addEventListener("click", () => minimizeCurrentDraft());
 
@@ -2247,28 +2541,48 @@
       saveIdentity(modal, this);
     });
 
-    modal.querySelector("#pmAddContactBtn").addEventListener("click", () => addContactCard(modal));
+    modal.querySelector("#pmAddContactBtn").addEventListener("click", () => openPmAddContactModal(modal));
+
+    if (document.getElementById("PmAddContactModal")) {
+      document.getElementById("pmAcmCancelBtn").addEventListener("click", () => window.closeModal("PmAddContactModal"));
+      document.getElementById("pmAcmSaveBtn").addEventListener("click", () => savePmContact(modal));
+    }
 
     modal.querySelector("#pmSaveContactsBtn").addEventListener("click", function () {
       saveContacts(modal, this);
     });
 
-    bindProductSelector(modal);
-    modal.querySelector("#pmAddCharterCargoBtn").addEventListener("click", () => addCharterCargoRow(modal));
-    modal.querySelector("#pmAddCharterPortBtn").addEventListener("click", () => addCharterPortRow(modal));
-    modal.querySelector("#pmAddRequirementBtn").addEventListener("click", function () {
-      const product = modal.querySelector("#pmRequirementProduct").value;
-      if (product === "freight") addContainerRow(modal, this);
-      else if (product === "trucking") addTruckingRow(modal, this);
-      else if (product === "charter") addCharter(modal, this);
-    });
+    modal.querySelector("#pmAddFreightBtn").addEventListener("click", openPmAddFreightModal);
+    modal.querySelector("#pmAddTruckingBtn").addEventListener("click", openPmAddTruckingModal);
+    modal.querySelector("#pmAddCharterBtn").addEventListener("click", openPmAddCharterModal);
+
+    if (document.getElementById("PmAddFreightModal")) {
+      document.getElementById("pmAfmCancelBtn").addEventListener("click", () => window.closeModal("PmAddFreightModal"));
+      document.getElementById("pmAfmSaveBtn").addEventListener("click", function () {
+        addContainerRow(modal, this);
+      });
+    }
+    if (document.getElementById("PmAddTruckingModal")) {
+      document.getElementById("pmAtmCancelBtn").addEventListener("click", () => window.closeModal("PmAddTruckingModal"));
+      document.getElementById("pmAtmSaveBtn").addEventListener("click", function () {
+        addTruckingRow(modal, this);
+      });
+    }
+    if (document.getElementById("PmAddCharterModal")) {
+      document.getElementById("pmAddCharterCargoBtn").addEventListener("click", () => addCharterCargoRow());
+      document.getElementById("pmAddCharterPortBtn").addEventListener("click", () => addCharterPortRow());
+      document.getElementById("pmChmCancelBtn").addEventListener("click", () => window.closeModal("PmAddCharterModal"));
+      document.getElementById("pmChmSaveBtn").addEventListener("click", function () {
+        addCharter(modal, this);
+      });
+    }
 
     Promise.all([
       fillTypeOfBusiness(modal),
       fillLeadSource(modal),
       fillAddressTypeOptions(),
       fillContactTitleOptions(),
-      initRequirementsLookups(modal),
+      initRequirementsLookups(),
     ]);
   }
   window.initProspectModal = initProspectModal;
@@ -2293,6 +2607,8 @@
     getTruckingCargoTypeOptionsHtml: () => truckingCargoTypeOptionsHtml,
     getLocationsOptionsHtml: () => locationsOptionsHtml,
     getPortsOptionsHtml: () => portsOptionsHtml,
+    getPortsOptionsHtmlForArea,
     getContainerCatalogByCode: () => containerCatalogByCode,
+    getCharterServiceOptionsHtml: () => charterServiceOptionsHtml,
   };
 })();

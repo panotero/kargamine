@@ -8,6 +8,7 @@ class ProposalRequestProductCharter extends Model
 {
     protected $fillable = [
         'proposal_request_id',
+        'charter_service_id',
         'vessel_name',
         'vessel_dead_weight',
         'charter_start_date',
@@ -33,13 +34,18 @@ class ProposalRequestProductCharter extends Model
         'charter_start_date' => 'date:Y-m-d',
         'charter_end_date' => 'date:Y-m-d',
         'loading_date' => 'date:Y-m-d',
-        'created_at' => 'datetime:F j, Y',
-        'updated_at' => 'datetime:F j, Y',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function proposalRequest()
     {
         return $this->belongsTo(ProposalRequest::class, 'proposal_request_id');
+    }
+
+    public function charterService()
+    {
+        return $this->belongsTo(CharterService::class, 'charter_service_id', 'charter_service_id');
     }
 
     public function cargoItems()

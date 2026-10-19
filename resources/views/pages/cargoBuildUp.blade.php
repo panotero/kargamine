@@ -380,7 +380,8 @@
                 },
                 {
                     title: 'Booking Date',
-                    key: 'booking_date'
+                    key: 'booking_date',
+                    render: (r) => r.booking_date ? formatDate(r.booking_date) : '-'
                 },
                 {
                     title: 'Grand Total',

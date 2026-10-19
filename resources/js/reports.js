@@ -126,23 +126,10 @@ window.initdocumentreport = function initdocumentreport() {
       status,
     } = item;
 
-    const dueDate = item.due_date
-      ? new Date(item.due_date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-        })
-      : "-";
+    const dueDate = item.due_date ? window.formatDate(item.due_date) : "-";
 
     const dateUploaded = item.date_forwarded
-      ? new Date(item.date_forwarded).toLocaleString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
+      ? window.formatDateTime(item.date_forwarded)
       : "-";
 
     const duration =
@@ -193,7 +180,7 @@ window.initdocumentreport = function initdocumentreport() {
   <td class="px-3 py-3">${item.recipient_name || ""}</td>
   <td class="px-3 py-3">${item.document_form || ""}</td>
   <td class="px-3 py-3">${item.document_type || ""}</td>
-  <td class="px-3 py-3">${item.date_of_document || ""}</td>
+  <td class="px-3 py-3">${item.date_of_document ? window.formatDate(item.date_of_document) : ""}</td>
   <td class="px-3 py-3">${item.signatory || ""}</td>
   <td class="px-3 py-3">${item.confirmed_by_name || ""}</td>
   <td class="px-3 py-3">${JSON.stringify(item.involved_office) || ""}</td>

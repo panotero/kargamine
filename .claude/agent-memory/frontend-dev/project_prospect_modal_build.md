@@ -169,3 +169,45 @@ containers.
   CV/FR/RF/RC/LC all in one shape (`ProposalRequestContainer`) — RC/LC route to the Rolling/Loose Cargo
   panes, not the Container pane. Backend: zero changes, this was frontend-only against fields already
   present on the existing `GET /api/crm/prospects/{uuid}` payload.
+- (2026-10-05 update — Rate matrix + T&C now persist for real) Built to a locked API contract while
+  backend built the endpoints in parallel (`.../proposalRequests/{id}/productRates` and
+  `.../termsAndConditions`, both POST, both added to `pr.product_rates`/`pr.ancillary_fees`/
+  `pr.terms_of_payment_standard`/`_charter` on the lead payload). `saveProductSpecification()` (Build
+  Rate Matrix tab's per-product modal) now actually POSTs instead of just toasting - reads fee rows
+  LIVE off `#psmRateBreakdownBody` DOM (not `sampleFeeBreakdown()`, since the reviewer may have edited
+  adjustments), via a new module var `rpmMatrixCurrentRow` stashed in `openProductSpecificationModal()`
+  (parallel to the existing `rpmMatrixCurrentKey`). Reopening the modal now rehydrates the fee table from
+  the product's saved `product_rates` row if one exists (`savedFeeBreakdown()`), falling back to
+  `sampleFeeBreakdown()` only when nothing's saved yet. The Rate check/warning icon (`matrixRateIcon`) is
+  now OR'd from two signals - the session-only `rpmMatrixConfirmedKeys` Set (empty on every fresh open)
+  and a new `hasPersistedRate(pr, row)` check against `pr.product_rates` - so reviewed-state survives a
+  reload; `matrixRowHtml`/`matrixRecapRowHtml` were changed to take `confirmed` as a param (computed by
+  the two callers, `renderBuildMatrix`/`buildRateMatrixRecapBlock`) rather than each computing it
+  internally, to keep both OR'd checks in exactly one place.
+  For Terms & Conditions: the T&C pane's 20 "sample fee" ancillary `<input>`s (5 reference tables x 4
+  rows each: Trucking/Storage/Loading-Unloading/Documentation) gained `data-section`/`data-service` + a
+  shared `.rpm-anc-fee` class (section = the block's exact heading string, e.g. `"For ConVans &
+  Flatracks"`) - `saveTermsAndConditions()` collects one `{section, service_name, fee_amount}` row per
+  non-blank `.rpm-anc-fee` input (via `window.parseCurrencyValue`), skipping blanks entirely per the
+  brief. The two Terms of Payment `<select>`s (`#rpmTcTermsOfPaymentStandard`/`#rpmTcTermsOfPaymentCharter`)
+  persist directly. A new `renderTermsConditions(modal, lead)` (called from `renderAll`) hydrates both
+  the selects and the 20 inputs from the saved payload on every open/refresh - confirmed
+  `window.formatCurrencyDisplay` exists (`resources/js/customFunctions.js`) before using it to format
+  the rehydrated fee values. The other ~15 display-only inputs in that pane (declared value caps,
+  surcharge %, storage days, load limits, temperature, laytime) were deliberately left alone - not part
+  of the contract, brief said display-only.
+  On the Approvals/Signed-Contracts side (`logic_client_proposals_shared.js`, shared by both pages per
+  [[project_proposal_assignment_and_signed_contracts_split]]), `openProposalModal()`'s rates table is
+  now a branch on `p.proposal_request_id && p.proposal_request?.product_rates?.length` - rather than
+  reshape one table's columns in JS, added a SECOND static `<table id="cpmRfpRatesTable">` (Item No. |
+  Product | Base | Adjustment | Total, each row's `fee_breakdown` lines as an indented sub-row) next to
+  the existing `#cpmLegacyRatesTable`, and JS just toggles which one is visible - keeps the "static HTML
+  for fixed structure" convention intact for both shapes instead of fighting it. Added this table plus a
+  new `#cpmRfpTerms` section (Terms of Payment + ancillary fees grouped by section) to BOTH
+  `pages/proposals.blade.php` and `pages/proposal_signed_contracts.blade.php` identically, since both
+  pages render their own independent copy of `#ClientProposalModal` (confirmed by reading both files -
+  this is NOT a shared partial, each page's Blade already has its own full copy of the modal markup,
+  pre-existing duplication this task matched rather than introduced). The legacy `p.rates` branch is
+  byte-for-byte what it was before this change. Didn't touch `createContractModal`/Create Contract logic
+  in the same file (out of scope, still reads `p.rates` only) - worth flagging if contracts ever need to
+  originate from RFP-sourced proposals too.

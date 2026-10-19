@@ -620,7 +620,8 @@
                 },
                 {
                     title: 'Booking Date',
-                    key: 'booking_date'
+                    key: 'booking_date',
+                    render: (r) => r.booking_date ? formatDate(r.booking_date) : '-'
                 },
                 {
                     title: 'Status',
@@ -744,7 +745,7 @@
             document.getElementById('vbRailClient').textContent =
                 `${booking.client?.company_name ?? '-'} (${booking.client?.customer_code ?? '-'})`;
             document.getElementById('vbRailContract').textContent = booking.client_contract?.code ?? 'Spot rate';
-            document.getElementById('vbRailBookingDate').textContent = booking.booking_date ?? '-';
+            document.getElementById('vbRailBookingDate').textContent = booking.booking_date ? formatDate(booking.booking_date) : '-';
             document.getElementById('vbRailGrandTotal').textContent = money(booking.grand_total_snapshot);
 
             // Route + delivery mode live per cargo line now - each row
@@ -930,12 +931,12 @@
         const LINE_DETAIL_FIELDS = [
             { field: 'consignee_name', label: 'Consignee Name', type: 'text' },
             { field: 'consignee_contact_person', label: 'Consignee Contact Person', type: 'text' },
-            { field: 'consignee_contact_number', label: 'Consignee Contact Number', type: 'text' },
+            { field: 'consignee_contact_number', label: 'Consignee Contact Number', type: 'phone' },
             { field: 'consignee_address', label: 'Consignee Address', type: 'text' },
             { field: 'cargo_type', label: 'Cargo Type / Content', type: 'text' },
-            { field: 'declared_value', label: 'Declared Value', type: 'number' },
+            { field: 'declared_value', label: 'Declared Value', type: 'currency' },
             { field: 'description', label: 'Description', type: 'text' },
-            { field: 'weight_kg', label: 'Weight (kg)', type: 'number' },
+            { field: 'weight_kg', label: 'Weight (kg)', type: 'currency' },
             { field: 'volume_cbm', label: 'Volume (m&sup3;)', type: 'number' },
             { field: 'delivery_date', label: 'Delivery Date', type: 'date' },
             { field: 'first_delivery_date', label: 'First Delivery Date', type: 'date' },
@@ -968,14 +969,21 @@
                 const variantLabel =
                     `${line.container?.name ?? '-'} / ${line.container_class?.class ?? '-'} / ${line.container_size?.size ?? '-'}`;
 
-                const fieldsHtml = LINE_DETAIL_FIELDS.map((f) => `
+                const fieldsHtml = LINE_DETAIL_FIELDS.map((f) => {
+                    const inputType = (f.type === 'currency' || f.type === 'phone') ? 'text' : f.type;
+                    const extraAttrs = f.type === 'number' ? 'step="0.01" min="0"'
+                        : f.type === 'currency' ? 'inputmode="decimal"'
+                        : '';
+                    const extraClass = f.type === 'currency' ? 'currency-input' : f.type === 'phone' ? 'phone-input' : '';
+                    return `
                     <div>
                         <label class="text-[11px] text-zinc-400 uppercase">${f.label}</label>
-                        <input type="${f.type}" ${f.type === 'number' ? 'step="0.01" min="0"' : ''}
+                        <input type="${inputType}" ${extraAttrs}
                             data-field="${f.field}"
-                            class="w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
+                            class="${extraClass} w-full border rounded-lg px-2 py-1.5 text-sm dark:text-zinc-900">
                     </div>
-                `).join('');
+                `;
+                }).join('');
 
                 return `
                     <div class="line-details-card border border-zinc-200 dark:border-zinc-700 rounded-lg p-3" data-line-id="${line.id}">
@@ -1011,7 +1019,10 @@
             const card = btn.closest('.line-details-card');
             const payload = {};
             card.querySelectorAll('[data-field]').forEach((input) => {
-                payload[input.dataset.field] = input.value || null;
+                let value = input.value;
+                if (input.classList.contains('currency-input')) value = parseCurrencyValue(value);
+                else if (input.classList.contains('phone-input')) value = parsePhoneValue(value);
+                payload[input.dataset.field] = value || null;
             });
 
             const response = await apiCall({
@@ -1088,7 +1099,7 @@
                 <div class="border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2">
                     <div class="flex justify-between">
                         <span class="font-medium">${STATUS_MAPPING[h.from_status]?.label ?? 'Created'} &rarr; ${STATUS_MAPPING[h.to_status]?.label ?? '-'}</span>
-                        <span class="text-zinc-400">${h.changed_at ?? ''}</span>
+                        <span class="text-zinc-400">${h.changed_at ? formatDateTime(h.changed_at) : ''}</span>
                     </div>
                     <div class="text-zinc-500">By ${h.changed_by?.name ?? 'System'}${h.note ? ' · ' + h.note : ''}</div>
                 </div>
@@ -1128,7 +1139,7 @@
                                 <span class="text-zinc-400 text-xs">${route}</span>
                                 <span class="ml-2 inline-flex items-center rounded-full ${badgeClasses} px-2 py-0.5 text-xs font-medium">${doc.document_type} &middot; ${doc.document_number}</span>
                             </div>
-                            <span class="text-zinc-400 text-xs">${doc.generated_at ?? ''}</span>
+                            <span class="text-zinc-400 text-xs">${doc.generated_at ? formatDateTime(doc.generated_at) : ''}</span>
                         </div>
                     `;
                 }
@@ -1280,12 +1291,12 @@
 
                 (line.container_units ?? []).forEach((unit) => {
                     const outCell = unit.eir_out ?
-                        `<span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">Issued ${unit.eir_out.issued_at ?? ''}</span>` :
+                        `<span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">Issued ${unit.eir_out.issued_at ? formatDateTime(unit.eir_out.issued_at) : ''}</span>` :
                         `<button type="button" class="eir-issue-btn px-2 py-1 text-xs rounded-lg bg-orange-500 hover:bg-orange-600 text-white" data-unit-id="${unit.id}" data-direction="OUT" data-driver-id-required="${driverIdRequired ? '1' : '0'}">Issue EIR Out</button>`;
 
                     let inCell;
                     if (unit.eir_in) {
-                        inCell = `<span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">Issued ${unit.eir_in.issued_at ?? ''}</span>`;
+                        inCell = `<span class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-medium">Issued ${unit.eir_in.issued_at ? formatDateTime(unit.eir_in.issued_at) : ''}</span>`;
                     } else if (!unit.actual_gate_in_at) {
                         inCell = '<span class="text-zinc-400">Not gated in yet</span>';
                     } else {

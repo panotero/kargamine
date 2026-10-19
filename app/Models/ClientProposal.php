@@ -10,11 +10,17 @@ use Illuminate\Database\Eloquent\Model;
 class ClientProposal extends Model
 {
     public const STATUS_PENDING = 1;
+
     public const STATUS_APPROVED = 2;
+
     public const STATUS_DISAPPROVED = 3;
+
     public const STATUS_ACCEPTED = 4;
+
     public const STATUS_REJECTED = 5;
+
     public const STATUS_CANCELLED = 6;
+
     public const STATUS_PENDING_MANAGER = 7;
 
     public const STATUS_LABELS = [
@@ -50,12 +56,12 @@ class ClientProposal extends Model
     ];
 
     protected $casts = [
-        'created_at' => 'datetime:M d, Y, h:i A',
-        'updated_at' => 'datetime:M d, Y, h:i A',
-        'signed_at' => 'datetime:M d, Y, h:i A',
-        'signature_requested_at' => 'datetime:M d, Y, h:i A',
-        'decided_at' => 'datetime:M d, Y, h:i A',
-        'rm_approved_at' => 'datetime:M d, Y, h:i A',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'signed_at' => 'datetime',
+        'signature_requested_at' => 'datetime',
+        'decided_at' => 'datetime',
+        'rm_approved_at' => 'datetime',
         'include_special_charges' => 'boolean',
         'include_port_charges' => 'boolean',
         'include_handling_fee' => 'boolean',
@@ -74,6 +80,17 @@ class ClientProposal extends Model
     public function rates()
     {
         return $this->hasMany(ClientProposalRate::class, 'proposal_id');
+    }
+
+    /**
+     * Immutable snapshot of the rate lines as they were at the moment the
+     * signed document was attached (see ClientProposalController::attachSigned
+     * and ClientProposalSignedRate) - distinct from rates(), which stays live
+     * and can still change after Accepted.
+     */
+    public function signedRates()
+    {
+        return $this->hasMany(ClientProposalSignedRate::class, 'client_proposal_id');
     }
 
     /**
@@ -121,15 +138,15 @@ class ClientProposal extends Model
      */
     public function canBeApprovedByRm(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+        if (RoleHelper::hasAnyRole($user, ['superadmin', 'developer'])) {
             return true;
         }
 
-        if (!PermissionHelper::userCan($user, 'proposal.approve.rm')) {
+        if (! PermissionHelper::userCan($user, 'proposal.approve.rm')) {
             return false;
         }
 
@@ -144,11 +161,11 @@ class ClientProposal extends Model
      */
     public function canBeApprovedByManager(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+        if (RoleHelper::hasAnyRole($user, ['superadmin', 'developer'])) {
             return true;
         }
 
@@ -157,8 +174,12 @@ class ClientProposal extends Model
 
     public function canBeRejectedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
+        }
+
+        if (RoleHelper::hasAnyRole($user, ['superadmin', 'developer'])) {
+            return true;
         }
 
         if (RoleHelper::hasAnyRole($user, config('client_proposal_workflow.reject_roles', []))) {
@@ -177,17 +198,17 @@ class ClientProposal extends Model
      */
     public function canBeSignedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        if (RoleHelper::hasAnyRole($user, ['superadmin'])) {
+        if (RoleHelper::hasAnyRole($user, ['superadmin', 'developer'])) {
             return true;
         }
 
         $ownerTeamId = $this->ownerUser()?->team_id;
 
-        if (!$ownerTeamId || !$user->team_id) {
+        if (! $ownerTeamId || ! $user->team_id) {
             return false;
         }
 
@@ -217,7 +238,7 @@ class ClientProposal extends Model
      */
     public function canBeCancelledBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
