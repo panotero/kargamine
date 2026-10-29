@@ -118,17 +118,19 @@
                         class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
                 </div>
                 <div>
-                    <label for="rpmPcDispatchOrigin" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode (Origin)</label>
+                    <label for="rpmPcDispatchOrigin" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode (Origin) <span class="req-asterisk">*</span></label>
                     <select id="rpmPcDispatchOrigin" data-field="dispatch_mode_origin"
                         class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm disabled:opacity-40">
+                        <option value="">Select Dispatch Mode</option>
                         <option value="single">Single</option>
                         <option value="tandem">Tandem</option>
                     </select>
                 </div>
                 <div>
-                    <label for="rpmPcDispatchDestination" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode (Destination)</label>
+                    <label for="rpmPcDispatchDestination" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode (Destination) <span class="req-asterisk">*</span></label>
                     <select id="rpmPcDispatchDestination" data-field="dispatch_mode_destination"
                         class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm disabled:opacity-40">
+                        <option value="">Select Dispatch Mode</option>
                         <option value="single">Single</option>
                         <option value="tandem">Tandem</option>
                     </select>

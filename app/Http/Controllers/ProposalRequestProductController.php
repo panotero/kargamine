@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesProposalRequestAccess;
+use App\Http\Controllers\Concerns\ResolvesLaneRates;
 use App\Models\ProposalRequest;
 use App\Models\ProposalRequestProductAncillaryService;
 use App\Models\ProposalRequestProductCharter;
 use App\Models\ProposalRequestProductRollingCargo;
 use App\Models\Prospect;
 use App\Models\SpecialCharge;
+use App\Models\TruckingTariff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -40,6 +42,7 @@ use Illuminate\Validation\Rule;
 class ProposalRequestProductController extends Controller
 {
     use AuthorizesProposalRequestAccess;
+    use ResolvesLaneRates;
 
     private function findProposalRequestFor(Prospect $lead, $proposalRequestId): ProposalRequest
     {
@@ -52,9 +55,20 @@ class ProposalRequestProductController extends Controller
     public function storeContainer(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
+
+        // Dispatch Mode (origin/destination) has no sensible default - the
+        // frontend used to pre-select "Single" so this was always
+        // technically filled in; it now ships with a blank placeholder so
+        // the user must consciously pick one, and this validation backs
+        // that up so a direct API call can't slip past it either. Only
+        // required on a side that actually has trucking (not "Pier"),
+        // mirroring the frontend's applyDispatchModeGating() disable logic.
+        $sides = explode(' - ', (string) $request->input('service_type'), 2);
+        $originIsPier = ($sides[0] ?? '') === 'Pier';
+        $destIsPier = ($sides[1] ?? '') === 'Pier';
 
         $validated = $request->validate([
             'container_type' => ['required', Rule::in(['CV', 'FR', 'RF'])],
@@ -67,8 +81,8 @@ class ProposalRequestProductController extends Controller
             'destination_prospect_location_id' => ['nullable', 'integer', Rule::exists('prospect_locations', 'id')->where(fn ($q) => $q->where('prospect_id', $lead->id))],
             'origin_port_id' => ['nullable', 'integer', 'exists:ports,port_id'],
             'destination_port_id' => ['nullable', 'integer', 'exists:ports,port_id'],
-            'dispatch_mode_origin' => ['nullable', Rule::in(['single', 'tandem'])],
-            'dispatch_mode_destination' => ['nullable', Rule::in(['single', 'tandem'])],
+            'dispatch_mode_origin' => [$originIsPier ? 'nullable' : 'required', Rule::in(['single', 'tandem'])],
+            'dispatch_mode_destination' => [$destIsPier ? 'nullable' : 'required', Rule::in(['single', 'tandem'])],
             'cargo_type' => ['nullable', 'string'],
             'cargo_description' => ['nullable', 'string'],
             'terms_of_payment' => ['nullable', 'string'],
@@ -82,13 +96,101 @@ class ProposalRequestProductController extends Controller
     public function destroyContainer(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->productContainers()->where('id', $id)->firstOrFail()->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Read-only FRT + trucking-fee lookup for one Container product row.
+     * FRT: resolves the container variant (class is always null;
+     * ProposalRequestProductContainer has no container_class_id column)
+     * and, if origin/destination ports and a matching variant are all
+     * present, the active lane/tariff price for it.
+     * Trucking: for whichever side(s) of service_type are "Door", matches
+     * that side's prospect location's municipality (free-text
+     * address_town_city) against a ServiceableArea's area_name within the
+     * same Location as that side's port, then looks up the active
+     * TruckingTariff for that (area, port) pair. Any missing link (no port,
+     * no prospect location, no matching area, no active tariff row)
+     * resolves to 0 rather than an error - a trucking tariff just hasn't
+     * been configured for that combination yet.
+     */
+    public function containerRate(Request $request, $uuid, $proposalRequestId, $containerId)
+    {
+        $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
+        $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
+
+        $row = $proposalRequest->productContainers()
+            ->with(['originLocation', 'destinationLocation', 'originPort', 'destinationPort'])
+            ->where('id', $containerId)
+            ->firstOrFail();
+
+        $variant = $this->resolveContainerVariant($row->container_type, $row->container_size_id);
+
+        $frt = null;
+        if ($row->origin_port_id && $row->destination_port_id && $variant) {
+            $lookup = $this->resolveRate($row->origin_port_id, $row->destination_port_id, $variant->id);
+            $frt = $lookup['frt'] ?? null;
+        }
+
+        [$originMode, $destinationMode] = array_pad(explode(' - ', $row->service_type ?? ''), 2, null);
+        $isDoorOrigin = $originMode === 'Door';
+        $isDoorDestination = $destinationMode === 'Door';
+
+        $originTrucking = $isDoorOrigin
+            ? $this->resolveTruckingAmount($row->originLocation, $row->originPort)
+            : 0.0;
+
+        $destinationTrucking = $isDoorDestination
+            ? $this->resolveTruckingAmount($row->destinationLocation, $row->destinationPort)
+            : 0.0;
+
+        return response()->json(['success' => true, 'data' => [
+            'frt' => $frt,
+            'is_door_origin' => $isDoorOrigin,
+            'is_door_destination' => $isDoorDestination,
+            'origin_trucking' => $originTrucking,
+            'destination_trucking' => $destinationTrucking,
+        ]]);
+    }
+
+    /**
+     * @param  \App\Models\ProspectLocation|null  $prospectLocation
+     * @param  \App\Models\Port|null  $port
+     */
+    protected function resolveTruckingAmount($prospectLocation, $port): float
+    {
+        $municipality = trim((string) ($prospectLocation?->address_town_city ?? ''));
+        // PSGC's official name for a highly-urbanized/independent city is
+        // usually "City of {Name}" (e.g. "City of Antipolo") - that's what
+        // address_town_city stores (sourced from the PSGC municipality
+        // dropdown), but Serviceable Areas here are named with just the
+        // short form ("Antipolo"). Strip that prefix before matching so
+        // "City of Antipolo" still finds "Rizal - Antipolo".
+        $municipality = preg_replace('/^city of\s+/i', '', $municipality);
+
+        if (! $port || $municipality === '') {
+            return 0.0;
+        }
+
+        // Not scoped by the port's own location_id - a Serviceable Area's
+        // trucking port isn't necessarily owned by the same Location as the
+        // area itself (plenty of areas are filed under a Location that owns
+        // no ports of its own). Searching directly for a configured
+        // TruckingTariff for this port is also more robust than guessing
+        // the "right" area first when the municipality name could match
+        // areas under more than one Location.
+        return (float) (TruckingTariff::where('port_id', $port->port_id)
+            ->whereHas('serviceableArea', fn ($q) => $q->where('area_name', 'like', "%{$municipality}%"))
+            ->activeOn()
+            ->value('amount') ?? 0);
     }
 
     // ------------------------------------------------------------------
@@ -97,8 +199,8 @@ class ProposalRequestProductController extends Controller
     public function storeRollingCargo(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
         $validated = $this->validateCargoRow($request, $lead);
 
@@ -110,8 +212,8 @@ class ProposalRequestProductController extends Controller
     public function destroyRollingCargo(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->productRollingCargo()->where('id', $id)->firstOrFail()->delete();
@@ -125,8 +227,8 @@ class ProposalRequestProductController extends Controller
     public function storeLooseCargo(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
         $validated = $this->validateCargoRow($request, $lead);
 
@@ -138,8 +240,8 @@ class ProposalRequestProductController extends Controller
     public function destroyLooseCargo(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->productLooseCargo()->where('id', $id)->firstOrFail()->delete();
@@ -176,14 +278,19 @@ class ProposalRequestProductController extends Controller
     public function storeTrucking(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
             'trucking_cargo_type' => ['nullable', 'string'],
             'quantity' => ['required', 'integer', 'min:1'],
-            'dispatch_mode' => ['nullable', Rule::in(['single', 'tandem'])],
+            // No "Pier" concept on the standalone Trucking product (it's
+            // always door-to-door trucking), so unlike Container's
+            // dispatch_mode_origin/destination this one is unconditionally
+            // required - see storeContainer() above for why this field has
+            // no default and must be chosen explicitly.
+            'dispatch_mode' => ['required', Rule::in(['single', 'tandem'])],
             'origin_prospect_location_id' => ['nullable', 'integer', Rule::exists('prospect_locations', 'id')->where(fn ($q) => $q->where('prospect_id', $lead->id))],
             'destination_prospect_location_id' => ['nullable', 'integer', Rule::exists('prospect_locations', 'id')->where(fn ($q) => $q->where('prospect_id', $lead->id))],
             'cargo_type' => ['nullable', 'string'],
@@ -199,8 +306,8 @@ class ProposalRequestProductController extends Controller
     public function destroyTrucking(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->productTruckings()->where('id', $id)->firstOrFail()->delete();
@@ -214,8 +321,8 @@ class ProposalRequestProductController extends Controller
     public function storeCharter(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -245,8 +352,8 @@ class ProposalRequestProductController extends Controller
     public function destroyCharter(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->productCharters()->where('id', $id)->firstOrFail()->delete();
@@ -267,8 +374,8 @@ class ProposalRequestProductController extends Controller
     public function storeCharterCargo(Request $request, $uuid, $proposalRequestId, $charterId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $charter = $this->findProductCharter($lead, $proposalRequestId, $charterId);
 
         $validated = $request->validate([
@@ -285,8 +392,8 @@ class ProposalRequestProductController extends Controller
     public function destroyCharterCargo(Request $request, $uuid, $proposalRequestId, $charterId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $charter = $this->findProductCharter($lead, $proposalRequestId, $charterId);
 
         $charter->cargoItems()->where('id', $id)->firstOrFail()->delete();
@@ -301,8 +408,8 @@ class ProposalRequestProductController extends Controller
     public function storeCharterPort(Request $request, $uuid, $proposalRequestId, $charterId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $charter = $this->findProductCharter($lead, $proposalRequestId, $charterId);
 
         $validated = $request->validate([
@@ -334,8 +441,8 @@ class ProposalRequestProductController extends Controller
     public function destroyCharterPort(Request $request, $uuid, $proposalRequestId, $charterId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $charter = $this->findProductCharter($lead, $proposalRequestId, $charterId);
 
         $charter->ports()->where('id', $id)->firstOrFail()->delete();
@@ -364,8 +471,8 @@ class ProposalRequestProductController extends Controller
     public function storeTopLoadCargo(Request $request, $uuid, $proposalRequestId, $rollingCargoId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $rollingCargo = $this->findRollingCargo($lead, $proposalRequestId, $rollingCargoId);
 
         $validated = $request->validate([
@@ -386,8 +493,8 @@ class ProposalRequestProductController extends Controller
     public function destroyTopLoadCargo(Request $request, $uuid, $proposalRequestId, $rollingCargoId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $rollingCargo = $this->findRollingCargo($lead, $proposalRequestId, $rollingCargoId);
 
         $rollingCargo->topLoadCargo()->where('id', $id)->firstOrFail()->delete();
@@ -402,8 +509,8 @@ class ProposalRequestProductController extends Controller
     public function storeProductRate(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -478,8 +585,8 @@ class ProposalRequestProductController extends Controller
     public function storeTermsAndConditions(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -535,8 +642,8 @@ class ProposalRequestProductController extends Controller
     public function storeAncillaryService(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -585,8 +692,8 @@ class ProposalRequestProductController extends Controller
     public function destroyAncillaryService(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $service = ProposalRequestProductAncillaryService::findOrFail($id);

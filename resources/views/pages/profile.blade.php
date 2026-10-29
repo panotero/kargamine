@@ -437,8 +437,8 @@
             }
         });
 
-        document.getElementById('profilePhotoRemoveBtn').addEventListener('click', async () => {
-            const response = await apiCall({ mode: 'DELETE', url: '/api/profile/photo' });
+        document.getElementById('profilePhotoRemoveBtn').addEventListener('click', async (e) => {
+            const response = await apiCall({ mode: 'DELETE', url: '/api/profile/photo', button: e.currentTarget });
 
             if (response.success) {
                 currentUser = response.data;

@@ -3,3 +3,5 @@
 - [nav.access:/page_settings has no nav_menus row](project_nav_access_settings_gap.md) — settings-gated routes 403 for everyone incl. superadmin until that row is seeded; no code bug.
 - [userconfig_table migration — RESOLVED](project_userconfig_table_missing.md) — table now exists (migration found 2026-09-17); historical note only, don't assume still broken.
 - [Prospect modal Contacts+Requirements phase (2026-09-17)](project_prospect_modal_contacts_requirements.md) — prospect_contacts/proposal_requests shapes; Identity tab reconciled to drop contact/signatory fields from saveStage1/gate1; restrictOnDelete FK fixed to cascade.
+- [Concurrent multi-agent worktree (2026-10-20)](project_concurrent_multiagent_worktree.md) — other agents edit this tree in parallel; isolate full-suite failures (stash/rerun or targeted tests) before blaming your own change.
+- [nav_menus live DB drifts from NavMenuSeeder.php (2026-10-20)](project_nav_menu_live_db_drift.md) — live allowed_roles values don't match the seeder source; always read the live row, don't assume the seeder reflects reality.

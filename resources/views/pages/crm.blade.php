@@ -112,6 +112,49 @@
 <x-pm-add-charter-modal />
 <x-prospect-info-modal />
 
+{{-- Reassign Owner side-modal - reached from ProspectInfoModal's header
+     "Reassign" button (shown only when lead.can_reassign === true). Trimmed
+     single-select version of proposal_requests.blade.php's
+     "assignOwnersModal" - see openReassignModal()/saveReassign() in
+     logic_prospect_info_modal.js. --}}
+<x-side-modal id="reassignOwnerModal">
+    <div
+        class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
+        <div>
+            <p class="text-lg font-semibold dark:text-white">Reassign Owner</p>
+            <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                <span id="reassignCompanyName">-</span>
+            </p>
+        </div>
+        <button class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">✕</button>
+    </div>
+
+    <div class="p-5 space-y-4">
+        <div>
+            <label for="reassignOwnerSelect"
+                class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                New Owner <span class="req-asterisk">*</span>
+            </label>
+            <select id="reassignOwnerSelect"
+                class="reassignOwnerDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
+                <option value="">Select owner</option>
+            </select>
+        </div>
+    </div>
+
+    <div
+        class="border-t border-zinc-200 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2 sticky bottom-0 bg-white dark:bg-zinc-900">
+        <button type="button"
+            class="modal-close px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            Cancel
+        </button>
+        <button type="button" id="reassignSaveBtn"
+            class="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white">
+            Save
+        </button>
+    </div>
+</x-side-modal>
+
 {{--
     Minimized "New/Edit Prospect" drafts, browser-tab style - lets a CSR
     work several prospects at once without losing typed-but-unsaved input.

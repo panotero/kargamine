@@ -13,7 +13,7 @@ class TruckingTariff extends Model
     protected $primaryKey = 'trucking_tariff_id';
 
     protected $fillable = [
-        'area_id', 'delivery_type_id', 'amount',
+        'area_id', 'port_id', 'amount',
         'effective_date', 'end_date', 'is_active',
     ];
 
@@ -31,8 +31,8 @@ class TruckingTariff extends Model
         return $this->belongsTo(ServiceableArea::class, 'area_id', 'area_id');
     }
 
-    public function deliveryType(): BelongsTo
+    public function port(): BelongsTo
     {
-        return $this->belongsTo(DeliveryType::class, 'delivery_type_id', 'delivery_type_id');
+        return $this->belongsTo(Port::class, 'port_id', 'port_id');
     }
 }

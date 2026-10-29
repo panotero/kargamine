@@ -191,11 +191,22 @@
                 </div>
             </div>
 
-            {{-- Only shown while this request's status is "pending". --}}
+            {{-- Only shown while pr.can_assign is true. --}}
             <div id="priAssignBtnWrap" class="hidden border-t dark:border-zinc-700 pt-3">
                 <button type="button" id="priAssignBtn"
                     class="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                     Assign
+                </button>
+            </div>
+
+            {{-- Only shown while pr.can_open_my_request is true (viewer is
+                 this request's assigned CSR/RM) - deep-links to the
+                 requester's own My Requests page via
+                 window.openMyProposalRequestByCode(). --}}
+            <div id="priOpenRequestBtnWrap" class="hidden border-t dark:border-zinc-700 pt-3">
+                <button type="button" id="priOpenRequestBtn"
+                    class="w-full justify-center border border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-950/30 px-4 py-2 rounded-lg text-sm font-medium">
+                    Open Request
                 </button>
             </div>
         </div>

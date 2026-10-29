@@ -11,10 +11,10 @@
     Add again to re-save it.
 
     Ancillary Type is sourced from the Special Charges catalog
-    (App Settings -> /page_maintenance), not a free LOV - picking one shows
-    its Base Value, Quantity multiplies against it live (Subtotal preview).
-    This tab only ever captures quantity - Adjustment is Build Rate
-    Matrix-only, see product-specification-modal.blade.php.
+    (App Settings -> /page_maintenance), not a free LOV. Pricing is not
+    previewed here - this tab only ever captures quantity; Base Value/
+    Adjustment/Subtotal are handled later in Build Rate Matrix, see
+    product-specification-modal.blade.php.
 --}}
 <x-modal id="AncillaryServicesModal" max-width="lg:max-w-3xl">
     <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
@@ -51,14 +51,6 @@
                 <input type="text" inputmode="decimal" id="asmQuantity" placeholder="0" value="1"
                     class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
             </div>
-            <div>
-                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Base Value</p>
-                <p id="asmBaseValuePreview" class="text-sm text-zinc-800 dark:text-zinc-100 mt-1 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">—</p>
-            </div>
-            <div>
-                <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Subtotal</p>
-                <p id="asmSubtotalPreview" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 mt-1 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">—</p>
-            </div>
             <div class="md:col-span-2">
                 <label for="asmRemarks" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Remarks</label>
                 <input type="text" id="asmRemarks"
@@ -81,9 +73,7 @@
                             <th class="px-3 py-2 text-left">Type</th>
                             <th class="px-3 py-2 text-left">Location</th>
                             <th class="px-3 py-2 text-left">Unit</th>
-                            <th class="px-3 py-2 text-right">Base Value</th>
                             <th class="px-3 py-2 text-right">Qty</th>
-                            <th class="px-3 py-2 text-right">Subtotal</th>
                             <th class="px-3 py-2 text-right">Actions</th>
                         </tr>
                     </thead>

@@ -12,9 +12,26 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\SettingRole;
 use App\Models\UserDepartment;
 use App\Models\UserStatus;
+use App\Support\RoleHelper;
 
 class UserController extends Controller
 {
+    /**
+     * User-account mutations (create/edit/deactivate/reactivate) stay
+     * restricted to this narrower set even though /page_users itself is
+     * visible more broadly (it now also hosts the migrated Team
+     * Management section) - mirrors the assignOwners() page-vs-action
+     * decoupling used for the Proposals consolidation.
+     */
+    private function assertCanManageUsers(Request $request): void
+    {
+        abort_unless(
+            RoleHelper::hasAnyRole($request->user(), ['superadmin', 'developer']),
+            403,
+            'Only Superadmin/Developer can manage user accounts.'
+        );
+    }
+
     public function index(Request $request)
     {
         $users = User::query()
@@ -73,6 +90,8 @@ class UserController extends Controller
 
     public function deactivate(Request $request, $id)
     {
+        $this->assertCanManageUsers($request);
+
         if ((int) $id === (int) $request->user()->id) {
             return response()->json([
                 'success' => false,
@@ -118,8 +137,9 @@ class UserController extends Controller
         }
     }
 
-    public function reactivate($id)
+    public function reactivate(Request $request, $id)
     {
+        $this->assertCanManageUsers($request);
 
         try {
             $user = User::findOrFail($id);
@@ -145,13 +165,14 @@ class UserController extends Controller
 
     public function save_info($id = false, Request $request)
     {
-
+        $this->assertCanManageUsers($request);
 
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:6',
             'role_id' => 'nullable|integer',
+            'team_id' => 'nullable|integer|exists:teams,id',
         ]);
 
         try {
@@ -159,12 +180,23 @@ class UserController extends Controller
             $data = array_filter($validated, function ($value) {
                 return !is_null($value) && $value !== '';
             });
+            // team_id must survive being explicitly cleared (unassign from
+            // team), which array_filter above would otherwise strip.
+            if (array_key_exists('team_id', $validated)) {
+                $data['team_id'] = $validated['team_id'];
+            }
             if (isset($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
 
             if ($id) {
                 $user = User::findOrFail($id);
+                // Moving/clearing a user's team drops any leader flag they
+                // held on the old team - leadership is granted per-team via
+                // the Team Management members modal, not carried across.
+                if (array_key_exists('team_id', $data) && (int) $user->team_id !== (int) ($data['team_id'] ?? 0)) {
+                    $data['is_team_leader'] = false;
+                }
                 $user->update($data);
             }
             DB::commit();
@@ -185,12 +217,14 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $this->assertCanManageUsers($request);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role_id' => 'required|integer',
+            'team_id' => 'nullable|integer|exists:teams,id',
         ]);
 
         try {
@@ -200,6 +234,7 @@ class UserController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role_id' => $validated['role_id'] ?? null,
+                'team_id' => $validated['team_id'] ?? null,
                 'must_change_password' => true,
             ]);
             DB::commit();

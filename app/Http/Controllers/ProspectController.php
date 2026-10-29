@@ -15,6 +15,7 @@ use App\Services\TeamNotifier;
 use App\Services\TeamService;
 use App\Support\RoleHelper;
 use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -44,7 +45,7 @@ class ProspectController extends Controller
         // members/leaders). superadmin bypasses this entirely.
         $visibleUserIds = RoleHelper::hasAnyRole($request->user(), ['superadmin'])
             ? null
-            : TeamService::accessibleUserIds($request->user());
+            : TeamService::accessibleTeamUserIds($request->user());
 
         $leads = Prospect::query()
             ->select(
@@ -58,6 +59,7 @@ class ProspectController extends Controller
                 'mobile',
                 'status',
                 'assigned_to',
+                'created_by',
                 'created_at',
                 'updated_at'
             )
@@ -65,10 +67,21 @@ class ProspectController extends Controller
                 'company:id,prospect_id,company_name',
                 'crmStatus:id,status',
                 'user:id,name',
+                'creator:id,name',
+                // First contact person (Contacts tab) for the list's
+                // Contact column - the Identity tab itself no longer
+                // collects a name, so Prospect's own contact_name accessor
+                // is blank for every current prospect; the real name lives
+                // on prospect_contacts now.
+                'contacts:id,prospect_id,title,first_name,middle_name,last_name',
             ])
             ->withMax('activities as last_activity_at', 'created_at')
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
-                $q->whereIn('assigned_to', $visibleUserIds);
+                $q->where(function ($qq) use ($visibleUserIds) {
+                    $qq->whereIn('created_by', $visibleUserIds)
+                        ->orWhereIn('owner_id', $visibleUserIds)
+                        ->orWhereIn('assigned_to', $visibleUserIds);
+                });
             })
 
             // Assigned To filter
@@ -118,7 +131,11 @@ class ProspectController extends Controller
         $allLeads = Prospect::with('crmStatus')
             ->withMax('activities as last_activity_at', 'created_at')
             ->when($visibleUserIds !== null, function ($q) use ($visibleUserIds) {
-                $q->whereIn('assigned_to', $visibleUserIds);
+                $q->where(function ($qq) use ($visibleUserIds) {
+                    $qq->whereIn('created_by', $visibleUserIds)
+                        ->orWhereIn('owner_id', $visibleUserIds)
+                        ->orWhereIn('assigned_to', $visibleUserIds);
+                });
             })
             ->get();
 
@@ -146,6 +163,16 @@ class ProspectController extends Controller
         ]);
     }
 
+    protected function authorizeProspectEdit(Prospect $lead): void
+    {
+        if (! $lead->canBeEditedBy(auth()->user())) {
+            throw new HttpResponseException(response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to edit this prospect.',
+            ], 403));
+        }
+    }
+
     public function assignableUsers(Request $request)
     {
         $userIds = RoleHelper::hasAnyRole($request->user(), ['superadmin', 'admin'])
@@ -170,6 +197,12 @@ class ProspectController extends Controller
      */
     public function assignOwners(Request $request, $uuid)
     {
+        abort_unless(
+            RoleHelper::hasAnyRole($request->user(), ['superadmin', 'admin']),
+            403,
+            'Only Management can assign owners.'
+        );
+
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
@@ -177,11 +210,26 @@ class ProspectController extends Controller
             'relationship_manager_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $lead->assigned_to = $validated['assigned_to'];
-        $lead->relationship_manager_id = $validated['relationship_manager_id'];
-        $lead->save();
+        // Staffing lands on the pending request(s) themselves, not the
+        // prospect - assigning a request must never silently reassign the
+        // prospect (or its other requests, since a prospect can have more
+        // than one over time).
+        $pendingRequests = $lead->proposalRequests()->where('status', 'pending')->get();
 
-        $lead->proposalRequests()->where('status', 'pending')->update(['status' => 'assigned']);
+        if ($pendingRequests->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No pending proposal request to assign.',
+            ], 422);
+        }
+
+        $pendingRequests->toQuery()->update([
+            'assigned_to' => $validated['assigned_to'],
+            'relationship_manager_id' => $validated['relationship_manager_id'],
+            'status' => 'assigned',
+        ]);
+
+        $justAssignedRequest = $pendingRequests->first();
 
         try {
             $csr = \App\Models\User::find($validated['assigned_to']);
@@ -199,35 +247,85 @@ class ProspectController extends Controller
         // Role-specific message per recipient (not a single TeamNotifier::notify()
         // call to both ids) so a CSR-only or RM-only assignee isn't told they're
         // "assigned" without knowing which role - and so the same person being
-        // both doesn't get double-notified.
+        // both doesn't get double-notified. Wording and link now point at the
+        // Proposal Request (what Management actually just staffed), not the
+        // Prospect itself - the prospect isn't "assigned" to anyone, only the
+        // request is (see storeProposalRequestNew()'s authorizeProspectEdit()
+        // change). Clicking opens "My Requests" and, when a request was
+        // actually pending, auto-opens that exact one via the modal_fn/
+        // modal_args convention (see notificationController.js's
+        // handleNotificationClick(), same pattern ClientProposalController
+        // already uses for 'openProposalModal').
         $leadLabel = $lead->company->company_name ?? $lead->contact_name;
+        $requestLabel = $justAssignedRequest ? " ({$justAssignedRequest->code})" : '';
+        $modalData = $justAssignedRequest
+            ? ['modal_fn' => 'openMyProposalRequestByCode', 'modal_args' => [$justAssignedRequest->code]]
+            : null;
 
         TeamNotifier::notify([$validated['assigned_to']], [
-            'type' => 'crm.prospect_assigned',
-            'title' => 'Prospect assigned to you',
-            'message' => "{$request->user()->name} assigned you as CSR for {$leadLabel}.",
+            'type' => 'crm.proposal_request_assigned',
+            'title' => 'Proposal request assigned to you',
+            'message' => "{$request->user()->name} assigned you as CSR for {$leadLabel}{$requestLabel}.",
             'from_user_id' => $request->user()->id,
             'notifiable' => $lead,
-            'link' => ['title' => 'View in CRM', 'url' => '/page_crm'],
+            'link' => ['title' => 'View My Requests', 'url' => '/page_proposal_requests_mine'],
+            'data' => $modalData,
             'email_subject' => "You've been assigned — {$leadLabel}",
         ]);
 
         if ($validated['relationship_manager_id'] !== $validated['assigned_to']) {
             TeamNotifier::notify([$validated['relationship_manager_id']], [
-                'type' => 'crm.prospect_assigned',
-                'title' => 'Prospect assigned to you',
-                'message' => "{$request->user()->name} assigned you as Relationship Manager for {$leadLabel}.",
+                'type' => 'crm.proposal_request_assigned',
+                'title' => 'Proposal request assigned to you',
+                'message' => "{$request->user()->name} assigned you as Relationship Manager for {$leadLabel}{$requestLabel}.",
                 'from_user_id' => $request->user()->id,
                 'notifiable' => $lead,
-                'link' => ['title' => 'View in CRM', 'url' => '/page_crm'],
+                'link' => ['title' => 'View My Requests', 'url' => '/page_proposal_requests_mine'],
+                'data' => $modalData,
                 'email_subject' => "You've been assigned — {$leadLabel}",
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $lead->fresh()->load('user:id,name', 'relationshipManager:id,name'),
+            'data' => $justAssignedRequest->fresh()->load('user:id,name', 'relationshipManager:id,name'),
         ]);
+    }
+
+    public function reassignOwner(Request $request, $uuid)
+    {
+        $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+
+        if (! $lead->canBeReassignedBy(auth()->user())) {
+            throw new HttpResponseException(response()->json([
+                'success' => false,
+                'message' => 'Only a team leader can reassign this prospect.',
+            ], 403));
+        }
+
+        $validated = $request->validate([
+            'owner_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        // superadmin has full access regardless of team - only a
+        // non-superadmin team leader is held to their own accessible
+        // subtree (accessibleUserIds() returns just the caller's own id
+        // for anyone who isn't a leader, which canBeReassignedBy() above
+        // has already ruled out reaching this point).
+        if (
+            ! RoleHelper::hasAnyRole(auth()->user(), ['superadmin'])
+            && ! TeamService::accessibleUserIds(auth()->user())->contains((int) $validated['owner_id'])
+        ) {
+            throw new HttpResponseException(response()->json([
+                'success' => false,
+                'message' => 'That user is outside your team.',
+            ], 422));
+        }
+
+        $lead->owner_id = $validated['owner_id'];
+        $lead->save();
+
+        return response()->json(['success' => true, 'data' => $lead->fresh()]);
     }
 
     public function saveStage1(Request $request)
@@ -302,6 +400,10 @@ class ProspectController extends Controller
 
             $isNew = ! $lead->exists;
 
+            if (! $isNew) {
+                $this->authorizeProspectEdit($lead);
+            }
+
             // Corporate/Individual is no longer a manual toggle - it's
             // derived from whichever "Type of Business" value was picked
             // (see BusinessTypeSeeder's lov_is_individual flag).
@@ -334,6 +436,7 @@ class ProspectController extends Controller
                 // deliberately staffs it via assignOwners(), with no
                 // exception for whoever created it.
                 $lead->created_by = auth()->id();
+                $lead->owner_id = auth()->id();
                 $lead->status = \App\Models\CrmStatus::where('status', 'PROSPECT')->first()?->id ?? 1;
                 $lead->status_updated_at = now();
             }
@@ -409,6 +512,7 @@ class ProspectController extends Controller
     public function saveStage2(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $validated = $request->validate([
             'containers' => ['nullable', 'array'],
@@ -481,6 +585,7 @@ class ProspectController extends Controller
     public function storeContainer(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $validated = $request->validate([
             'container_type' => ['nullable', 'in:CV,FR,RF,LC,RC'],
@@ -548,6 +653,7 @@ class ProspectController extends Controller
     public function saveContacts(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $validated = $request->validate([
             'contacts' => ['nullable', 'array'],
@@ -621,6 +727,7 @@ class ProspectController extends Controller
     public function storeProposalRequestContainer(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $validated = $request->validate([
             'container_type' => ['nullable', 'in:CV,FR,RF,LC,RC'],
@@ -677,6 +784,7 @@ class ProspectController extends Controller
     public function destroyProposalRequestContainer($uuid, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $container = $lead->requirementContainers()->where('id', $id)->firstOrFail();
         $container->delete();
@@ -693,6 +801,7 @@ class ProspectController extends Controller
     public function storeProposalRequestTrucking(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $validated = $request->validate([
             'trucking_cargo_type' => ['nullable', 'string', 'max:255'],
@@ -740,6 +849,7 @@ class ProspectController extends Controller
     public function destroyProposalRequestTrucking($uuid, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $trucking = $lead->requirementTruckings()->where('id', $id)->firstOrFail();
         $trucking->delete();
@@ -759,6 +869,7 @@ class ProspectController extends Controller
     public function storeProposalRequestCharter(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $validated = $request->validate([
             'charter_service_id' => ['nullable', 'integer', 'exists:charter_services,charter_service_id'],
@@ -838,6 +949,7 @@ class ProspectController extends Controller
     public function destroyProposalRequestCharter($uuid, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         $charter = $lead->requirementCharters()->where('id', $id)->firstOrFail();
         $charter->delete();
@@ -858,7 +970,16 @@ class ProspectController extends Controller
     public function storeProposalRequestNew(Request $request, $uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
+
+        // Starting a request is an ownership-tier action (the prospect's
+        // creator, or an in-reach team leader) - NOT the later
+        // authorizeProspectOwnership() tier, which requires an exact
+        // assigned_to/relationship_manager_id match set by Management.
+        // That later tier still gates every endpoint that works an
+        // ALREADY-created request (signatories/locations/submit/etc. below)
+        // - only this creation step moved, so Management assigning a
+        // CSR/RM afterward is unaffected.
+        $this->authorizeProspectEdit($lead);
 
         $proposalRequest = DB::transaction(function () use ($lead, $request) {
             return ProposalRequest::create([
@@ -913,7 +1034,7 @@ class ProspectController extends Controller
     public function destroyProposalRequest(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         if (! in_array($proposalRequest->status, ['pending', 'assigned'], true)) {
@@ -948,8 +1069,8 @@ class ProspectController extends Controller
     public function storeProposalRequestCompanyDetails(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -980,8 +1101,8 @@ class ProspectController extends Controller
     public function storeProposalRequestSignatory(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -1012,8 +1133,8 @@ class ProspectController extends Controller
     public function destroyProposalRequestSignatory(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->signatories()->where('id', $id)->firstOrFail()->delete();
@@ -1035,8 +1156,8 @@ class ProspectController extends Controller
     public function storeProposalRequestLocation(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $validated = $request->validate([
@@ -1059,13 +1180,32 @@ class ProspectController extends Controller
         // A manually-typed entry (no chip selected) has no prospect_location_id
         // yet - without one it can never be picked as a product's origin/
         // destination on the Products tab, since those columns FK straight to
-        // prospect_locations. Back it with a new prospect_locations row (not
-        // marked primary - this is a one-off capture, not a change to the
-        // prospect's designated primary address) so every O&D entry, manual
-        // or chip-selected, ends up equally selectable there.
-        if (empty($validated['prospect_location_id'])) {
+        // prospect_locations. Same problem, less obviously, when a chip WAS
+        // picked but the card's fields were then edited before Save (the
+        // card "stays fully editable afterward" by design) - the submitted
+        // prospect_location_id still points at the ORIGINAL, un-edited
+        // address, so the Products tab dropdown (keyed by that id) would
+        // keep showing the old address instead of what was actually typed,
+        // and the edited one could never be selected at all. Detect both
+        // cases the same way: whenever the submitted fields don't exactly
+        // match the prospect_locations row being referenced, back this
+        // entry with a NEW prospect_locations row (not marked primary -
+        // this is a one-off capture, not a change to the prospect's
+        // designated primary address, and never an in-place update of the
+        // original chip's row either) so every O&D entry - manual,
+        // chip-selected, or chip-then-edited - ends up equally and
+        // correctly selectable there.
+        $addressFields = collect($validated)->except('prospect_location_id')->toArray();
+        $existingLocation = ! empty($validated['prospect_location_id'])
+            ? $lead->addresses()->find($validated['prospect_location_id'])
+            : null;
+        $matchesExisting = $existingLocation && collect($addressFields)->every(
+            fn ($value, $key) => (string) ($existingLocation->{$key} ?? '') === (string) ($value ?? '')
+        );
+
+        if (! $matchesExisting) {
             $newProspectLocation = $lead->addresses()->create([
-                ...collect($validated)->except('prospect_location_id')->toArray(),
+                ...$addressFields,
                 'is_primary' => false,
             ]);
             $validated['prospect_location_id'] = $newProspectLocation->id;
@@ -1086,8 +1226,8 @@ class ProspectController extends Controller
     public function destroyProposalRequestLocation(Request $request, $uuid, $proposalRequestId, $id)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         $proposalRequest->locations()->where('id', $id)->firstOrFail()->delete();
@@ -1100,22 +1240,99 @@ class ProspectController extends Controller
 
     /**
      * Final "Confirm & Submit Request" action on the wizard's Confirmation
-     * tab - requires Company Details (name + location) and at least one
-     * signatory and one Origin & Destination location. Products is
-     * intentionally not required yet (still a placeholder tab). Only legal
+     * tab - requires Company Details (name + location), at least one
+     * signatory, one Origin & Destination location, at least one product,
+     * every product's rate built on the Build Rate Matrix tab, and Terms of
+     * Payment set for every product-type section that applies. Only legal
      * from 'assigned' (CSR+RM already set - see assignOwners()); moves
      * status to for_approval - no further resubmission is expected, so
      * reaching this again (if it ever does) just overwrites the
      * timestamp/actor.
+     *
+     * Each failure is tagged with the wizard tab it belongs to in
+     * `error_tabs` (RequestProposalModal's `data-rpm-tab` values) so the
+     * frontend can jump straight to the offending tab and mark it - see
+     * submitProposalRequest() in logic_prospect_request_proposal.js. Checks
+     * that predate this (status/company/signatories/locations) stay
+     * untagged (no `error_tabs` entry) - only the three newly added checks
+     * (Products/BuildMatrix/TermsConditions) report a tab.
      */
     public function submitProposalRequest(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
-        $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId)->load($this->proposalRequestRelations());
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
+        $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId)->load(array_merge(
+            $this->proposalRequestRelations(),
+            [
+                'productContainers',
+                'productRollingCargo',
+                'productLooseCargo',
+                'productTruckings',
+                'productCharters',
+                'productRates',
+            ]
+        ));
+
+        $request->validate(['additional_notes' => ['nullable', 'string', 'max:5000']]);
 
         $errors = [];
+        $errorTabs = [];
+
+        $productGroups = [
+            'container' => $proposalRequest->productContainers,
+            'rolling_cargo' => $proposalRequest->productRollingCargo,
+            'loose_cargo' => $proposalRequest->productLooseCargo,
+            'trucking' => $proposalRequest->productTruckings,
+            'charter' => $proposalRequest->productCharters,
+        ];
+        $hasAnyProduct = collect($productGroups)->contains(fn ($rows) => $rows->isNotEmpty());
+
+        if (! $hasAnyProduct) {
+            $errors[] = 'At least one product must be added on the Products tab.';
+            $errorTabs[] = 'Products';
+        } else {
+            // At least one product needs a built rate - not every product.
+            // A request can mix priced and still-being-quoted lines; what's
+            // not allowed is reaching Confirmation with zero rates built at
+            // all.
+            if ($proposalRequest->productRates->isEmpty()) {
+                $errors[] = 'At least one product must have its rate built on the Build Rate Matrix tab.';
+                $errorTabs[] = 'BuildMatrix';
+            }
+
+            // Mirrors RPM_TC_SECTION_PRODUCT_CHECKS in
+            // logic_prospect_request_proposal.js - which Terms & Conditions
+            // sections are shown (and therefore required) depends on which
+            // product types are present.
+            $relevantSections = [];
+            if ($productGroups['container']->contains(fn ($c) => in_array($c->container_type, ['CV', 'FR']))) {
+                $relevantSections[] = 'For ConVans & Flatracks';
+            }
+            if ($productGroups['container']->contains(fn ($c) => $c->container_type === 'RF')) {
+                $relevantSections[] = 'For Reefer Vans';
+            }
+            if ($productGroups['rolling_cargo']->isNotEmpty()) {
+                $relevantSections[] = 'For Rolling Cargoes';
+            }
+            if ($productGroups['loose_cargo']->isNotEmpty()) {
+                $relevantSections[] = 'For Break Bulk Cargo';
+            }
+            if ($productGroups['trucking']->isNotEmpty()) {
+                $relevantSections[] = 'For Trucking';
+            }
+            if ($productGroups['charter']->isNotEmpty()) {
+                $relevantSections[] = 'For Charter';
+            }
+
+            $setSections = $proposalRequest->termsOfPayment->pluck('section')->all();
+            $missingSections = array_diff($relevantSections, $setSections);
+
+            if ($missingSections) {
+                $errors[] = 'Terms of Payment must be set for: '.implode(', ', $missingSections).'.';
+                $errorTabs[] = 'TermsConditions';
+            }
+        }
 
         if ($proposalRequest->status !== 'assigned') {
             $errors[] = 'This request must be assigned by Management before it can be submitted.';
@@ -1137,6 +1354,7 @@ class ProspectController extends Controller
                 'success' => false,
                 'message' => implode(' ', $errors),
                 'errors' => $errors,
+                'error_tabs' => array_values(array_unique($errorTabs)),
             ], 422);
         }
 
@@ -1191,6 +1409,7 @@ class ProspectController extends Controller
             $proposalRequest->status = 'for_approval';
             $proposalRequest->submitted_at = now();
             $proposalRequest->submitted_by = $request->user()?->id;
+            $proposalRequest->additional_notes = $request->input('additional_notes');
             $proposalRequest->save();
 
             // Bridges the submitted RFP into a lead-scoped ClientProposal so
@@ -1254,8 +1473,8 @@ class ProspectController extends Controller
     public function cancelProposalRequest(Request $request, $uuid, $proposalRequestId)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
-        $this->authorizeProspectOwnership($lead, $request->user());
-        $this->authorizeProspectFullyAssigned($lead);
+        $this->authorizeProspectOwnership($lead, $request->user(), $proposalRequestId);
+        $this->authorizeProspectFullyAssigned($lead, $proposalRequestId);
         $proposalRequest = $this->findProposalRequestFor($lead, $proposalRequestId);
 
         if (! in_array($proposalRequest->status, ['assigned', 'for_approval'], true)) {
@@ -1626,6 +1845,7 @@ class ProspectController extends Controller
                 'user',
                 'relationshipManager:id,name',
                 'creator:id,name',
+                'owner:id,name,team_id',
                 'containers.originPort:port_id,location_id,name',
                 'containers.originPort.location:location_id,name',
                 'containers.destinationPort:port_id,location_id,name',
@@ -1646,6 +1866,11 @@ class ProspectController extends Controller
                 'requirementCharters.cargoItems',
                 'requirementCharters.ports.port:port_id,location_id,name',
                 'requirementCharters.ports.port.location:location_id,name',
+                // Each request's own staffed CSR/RM (see ProposalRequest::
+                // user()/relationshipManager()) - used by the RFP wizard's
+                // applyAssignmentGating() via getMyProposalRequest(lead).
+                'proposalRequests.user:id,name',
+                'proposalRequests.relationshipManager:id,name',
             ],
             array_map(fn ($s) => "proposalRequest.{$s}", $prSuffixes),
             array_map(fn ($s) => "proposalRequests.{$s}", $prSuffixes),
@@ -1660,6 +1885,8 @@ class ProspectController extends Controller
         $lead->setAttribute('has_accepted_proposal', $lead->hasAcceptedProposal());
         $lead->setAttribute('can_convert_to_client', $lead->canConvertToClient());
         $lead->setAttribute('stage_completion', $lead->stageCompletionFlags());
+        $lead->setAttribute('can_edit', $lead->canBeEditedBy(auth()->user()));
+        $lead->setAttribute('can_reassign', $lead->canBeReassignedBy(auth()->user()));
 
         // Flatten each contact's addresses into a plain location_ids list
         // for the frontend, mirroring the shape it submits to
@@ -1684,6 +1911,7 @@ class ProspectController extends Controller
     public function getOrGenerateCustomerCode($uuid)
     {
         $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
 
         if (! $lead->customer_code) {
             $lead->customer_code = \App\Models\ClientMaster::generateNextCustomerCode();
@@ -1703,10 +1931,14 @@ class ProspectController extends Controller
             'email' => $request->contact_email,
             'mobile' => $request->contact_mobile,
         ];
+
+        $lead = Prospect::where('uuid', $uuid)->firstOrFail();
+        $this->authorizeProspectEdit($lead);
+
         try {
             DB::beginTransaction();
 
-            Prospect::where('uuid', $uuid)->firstOrFail()->update($updatePayload);
+            $lead->update($updatePayload);
             DB::commit();
         } catch (\Exception $ex) {
             DB::rollBack();
@@ -1726,7 +1958,9 @@ class ProspectController extends Controller
 
     public function destroy($id)
     {
-        Prospect::findOrFail($id)->delete();
+        $lead = Prospect::findOrFail($id);
+        $this->authorizeProspectEdit($lead);
+        $lead->delete();
 
         return response()->json([
 

@@ -11,20 +11,27 @@
 (function () {
   const EMPTY = "—";
 
-  // pending/assigned/for_approval/approved/signed/cancelled - mirrors
-  // logic_prospect_info_modal.js's own STATUS_PILL copy (small intentional
-  // duplication, same "own local cache per file" precedent used throughout
-  // this codebase).
+  // Full effective_status vocabulary (plus the stale fallbacks
+  // for_approval/signed) - mirrors logic_client_proposals_shared.js's own
+  // STATUS_BADGE palette for the stages that overlap with it, same "own
+  // local cache per file" precedent used throughout this codebase.
   const STATUS_PILL = {
-    pending: { label: "Pending", classes: "bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200" },
-    assigned: { label: "Assigned", classes: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" },
-    for_approval: { label: "For Approval", classes: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" },
+    for_assignment: { label: "For Assignment", classes: "bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200" },
+    assigned: { label: "Assigned", classes: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300" },
+    pending_rm: { label: "Pending RM Approval", classes: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" },
+    pending_manager: { label: "Pending Manager Approval", classes: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" },
     approved: { label: "Approved", classes: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" },
-    signed: { label: "Signed", classes: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" },
+    accepted: { label: "Accepted / Signed", classes: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" },
+    disapproved: { label: "Disapproved", classes: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300" },
+    rejected: { label: "Rejected", classes: "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500" },
+    proposal_cancelled: { label: "Proposal Cancelled", classes: "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500" },
     cancelled: { label: "Cancelled", classes: "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500" },
+    // Stale fallbacks - kept for rows the backend hasn't recomputed yet.
+    for_approval: { label: "For Approval", classes: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" },
+    signed: { label: "Signed", classes: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" },
   };
 
-  let activeAssignmentStatus = "all";
+  let activeEffectiveStatus = "all";
   let assignableUsersOptionsHtml = "";
   let assignableUsersLoaded = false;
   let currentAssignProspectUuid = null;
@@ -96,7 +103,7 @@
   }
 
   function statusPill(status) {
-    const pill = STATUS_PILL[status] ?? STATUS_PILL.pending;
+    const pill = STATUS_PILL[status] ?? STATUS_PILL.for_assignment;
     return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${pill.classes}">${pill.label}</span>`;
   }
 
@@ -292,14 +299,15 @@
     document.getElementById("priRequestCode").textContent = pr.code ?? EMPTY;
     document.getElementById("priCompanyName").textContent = lead.company?.company_name || EMPTY;
     document.getElementById("priCode").textContent = pr.code ?? EMPTY;
-    document.getElementById("priStatus").innerHTML = statusPill(pr.status);
+    document.getElementById("priStatus").innerHTML = statusPill(pr.effective_status ?? pr.status);
     document.getElementById("priCreatedAt").textContent = formatDateTime(pr.created_at);
     document.getElementById("priCreatedBy").textContent = pr.creator?.name || EMPTY;
     document.getElementById("priCompanyNameFull").textContent = lead.company?.company_name || EMPTY;
-    document.getElementById("priCsrName").textContent = lead.user?.name || EMPTY;
-    document.getElementById("priRmName").textContent = lead.relationship_manager?.name || EMPTY;
+    document.getElementById("priCsrName").textContent = pr.user?.name || EMPTY;
+    document.getElementById("priRmName").textContent = pr.relationship_manager?.name || EMPTY;
 
-    document.getElementById("priAssignBtnWrap").classList.toggle("hidden", pr.status !== "pending");
+    document.getElementById("priAssignBtnWrap").classList.toggle("hidden", !pr.can_assign);
+    document.getElementById("priOpenRequestBtnWrap")?.classList.toggle("hidden", !pr.can_open_my_request);
 
     renderPriLocations(lead);
     renderPriContacts(lead);
@@ -332,10 +340,25 @@
   // ------------------------------------------------------------------
   // COUNTS + STATUS STRIP
   // ------------------------------------------------------------------
+  const EFFECTIVE_STATUS_KEYS = [
+    "all",
+    "for_assignment",
+    "assigned",
+    "pending_rm",
+    "pending_manager",
+    "approved",
+    "accepted",
+    "disapproved",
+    "rejected",
+    "proposal_cancelled",
+    "cancelled",
+  ];
+
   function updateAssignmentCounts(counts) {
-    document.getElementById("prCountAll").textContent = counts?.all ?? 0;
-    document.getElementById("prCountAwaiting").textContent = counts?.awaiting ?? 0;
-    document.getElementById("prCountAssigned").textContent = counts?.assigned ?? 0;
+    EFFECTIVE_STATUS_KEYS.forEach((key) => {
+      const el = document.getElementById(`prCount_${key}`);
+      if (el) el.textContent = counts?.[key] ?? 0;
+    });
   }
 
   // ------------------------------------------------------------------
@@ -349,16 +372,16 @@
         key: "prospect.company.company_name",
         render: (r) => esc(r.prospect?.company?.company_name || EMPTY),
       },
-      { title: "Status", key: "status", render: (r) => statusPill(r.status) },
+      { title: "Status", key: "status", render: (r) => statusPill(r.effective_status ?? r.status) },
       {
         title: "Assigned CSR",
-        key: "prospect.user.name",
-        render: (r) => esc(r.prospect?.user?.name || EMPTY),
+        key: "user.name",
+        render: (r) => esc(r.user?.name || EMPTY),
       },
       {
         title: "RM",
-        key: "prospect.relationship_manager.name",
-        render: (r) => esc(r.prospect?.relationship_manager?.name || EMPTY),
+        key: "relationship_manager.name",
+        render: (r) => esc(r.relationship_manager?.name || EMPTY),
       },
       { title: "Created", key: "created_at", render: (r) => formatDateTime(r.created_at) },
     ];
@@ -368,11 +391,19 @@
       tableId: "tableProposalRequests",
       thead,
       afterRenderFunction: (row) => {
-        // Dedicated read-only ProposalRequestInfoModal (not ProspectInfoModal)
-        // - needs its own fetch since the table row payload only has the
-        // handful of fields its own columns render.
         row.addEventListener("click", async function () {
           const pr = JSON.parse(row.dataset.row);
+
+          // Rows that already have a commercial ClientProposal open the full
+          // #ClientProposalModal (shared decision/signed/contract logic) -
+          // see resources/js/logic_client_proposals_shared.js's
+          // openProposalModal(). Rows without one fall back to the
+          // dedicated, fully read-only ProposalRequestInfoModal below.
+          if (pr.latest_client_proposal) {
+            window.openProposalModal(pr.latest_client_proposal.id);
+            return;
+          }
+
           const uuid = pr.prospect?.uuid;
           if (!uuid) {
             showMessage({ status: "error", title: "This request has no prospect on file." });
@@ -384,9 +415,9 @@
         });
       },
       emptyMessage: () => {
-        if (activeAssignmentStatus === "awaiting") return "No requests awaiting assignment.";
-        if (activeAssignmentStatus === "assigned") return "No assigned requests yet.";
-        return "No proposal requests yet.";
+        if (activeEffectiveStatus === "all") return "No proposal requests yet.";
+        const label = (STATUS_PILL[activeEffectiveStatus]?.label ?? "").toLowerCase();
+        return `No ${label} requests.`;
       },
     });
   }
@@ -402,15 +433,15 @@
   }
 
   // ------------------------------------------------------------------
-  // ASSIGN OWNERS MODAL - takes a Prospect-shaped object directly
-  // (uuid/company.company_name/user.id/relationship_manager.id) rather
-  // than a ProposalRequest row, reached from ProposalRequestInfoModal's
-  // rail "Assign" button (shown only while status === "pending", see
-  // openProposalRequestInfoModal()/priAssignBtn's binding below) - a
-  // ProposalRequest's own `code` is a separate, optional param purely for
-  // this modal's subtitle.
+  // ASSIGN OWNERS MODAL - takes the Prospect (for uuid/company name only)
+  // plus the specific ProposalRequest being staffed, reached from
+  // ProposalRequestInfoModal's rail "Assign" button (shown only while
+  // status === "pending", see openProposalRequestInfoModal()/priAssignBtn's
+  // binding below). CSR/RM prefill reads the REQUEST's own assignment
+  // (pr.user/pr.relationship_manager), not the prospect's - staffing lives
+  // on the request now, see ProspectController::assignOwners().
   // ------------------------------------------------------------------
-  async function openAssignModal(lead, requestCode) {
+  async function openAssignModal(lead, pr) {
     const modal = document.getElementById("assignOwnersModal");
     if (!modal) return;
 
@@ -422,15 +453,15 @@
 
     await ensureAssignableUsersLoaded();
 
-    modal.querySelector("#assignRequestCode").textContent = requestCode ?? "";
+    modal.querySelector("#assignRequestCode").textContent = pr?.code ?? "";
     modal.querySelector("#assignCompanyName").textContent = lead?.company?.company_name || EMPTY;
 
     const csrSelect = modal.querySelector("#assignCsrSelect");
     const rmSelect = modal.querySelector("#assignRmSelect");
     csrSelect.innerHTML = assignableUsersOptionsHtml;
     rmSelect.innerHTML = assignableUsersOptionsHtml;
-    csrSelect.value = String(lead?.user?.id ?? "");
-    rmSelect.value = String(lead?.relationship_manager?.id ?? "");
+    csrSelect.value = String(pr?.user?.id ?? "");
+    rmSelect.value = String(pr?.relationship_manager?.id ?? "");
     refreshSearchable(csrSelect);
     refreshSearchable(rmSelect);
 
@@ -473,13 +504,12 @@
 
     // ProposalRequestInfoModal stays open underneath - refresh its rail's
     // CSR/RM text in place rather than making the user close/reopen it.
-    if (currentInfoLead?.uuid === currentAssignProspectUuid) {
-      const refreshed = await apiCall({ mode: "GET", url: `/api/crm/prospects/${currentAssignProspectUuid}` });
-      if (refreshed.success) {
-        currentInfoLead = refreshed.data;
-        document.getElementById("priCsrName").textContent = currentInfoLead.user?.name || EMPTY;
-        document.getElementById("priRmName").textContent = currentInfoLead.relationship_manager?.name || EMPTY;
-      }
+    // The assign response IS the just-assigned ProposalRequest (with
+    // user/relationshipManager loaded) - no need to re-fetch the prospect.
+    if (currentInfoLead?.uuid === currentAssignProspectUuid && response.data) {
+      currentInfoPr = { ...currentInfoPr, ...response.data };
+      document.getElementById("priCsrName").textContent = currentInfoPr.user?.name || EMPTY;
+      document.getElementById("priRmName").textContent = currentInfoPr.relationship_manager?.name || EMPTY;
     }
   }
 
@@ -490,7 +520,7 @@
     const root = document.getElementById("ProposalRequestsPage");
     if (!root) return; // guarded: only runs on this page
 
-    activeAssignmentStatus = "all";
+    activeEffectiveStatus = "all";
     currentAssignProspectUuid = null;
     currentInfoPr = null;
     currentInfoLead = null;
@@ -501,14 +531,14 @@
     ensureAssignableUsersLoaded();
     loadProposalRequests();
 
-    document.querySelectorAll(".prAssignmentStatusBtn").forEach((btn) => {
+    document.querySelectorAll(".prEffStatusBtn").forEach((btn) => {
       btn.addEventListener("click", function () {
-        activeAssignmentStatus = this.dataset.assignmentStatus;
+        activeEffectiveStatus = this.dataset.effStatus;
         document
-          .querySelectorAll(".prAssignmentStatusBtn")
+          .querySelectorAll(".prEffStatusBtn")
           .forEach((b) => b.classList.remove("ring-2", "ring-orange-500"));
         this.classList.add("ring-2", "ring-orange-500");
-        renderTable().setFilter("assignment_status", activeAssignmentStatus);
+        renderTable().setFilter("effective_status", activeEffectiveStatus);
       });
     });
 
@@ -524,8 +554,25 @@
 
     document.getElementById("priAssignBtn").addEventListener("click", function () {
       if (!currentInfoLead) return;
-      openAssignModal(currentInfoLead, currentInfoPr?.code);
+      openAssignModal(currentInfoLead, currentInfoPr);
     });
+
+    document.getElementById("priOpenRequestBtn")?.addEventListener("click", async function () {
+      const code = currentInfoPr?.code;
+      if (!code) return;
+      await window.loadPage({ title: "My Requests", link: "/page_proposal_requests_mine" });
+      window.openMyProposalRequestByCode(code);
+    });
+
+    // Bind the shared #ClientProposalModal's action buttons once (that
+    // file's own initClientProposalsPage() no-ops here since this page has
+    // no #tableClientProposals), and register the post-action refresh hook
+    // it falls back to - see refreshProposalList() in
+    // logic_client_proposals_shared.js.
+    window.bindClientProposalModalEvents?.();
+    window.onClientProposalActionDone = function () {
+      renderTable().reload();
+    };
   }
   window.initProposalRequestsPage = initProposalRequestsPage;
 })();

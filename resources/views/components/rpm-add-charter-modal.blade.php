@@ -43,13 +43,13 @@
             </div>
             <div>
                 <label for="rpmChLaytimeLoading" class="text-[11px] text-zinc-400 uppercase">Laytime - Loading (days)</label>
-                <input type="number" id="rpmChLaytimeLoading" data-field="laytime_loading_days"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
+                <input type="text" inputmode="numeric" id="rpmChLaytimeLoading" data-field="laytime_loading_days"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label for="rpmChLaytimeUnloading" class="text-[11px] text-zinc-400 uppercase">Laytime - Unloading (days)</label>
-                <input type="number" id="rpmChLaytimeUnloading" data-field="laytime_unloading_days"
-                    class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
+                <input type="text" inputmode="numeric" id="rpmChLaytimeUnloading" data-field="laytime_unloading_days"
+                    class="currency-input w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
             </div>
             <div class="flex items-center gap-2 mt-5">
                 <input type="checkbox" id="rpmChDemurrage" data-field="demurrage_charges" class="rounded border-zinc-300 dark:border-zinc-700">

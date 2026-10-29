@@ -134,7 +134,7 @@
             document.getElementById('appIconRemoveBtn').classList.remove('hidden');
         });
 
-        document.getElementById('appLogoRemoveBtn').addEventListener('click', async () => {
+        document.getElementById('appLogoRemoveBtn').addEventListener('click', async (e) => {
             pendingLogoFile = null;
             document.getElementById('appLogoInput').value = '';
 
@@ -143,7 +143,7 @@
                 return;
             }
 
-            const response = await apiCall({ mode: 'DELETE', url: '/api/app-information/logo' });
+            const response = await apiCall({ mode: 'DELETE', url: '/api/app-information/logo', button: e.currentTarget });
             if (response.success) {
                 state = response.data;
                 render();
@@ -151,7 +151,7 @@
             }
         });
 
-        document.getElementById('appIconRemoveBtn').addEventListener('click', async () => {
+        document.getElementById('appIconRemoveBtn').addEventListener('click', async (e) => {
             pendingIconFile = null;
             document.getElementById('appIconInput').value = '';
 
@@ -160,7 +160,7 @@
                 return;
             }
 
-            const response = await apiCall({ mode: 'DELETE', url: '/api/app-information/icon' });
+            const response = await apiCall({ mode: 'DELETE', url: '/api/app-information/icon', button: e.currentTarget });
             if (response.success) {
                 state = response.data;
                 render();

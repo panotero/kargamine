@@ -11,16 +11,21 @@ class ProposalRequest extends Model
         'code',
         'prospect_id',
         'status',
+        'assigned_to',
+        'relationship_manager_id',
         'created_by',
         'submitted_at',
         'submitted_by',
         'terms_of_payment_standard',
         'terms_of_payment_charter',
+        'additional_notes',
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
     ];
+
+    protected $appends = ['is_fully_assigned'];
 
     public function prospect()
     {
@@ -38,12 +43,93 @@ class ProposalRequest extends Model
     }
 
     /**
+     * The staffed CSR - Management's assignOwners() sets this on the
+     * request itself (not the prospect) so staffing one request never
+     * silently reassigns the prospect or any of its other requests. Named
+     * user() (not assignedTo()) to match Prospect::user()'s existing
+     * convention - lets the frontend keep reading `.user.name` either way.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function relationshipManager()
+    {
+        return $this->belongsTo(User::class, 'relationship_manager_id');
+    }
+
+    /**
+     * Both a CSR and a Relationship Manager must be set by Management
+     * before the RFP wizard endpoints unlock - see
+     * AuthorizesProposalRequestAccess. Mirrors Prospect::isFullyAssigned(),
+     * but scoped to this specific request now.
+     */
+    public function isFullyAssigned(): bool
+    {
+        return $this->assigned_to !== null && $this->relationship_manager_id !== null;
+    }
+
+    public function getIsFullyAssignedAttribute(): bool
+    {
+        return $this->isFullyAssigned();
+    }
+
+    /**
      * The commercial ClientProposal(s) built from this RFP. A ClientProposal
      * points back via proposal_request_id (see ClientProposal::proposalRequest()).
      */
     public function clientProposals()
     {
         return $this->hasMany(\App\Models\ClientProposal::class, 'proposal_request_id')->latest();
+    }
+
+    /**
+     * The single most-recent ClientProposal built from this RFP. Normally
+     * there is exactly one (submitProposalRequest() creates it atomically);
+     * latestOfMany() picks the newest deterministically if more exist.
+     */
+    public function latestClientProposal()
+    {
+        return $this->hasOne(\App\Models\ClientProposal::class, 'proposal_request_id')->latestOfMany();
+    }
+
+    /**
+     * Unifies this request's own lifecycle status with its latest
+     * ClientProposal's status (once one exists) into a single value the
+     * combined Requests/Approvals/Signed-Contracts list page filters and
+     * displays by. Mirrors the table in the consolidation brief - request
+     * 'cancelled' wins outright, then the ClientProposal's integer status
+     * (if any) takes over, then the request's own pre-submission status
+     * ('pending'/'assigned'), falling back to the raw request status for
+     * any other (stale) value.
+     */
+    public function getEffectiveStatusAttribute(): string
+    {
+        if ($this->status === 'cancelled') {
+            return 'cancelled';
+        }
+
+        $proposal = $this->latestClientProposal;
+
+        if ($proposal) {
+            return match ($proposal->status) {
+                \App\Models\ClientProposal::STATUS_PENDING => 'pending_rm',
+                \App\Models\ClientProposal::STATUS_PENDING_MANAGER => 'pending_manager',
+                \App\Models\ClientProposal::STATUS_APPROVED => 'approved',
+                \App\Models\ClientProposal::STATUS_ACCEPTED => 'accepted',
+                \App\Models\ClientProposal::STATUS_DISAPPROVED => 'disapproved',
+                \App\Models\ClientProposal::STATUS_REJECTED => 'rejected',
+                \App\Models\ClientProposal::STATUS_CANCELLED => 'proposal_cancelled',
+                default => $this->status,
+            };
+        }
+
+        return match ($this->status) {
+            'pending' => 'for_assignment',
+            'assigned' => 'assigned',
+            default => $this->status,
+        };
     }
 
     public function companyDetail()

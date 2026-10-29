@@ -35,10 +35,19 @@
             <p class="text-lg font-semibold text-zinc-900 dark:text-white" id="pimTitle">Prospect</p>
             <p class="text-xs text-zinc-400 dark:text-zinc-500" id="pimSubtitle"></p>
         </div>
-        <button
-            class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
-            ✕
-        </button>
+        <div class="flex items-center gap-2">
+            {{-- Shown only when lead.can_reassign === true - see renderAll()
+                 in logic_prospect_info_modal.js. Opens #reassignOwnerModal
+                 (resources/views/pages/crm.blade.php). --}}
+            <button type="button" id="pimReassignBtn"
+                class="hidden text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium">
+                Reassign
+            </button>
+            <button
+                class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                ✕
+            </button>
+        </div>
     </div>
 
     <div class="flex flex-col md:flex-row gap-5 p-5 flex-1 overflow-y-auto">
@@ -294,18 +303,20 @@
             {{-- Mints a ProposalRequest and confirms via toast - that's the
                  TEMP CSR's whole job here. Filling it out happens on the
                  assigned CSR/Relationship Manager's "My Requests" page
-                 instead (see logic_proposal_requests_mine.js). Disabled
-                 until Management has assigned a CSR (assigned_to) - a
-                 prospect starts genuinely unassigned now, with no
-                 exception for whoever created it, so this needs an
-                 always-visible explanation rather than a silent 403. --}}
+                 instead (see logic_proposal_requests_mine.js). Gated the
+                 same as editing the prospect (lead.can_edit - creator or an
+                 in-reach team leader), NOT on whether Management has
+                 already staffed a CSR/RM - that staffing is a separate,
+                 later step on the request this button creates, not a
+                 precondition for creating it. Still an always-visible
+                 explanation rather than a silent 403. --}}
             <div class="border-t dark:border-zinc-700 pt-3 space-y-1.5">
                 <button type="button" id="pimRequestProposalBtn"
                     class="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-orange-500">
                     Request for Proposal
                 </button>
                 <p id="pimRequestProposalHint" class="hidden text-xs text-zinc-400 dark:text-zinc-500 text-center">
-                    Awaiting CSR assignment from Management
+                    Only the prospect's creator or your team leader can request a proposal
                 </p>
             </div>
 

@@ -116,6 +116,7 @@
                     <th class="text-right py-1">Base Rate</th>
                     <th class="text-right py-1">Adjustment</th>
                     <th class="text-right py-1">Total</th>
+                    <th class="text-right py-1">Grand Total</th>
                 </tr>
             </thead>
             <tbody id="cpmRfpRatesBody"></tbody>
@@ -150,6 +151,14 @@
                 <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Ancillary Service Fees</p>
                 <div id="cpmRfpAncillaryBody" class="space-y-3"></div>
             </div>
+        </div>
+
+        {{-- RFP "Additional Note" (proposal_request.additional_notes) - the
+             requester's free-text note to the approver, entered on the RFP
+             wizard's Confirmation tab. Hidden entirely when empty. --}}
+        <div id="cpmRfpAdditionalNote" class="hidden space-y-1">
+            <p class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Additional Note</p>
+            <p id="cpmRfpAdditionalNoteText" class="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-line"></p>
         </div>
 
         {{-- Attach signed document - only shown when APPROVED --}}

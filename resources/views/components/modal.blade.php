@@ -12,7 +12,7 @@
     overlay-padding="p-0 md:p-4" for a true edge-to-edge full-screen-on-
     mobile panel).
 --}}
-@props(['maxWidth' => null, 'minWidth' => null, 'panelClass' => '', 'overlayPadding' => 'px-4', 'rounded' => null])
+@props(['maxWidth' => null, 'minWidth' => null, 'panelClass' => '', 'overlayPadding' => 'px-4', 'rounded' => null, 'overlayZIndex' => 'z-40'])
 @php
     $hasCustomClass = $attributes->has('class');
     $roundedClass = $rounded ?? ($hasCustomClass ? '' : 'rounded-2xl');
@@ -20,7 +20,7 @@
     $maxWidthClass = $maxWidth ?? ($hasCustomClass ? '' : 'lg:max-w-[60vw]');
 @endphp
 <div id="{{ $attributes->get('id', 'defaultModal') }}"
-    class="fixed inset-0 hidden z-40 flex items-center justify-center bg-black/50 {{ $overlayPadding }} modal">
+    class="fixed inset-0 hidden {{ $overlayZIndex }} flex items-center justify-center bg-black/50 {{ $overlayPadding }} modal">
     <div {{ $attributes->except('id')->merge(['class' => "bg-white dark:bg-zinc-800 {$roundedClass} shadow-2xl w-full {$minWidthClass} {$maxWidthClass} {$panelClass}"]) }}>
         {{ $slot }}
     </div>

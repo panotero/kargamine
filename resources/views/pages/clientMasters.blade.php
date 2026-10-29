@@ -2078,6 +2078,7 @@
                         isJson: true,
                         payload: {},
                         url: `/api/clientMasters/proposals/rates/${this.dataset.rateId}`,
+                        button: this,
                     });
 
                     if (!response.success) {

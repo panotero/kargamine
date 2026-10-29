@@ -132,6 +132,46 @@ class Prospect extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function canBeEditedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+        if (\App\Support\RoleHelper::hasAnyRole($user, ['superadmin'])) {
+            return true;
+        }
+        if ($user->id === $this->owner_id) {
+            return true;
+        }
+        if (! $user->is_team_leader || ! $user->team_id) {
+            return false;
+        }
+        $ownerTeamId = $this->owner?->team_id;
+
+        return $ownerTeamId && \App\Services\TeamService::accessibleTeamIds($user)->contains($ownerTeamId);
+    }
+
+    public function canBeReassignedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+        if (\App\Support\RoleHelper::hasAnyRole($user, ['superadmin'])) {
+            return true;
+        }
+        if (! $user->is_team_leader || ! $user->team_id) {
+            return false;
+        }
+        $ownerTeamId = $this->owner?->team_id;
+
+        return $ownerTeamId && \App\Services\TeamService::accessibleTeamIds($user)->contains($ownerTeamId);
+    }
+
     /**
      * Both a CSR (assigned_to) and a Relationship Manager
      * (relationship_manager_id) must be set by Management before the RFP

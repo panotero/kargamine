@@ -277,18 +277,20 @@ class ClientProposal extends Model
      */
     public function ownerUser(): ?User
     {
-        return $this->prospect?->user ?? $this->client?->prospect?->user;
+        return $this->proposalRequest?->user ?? $this->prospect?->user ?? $this->client?->prospect?->user;
     }
 
     /**
      * The deal's assigned Relationship Manager - same fallback chain as
-     * ownerUser() (this proposal's own prospect first, then the client's
-     * originating prospect for proposals created via the client-scoped
-     * store() path). This is who gives the first (RM) approval.
+     * ownerUser(): this proposal's own ProposalRequest first (staffing now
+     * lives there, not on the prospect), then this proposal's own prospect,
+     * then the client's originating prospect for proposals created via the
+     * client-scoped store() path (which never sets prospect_id or
+     * proposal_request_id). This is who gives the first (RM) approval.
      */
     public function assignedRelationshipManager(): ?User
     {
-        return $this->prospect?->relationshipManager ?? $this->client?->prospect?->relationshipManager;
+        return $this->proposalRequest?->relationshipManager ?? $this->prospect?->relationshipManager ?? $this->client?->prospect?->relationshipManager;
     }
 
     /**

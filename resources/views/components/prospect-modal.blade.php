@@ -61,6 +61,18 @@
         <p id="pmDraftIndicator" class="hidden w-full text-[11px] text-zinc-400 dark:text-zinc-500 mt-1"></p>
     </div>
 
+    {{-- View-only banner - shown/hidden by applyProspectEditGating() in
+         logic_prospect_modal.js based on lead.can_edit (existing prospects
+         only; a brand-new prospect is always editable). Sits above the tab
+         rail + content so it reads across every tab, mirroring
+         RequestProposalModal's #rfpAwaitingAssignmentBanner treatment. --}}
+    <div id="pmViewOnlyBanner"
+        class="hidden mx-5 mt-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+        <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
+            View only — ask the owner or your team leader to make changes.
+        </p>
+    </div>
+
     {{-- Body: same full-width rule - the tab rail + content (and each
          tab's own Save button, acting as this modal's footer) now stretch
          the full panel width instead of sitting in a centered box. --}}

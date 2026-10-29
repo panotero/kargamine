@@ -82,13 +82,13 @@
       { title: "Status", key: "status", render: (r) => statusPill(r.status) },
       {
         title: "Assigned CSR",
-        key: "prospect.user.name",
-        render: (r) => esc(r.prospect?.user?.name || EMPTY),
+        key: "user.name",
+        render: (r) => esc(r.user?.name || EMPTY),
       },
       {
         title: "RM",
-        key: "prospect.relationship_manager.name",
-        render: (r) => esc(r.prospect?.relationship_manager?.name || EMPTY),
+        key: "relationship_manager.name",
+        render: (r) => esc(r.relationship_manager?.name || EMPTY),
       },
       { title: "Created", key: "created_at", render: (r) => formatDateTime(r.created_at) },
       {
@@ -177,7 +177,56 @@
       cancelProposalRequest(pr, this);
     });
 
+    const canUploadSigned = pr.status === "approved" && Boolean(pr.can_upload_signed);
+    modal.querySelector("#prsmSignedSection")?.classList.toggle("hidden", !canUploadSigned);
+    const fileInput = modal.querySelector("#prsmSignedFile");
+    if (fileInput) fileInput.value = "";
+
+    const uploadBtn = modal.querySelector("#prsmUploadSignedBtn");
+    if (uploadBtn) {
+      // Rebind each open (closes over this row's pr/currentLead) rather than
+      // a one-time delegated listener - this modal is re-opened repeatedly
+      // for different rows, so cloning the node drops any stale handler
+      // from a previous row before attaching the current one.
+      const freshBtn = uploadBtn.cloneNode(true);
+      uploadBtn.replaceWith(freshBtn);
+      freshBtn.addEventListener("click", function () {
+        uploadSignedDocument(pr, fileInput, this);
+      });
+    }
+
     window.initModal({ modalId: "ProposalRequestSummaryModal" });
+  }
+
+  // Ports the "Upload Signed Document" affordance from the Proposals page's
+  // ClientProposalModal (see logic_client_proposals_shared.js's
+  // #cpmUploadSignedBtn handler) onto this page's own read-only summary
+  // modal - same FormData/attachSigned contract, just reached from "My
+  // Requests" instead.
+  async function uploadSignedDocument(pr, fileInput, button) {
+    if (!fileInput?.files?.length) {
+      showMessage({ status: "error", title: "Select a file first" });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("signed_document", fileInput.files[0]);
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: false,
+      payload: formData,
+      url: `/api/clientProposals/${pr.client_proposal_id}/attachSigned`,
+      button,
+    });
+    if (!response.success) {
+      showMessage({ status: "error", title: "Error", message: response.message ?? "Upload failed." });
+      return;
+    }
+
+    showMessage({ status: "success", title: "Signed document uploaded — proposal accepted!" });
+    window.closeModal("ProposalRequestSummaryModal");
+    renderTable().reload();
   }
 
   async function cancelProposalRequest(pr, button) {
@@ -241,6 +290,32 @@
     showMessage({ status: "success", title: "Proposal Request Cancelled" });
     renderTable().reload();
   }
+
+  // Deep-link target for the "Proposal request assigned to you" notification
+  // (ProspectController::assignOwners() sends {modal_fn: 'openMyProposalRequestByCode',
+  // modal_args: [code]} - see notificationController.js's handleNotificationClick(),
+  // which first loadPage()s to /page_proposal_requests_mine, then calls this).
+  // No single-record "mine" endpoint exists, so this reuses the list
+  // endpoint's existing `search` filter (matches on code) rather than adding
+  // a new one - codes are unique, so this should resolve to exactly one row.
+  async function openMyProposalRequestByCode(code) {
+    if (!code) return;
+    const response = await apiCall({
+      mode: "GET",
+      url: `/api/proposalRequests/mine?search=${encodeURIComponent(code)}&per_page=1`,
+    });
+    const pr = response.success ? response.data?.data?.[0] : null;
+    if (!pr) {
+      showMessage({
+        status: "error",
+        title: "Request not found",
+        message: "That proposal request is no longer assigned to you.",
+      });
+      return;
+    }
+    await openRow(pr);
+  }
+  window.openMyProposalRequestByCode = openMyProposalRequestByCode;
 
   // ------------------------------------------------------------------
   // PUBLIC API

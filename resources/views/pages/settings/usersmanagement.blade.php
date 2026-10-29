@@ -413,7 +413,8 @@
 
                             const response = await apiCall({
                                 mode: 'PATCH',
-                                url: `/api/users/deactivate/${id}`
+                                url: `/api/users/deactivate/${id}`,
+                                button: deactivateBtn
                             });
 
                             if (!response.success) {
@@ -444,7 +445,8 @@
 
                             const response = await apiCall({
                                 mode: 'PATCH',
-                                url: `/api/users/reactivate/${id}`
+                                url: `/api/users/reactivate/${id}`,
+                                button: reactivateBtn
                             });
 
                             if (!response.success) {
@@ -577,7 +579,8 @@
 
                     const response = await apiCall({
                         mode: 'DELETE',
-                        url: `/api/roles/${roleId}`
+                        url: `/api/roles/${roleId}`,
+                        button: deleteBtn
                     });
 
                     if (!response.success) {

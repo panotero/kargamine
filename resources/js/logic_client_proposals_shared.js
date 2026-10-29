@@ -30,13 +30,13 @@
     7: "Pending Manager Approval",
   };
   const STATUS_BADGE = {
-    1: "bg-amber-100 text-amber-600",
-    2: "bg-green-100 text-green-700",
-    3: "bg-red-100 text-red-600",
-    4: "bg-blue-100 text-blue-700",
-    5: "bg-zinc-200 text-zinc-600",
-    6: "bg-zinc-200 text-zinc-600",
-    7: "bg-amber-100 text-amber-600",
+    1: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
+    2: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    3: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300",
+    4: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    5: "bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
+    6: "bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
+    7: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
   };
 
   // Humanized labels for the RFP wizard's product_rates[].product_type -
@@ -49,6 +49,129 @@
     trucking: "Trucking",
     charter: "Charter",
   };
+
+  const EMPTY = "—";
+
+  // Maps a product_rates[].product_type to the matching array on
+  // proposal_request carrying the full product rows (see openProposalModal()'s
+  // RFP rates branch) - resolved per rate row by Number(id) === Number(product_id).
+  const RFP_PRODUCT_ARRAY_KEY = {
+    container: "product_containers",
+    rolling_cargo: "product_rolling_cargo",
+    loose_cargo: "product_loose_cargo",
+    trucking: "product_truckings",
+    charter: "product_charters",
+  };
+
+  // Minimal escaping for free-text cargo fields interpolated into the cargo
+  // detail sub-row below - matches the esc() helper used elsewhere in the
+  // CRM/RFP JS files.
+  function esc(v) {
+    return String(v ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[c]));
+  }
+
+  // Looks up the full product row (origin/destination, cargo fields, etc.)
+  // backing one product_rates[] entry - see openProposalModal()'s RFP rates
+  // branch. Returns null if the array/row isn't found (never throws); the
+  // caller then simply skips the cargo-detail sub-row for that rate.
+  function findRfpProductRow(pr, rate) {
+    const key = RFP_PRODUCT_ARRAY_KEY[rate?.product_type];
+    if (!key || !pr) return null;
+    const rows = pr[key];
+    if (!Array.isArray(rows)) return null;
+    return rows.find((row) => Number(row?.id) === Number(rate.product_id)) ?? null;
+  }
+
+  // Mirrors the RFP wizard's own matrixGrandTotal() (logic_prospect_request_proposal.js)
+  // so the approval/view-only modals show the same figure as "My Requests":
+  // total_rate x qty (container/trucking: quantity, rolling/loose cargo:
+  // cargo_quantity, charter: no per-unit qty) + the product row's own
+  // ancillary services total.
+  function rfpGrandTotal(pr, rate) {
+    const totalRate = Number(rate?.total_rate) || 0;
+    const row = findRfpProductRow(pr, rate);
+    const ancillaryTotal = (row?.ancillary_services ?? []).reduce((sum, a) => sum + (Number(a.total_value) || 0), 0);
+    let qty = 1;
+    if (rate?.product_type === "container" || rate?.product_type === "trucking") qty = Number(row?.quantity) || 0;
+    else if (rate?.product_type === "rolling_cargo" || rate?.product_type === "loose_cargo") qty = Number(row?.cargo_quantity) || 0;
+    return totalRate * qty + ancillaryTotal;
+  }
+
+  // Builds the cargo-detail sub-row's inner lines (route, cargo type,
+  // description, declared value, weight, special requirements, container
+  // class/size) for one RFP product row - only the fields actually present
+  // for that product type are rendered. Charter rows have no single origin/
+  // destination pair (they carry a ports[] list + cargo_items[] instead),
+  // so they're handled separately.
+  function rfpCargoDetailLines(product, productType) {
+    if (!product) return [];
+    const lines = [];
+
+    if (product.origin_location || product.destination_location) {
+      const o = product.origin_location?.location_mnemonic || product.origin_location?.name || EMPTY;
+      const d = product.destination_location?.location_mnemonic || product.destination_location?.name || EMPTY;
+      lines.push(["Route", `${o} &rarr; ${d}`]);
+    } else if (product.origin_port || product.destination_port) {
+      const portLabel = (p) => (p ? `${p.location?.name ? p.location.name + " - " : ""}${p.name ?? EMPTY}` : EMPTY);
+      lines.push(["Route", `${portLabel(product.origin_port)} &rarr; ${portLabel(product.destination_port)}`]);
+    } else if (Array.isArray(product.ports) && product.ports.length) {
+      lines.push(["Route", product.ports.map((p) => esc(p?.port?.name ?? p?.name ?? EMPTY)).join(" &rarr; ")]);
+    }
+
+    if (productType === "charter") {
+      (product.cargo_items ?? []).forEach((item, index) => {
+        const parts = [item?.cargo_type, item?.cargo_description, item?.special_requirements].filter(Boolean).map(esc).join(" &middot; ");
+        if (parts) lines.push([`Cargo ${index + 1}`, parts]);
+      });
+      if (product.declared_value != null) lines.push(["Declared Value", Number(product.declared_value).toLocaleString()]);
+      if (product.weight != null) lines.push(["Weight", `${Number(product.weight).toLocaleString()}${product.weight_unit ? " " + esc(product.weight_unit) : ""}`]);
+      return lines;
+    }
+
+    if (product.cargo_type) lines.push(["Cargo Type", esc(product.cargo_type)]);
+    if (product.cargo_description) lines.push(["Cargo Description", esc(product.cargo_description)]);
+    const qty = product.quantity ?? product.cargo_quantity;
+    if (qty != null) lines.push(["Quantity", esc(qty)]);
+    if (product.declared_value_per_unit != null) lines.push(["Declared Value", Number(product.declared_value_per_unit).toLocaleString()]);
+    if (product.weight != null) lines.push(["Weight", `${Number(product.weight).toLocaleString()}${product.weight_unit ? " " + esc(product.weight_unit) : ""}`]);
+    if (product.special_requirements) lines.push(["Special Requirements", esc(product.special_requirements)]);
+    const containerClassSize = [product.container_type, product.container_size?.size].filter(Boolean).join(" / ");
+    if (containerClassSize) lines.push(["Container Class / Size", esc(containerClassSize)]);
+
+    return lines;
+  }
+
+  // Renders the cargo-detail sub-row for one RFP rate row - mirrors the
+  // fee_breakdown sub-row's markup immediately below it (same colspan/
+  // indentation/typography). Resilient by design: any lookup miss just
+  // means no sub-row, never a thrown error.
+  function rfpCargoDetailRowHtml(pr, rate) {
+    try {
+      const product = findRfpProductRow(pr, rate);
+      const lines = rfpCargoDetailLines(product, rate?.product_type);
+      if (!lines.length) return "";
+      return `
+                <tr class="border-t">
+                    <td colspan="6" class="py-1 pb-2 pl-4">
+                        <div class="space-y-0.5">
+                            ${lines.map(([label, value]) => `
+                            <div class="flex justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span>${label}</span>
+                                <span class="text-right">${value}</span>
+                            </div>`).join("")}
+                        </div>
+                    </td>
+                </tr>`;
+    } catch (e) {
+      return "";
+    }
+  }
 
   let currentProposalId = null;
   let currentProposalLead = null;
@@ -64,6 +187,21 @@
 
   function toggle(id, visible) {
     document.getElementById(id)?.classList.toggle("hidden", !visible);
+  }
+
+  // Post-action list refresh - on the two original pages #tableClientProposals
+  // is always present, so this is identical to the old `renderTable().reload()`
+  // call it replaces. On the merged Proposal Requests page
+  // (resources/views/pages/proposal_requests.blade.php) that table id doesn't
+  // exist - this file's own renderTable()/initClientProposalsPage() are a
+  // no-op there - so instead we fall back to a hook the consuming page sets
+  // (window.onClientProposalActionDone) to reload ITS OWN table.
+  function refreshProposalList() {
+    if (document.getElementById("tableClientProposals")) {
+      renderTable().reload();
+    } else if (typeof window.onClientProposalActionDone === "function") {
+      window.onClientProposalActionDone();
+    }
   }
 
   async function loadProposals() {
@@ -218,7 +356,7 @@
         const feeLines = r.fee_breakdown ?? [];
         const feeBreakdownRow = feeLines.length ? `
                 <tr class="border-t">
-                    <td colspan="5" class="py-1 pb-2 pl-4">
+                    <td colspan="6" class="py-1 pb-2 pl-4">
                         <div class="space-y-0.5">
                             ${feeLines.map((f) => `
                             <div class="flex justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
@@ -228,6 +366,7 @@
                         </div>
                     </td>
                 </tr>` : "";
+        const cargoDetailRow = rfpCargoDetailRowHtml(pr, r);
 
         return `
             <tr class="border-t">
@@ -235,8 +374,9 @@
                 <td class="py-1.5">${RFP_PRODUCT_TYPE_LABEL[r.product_type] ?? r.product_type ?? "-"}</td>
                 <td class="py-1.5 text-right">${Number(r.base_rate ?? 0).toLocaleString()}</td>
                 <td class="py-1.5 text-right">${rfpAdjustmentDisplay(r.adjustment)}</td>
-                <td class="py-1.5 text-right font-semibold">${Number(r.total_rate ?? 0).toLocaleString()}</td>
-            </tr>${feeBreakdownRow}`;
+                <td class="py-1.5 text-right">${Number(r.total_rate ?? 0).toLocaleString()}</td>
+                <td class="py-1.5 text-right font-semibold">${rfpGrandTotal(pr, r).toLocaleString()}</td>
+            </tr>${cargoDetailRow}${feeBreakdownRow}`;
       }).join("");
     } else {
       rfpRatesTable?.classList.add("hidden");
@@ -309,6 +449,17 @@
       rfpTermsSection.classList.toggle("hidden", !hasStandardTop && !hasCharterTop && !ancillaryFees.length);
     }
 
+    // RFP "Additional Note" (proposal_request.additional_notes) - the
+    // requester's free-text note to the approver, entered on the RFP
+    // wizard's Confirmation tab. Hidden entirely when empty.
+    const additionalNoteWrap = document.getElementById("cpmRfpAdditionalNote");
+    const additionalNote = pr?.additional_notes ?? "";
+    if (additionalNoteWrap) {
+      additionalNoteWrap.classList.toggle("hidden", !additionalNote);
+      const noteText = document.getElementById("cpmRfpAdditionalNoteText");
+      if (noteText) noteText.textContent = additionalNote;
+    }
+
     const additionalCharges = [
       ["include_special_charges", "Special Charges"],
       ["include_port_charges", "Port Charges"],
@@ -376,7 +527,7 @@
       title: successMessage,
     });
     closemodals();
-    renderTable().reload();
+    refreshProposalList();
   }
 
   // -----------------------------------------------------------------
@@ -584,7 +735,7 @@
         title: "Signed document uploaded — proposal accepted!",
       });
       closemodals();
-      renderTable().reload();
+      refreshProposalList();
     });
 
     document.getElementById("cpmCreateContractBtn")?.addEventListener("click", function () {
@@ -703,7 +854,7 @@
       showMessage({ status: "success", title: "Contract created" });
       closemodals();
       await openProposalModal(currentProposalDetail.id);
-      renderTable().reload();
+      refreshProposalList();
     });
 
     document.getElementById("cpmCreateClientMasterBtn")?.addEventListener("click", async function () {
@@ -768,4 +919,9 @@
     bindEvents();
   }
   window.initClientProposalsPage = initClientProposalsPage;
+  // Exposed so the merged Proposal Requests page (which has no
+  // #tableClientProposals, so initClientProposalsPage() above no-ops there)
+  // can still bind the shared #ClientProposalModal's action buttons once on
+  // its own init - see resources/js/logic_proposal_requests.js.
+  window.bindClientProposalModalEvents = bindEvents;
 })();

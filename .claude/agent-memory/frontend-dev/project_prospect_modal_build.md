@@ -211,3 +211,59 @@ containers.
   byte-for-byte what it was before this change. Didn't touch `createContractModal`/Create Contract logic
   in the same file (out of scope, still reads `p.rates` only) - worth flagging if contracts ever need to
   originate from RFP-sourced proposals too.
+- (2026-10-20 update — ownership/edit-rights gating + Reassign Owner) Backend added two booleans to
+  the `GET /api/crm/prospects/{uuid}` payload - `can_edit` (owner/in-reach team leader/superadmin)
+  and `can_reassign` (team leader/superadmin) - plus an eager-loaded `owner: {id, name, team_id}`
+  and `POST /api/crm/prospects/{uuid}/reassign-owner` (`{owner_id}`). Frontend-only pass (this one):
+  `prospect-modal.blade.php` gained `#pmViewOnlyBanner` (full-width, sits between the header and the
+  rail+content body since this modal's tab nav is a *vertical rail* - not a horizontal bar like RPM's
+  `#rfpAwaitingAssignmentBanner` - so "just under the tab bar" was interpreted as "just above the
+  rail+content row" to stay visible across every tab) + `applyProspectEditGating(modal, lead)` in
+  `logic_prospect_modal.js`, mirroring `applyAssignmentGating()`'s disabled-id-list + banner-toggle
+  shape. Gated ids: `pmSaveIdentityBtn`/`pmAddLocationBtn`/`pmSaveContactsBtn`/`pmAddContactBtn`/
+  `pmAddFreightBtn`/`pmAddTruckingBtn`/`pmAddCharterBtn`, plus already-rendered row deletes
+  `.pm-remove-location-row`/`.pm-remove-contact-row`/`.pm-remove-container-row`/
+  `.pm-remove-trucking-row`/`.pm-remove-charter-row` (verified via grep - the *card's own* remove
+  button, `.pm-remove-location`/`.pm-remove-contact`, was deliberately left out of the gated selector
+  since its card can only ever be reached through the already-gated Add button, so it can never be
+  open in read-only mode). Added a reset call `applyProspectEditGating(modal, null)` right after the
+  existing `updateTabGating(modal, {})` reset at the top of `openProspectModal()` (not explicitly
+  asked for, but necessary - without it, reopening this one persistent modal instance for a brand-new
+  prospect right after viewing a read-only existing one would leave every Add button permanently
+  disabled, since otherwise `applyProspectEditGating` is only ever called from the existing-lead
+  success branch).
+  `prospect-info-modal.blade.php`/`logic_prospect_info_modal.js`: `#pimSummaryEditBtn` now hidden
+  when `lead.can_edit === false`; new header-rail `#pimReassignBtn` (shown only when
+  `lead.can_reassign === true`) opens a new single-select `<x-side-modal id="reassignOwnerModal">`
+  added to `crm.blade.php` right after `<x-prospect-info-modal />` - a trimmed one-select copy of
+  `proposal_requests.blade.php`'s `assignOwnersModal`/`openAssignModal`/`saveAssignment` idiom
+  (own local `assignableUsersOptionsHtml` cache + `refreshSearchable()` helper, both copied into
+  `logic_prospect_info_modal.js` since it didn't have them yet - reuses the already-existing
+  `GET /api/crm/prospects/assignable-users` endpoint, no new list endpoint needed). After save,
+  reloads in place via the existing `reloadProspectInfo(uuid)` and also calls the real existing CRM
+  table reload hook `window.reloadCrmData?.()` (found by grepping `logic_crm.js` - the table itself
+  is a function-local `const table`, not a global handle; `window.reloadCrmData` is the one thing
+  that *is* exported, wrapping `renderTable().load(1)` + `renderCounts()`). Zero backend/controller
+  work done in this pass (out of lane) - this was built against the locked contract while a backend
+  pass added the two booleans + endpoint in parallel, not yet independently verified against a live
+  response.
+- (2026-10-20 update — Build Rate Matrix: real freight base rate for Container rows, Ancillary
+  popup pricing preview dropped) Two small independent changes in the same file. (1) The Add
+  Ancillary popup's live Base Value/Subtotal preview (`updateAncillaryPreview()`, the
+  `#asmBaseValuePreview`/`#asmSubtotalPreview` `<p>`s, and the table's Base Value/Subtotal columns)
+  was removed entirely from `ancillary-services-modal.blade.php` - that tab now only ever captures
+  qty/unit/remarks, matching the brief's "pricing deferred to Build Rate Matrix" framing; nothing
+  else in `addAncillary()`'s payload changed (it never sent base_value/total_value - backend already
+  computes those). (2) `openProductSpecificationModal(type, id)` is now `async` (its one caller, the
+  row-click listener near line ~1966, doesn't await it - fire-and-forget is fine here since it only
+  drives modal population). New branch: when `savedFeeBreakdown(pr, row)` is null AND `type ===
+  "container"`, it now awaits a new `containerFreightFeeBreakdown(row)` helper that GETs
+  `/api/crm/prospects/{uuid}/proposalRequests/{id}/products/containers/{row.id}/rate` (envelope
+  `{success, data: {frt, is_door_origin}}`) and builds `[{detail: "Base Freight Charge", base: frt||0,
+  adjustment: 0}, …optionally "Trucking Fee (Door - Origin)" at base 0 if is_door_origin === true]` -
+  non-container types (rolling_cargo/loose_cargo/trucking/charter) are untouched, still
+  `sampleFeeBreakdown()`. This is the first real (non-placeholder) rate source in the Build Rate
+  Matrix tab; if a later pass extends real rates to rolling_cargo/loose_cargo/trucking/charter,
+  expect a parallel `{frt-equivalent, is_door_origin-equivalent}` contract per type and follow this
+  same `savedFeeBreakdown ?? real-fetch-by-type ?? sampleFeeBreakdown` branching shape rather than
+  inventing a new one.

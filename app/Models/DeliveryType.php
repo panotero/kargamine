@@ -23,11 +23,6 @@ class DeliveryType extends Model
         'includes_destination_trucking' => 'boolean',
     ];
 
-    public function truckingTariffs(): HasMany
-    {
-        return $this->hasMany(TruckingTariff::class, 'delivery_type_id', 'delivery_type_id');
-    }
-
     public function bookingLines(): HasMany
     {
         return $this->hasMany(BookingLine::class, 'delivery_type_id', 'delivery_type_id');

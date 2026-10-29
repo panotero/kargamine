@@ -119,14 +119,14 @@ class RateResolutionService
 
             if ($deliveryType->includes_origin_trucking) {
                 $originTrucking = (float) (TruckingTariff::where('area_id', $line['origin_area_id'])
-                    ->where('delivery_type_id', $deliveryType->delivery_type_id)
+                    ->where('port_id', $line['origin_port_id'])
                     ->activeOn($bookingDate)
                     ->value('amount') ?? 0);
             }
 
             if ($deliveryType->includes_destination_trucking) {
                 $destinationTrucking = (float) (TruckingTariff::where('area_id', $line['destination_area_id'])
-                    ->where('delivery_type_id', $deliveryType->delivery_type_id)
+                    ->where('port_id', $line['destination_port_id'])
                     ->activeOn($bookingDate)
                     ->value('amount') ?? 0);
             }

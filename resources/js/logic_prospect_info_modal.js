@@ -106,6 +106,11 @@
   // read-only via window.prospectInfo.getCurrentLead() for the standalone
   // Add Location/Contact/Requirement modals (logic_prospect_add_modals.js).
   let currentLead = null;
+  // ASSIGNABLE USERS for the Reassign Owner select - fetched once ever,
+  // same "fetch once, paint per open" pattern as logic_proposal_requests.js's
+  // own copy of this cache (a separate page/file, so a separate cache).
+  let assignableUsersOptionsHtml = "";
+  let assignableUsersLoaded = false;
   // Snapshot of the 4 edit-mode field values taken when Edit was clicked -
   // compared against on every keystroke/change to decide whether Save
   // should be enabled (see checkSummaryDirty()).
@@ -123,6 +128,77 @@
           "'": "&#39;",
         })[c],
     );
+  }
+
+  function refreshSearchable(el) {
+    el?._searchableSelect?.refresh();
+  }
+
+  // ------------------------------------------------------------------
+  // REASSIGN OWNER - shares the ProspectModal's "assignable-users" list
+  // (GET /api/crm/prospects/assignable-users) with logic_proposal_requests.js;
+  // same "fetch once ever, paint per open" pattern, own local cache per file.
+  // ------------------------------------------------------------------
+  async function ensureAssignableUsersLoaded() {
+    if (assignableUsersLoaded) return;
+    const response = await apiCall({
+      mode: "GET",
+      url: "/api/crm/prospects/assignable-users",
+    });
+    if (!response.success) return;
+    assignableUsersOptionsHtml =
+      '<option value="">Select owner</option>' +
+      response.data.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join("");
+    assignableUsersLoaded = true;
+  }
+
+  async function openReassignModal() {
+    const lead = currentLead;
+    if (!lead) return;
+    const modal = document.getElementById("reassignOwnerModal");
+    if (!modal) return;
+
+    await ensureAssignableUsersLoaded();
+
+    modal.querySelector("#reassignCompanyName").textContent =
+      lead.company?.company_name || lead.contact_name || "-";
+
+    const sel = modal.querySelector("#reassignOwnerSelect");
+    sel.innerHTML = assignableUsersOptionsHtml;
+    sel.value = String(lead.owner?.id ?? "");
+    refreshSearchable(sel);
+
+    window.initSideModal({ modalId: "reassignOwnerModal" });
+  }
+
+  async function saveReassign(button) {
+    const lead = currentLead;
+    if (!lead) return;
+    const modal = document.getElementById("reassignOwnerModal");
+    const ownerId = modal.querySelector("#reassignOwnerSelect").value;
+
+    if (!ownerId) {
+      showMessage({ status: "error", title: "Select a new owner." });
+      return;
+    }
+
+    const response = await apiCall({
+      mode: "POST",
+      isJson: true,
+      payload: { owner_id: ownerId },
+      url: `/api/crm/prospects/${lead.uuid}/reassign-owner`,
+      button,
+    });
+
+    if (!response.success) {
+      showMessage({ status: "error", title: "Reassign failed", message: response.message ?? "" });
+      return;
+    }
+
+    showMessage({ status: "success", title: "Owner Reassigned" });
+    window.closeSideModal("reassignOwnerModal");
+    await reloadProspectInfo(lead.uuid);
+    window.reloadCrmData?.();
   }
 
   function formatLocationLabel(loc) {
@@ -203,13 +279,15 @@
       )
       .join("");
 
-    // A prospect starts genuinely unassigned (assigned_to null) until
-    // Management staffs it via assignOwners() - no exception for whoever
-    // created it - so "Request for Proposal" stays disabled with an
-    // always-visible explanation rather than failing with a silent 403.
-    const hasAssignedCsr = Boolean(lead.assigned_to);
-    modal.querySelector("#pimRequestProposalBtn").disabled = !hasAssignedCsr;
-    modal.querySelector("#pimRequestProposalHint").classList.toggle("hidden", hasAssignedCsr);
+    // Starting a request is gated the same as editing the prospect itself
+    // (creator, or an in-reach team leader) - NOT on whether Management has
+    // already staffed a CSR/RM (lead.assigned_to). That staffing is a
+    // separate, later step on the REQUEST this button creates, not a
+    // precondition for creating it. See authorizeProspectEdit() in
+    // ProspectController::storeProposalRequestNew().
+    const canRequestProposal = lead.can_edit !== false;
+    modal.querySelector("#pimRequestProposalBtn").disabled = !canRequestProposal;
+    modal.querySelector("#pimRequestProposalHint").classList.toggle("hidden", canRequestProposal);
   }
 
   async function loadSummaryEditLookups(modal) {
@@ -347,7 +425,7 @@
   // ------------------------------------------------------------------
   // saveStage1 requires at least one address - resending the full list
   // minus this one, same replace-all contract Add Location already uses.
-  async function removeLocation(locationId) {
+  async function removeLocation(locationId, button) {
     const lead = currentLead;
     if (!lead) return;
 
@@ -389,6 +467,7 @@
       isJson: true,
       payload,
       url: "/api/crm/prospects/stage1",
+      button,
     });
     if (!response.success) {
       showMessage({
@@ -424,7 +503,7 @@
 
     wrap.querySelectorAll(".pim-remove-location").forEach((btn) => {
       btn.addEventListener("click", () =>
-        removeLocation(Number(btn.dataset.id)),
+        removeLocation(Number(btn.dataset.id), btn),
       );
     });
   }
@@ -435,7 +514,7 @@
   // The contacts endpoint is replace-all too, and has no "at least one"
   // constraint (contacts is nullable server-side) - resending the full
   // list minus this one, same shape Add Contact already sends.
-  async function removeContact(contactId) {
+  async function removeContact(contactId, button) {
     const lead = currentLead;
     if (!lead) return;
 
@@ -463,6 +542,7 @@
       isJson: true,
       payload: { contacts: remaining },
       url: `/api/crm/prospects/${lead.uuid}/contacts`,
+      button,
     });
     if (!response.success) {
       showMessage({
@@ -524,7 +604,7 @@
 
     wrap.querySelectorAll(".pim-remove-contact").forEach((btn) => {
       btn.addEventListener("click", () =>
-        removeContact(Number(btn.dataset.id)),
+        removeContact(Number(btn.dataset.id), btn),
       );
     });
   }
@@ -623,7 +703,7 @@
   // Shared DELETE for all three Requirements-tab tables - `kind` is the
   // route segment (containers/truckings/charters), matching the append-one
   // endpoints' own naming.
-  async function removeRequirementRow(kind, id) {
+  async function removeRequirementRow(kind, id, button) {
     const lead = currentLead;
     if (!lead) return;
 
@@ -633,6 +713,7 @@
     const response = await apiCall({
       mode: "DELETE",
       url: `/api/crm/prospects/${lead.uuid}/proposalRequest/${kind}/${id}`,
+      button,
     });
     if (!response.success) {
       showMessage({ status: "error", title: "Error Removing", message: response.message ?? "" });
@@ -656,19 +737,19 @@
     const cBody = modal.querySelector("#pimContainersTableBody");
     cBody.innerHTML = containers.map(containerRowHtml).join("");
     cBody.querySelectorAll(".pim-remove-container-row").forEach((btn) =>
-      btn.addEventListener("click", () => removeRequirementRow("containers", btn.closest("tr").dataset.id))
+      btn.addEventListener("click", () => removeRequirementRow("containers", btn.closest("tr").dataset.id, btn))
     );
 
     const tBody = modal.querySelector("#pimTruckingsTableBody");
     tBody.innerHTML = truckings.map(truckingRowHtml).join("");
     tBody.querySelectorAll(".pim-remove-trucking-row").forEach((btn) =>
-      btn.addEventListener("click", () => removeRequirementRow("truckings", btn.closest("tr").dataset.id))
+      btn.addEventListener("click", () => removeRequirementRow("truckings", btn.closest("tr").dataset.id, btn))
     );
 
     const chBody = modal.querySelector("#pimChartersTableBody");
     chBody.innerHTML = charters.map(charterRowHtml).join("");
     chBody.querySelectorAll(".pim-remove-charter-row").forEach((btn) =>
-      btn.addEventListener("click", () => removeRequirementRow("charters", btn.closest("tr").dataset.id))
+      btn.addEventListener("click", () => removeRequirementRow("charters", btn.closest("tr").dataset.id, btn))
     );
   }
 
@@ -679,7 +760,7 @@
   // Read/writes the same proposal_request_locations rows as that wizard -
   // see logic_prospect_request_proposal.js.)
   // ------------------------------------------------------------------
-  async function removeOdLocation(id) {
+  async function removeOdLocation(id, button) {
     const lead = currentLead;
     if (!lead) return;
 
@@ -700,6 +781,7 @@
     const response = await apiCall({
       mode: "DELETE",
       url: `/api/crm/prospects/${lead.uuid}/proposalRequests/${lead.proposal_request.id}/locations/${id}`,
+      button,
     });
     if (!response.success) {
       showMessage({
@@ -753,7 +835,7 @@
 
     modal.querySelectorAll(".pim-remove-od").forEach((btn) => {
       btn.addEventListener("click", () =>
-        removeOdLocation(Number(btn.dataset.id)),
+        removeOdLocation(Number(btn.dataset.id), btn),
       );
     });
   }
@@ -847,6 +929,29 @@
       lead.company?.company_name || lead.contact_name || "Prospect";
     modal.querySelector("#pimSubtitle").textContent = lead.source || "";
 
+    const editBtn = modal.querySelector("#pimSummaryEditBtn");
+    if (editBtn) editBtn.classList.toggle("hidden", lead.can_edit === false);
+    modal.querySelector("#pimReassignBtn")?.classList.toggle("hidden", lead.can_reassign !== true);
+
+    // These "+ Add X" triggers all end up at a mutating ProspectController
+    // endpoint gated by the same canBeEditedBy() check (saveStage1/saveContacts/
+    // storeProposalRequestContainer/Trucking/Charter) - hide them up front
+    // for a non-owner instead of letting the click reach that endpoint's
+    // 403. (#pimRequestProposalBtn is deliberately NOT included here - the
+    // RFP wizard tab is gated by the separate, pre-existing
+    // authorizeProspectOwnership() tier, orthogonal to this one.)
+    const readOnly = lead.can_edit === false;
+    [
+      "pimAddLocationBtn",
+      "pimAddOdBtn",
+      "pimAddContactBtn",
+      "pimAddFreightBtn",
+      "pimAddTruckingBtn",
+      "pimAddCharterBtn",
+    ].forEach((id) => {
+      modal.querySelector(`#${id}`)?.classList.toggle("hidden", readOnly);
+    });
+
     renderContactSummary(modal, lead);
     renderRequestedProposals(modal, lead);
     renderActivityTimeline(modal, lead);
@@ -854,6 +959,13 @@
     renderContactsSummary(modal, lead);
     renderRequirementsSummary(modal, lead);
     renderOriginDestinationTab(modal, lead);
+
+    // Per-row "✕ Remove" buttons were just (re)built from scratch by the
+    // render*Summary() calls above - disabling them has to happen after,
+    // not before, or every row rendered on this pass would be missed.
+    modal.querySelectorAll(
+      ".pim-remove-location, .pim-remove-contact, .pim-remove-container-row, .pim-remove-trucking-row, .pim-remove-charter-row, .pim-remove-od"
+    ).forEach((el) => { el.disabled = readOnly; });
   }
 
   function openProspectInfoModal(lead) {
@@ -902,6 +1014,22 @@
     modal
       .querySelector("#pimSummaryEditBtn")
       .addEventListener("click", () => enterSummaryEditMode(modal));
+    modal
+      .querySelector("#pimReassignBtn")
+      ?.addEventListener("click", () => openReassignModal());
+
+    // Reassign Owner side-modal (resources/views/pages/crm.blade.php) -
+    // searchable select init follows logic_proposal_requests.js's own
+    // "once per page init" pattern rather than lazily on first open.
+    const reassignModal = document.getElementById("reassignOwnerModal");
+    if (reassignModal) {
+      window.makeSearchableSelect(reassignModal.querySelector("#reassignOwnerSelect"));
+      reassignModal
+        .querySelector("#reassignSaveBtn")
+        .addEventListener("click", function () {
+          saveReassign(this);
+        });
+    }
     modal
       .querySelector("#pimSummaryCancelBtn")
       .addEventListener("click", () => exitSummaryEditMode(modal));

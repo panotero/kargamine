@@ -138,7 +138,7 @@
                 @endif
 
                 <div
-                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden"
+                    class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
                     <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
                         <thead class="bg-zinc-50 dark:bg-zinc-800">
                             <tr data-table-head="{{ $key }}"></tr>
@@ -380,7 +380,18 @@
                 </button>
             </div>
             <p class="text-xs text-zinc-400 mb-2">e.g. Caticlan Port, Dumaguit Port</p>
-            <div id="locationPortRows" class="space-y-2"></div>
+            <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead class="bg-zinc-50 dark:bg-zinc-800/60">
+                        <tr>
+                            <th class="text-left font-medium text-zinc-500 dark:text-zinc-400 px-3 py-2">Port Name</th>
+                            <th class="w-20 px-3 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationPortsTableBody" class="divide-y divide-zinc-200 dark:divide-zinc-700"></tbody>
+                </table>
+                <p id="locationPortsEmptyState" class="text-xs text-zinc-400 text-center py-3 hidden">No ports added yet.</p>
+            </div>
         </div>
 
         <div>
@@ -394,8 +405,19 @@
                     Add Area
                 </button>
             </div>
-            <p class="text-xs text-zinc-400 mb-2">Trucking zones within this location, e.g. Laguna - Binan. Pick Province then Municipality, or type directly.</p>
-            <div id="locationAreaRows" class="space-y-2"></div>
+            <p class="text-xs text-zinc-400 mb-2">Trucking zones within this location, e.g. Laguna - Binan.</p>
+            <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead class="bg-zinc-50 dark:bg-zinc-800/60">
+                        <tr>
+                            <th class="text-left font-medium text-zinc-500 dark:text-zinc-400 px-3 py-2">Area Name</th>
+                            <th class="w-20 px-3 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationAreasTableBody" class="divide-y divide-zinc-200 dark:divide-zinc-700"></tbody>
+                </table>
+                <p id="locationAreasEmptyState" class="text-xs text-zinc-400 text-center py-3 hidden">No serviceable areas added yet.</p>
+            </div>
         </div>
     </form>
 
@@ -411,6 +433,9 @@
         </button>
     </div>
 </x-side-modal>
+
+<x-add-port-modal />
+<x-add-area-modal />
 
 {{-- Special Charge modal - bespoke, same idea as the Location modal's Ports/
      Serviceable Areas: the flat base_value field is gone, replaced by a
@@ -543,6 +568,95 @@
         <button type="submit" form="laneForm" id="laneFormSubmitBtn"
             class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
             Save Lane
+        </button>
+    </div>
+</x-side-modal>
+
+{{-- Trucking Tariff modal - a tariff is "cost to truck between this
+     Serviceable Area and this Port", not keyed by delivery type (a trucking
+     leg is always attached to a door end, so the same amount applies
+     whether that door end is the origin or destination). Location is a
+     UI-only cascade key here (not itself stored) - picking it filters the
+     Area/Port selects down to that Location's own catalog rows, same
+     /api/serviceableAreas?location_id=/'/api/ports?location_id= filters the
+     Location modal's own Add Area/Add Port popups already rely on. --}}
+<x-side-modal id="truckingTariffFormModal" panelClass="w-full md:w-[560px] lg:w-[700px]">
+    <div
+        class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <h3 id="truckingTariffFormTitle" class="text-base font-semibold text-zinc-900 dark:text-white">Add Trucking Tariff</h3>
+        <button type="button" id="truckingTariffFormCloseBtn"
+            class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <form id="truckingTariffForm" class="px-5 py-4 space-y-4">
+        <input type="hidden" id="truckingTariffIdInput">
+
+        <div id="truckingTariffAddFields" class="space-y-4">
+            {{-- No Location field - a trucking tariff is just "cost between
+                 this Serviceable Area and this Port", and gating by Location
+                 just reintroduces confusion since some areas are filed as a
+                 serviceable area under a completely different Location than
+                 the one that owns their nearby ports. Area lists every
+                 serviceable area app-wide (already labeled "Province -
+                 Municipality" from the area_name itself); picking one then
+                 filters Port down to that area's own Location, since that's
+                 the trucking-rate fetch's actual scope (area_id + port_id). --}}
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Serviceable Area
+                    <span class="req-asterisk">*</span></label>
+                <select id="truckingTariffAreaInput" required
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    <option value="">Select Serviceable Area</option>
+                </select>
+            </div>
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Port <span
+                        class="req-asterisk">*</span></label>
+                <select id="truckingTariffPortInput" required disabled
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+                    <option value="">Select Serviceable Area first</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="truckingTariffReadonlySummary" class="hidden rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Amount (₱) <span
+                        class="req-asterisk">*</span></label>
+                <input type="text" inputmode="decimal" id="truckingTariffAmountInput" required
+                    class="currency-input w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div id="truckingTariffEffectiveDateWrap" class="border-l-2 border-orange-400 dark:border-orange-600 pl-3">
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Effective Date <span
+                        class="req-asterisk">*</span></label>
+                <input type="date" id="truckingTariffEffectiveDateInput" required
+                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div class="flex items-end">
+                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 pb-2">
+                    <input type="checkbox" id="truckingTariffActiveInput" checked
+                        class="rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500">
+                    Active
+                </label>
+            </div>
+        </div>
+    </form>
+
+    <div
+        class="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-end gap-2">
+        <button type="button" id="truckingTariffFormCancelBtn"
+            class="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+            Cancel
+        </button>
+        <button type="submit" form="truckingTariffForm" id="truckingTariffFormSubmitBtn"
+            class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+            Save Trucking Tariff
         </button>
     </div>
 </x-side-modal>
@@ -1155,9 +1269,9 @@
                             `${row.serviceable_area?.location?.name ?? '-'} / ${row.serviceable_area?.area_name ?? '-'}`
                     },
                     {
-                        key: 'delivery_type',
-                        label: 'Delivery Type',
-                        render: (row) => row.delivery_type?.code ?? '-'
+                        key: 'port',
+                        label: 'Port',
+                        render: (row) => row.port?.name ?? '-'
                     },
                     {
                         key: 'amount',
@@ -1175,45 +1289,7 @@
                         render: (row) => activeBadge(row.is_active)
                     },
                 ],
-                fields: [{
-                        name: 'area_id',
-                        label: 'Serviceable Area',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'serviceableAreas'
-                    },
-                    {
-                        name: 'delivery_type_id',
-                        label: 'Delivery Type',
-                        type: 'select',
-                        required: true,
-                        optionsSource: 'deliveryTypes'
-                    },
-                    {
-                        name: 'amount',
-                        label: 'Amount (₱)',
-                        type: 'currency',
-                        required: true
-                    },
-                    {
-                        name: 'effective_date',
-                        label: 'Effective Date',
-                        type: 'date',
-                        required: true
-                    },
-                ],
-                editFields: [{
-                        name: 'amount',
-                        label: 'Amount (₱)',
-                        type: 'currency',
-                        required: true
-                    },
-                    {
-                        name: 'is_active',
-                        label: 'Active',
-                        type: 'checkbox'
-                    },
-                ],
+                fields: [],
             },
 
             vatRates: {
@@ -1629,7 +1705,7 @@
                         btn) => {
                         btn.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            deleteRow(key, btn.dataset.deleteId);
+                            deleteRow(key, btn.dataset.deleteId, btn);
                         });
                     });
 
@@ -1796,6 +1872,7 @@
             if (key === 'locations') return openLocationForm(id);
             if (key === 'lanes') return openLaneForm(id);
             if (key === 'specialCharges') return openSpecialChargeForm(id);
+            if (key === 'truckingTariffs') return openTruckingTariffForm(id);
             const config = ENTITY_CONFIG[key];
             editingId = id;
             formEntityKey = key;
@@ -1861,7 +1938,7 @@
             getOrCreateTable(formEntityKey).reload();
         }
 
-        async function deleteRow(key, id) {
+        async function deleteRow(key, id, button) {
             const config = ENTITY_CONFIG[key];
 
             if (!confirm(`Delete this ${config.label}? This cannot be undone.`)) return;
@@ -1873,6 +1950,7 @@
                     _method: 'DELETE'
                 },
                 url: config.deleteUrl(id),
+                button,
             });
 
             if (!response.success) {
@@ -1910,6 +1988,8 @@
                         openLaneForm();
                     } else if (btn.dataset.entity === 'specialCharges') {
                         openSpecialChargeForm();
+                    } else if (btn.dataset.entity === 'truckingTariffs') {
+                        openTruckingTariffForm();
                     } else {
                         openAddForm(btn.dataset.entity);
                     }
@@ -2217,59 +2297,6 @@
             select.disabled = false;
         }
 
-        // Wires one Serviceable Area row's Province/Municipality selects -
-        // picking both composes "Province - Municipality" into that row's
-        // own area_name text input (which stays directly editable by hand
-        // regardless, and is the only field actually submitted). Works in
-        // either order: pick Province first to narrow Municipality down to
-        // its towns, or search Municipality directly (nationwide) and
-        // Province auto-fills to match.
-        async function bindAreaRowCascade(row) {
-            const provinceSelect = row.querySelector('.area-province-select');
-            const municipalitySelect = row.querySelector('.area-municipality-select');
-            const textInput = row.querySelector('[data-field="area_name"]');
-
-            const provinces = await loadProvinces();
-            if (!provinces.length) return; // degrade silently - text input stays plain manual entry
-
-            populatePsgcSelect(provinceSelect, provinces, 'Province');
-            makeSearchableSelect(provinceSelect);
-            makeSearchableSelect(municipalitySelect);
-
-            resetPsgcSelect(municipalitySelect, 'Loading...');
-            refreshSearchable(municipalitySelect);
-            loadAllMunicipalities().then((all) => {
-                // Only take the full nationwide list if the admin hasn't
-                // already picked a Province while this was loading - that
-                // case is handled by the change handler below instead.
-                if (provinceSelect.value) return;
-                populateMunicipalitySelect(municipalitySelect, all, 'Municipality');
-                refreshSearchable(municipalitySelect);
-            });
-
-            provinceSelect.addEventListener('change', async function () {
-                const provinceCode = this.selectedOptions[0]?.dataset.code;
-                resetPsgcSelect(municipalitySelect, 'Loading...');
-                refreshSearchable(municipalitySelect);
-
-                const all = await loadAllMunicipalities();
-                const municipalities = provinceCode ? all.filter((m) => m.provinceCode === provinceCode) : all;
-                populateMunicipalitySelect(municipalitySelect, municipalities, 'Municipality');
-                refreshSearchable(municipalitySelect);
-            });
-
-            municipalitySelect.addEventListener('change', function () {
-                const provinceName = this.selectedOptions[0]?.dataset.provinceName;
-                if (provinceName && provinceSelect.value !== provinceName) {
-                    provinceSelect.value = provinceName;
-                    refreshSearchable(provinceSelect);
-                }
-                if (provinceSelect.value && this.value) {
-                    textInput.value = `${provinceSelect.value} - ${this.value}`;
-                }
-            });
-        }
-
         // -----------------------------------------------------------------
         // Location Name - single text input with native <datalist>
         // suggestions, built from the same cached loadProvinces() list as
@@ -2286,14 +2313,28 @@
         });
 
         // -----------------------------------------------------------------
-        // Location form - Ports and Serviceable Areas are managed as
-        // nested multi-row lists here (same catalogRowHtml pattern as the
-        // Container modal's Sizes/Classes), instead of their own tabs.
-        // Each row optionally carries the existing port_id/area_id (hidden
-        // input) so Location::syncPorts()/syncServiceableAreas() can tell
-        // an edit from a brand new row.
+        // Location form - Ports and Serviceable Areas are each rendered as
+        // a table inside the Location modal (#locationPortsTableBody /
+        // #locationAreasTableBody). Adding or editing an entry opens its
+        // own small popup (AddPortModal / AddAreaModal, markup in the
+        // add-port-modal/add-area-modal Blade components included right
+        // after this page's locationFormModal side-modal) instead of
+        // appending an inline-editable row. State lives in the locationPorts/
+        // locationAreas arrays below (not the DOM) until the whole Location
+        // form is submitted together - a brand new Location has no id yet
+        // to attach independently-saved ports/areas to, so these still
+        // ride along in the same ports[]/serviceable_areas[] payload
+        // Location::syncPorts()/syncServiceableAreas() already expects.
+        // idRowHtml()/collectIdRows() below stay in place for the Container
+        // modal's Sizes/Classes rows and the Special Charge rate rows
+        // further down the file, which still use the old inline-row
+        // pattern - only Ports/Serviceable Areas moved off of it.
         // -----------------------------------------------------------------
         let editingLocationId = null;
+        let locationPorts = [];
+        let locationAreas = [];
+        let editingPortIndex = null;
+        let editingAreaIndex = null;
 
         function idRowHtml(idField, textField, placeholder) {
             return `
@@ -2310,59 +2351,203 @@
     `;
         }
 
-        function addPortRow(name = '', portId = null) {
-            const wrap = document.getElementById('locationPortRows');
-            wrap.insertAdjacentHTML('beforeend', idRowHtml('port_id', 'name', 'e.g. Caticlan Port'));
-            const row = wrap.lastElementChild;
-            row.querySelector('[data-field="name"]').value = name;
-            row.querySelector('[data-field="port_id"]').value = portId ?? '';
-        }
-
-        // Serviceable Area rows get a Province + Municipality picker above
-        // the plain area_name text input (unlike Port rows, which stay
-        // idRowHtml()'s plain text-only shape) - see bindAreaRowCascade()
-        // above. data-catalog-row stays on the OUTER wrapper here so
-        // removeCatalogRowOnClick() below removes the whole row (selects
-        // included), not just the inner id+text+remove slice.
-        function areaRowHtml() {
+        function rowActionButtonsHtml(index, kind) {
             return `
-        <div class="catalog-row space-y-1.5" data-catalog-row>
-            <div class="grid grid-cols-2 gap-2">
-                <select class="area-province-select rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm">
-                    <option value="">Province</option>
-                </select>
-                <select class="area-municipality-select rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-2 py-1.5 text-sm" disabled>
-                    <option value="">Municipality</option>
-                </select>
-            </div>
-            <div class="flex items-center gap-2">
-                <input type="hidden" data-field="area_id">
-                <input type="text" data-field="area_name" required placeholder="e.g. Laguna - Binan"
-                       class="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500">
-                <button type="button" class="remove-catalog-row text-zinc-400 hover:text-red-600 p-1">
+            <div class="flex items-center justify-end gap-1">
+                <button type="button" data-action="edit-${kind}" data-index="${index}" class="text-zinc-400 hover:text-orange-600 p-1">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                    </svg>
+                </button>
+                <button type="button" data-action="remove-${kind}" data-index="${index}" class="text-zinc-400 hover:text-red-600 p-1">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
-            </div>
-        </div>
-    `;
+            </div>`;
         }
 
-        function addAreaRow(name = '', areaId = null) {
-            const wrap = document.getElementById('locationAreaRows');
-            wrap.insertAdjacentHTML('beforeend', areaRowHtml());
-            const row = wrap.lastElementChild;
-            row.querySelector('[data-field="area_name"]').value = name;
-            row.querySelector('[data-field="area_id"]').value = areaId ?? '';
-            bindAreaRowCascade(row);
+        function renderPortsTable() {
+            const body = document.getElementById('locationPortsTableBody');
+            body.innerHTML = locationPorts.map((p, i) => `
+                <tr>
+                    <td class="px-3 py-2 text-zinc-900 dark:text-zinc-100">${p.name}</td>
+                    <td class="px-3 py-2">${rowActionButtonsHtml(i, 'port')}</td>
+                </tr>
+            `).join('');
+            document.getElementById('locationPortsEmptyState').classList.toggle('hidden', locationPorts.length > 0);
         }
 
-        document.getElementById('locationPortRows').addEventListener('click', removeCatalogRowOnClick);
-        document.getElementById('locationAreaRows').addEventListener('click', removeCatalogRowOnClick);
+        function renderAreasTable() {
+            const body = document.getElementById('locationAreasTableBody');
+            body.innerHTML = locationAreas.map((a, i) => `
+                <tr>
+                    <td class="px-3 py-2 text-zinc-900 dark:text-zinc-100">${a.area_name}</td>
+                    <td class="px-3 py-2">${rowActionButtonsHtml(i, 'area')}</td>
+                </tr>
+            `).join('');
+            document.getElementById('locationAreasEmptyState').classList.toggle('hidden', locationAreas.length > 0);
+        }
 
-        document.getElementById('addPortRowBtn').addEventListener('click', () => addPortRow());
-        document.getElementById('addAreaRowBtn').addEventListener('click', () => addAreaRow());
+        function openAddPortModal(index = null) {
+            editingPortIndex = index;
+            document.getElementById('addPortModalTitle').textContent = index === null ? 'Add Port' : 'Edit Port';
+            document.getElementById('addPortNameInput').value = index === null ? '' : locationPorts[index].name;
+            initModal({ modalId: 'AddPortModal' });
+        }
+
+        document.getElementById('locationPortsTableBody').addEventListener('click', async (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const index = Number(btn.dataset.index);
+
+            if (btn.dataset.action === 'edit-port') {
+                openAddPortModal(index);
+                return;
+            }
+
+            if (btn.dataset.action === 'remove-port') {
+                if (locationPorts[index].port_id) {
+                    const confirmed = await window.customConfirm('Remove this port? Any pricing built only on it (lane tariff rates, port charges, handling fees, trucking tariffs) will be deleted too once saved. This cannot be undone.');
+                    if (!confirmed) return;
+                }
+                locationPorts.splice(index, 1);
+                renderPortsTable();
+            }
+        });
+
+        document.getElementById('addPortRowBtn').addEventListener('click', () => openAddPortModal());
+        document.getElementById('addPortSaveBtn').addEventListener('click', () => {
+            const name = document.getElementById('addPortNameInput').value.trim();
+            if (!name) return;
+
+            if (editingPortIndex === null) {
+                locationPorts.push({ name, port_id: null });
+            } else {
+                locationPorts[editingPortIndex].name = name;
+            }
+            renderPortsTable();
+            closeModal('AddPortModal');
+        });
+
+        // Province/Municipality PSGC cascade for the Add Area popup - wired
+        // once here (not once per row like the old inline-row version,
+        // since there's now only one instance of these selects to wire).
+        // loadProvinces()/loadMunicipalities()/loadAllMunicipalities()
+        // below already cache their results for the page session,
+        // including a synthetic "Metro Manila (NCR)" province entry the
+        // PSGC API itself omits - picking both selects composes "Province
+        // - Municipality" into the Area Name input, which stays directly
+        // editable by hand regardless and is the only field actually
+        // submitted.
+        let areaCascadeBound = false;
+        async function bindAreaCascadeOnce() {
+            if (areaCascadeBound) return;
+            areaCascadeBound = true;
+
+            const provinceSelect = document.getElementById('addAreaProvinceSelect');
+            const municipalitySelect = document.getElementById('addAreaMunicipalitySelect');
+            const textInput = document.getElementById('addAreaNameInput');
+
+            const provinces = await loadProvinces();
+            if (!provinces.length) return; // degrade silently - text input stays plain manual entry
+
+            populatePsgcSelect(provinceSelect, provinces, 'Province');
+            makeSearchableSelect(provinceSelect);
+            makeSearchableSelect(municipalitySelect);
+
+            resetPsgcSelect(municipalitySelect, 'Loading...');
+            refreshSearchable(municipalitySelect);
+            loadAllMunicipalities().then((all) => {
+                if (provinceSelect.value) return;
+                populateMunicipalitySelect(municipalitySelect, all, 'Municipality');
+                refreshSearchable(municipalitySelect);
+            });
+
+            provinceSelect.addEventListener('change', async function () {
+                const provinceCode = this.selectedOptions[0]?.dataset.code;
+                resetPsgcSelect(municipalitySelect, 'Loading...');
+                refreshSearchable(municipalitySelect);
+
+                const all = await loadAllMunicipalities();
+                // Strip provinceName once a specific Province is selected -
+                // populateMunicipalitySelect() only suffixes "(Province)"
+                // when an item carries that field, and here it'd just
+                // redundantly repeat whatever's already picked above (e.g.
+                // "Antipolo (Rizal)" right under a Province select already
+                // showing "Rizal").
+                const municipalities = provinceCode
+                    ? all.filter((m) => m.provinceCode === provinceCode).map(({ provinceName, ...m }) => m)
+                    : all;
+                populateMunicipalitySelect(municipalitySelect, municipalities, 'Municipality');
+                refreshSearchable(municipalitySelect);
+            });
+
+            municipalitySelect.addEventListener('change', function () {
+                const provinceName = this.selectedOptions[0]?.dataset.provinceName;
+                if (provinceName && provinceSelect.value !== provinceName) {
+                    provinceSelect.value = provinceName;
+                    refreshSearchable(provinceSelect);
+                }
+                if (provinceSelect.value && this.value) {
+                    textInput.value = `${provinceSelect.value} - ${this.value}`;
+                }
+            });
+        }
+
+        function resetAreaCascadeSelects() {
+            const provinceSelect = document.getElementById('addAreaProvinceSelect');
+            const municipalitySelect = document.getElementById('addAreaMunicipalitySelect');
+            if (provinceSelect) { provinceSelect.value = ''; refreshSearchable(provinceSelect); }
+            if (municipalitySelect) { municipalitySelect.value = ''; refreshSearchable(municipalitySelect); }
+        }
+
+        function openAddAreaModal(index = null) {
+            editingAreaIndex = index;
+            document.getElementById('addAreaModalTitle').textContent = index === null ? 'Add Serviceable Area' : 'Edit Serviceable Area';
+            // Only the free-text area_name survives for an existing entry -
+            // the Province/Municipality selects are a convenience toward
+            // composing that text, not a parsed-back source of truth, so
+            // they reset to blank on edit same as a fresh Add.
+            document.getElementById('addAreaNameInput').value = index === null ? '' : locationAreas[index].area_name;
+            resetAreaCascadeSelects();
+            initModal({ modalId: 'AddAreaModal' });
+            bindAreaCascadeOnce();
+        }
+
+        document.getElementById('locationAreasTableBody').addEventListener('click', async (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const index = Number(btn.dataset.index);
+
+            if (btn.dataset.action === 'edit-area') {
+                openAddAreaModal(index);
+                return;
+            }
+
+            if (btn.dataset.action === 'remove-area') {
+                if (locationAreas[index].area_id) {
+                    const confirmed = await window.customConfirm('Remove this serviceable area? Any pricing built only on it (lane tariff rates, port charges, handling fees, trucking tariffs) will be deleted too once saved. This cannot be undone.');
+                    if (!confirmed) return;
+                }
+                locationAreas.splice(index, 1);
+                renderAreasTable();
+            }
+        });
+
+        document.getElementById('addAreaRowBtn').addEventListener('click', () => openAddAreaModal());
+        document.getElementById('addAreaSaveBtn').addEventListener('click', () => {
+            const area_name = document.getElementById('addAreaNameInput').value.trim();
+            if (!area_name) return;
+
+            if (editingAreaIndex === null) {
+                locationAreas.push({ area_name, area_id: null });
+            } else {
+                locationAreas[editingAreaIndex].area_name = area_name;
+            }
+            renderAreasTable();
+            closeModal('AddAreaModal');
+        });
 
         document.getElementById('locationFilterActive')?.addEventListener('change', function () {
             getOrCreateTable('locations').setFilter('is_active', this.value);
@@ -2377,8 +2562,10 @@
         async function openLocationForm(id = null) {
             editingLocationId = id;
             document.getElementById('locationForm').reset();
-            document.getElementById('locationPortRows').innerHTML = '';
-            document.getElementById('locationAreaRows').innerHTML = '';
+            locationPorts = [];
+            locationAreas = [];
+            renderPortsTable();
+            renderAreasTable();
             document.getElementById('locationFormTitle').textContent = id ? 'Edit Location' : 'Add Location';
 
             if (id) {
@@ -2398,8 +2585,10 @@
                 document.getElementById('locationIdInput').value = row.location_id;
                 document.getElementById('locationNameInput').value = row.name;
                 document.getElementById('locationActiveInput').checked = Boolean(row.is_active);
-                (row.ports ?? []).forEach((p) => addPortRow(p.name, p.port_id));
-                (row.serviceable_areas ?? []).forEach((a) => addAreaRow(a.area_name, a.area_id));
+                locationPorts = (row.ports ?? []).map((p) => ({ name: p.name, port_id: p.port_id }));
+                locationAreas = (row.serviceable_areas ?? []).map((a) => ({ area_name: a.area_name, area_id: a.area_id }));
+                renderPortsTable();
+                renderAreasTable();
             } else {
                 document.getElementById('locationIdInput').value = '';
                 document.getElementById('locationActiveInput').checked = true;
@@ -2430,8 +2619,8 @@
             const payload = {
                 name: document.getElementById('locationNameInput').value,
                 is_active: document.getElementById('locationActiveInput').checked,
-                ports: collectIdRows('locationPortRows', 'port_id', 'name'),
-                serviceable_areas: collectIdRows('locationAreaRows', 'area_id', 'area_name'),
+                ports: locationPorts,
+                serviceable_areas: locationAreas,
             };
 
             const isEdit = Boolean(editingLocationId);
@@ -2817,6 +3006,7 @@
                     },
                 url: editingLaneTariffRateId ?
                     `/api/laneTariffRates/${editingLaneTariffRateId}` : '/api/laneTariffRates',
+                button,
             });
 
             if (!rateResponse.success) {
@@ -2840,6 +3030,158 @@
         document.getElementById('laneFormCloseBtn').addEventListener('click', () => closeSideModal('laneFormModal'));
         document.getElementById('laneFormCancelBtn').addEventListener('click', () => closeSideModal(
             'laneFormModal'));
+
+        // -----------------------------------------------------------------
+        // Trucking Tariff form - no Location field. A tariff is just "cost
+        // between this Serviceable Area and this Port" (that's exactly what
+        // the trucking-rate fetch keys on), and gating by Location only
+        // reintroduces confusion since some areas are filed as a serviceable
+        // area under a completely different Location than the one that owns
+        // their nearby ports. Serviceable Area lists every area app-wide
+        // (already labeled "Province - Municipality" via area_name itself);
+        // picking one then filters Port down to that area's own Location
+        // (stashed as a data-location-id attribute on each Area option so
+        // the Port cascade doesn't need a second round trip to look it up).
+        // Versioned like Lane Tariff Rates/Port Charges/etc - editing an
+        // existing tariff only allows Amount/Active (a new effective date
+        // creates a new version via ManagesVersionedRates on the backend),
+        // so the Area/Port pickers are hidden (not just disabled) on edit
+        // and a plain read-only summary line is shown instead.
+        // -----------------------------------------------------------------
+        let editingTruckingTariffId = null;
+
+        async function populateSelectFromUrl(selectEl, url, valueKey, labelFn, placeholder, dataAttrsFn = null) {
+            selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+            const response = await apiCall({ mode: 'GET', url });
+            if (!response.success) return;
+            const rows = response.data?.data ?? [];
+            selectEl.insertAdjacentHTML('beforeend', rows
+                .map((row) => {
+                    const attrs = dataAttrsFn ? Object.entries(dataAttrsFn(row)).map(([k, v]) => ` data-${k}="${v}"`).join('') : '';
+                    return `<option value="${row[valueKey]}"${attrs}>${labelFn(row)}</option>`;
+                })
+                .join(''));
+        }
+
+        async function loadTruckingTariffAreaOptions() {
+            const areaSelect = document.getElementById('truckingTariffAreaInput');
+            await populateSelectFromUrl(
+                areaSelect,
+                '/api/serviceableAreas?per_page=500',
+                'area_id',
+                (row) => row.area_name,
+                'Select Serviceable Area',
+                (row) => ({ 'location-id': row.location_id })
+            );
+            makeSearchableSelect(areaSelect);
+            refreshSearchable(areaSelect);
+        }
+
+        async function loadTruckingTariffPortOptions(locationId) {
+            const portSelect = document.getElementById('truckingTariffPortInput');
+
+            if (!locationId) {
+                portSelect.innerHTML = '<option value="">Select Serviceable Area first</option>';
+                portSelect.disabled = true;
+                refreshSearchable(portSelect);
+                return;
+            }
+
+            await populateSelectFromUrl(portSelect, `/api/ports?location_id=${locationId}&per_page=200`, 'port_id', (row) => row.name, 'Select Port');
+            portSelect.disabled = false;
+            makeSearchableSelect(portSelect);
+            refreshSearchable(portSelect);
+        }
+
+        document.getElementById('truckingTariffAreaInput').addEventListener('change', function () {
+            const locationId = this.selectedOptions[0]?.dataset.locationId || null;
+            loadTruckingTariffPortOptions(locationId);
+        });
+
+        async function openTruckingTariffForm(id = null) {
+            editingTruckingTariffId = id;
+            document.getElementById('truckingTariffForm').reset();
+            document.getElementById('truckingTariffIdInput').value = '';
+            document.getElementById('truckingTariffFormTitle').textContent = id ? 'Edit Trucking Tariff' : 'Add Trucking Tariff';
+
+            const addFields = document.getElementById('truckingTariffAddFields');
+            const readonlySummary = document.getElementById('truckingTariffReadonlySummary');
+            const effectiveDateWrap = document.getElementById('truckingTariffEffectiveDateWrap');
+
+            await loadTruckingTariffAreaOptions();
+            await loadTruckingTariffPortOptions(null);
+
+            if (id) {
+                const response = await apiCall({ mode: 'GET', url: `/api/truckingTariffs/${id}` });
+                if (!response.success) {
+                    showMessage({ status: 'error', title: 'Error', message: 'Unable to load this trucking tariff.' });
+                    return;
+                }
+                const row = response.data;
+                document.getElementById('truckingTariffIdInput').value = row.trucking_tariff_id;
+                document.getElementById('truckingTariffAmountInput').value = row.amount;
+                document.getElementById('truckingTariffActiveInput').checked = Boolean(row.is_active);
+
+                addFields.classList.add('hidden');
+                effectiveDateWrap.classList.add('hidden');
+                readonlySummary.classList.remove('hidden');
+                readonlySummary.textContent =
+                    `${row.serviceable_area?.location?.name ?? '-'} / ${row.serviceable_area?.area_name ?? '-'} ↔ ${row.port?.name ?? '-'}`;
+            } else {
+                addFields.classList.remove('hidden');
+                effectiveDateWrap.classList.remove('hidden');
+                readonlySummary.classList.add('hidden');
+                document.getElementById('truckingTariffActiveInput').checked = true;
+                document.getElementById('truckingTariffEffectiveDateInput').value = new Date().toISOString().slice(0, 10);
+            }
+
+            initSideModal({ modalId: 'truckingTariffFormModal' });
+        }
+
+        document.getElementById('truckingTariffForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const isEdit = Boolean(editingTruckingTariffId);
+            const button = document.getElementById('truckingTariffFormSubmitBtn');
+
+            const payload = isEdit ? {
+                amount: Number(parseCurrencyValue(document.getElementById('truckingTariffAmountInput').value)),
+                is_active: document.getElementById('truckingTariffActiveInput').checked,
+            } : {
+                area_id: Number(document.getElementById('truckingTariffAreaInput').value),
+                port_id: Number(document.getElementById('truckingTariffPortInput').value),
+                amount: Number(parseCurrencyValue(document.getElementById('truckingTariffAmountInput').value)),
+                effective_date: document.getElementById('truckingTariffEffectiveDateInput').value,
+            };
+
+            const response = await apiCall({
+                mode: isEdit ? 'PUT' : 'POST',
+                isJson: true,
+                payload,
+                url: isEdit ? `/api/truckingTariffs/${editingTruckingTariffId}` : '/api/truckingTariffs',
+                button,
+            });
+
+            if (!response.success) {
+                showMessage({
+                    status: 'error',
+                    title: 'Error',
+                    message: response.message ?? 'Unable to save this trucking tariff.'
+                });
+                return;
+            }
+
+            showMessage({
+                status: 'success',
+                title: 'Saved',
+                message: `Trucking Tariff ${isEdit ? 'updated' : 'added'}.`
+            });
+            closeSideModal('truckingTariffFormModal');
+            getOrCreateTable('truckingTariffs').reload();
+        });
+
+        document.getElementById('truckingTariffFormCloseBtn').addEventListener('click', () => closeSideModal('truckingTariffFormModal'));
+        document.getElementById('truckingTariffFormCancelBtn').addEventListener('click', () => closeSideModal('truckingTariffFormModal'));
 
         // -----------------------------------------------------------------
         // General Lookups tab - generic Option -> List-of-Values management

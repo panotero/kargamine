@@ -111,52 +111,18 @@
                 </div>
 
                 {{-- ---- Authorized Signatory sub-section ----
-                     Picking a Contact prefills Name/Position/Email/Contact
-                     Number below (see signatoryContactChange() in
-                     logic_prospect_request_proposal.js) but every field
-                     stays fully editable, and the Contact picker itself is
-                     optional - leaving it blank and typing all four fields
-                     is a valid fully-manual signatory. Whatever's in these
-                     four fields at Add time is what gets saved on this
-                     signatory (its own snapshot, not re-read from the
-                     contact later) - and on final submit, that snapshot
-                     syncs back into the picked contact's
-                     position/email/mobile, or becomes a brand new contact
-                     if none was picked. See
-                     ProspectController::submitProposalRequest(). --}}
+                     The actual Contact picker + Name/Position/Email/Contact
+                     Number fields now live in their own popup - see
+                     <x-rpm-add-signatory-modal /> and
+                     openRpmAddSignatoryModal()/addSignatory() in
+                     logic_prospect_request_proposal.js - same "+Add via
+                     popup, appears in the list" pattern used for Origin &
+                     Destination just above and for Locations on the
+                     Prospect Identity tab. --}}
                 <div class="border-t dark:border-zinc-700 pt-4 space-y-3">
-                    <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Authorized Signatory</p>
-                    <div>
-                        <label for="rpmSignatoryContact" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Contact</label>
-                        <select id="rpmSignatoryContact"
-                            class="rpmSignatoryDropdown w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                            <option value="">Select Contact (optional - or type below manually)</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label for="rpmSignatoryName" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Name <span class="req-asterisk">*</span></label>
-                            <input type="text" id="rpmSignatoryName"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label for="rpmSignatoryPosition" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Position</label>
-                            <input type="text" id="rpmSignatoryPosition"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label for="rpmSignatoryEmail" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Email</label>
-                            <input type="email" id="rpmSignatoryEmail"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label for="rpmSignatoryContactNumber" class="text-[11px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Contact Number</label>
-                            <input type="text" id="rpmSignatoryContactNumber"
-                                class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm mt-1">
-                        </div>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="button" id="rpmAddSignatoryBtn"
+                    <div class="flex justify-between items-center">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Authorized Signatory</p>
+                        <button type="button" id="rpmOpenAddSignatoryBtn"
                             class="text-sm px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
                             + Add Authorized
                         </button>
@@ -438,6 +404,7 @@
                             <th class="px-3 py-2 text-left">Detail</th>
                             <th class="px-3 py-2 text-left">Route</th>
                             <th class="px-3 py-2 text-right">Qty</th>
+                            <th class="px-3 py-2 text-right">Grand Total</th>
                         </tr>
                     </thead>
                     <tbody id="rpmMatrixTableBody" class="divide-y divide-zinc-100 dark:divide-zinc-700"></tbody>
@@ -464,6 +431,7 @@
                     <select id="rpmTcTermConvan" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For ConVans & Flatracks">
                         <option value="">Select Terms of Payment</option>
                     </select>
+                    @include('components.partials.rpm-tc-days-select', ['section' => 'For ConVans & Flatracks'])
                 </div>
                 <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
                     <li>Above rates do not apply to "Dangerous Cargoes".</li>
@@ -485,6 +453,7 @@
                     <select id="rpmTcTermReefer" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Reefer Vans">
                         <option value="">Select Terms of Payment</option>
                     </select>
+                    @include('components.partials.rpm-tc-days-select', ['section' => 'For Reefer Vans'])
                 </div>
                 <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
                     <li>Above rates do not apply to "Dangerous Cargoes".</li>
@@ -504,6 +473,7 @@
                     <select id="rpmTcTermRolling" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Rolling Cargoes">
                         <option value="">Select Terms of Payment</option>
                     </select>
+                    @include('components.partials.rpm-tc-days-select', ['section' => 'For Rolling Cargoes'])
                 </div>
                 <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
                     <li>Above rates do not apply to "Dangerous Cargoes".</li>
@@ -523,6 +493,7 @@
                     <select id="rpmTcTermBreakbulk" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Break Bulk Cargo">
                         <option value="">Select Terms of Payment</option>
                     </select>
+                    @include('components.partials.rpm-tc-days-select', ['section' => 'For Break Bulk Cargo'])
                 </div>
                 <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
                     <li>Above rates do not apply to "Dangerous Cargoes".</li>
@@ -541,6 +512,7 @@
                     <select id="rpmTcTermTrucking" class="rpmTermsOfPaymentDropdown rpm-tc-payment-term w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm" data-section="For Trucking">
                         <option value="">Select Terms of Payment</option>
                     </select>
+                    @include('components.partials.rpm-tc-days-select', ['section' => 'For Trucking'])
                 </div>
                 <ul class="list-disc list-inside text-xs text-zinc-600 dark:text-zinc-300 space-y-1 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
                     <li>Above rates do not apply to "Dangerous Cargoes".</li>
@@ -584,6 +556,12 @@
         <div class="rpm-tab-pane hidden space-y-6" data-rpm-pane="Confirmation">
             <div id="rpmConfirmationRecap" class="space-y-4"></div>
 
+            <div>
+                <label for="rpmAdditionalNotes" class="text-[11px] font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Additional Note</label>
+                <textarea id="rpmAdditionalNotes" rows="3" maxlength="5000" placeholder="Any notes for the approver (optional)"
+                    class="mt-1 w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm"></textarea>
+            </div>
+
             <div class="border-t dark:border-zinc-700 pt-4 flex items-center justify-between gap-3">
                 <p id="rpmSubmittedStatus" class="text-sm text-zinc-400 dark:text-zinc-500"></p>
                 <button type="button" id="rpmSubmitBtn"
@@ -595,6 +573,7 @@
     </div>
 </x-modal>
 
+<x-rpm-add-signatory-modal />
 <x-rpm-add-od-modal />
 <x-rpm-add-container-modal />
 <x-rpm-add-rolling-cargo-modal />

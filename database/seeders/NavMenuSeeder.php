@@ -134,11 +134,16 @@ class NavMenuSeeder extends Seeder
                 // Points at the redesigned pages.settings.users view (real
                 // API-backed, rebuilt from usersmanagement.blade.php's logic)
                 // rather than /page_usermanagement, which still serves the
-                // superseded pre-redesign page and is now unreferenced.
+                // superseded pre-redesign page and is now unreferenced. Also
+                // now hosts the migrated Team Management section below the
+                // Users Management section, so allowed_roles covers the
+                // union of both pages' former audiences (Team Management's
+                // mutating routes stay scoped to this same nav entry - see
+                // routes/api.php's /api/teams group).
                 'title' => 'Users',
                 'icon' => 'users',
                 'link' => '/page_users',
-                'allowed_roles' => ['4', '1'],
+                'allowed_roles' => ['1', '2', '3', '4', '5', '6', '7', '8'],
                 'parent_title' => null,
                 'menu_order' => '10',
             ],
@@ -168,14 +173,14 @@ class NavMenuSeeder extends Seeder
                 'parent_title' => 'Settings',
                 'menu_order' => '1',
             ],
-            [
-                'title' => 'Team Management',
-                'icon' => 'briefcase',
-                'link' => '/page_team_management',
-                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
-                'parent_title' => 'Settings',
-                'menu_order' => '2',
-            ],
+            // Team Management nav entry removed - its content (teams table,
+            // Add/Edit Team modal, Members modal) migrated into the Users
+            // page (/page_users, pages.settings.users) below the Users
+            // Management section, under a "Team Management" heading. The
+            // /page_team_management route/controller/view are left in place,
+            // unlinked, rather than deleted (same low-risk precedent used
+            // when the Approvals/Signed-Contracts pages were folded into
+            // Requests).
             [
                 // Moved here from top-level via the Menus admin page.
                 'title' => 'Container Inventory',
@@ -226,31 +231,25 @@ class NavMenuSeeder extends Seeder
                 'menu_order' => '4',
             ],
             [
-                // Management-only queue - mints happen elsewhere, this is
-                // where superadmin/admin assign the CSR + Relationship
-                // Manager that unlock the RFP wizard for a prospect.
+                // Combined Requests / Approvals / Signed-Contracts list,
+                // broadened from the old Management-only assignment queue -
+                // visible to every role (all 8), same as the former
+                // Approvals/Signed-Contracts nav rows this page absorbed
+                // and which have been deleted from this list (their
+                // blade/controller/route files are left in place, just
+                // unlinked). Per-row visibility is team-scoped
+                // (see ProposalRequestAssignmentController::index()), so a
+                // role with no accessible rows simply sees an empty list -
+                // broad menu visibility here is intentional, not a bug.
+                // The "Assign owners" action itself stays gated to
+                // superadmin/admin in-method (ProspectController::
+                // assignOwners()), not via nav role.
                 'title' => 'Request',
                 'icon' => 'paper-airplane',
                 'link' => '/page_proposal_requests',
-                'allowed_roles' => ['1', '2'],
+                'allowed_roles' => ['1', '2', '3', '4', '5', '6', '7', '8'],
                 'parent_title' => 'Proposals',
                 'menu_order' => '1',
-            ],
-            [
-                'title' => 'Approvals',
-                'icon' => 'paper-airplane',
-                'link' => 'page_proposals',
-                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
-                'parent_title' => 'Proposals',
-                'menu_order' => '2',
-            ],
-            [
-                'title' => 'Signed / Contracts',
-                'icon' => 'paper-airplane',
-                'link' => '/page_proposal_signed_contracts',
-                'allowed_roles' => ['2', '5', '4', '6', '1', '3'],
-                'parent_title' => 'Proposals',
-                'menu_order' => '3',
             ],
             [
                 // Self-scoped by query (assigned CSR/RM only) - no

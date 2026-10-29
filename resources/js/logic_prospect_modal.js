@@ -342,36 +342,45 @@
     }
   }
 
-  // Splits a Serviceable Area's "{Province} - {Municipality}" string (see
-  // maintenance.blade.php's Location modal) into its two parts, trimmed.
-  // Legacy freeform areas saved before that format existed (no " - ") are
-  // returned as null and simply never match anything below.
-  function parseServiceableArea(areaName) {
-    const parts = (areaName || "").split(" - ");
-    if (parts.length !== 2) return null;
-    return { province: parts[0].trim().toLowerCase(), municipality: parts[1].trim().toLowerCase() };
-  }
-
   // Ports for whichever Location's Serviceable Areas include the given
   // province/municipality (an Origin or Destination's own
   // address_province/address_town_city) - used by the Request for
   // Proposal wizard's Products tab so Port dropdowns only show ports that
   // actually service the selected route (see
-  // logic_prospect_request_proposal.js's applyPortFilterForSide()).
-  // Falls back to every port when nothing's selected yet or nothing
-  // matches - this filter is a convenience, never a hard block.
+  // logic_prospect_request_proposal.js's applyPortFilterForSide()), same
+  // substring-search approach as the Trucking Tariff maintenance form's
+  // Area->Port cascade (see maintenance.blade.php/
+  // ProposalRequestProductController::resolveTruckingAmount()) rather than
+  // an exact "{Province} - {Municipality}" split+equality match - that
+  // broke on the many Serviceable Areas whose municipality slot is itself
+  // a compound "Locality, Municipality" name (e.g. "Aklan - Caticlan,
+  // Malay"). Returns every port when nothing's selected yet (Port must stay
+  // usable on its own for Pier-side rows, which have no Origin/Destination
+  // address at all), but an EMPTY list (just the caller's own "Select
+  // Port" placeholder) once both are selected and nothing matches - no
+  // silent fallback to the full list, so a route with no configured port
+  // reads as empty, not misleadingly "any port works here".
+  // PSGC's official name for a highly-urbanized/independent city is usually
+  // "City of {Name}" (e.g. "City of Antipolo", "City of Manila") - that's
+  // what address_town_city stores (sourced straight from the PSGC
+  // municipality dropdown), but Serviceable Areas here are named with just
+  // the short form ("Antipolo", "Manila"). Strip that prefix before
+  // matching so "City of Antipolo" still finds "Rizal - Antipolo".
+  function stripCityOfPrefix(name) {
+    return name.replace(/^city of\s+/i, "").trim();
+  }
+
   function getPortsOptionsHtmlForArea(provinceName, cityName) {
     const province = (provinceName || "").trim().toLowerCase();
-    const municipality = (cityName || "").trim().toLowerCase();
+    const municipality = stripCityOfPrefix((cityName || "").trim()).toLowerCase();
     if (!province || !municipality) return portsOptionsHtml;
 
     const matches = portsRaw.filter((p) =>
       (p.location?.serviceable_areas ?? []).some((a) => {
-        const parsed = parseServiceableArea(a.area_name);
-        return parsed && parsed.province === province && parsed.municipality === municipality;
+        const name = (a.area_name || "").toLowerCase();
+        return name.includes(province) && name.includes(municipality);
       })
     );
-    if (!matches.length) return portsOptionsHtml;
 
     return matches.map((p) => `<option value="${p.port_id}">${p.location?.name ?? "-"} - ${p.name}</option>`).join("");
   }
@@ -539,15 +548,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">No.</label>
-                <input type="text" data-field="address_no" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_no" autocomplete="search-addr-no" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Building</label>
-                <input type="text" data-field="address_building" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_building" autocomplete="search-addr-building" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Street</label>
-                <input type="text" data-field="address_street" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_street" autocomplete="search-addr-street" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Country</label>
@@ -575,7 +584,7 @@
             </div>
             <div>
                 <label class="text-[11px] text-zinc-400 uppercase">Postal Code</label>
-                <input type="text" data-field="address_postal_code" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
+                <input type="text" data-field="address_postal_code" autocomplete="search-addr-postal" class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1.5 text-sm">
             </div>
         </div>
     </div>`;
@@ -1462,11 +1471,12 @@
   }
 
   function bindContainerRowRemove(modal, row) {
-    row.querySelector(".pm-remove-container-row")?.addEventListener("click", async () => {
+    row.querySelector(".pm-remove-container-row")?.addEventListener("click", async (e) => {
       const id = row.dataset.id;
       const response = await apiCall({
         mode: "DELETE",
         url: `/api/crm/prospects/${currentProspectUuid}/proposalRequest/containers/${id}`,
+        button: e.currentTarget,
       });
 
       if (!response.success) {
@@ -1598,11 +1608,12 @@
   }
 
   function bindTruckingRowRemove(modal, row) {
-    row.querySelector(".pm-remove-trucking-row")?.addEventListener("click", async () => {
+    row.querySelector(".pm-remove-trucking-row")?.addEventListener("click", async (e) => {
       const id = row.dataset.id;
       const response = await apiCall({
         mode: "DELETE",
         url: `/api/crm/prospects/${currentProspectUuid}/proposalRequest/truckings/${id}`,
+        button: e.currentTarget,
       });
 
       if (!response.success) {
@@ -1802,11 +1813,12 @@
   }
 
   function bindCharterRowRemove(modal, row) {
-    row.querySelector(".pm-remove-charter-row")?.addEventListener("click", async () => {
+    row.querySelector(".pm-remove-charter-row")?.addEventListener("click", async (e) => {
       const id = row.dataset.id;
       const response = await apiCall({
         mode: "DELETE",
         url: `/api/crm/prospects/${currentProspectUuid}/proposalRequest/charters/${id}`,
+        button: e.currentTarget,
       });
 
       if (!response.success) {
@@ -1913,6 +1925,35 @@
     setTabCompletionIndicator(modal, "pmTabBtnIdentity", stageCompletion?.[1]);
     setTabCompletionIndicator(modal, "pmTabBtnContact", stageCompletion?.[2]);
     setTabCompletionIndicator(modal, "pmTabBtnRequirements", stageCompletion?.[3]);
+  }
+
+  // Blanket-disables every interactive control inside the 3 tab panes
+  // (data-pm-pane) rather than maintaining a curated id list - an earlier
+  // version only disabled a handful of named Save/Add buttons, which still
+  // let a non-owner type into every text field and reach several "Add X"
+  // sub-flows that weren't on the list, so they'd only discover they lacked
+  // permission after already submitting (the backend's authorizeProspectEdit
+  // 403). Scoped to [data-pm-pane] so the tab rail and header/footer close
+  // controls stay clickable - viewing/navigating always still works, only
+  // mutating is blocked, same intent as applyAssignmentGating() in
+  // logic_prospect_request_proposal.js. A brand-new prospect (no uuid yet,
+  // lead is null/undefined) is always editable.
+  function applyProspectEditGating(modal, lead) {
+    const readOnly = Boolean(lead && lead.uuid && lead.can_edit === false);
+    const banner = modal.querySelector("#pmViewOnlyBanner");
+    if (banner) banner.classList.toggle("hidden", !readOnly);
+
+    modal.querySelectorAll("[data-pm-pane]").forEach((pane) => {
+      pane.querySelectorAll("input, select, textarea, button").forEach((el) => {
+        el.disabled = readOnly;
+      });
+      // Searchable-select widgets (resources/js/searchableSelect.js) wrap
+      // the real <select> in a separate visible text input that only
+      // picks up a freshly-set disabled state on refresh().
+      pane.querySelectorAll("select").forEach((sel) => {
+        sel._searchableSelect?.refresh();
+      });
+    });
   }
 
   function bindTabs(modal) {
@@ -2423,6 +2464,11 @@
     resetRequirementsForm(modal);
     switchTab(modal, "Identity");
     updateTabGating(modal, {});
+    // Reset to fully-editable before any load - a brand-new prospect (the
+    // else branch below never calls applyProspectEditGating again) must
+    // never inherit a previous "view only" state left over from the last
+    // existing lead viewed in this same modal instance.
+    applyProspectEditGating(modal, null);
 
     if (currentProspectUuid) {
       modal.querySelector("#pmTitle").textContent = "Edit Prospect";
@@ -2458,6 +2504,7 @@
         hydrateRequirementsTab(modal, response.data);
         modal.querySelector("#pmSubtitle").textContent = response.data.company?.company_name ?? response.data.contact_name ?? "";
         updateTabGating(modal, response.data.stage_completion);
+        applyProspectEditGating(modal, response.data);
       } else {
         modal.querySelector("#pmSubtitle").textContent = "Unable to load this prospect.";
         showMessage({

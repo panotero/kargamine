@@ -22,9 +22,10 @@
                 </select>
             </div>
             <div>
-                <label for="rpmTrDispatchMode" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode</label>
+                <label for="rpmTrDispatchMode" class="text-[11px] text-zinc-400 uppercase">Dispatch Mode <span class="req-asterisk">*</span></label>
                 <select id="rpmTrDispatchMode" data-field="dispatch_mode"
                     class="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm">
+                    <option value="">Select Dispatch Mode</option>
                     <option value="single">Single</option>
                     <option value="tandem">Tandem</option>
                 </select>

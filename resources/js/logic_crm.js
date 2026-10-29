@@ -181,8 +181,9 @@ window.initCrmLogic = function initCrmLogic() {
         render: (row) => renderStatusCell(row),
       },
       {
-        title: "Assigned To",
-        key: "user.name",
+        title: "Created By",
+        key: "creator.name",
+        render: (row) => row.creator?.name ?? "-",
       },
       {
         title: "Last Activity",
@@ -205,10 +206,18 @@ window.initCrmLogic = function initCrmLogic() {
 
     function renderContactCell(row) {
       const company = row.company?.company_name ?? "-";
+      // The Identity tab no longer collects a contact-person name itself
+      // (that moved to the Contacts tab, prospect_contacts) - Prospect's
+      // own contact_name accessor is blank for every current prospect, so
+      // this reads the first saved contact person instead.
+      const contact = row.contacts?.[0];
+      const contactName = contact
+        ? [contact.title, contact.first_name, contact.middle_name, contact.last_name].filter(Boolean).join(" ")
+        : "";
 
       return `
         <div class="flex flex-col">
-            <span class="font-medium text-zinc-800 dark:text-zinc-100">${row.contact_name ?? "-"}</span>
+            <span class="font-medium text-zinc-800 dark:text-zinc-100">${contactName}</span>
             <span class="text-xs text-zinc-400">${company} · ${row.email ?? "-"} · ${row.mobile ?? "-"}</span>
         </div>`;
     }

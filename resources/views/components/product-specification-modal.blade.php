@@ -65,6 +65,7 @@
                             <tr>
                                 <th class="px-3 py-2 text-left">Detail</th>
                                 <th class="px-3 py-2 text-right">Qty</th>
+                                <th class="px-3 py-2 text-left">Unit</th>
                                 <th class="px-3 py-2 text-right">Base Price</th>
                                 <th class="px-3 py-2 text-right">Adjustment</th>
                                 <th class="px-3 py-2 text-right">Sub Total</th>

@@ -85,16 +85,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/swap', [MenusController::class, 'swapMenuOrder']);
     });
 
+    // Team Management's UI moved into the /page_users page (below Users
+    // Management) - these mutation routes used to gate on the now-removed
+    // /page_team_management nav entry and are repointed at /page_users.
     Route::prefix('teams')->group(function () {
         Route::get('/', [TeamController::class, 'index']);
         Route::get('/users', [TeamController::class, 'availableUsers']);
-        Route::post('/', [TeamController::class, 'store'])->middleware('nav.access:/page_team_management');
-        Route::put('/{id}', [TeamController::class, 'update'])->middleware('nav.access:/page_team_management');
-        Route::delete('/{id}', [TeamController::class, 'destroy'])->middleware('nav.access:/page_team_management');
+        Route::post('/', [TeamController::class, 'store'])->middleware('nav.access:/page_users');
+        Route::put('/{id}', [TeamController::class, 'update'])->middleware('nav.access:/page_users');
+        Route::delete('/{id}', [TeamController::class, 'destroy'])->middleware('nav.access:/page_users');
         Route::get('/{id}/members', [TeamController::class, 'members']);
-        Route::post('/{id}/members', [TeamController::class, 'addMember'])->middleware('nav.access:/page_team_management');
-        Route::patch('/{id}/members/{userId}', [TeamController::class, 'updateMember'])->middleware('nav.access:/page_team_management');
-        Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])->middleware('nav.access:/page_team_management');
+        Route::post('/{id}/members', [TeamController::class, 'addMember'])->middleware('nav.access:/page_users');
+        Route::patch('/{id}/members/{userId}', [TeamController::class, 'updateMember'])->middleware('nav.access:/page_users');
+        Route::delete('/{id}/members/{userId}', [TeamController::class, 'removeMember'])->middleware('nav.access:/page_users');
     });
 
     Route::prefix('app-theme')->group(function () {
@@ -153,6 +156,7 @@ Route::middleware(['auth'])->group(function () {
         // unlock the RFP wizard endpoints for this prospect.
         Route::post('/prospects/{uuid}/assignment', [ProspectController::class, 'assignOwners'])
             ->middleware('nav.access:/page_proposal_requests');
+        Route::post('/prospects/{uuid}/reassign-owner', [ProspectController::class, 'reassignOwner']);
 
         // STATUS CRUD
         Route::get('/getCrmStatus', [CrmStatusController::class, 'index']);
@@ -198,6 +202,7 @@ Route::middleware(['auth'])->group(function () {
         // set of product forms (see ProposalRequestProductController).
         Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/containers', [ProposalRequestProductController::class, 'storeContainer']);
         Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/containers/{id}', [ProposalRequestProductController::class, 'destroyContainer']);
+        Route::get('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/containers/{containerId}/rate', [ProposalRequestProductController::class, 'containerRate']);
         Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo', [ProposalRequestProductController::class, 'storeRollingCargo']);
         Route::delete('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/rollingCargo/{id}', [ProposalRequestProductController::class, 'destroyRollingCargo']);
         Route::post('/prospects/{uuid}/proposalRequests/{proposalRequestId}/products/looseCargo', [ProposalRequestProductController::class, 'storeLooseCargo']);

@@ -90,7 +90,7 @@ window.initPierCheckinPage = function initPierCheckinPage() {
   // -----------------------------------------------------------------
   // Confirm a scanned/typed code
   // -----------------------------------------------------------------
-  async function submitCode(code) {
+  async function submitCode(code, button = null) {
     if (submitting) return;
     submitting = true;
 
@@ -99,6 +99,7 @@ window.initPierCheckinPage = function initPierCheckinPage() {
       isJson: true,
       payload: { code },
       url: "/api/gate-scan",
+      button,
     });
 
     if (!response.success) {
@@ -137,7 +138,7 @@ window.initPierCheckinPage = function initPierCheckinPage() {
   manualBtn.addEventListener("click", function () {
     const code = manualInput.value.trim();
     if (!code) return;
-    submitCode(code);
+    submitCode(code, this);
     manualInput.value = "";
   });
 

@@ -73,4 +73,20 @@ class TeamService
 
         return User::whereIn('team_id', static::descendantTeamIds($user->team_id))->pluck('id');
     }
+
+    /**
+     * Team-scoped user ids this user can see data for: everyone belonging
+     * to any team in accessibleTeamIds() (their own team, plus every
+     * descendant team if they're a leader) - unlike accessibleUserIds()
+     * above, this includes other leaders/members of the same team even
+     * when $user isn't a leader themselves.
+     */
+    public static function accessibleTeamUserIds(User $user): Collection
+    {
+        if (!$user->team_id) {
+            return collect([$user->id]);
+        }
+
+        return User::whereIn('team_id', static::accessibleTeamIds($user))->pluck('id');
+    }
 }

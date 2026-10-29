@@ -5,3 +5,6 @@
 - [Prospect activity + RFP sections](project_prospect_activity_and_rfp_sections.md) — detail modal vs intake modal; ActivityService had no live call sites; show() payload already carries the data
 - [Requirement vs product location tables](project_requirement_vs_product_location_tables.md) — requirement O&D → `locations` master; product O&D → `prospect_locations`; IDs not interchangeable
 - [RFP → ClientProposal bridge](project_rfp_to_clientproposal_bridge.md) — RFP submit mints a lead-scoped ClientProposal; rate matrix/T&C in their own tables, rendered additively on Approvals
+- [Prospect ownership model](project_prospect_ownership_model.md) — prospects.owner_id edit-rights + team-wide visibility + leader reassignment; the TWO distinct prospect auth tiers; use HttpResponseException not abort()
+- [Rate Matrix real lookup](project_rate_matrix_real_lookup.md) — Build Rate Matrix freight is real for Containers only (ResolvesLaneRates trait); trucking fee + other product types deliberately still placeholder
+- [nav.access role baseline trap](feedback_nav_access_role_baseline.md) — the common NavMenuSeeder allowed_roles baseline is roles 1-6 only; it omits RM(7)/CSR(8) and silently 403s them

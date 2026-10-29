@@ -259,7 +259,7 @@
             row.querySelector('.vsRemoveLegBtn').addEventListener('click', async function() {
                 if (row.dataset.legId) {
                     if (!confirm('Remove this leg from the schedule? This cannot be undone.')) return;
-                    const response = await apiCall({ mode: 'DELETE', url: `/api/vesselVoyages/${row.dataset.legId}` });
+                    const response = await apiCall({ mode: 'DELETE', url: `/api/vesselVoyages/${row.dataset.legId}`, button: this });
                     if (!response.success) {
                         showMessage({ status: 'error', title: 'Unable to remove leg', message: response.message ?? '' });
                         return;
@@ -479,8 +479,12 @@
             }
 
             const submitBtn = document.getElementById('vsFormSubmitBtn');
+            const submitBtnOriginalHtml = submitBtn.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+            submitBtn.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="w-4 h-4 border-2 border-gray-800 border-t-white rounded-full animate-spin"></div>
+                </div>`;
 
             const requests = rows.map((row) => {
                 const originId = row.querySelector('.vsLegOriginSelect').value;
@@ -506,7 +510,7 @@
 
             const results = await Promise.all(requests);
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Schedule';
+            submitBtn.innerHTML = submitBtnOriginalHtml;
 
             const failed = results.filter((r) => !r.success);
             if (failed.length) {

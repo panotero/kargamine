@@ -132,21 +132,28 @@
                     </div>
                 </div>
 
-                {{-- Team & Leadership (edit only) --}}
+                {{-- Team --}}
+                <div class="flex flex-col gap-1">
+                    <label for="userTeamSelect" class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Team</label>
+                    <select id="userTeamSelect"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+                        <option value="">No team</option>
+                    </select>
+                </div>
+
+                {{-- Leadership (edit only, informational - leadership itself is granted per-team via Team Management's Members modal) --}}
                 <div id="userTeamBlock" class="hidden rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4 space-y-2">
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Team &amp; Leadership</p>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100" id="userTeamName">No team assigned</span>
                         <span id="userLeaderBadge"
                             class="hidden text-[10px] font-semibold uppercase tracking-wide bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 rounded px-1.5 py-0.5">Team Leader</span>
                     </div>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                        Team leaders can see every record their team and its sub-teams own. Team and leader status are
-                        set in Team Management, not here.
+                        Team leaders can see every record their team and its sub-teams own. Leadership is granted
+                        from the Team Management section below, via that team's Members button.
                     </p>
                     <button type="button" id="btnGoTeamManagement"
                         class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400">
-                        View this user's team assignment in Team Management →
+                        Jump to Team Management ↓
                     </button>
                 </div>
             </form>
@@ -165,6 +172,125 @@
         </div>
 
     </x-side-modal>
+
+    {{-- TEAM MANAGEMENT (migrated from the former standalone /page_team_management) --}}
+    <div id="teamManagementSection" class="mt-10">
+        <div class="flex justify-between items-center mb-5 p-2">
+            <div>
+                <h1 class="text-2xl font-bold dark:text-white">Team Management</h1>
+                <p class="text-zinc-500">Build the parent/child team hierarchy, and assign members and leaders</p>
+            </div>
+            <button id="addTeamBtn"
+                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                + Add New Team
+            </button>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="teamsTable">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">Name</th>
+                            <th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">Description</th>
+                            <th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">Members</th>
+                            <th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">Leaders</th>
+                            <th class="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">Status</th>
+                            <th class="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide bg-orange-500 text-white">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamsTbody" class="divide-y divide-zinc-100 dark:divide-zinc-800"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- ADD / EDIT TEAM MODAL --}}
+    <x-modal id="teamModal" maxWidth="lg:max-w-md">
+        <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+            <div>
+                <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Team Management</p>
+                <p class="text-lg font-semibold dark:text-white mt-0.5" id="teamModalTitle">Add New Team</p>
+            </div>
+            <button
+                class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                ✕
+            </button>
+        </div>
+
+        <div class="p-5">
+            <form id="teamForm" class="space-y-4">
+                <input type="hidden" id="teamId">
+
+                <div class="flex flex-col gap-1">
+                    <label for="teamName" class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Name</label>
+                    <input type="text" id="teamName" required
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="teamDescription" class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Description</label>
+                    <textarea id="teamDescription" rows="2"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition"></textarea>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="teamParent" class="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">Parent Team</label>
+                    <select id="teamParent"
+                        class="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition">
+                        <option value="">None (top-level team)</option>
+                    </select>
+                </div>
+
+                <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                    <input type="checkbox" id="teamActive" checked class="rounded border-zinc-300 dark:border-zinc-700">
+                    Active
+                </label>
+            </form>
+        </div>
+
+        <div class="border-t border-zinc-100 dark:border-zinc-800 px-5 py-4 flex justify-end gap-2">
+            <button type="button"
+                class="modal-close px-4 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
+                Cancel
+            </button>
+            <button type="button" id="saveTeamBtn"
+                class="px-4 py-1.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition">
+                Save
+            </button>
+        </div>
+    </x-modal>
+
+    {{-- MEMBERS MODAL --}}
+    <x-modal id="membersModal" maxWidth="lg:max-w-lg">
+        <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+            <p class="text-lg font-semibold dark:text-white" id="membersModalTitle">Team</p>
+            <button
+                class="modal-close text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                ✕
+            </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+            <div class="flex items-center gap-2">
+                <select id="addMemberSelect"
+                    class="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition"></select>
+                <button type="button" id="addMemberBtn"
+                    class="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition">
+                    Add
+                </button>
+            </div>
+
+            <div id="teamMembersList" class="space-y-1 max-h-80 overflow-y-auto"></div>
+        </div>
+
+        <div class="border-t border-zinc-100 dark:border-zinc-800 px-5 py-4 flex justify-end">
+            <button type="button"
+                class="modal-close px-4 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition">
+                Close
+            </button>
+        </div>
+    </x-modal>
 
     {{-- JS --}}
     <script>
@@ -193,7 +319,7 @@
             const saveUserBtn = document.getElementById('saveUserBtn');
 
             const teamBlock = document.getElementById('userTeamBlock');
-            const teamNameEl = document.getElementById('userTeamName');
+            const teamSelect = document.getElementById('userTeamSelect');
             const leaderBadge = document.getElementById('userLeaderBadge');
             const btnGoTeam = document.getElementById('btnGoTeamManagement');
 
@@ -275,6 +401,20 @@
 
             function refreshRoleSelect() {
                 roleSelect._searchableSelect?.refresh?.();
+            }
+
+            async function loadTeamOptions() {
+                const teams = await apiCall({ mode: 'GET', url: '/api/teams' });
+                const list = Array.isArray(teams) ? teams : [];
+                teamSelect.innerHTML =
+                    '<option value="">No team</option>' +
+                    list.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
+                refreshTeamSelect();
+            }
+
+            function refreshTeamSelect() {
+                if (teamSelect._searchableSelect) teamSelect._searchableSelect.refresh();
+                else if (typeof window.makeSearchableSelect === 'function') window.makeSearchableSelect(teamSelect);
             }
 
             // ── Table ────────────────────────────────────────────────
@@ -435,8 +575,9 @@
                 userIdEl.value = '';
                 roleSelect.value = '';
                 refreshRoleSelect();
+                teamSelect.value = '';
+                refreshTeamSelect();
                 leaderBadge.classList.add('hidden');
-                teamNameEl.textContent = 'No team assigned';
             }
 
             document.getElementById('btnNewUser').addEventListener('click', () => {
@@ -466,14 +607,14 @@
                 roleSelect.value = user.role_id ?? '';
                 refreshRoleSelect();
 
-                const teamName = teamNameByUserId[user.id] || null;
-                teamNameEl.textContent = teamName || 'No team assigned';
+                teamSelect.value = user.team_id ?? '';
+                refreshTeamSelect();
                 leaderBadge.classList.toggle('hidden', !user.is_team_leader);
             }
 
             btnGoTeam.addEventListener('click', () => {
                 closeSideModal('userSideModal');
-                loadPage({ title: 'Team Management', link: '/page_team_management' });
+                document.getElementById('teamManagementSection')?.scrollIntoView({ behavior: 'smooth' });
             });
 
             saveUserBtn.addEventListener('click', async () => {
@@ -503,7 +644,12 @@
                     return;
                 }
 
-                const payload = { name, email, role_id: Number(roleId) };
+                const payload = {
+                    name,
+                    email,
+                    role_id: Number(roleId),
+                    team_id: teamSelect.value ? Number(teamSelect.value) : null,
+                };
                 if (password) payload.password = password;
 
                 const res = await apiCall({
@@ -537,11 +683,13 @@
             // ── Boot ─────────────────────────────────────────────────
             async function init() {
                 paintChips();
-                await Promise.all([loadRoles(), loadTeamMap(), refreshActiveStat()]);
+                await Promise.all([loadRoles(), loadTeamOptions(), loadTeamMap(), refreshActiveStat()]);
                 buildTable();
             }
 
             init();
+
+            if (window.initTeamManagementPage) window.initTeamManagementPage();
         })();
     </script>
 </div>

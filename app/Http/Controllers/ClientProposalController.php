@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesLaneRates;
 use App\Models\ClientMaster;
 use App\Models\ClientProposal;
 use App\Models\ClientProposalRate;
@@ -27,6 +28,8 @@ use Illuminate\Support\Str;
 
 class ClientProposalController extends Controller
 {
+    use ResolvesLaneRates;
+
     protected $fileUploadService;
 
     protected ActivityService $activityService;
@@ -182,8 +185,10 @@ class ClientProposalController extends Controller
             'rates.containerSize',
             'rates.ancillaryServices',
             'activeContract',
-            'proposalRequest.productRates',
-            'proposalRequest.ancillaryFees',
+            ...array_map(
+                fn ($s) => "proposalRequest.$s",
+                \App\Models\ProposalRequest::fullTreeEagerLoadSuffixes()
+            ),
         ]);
 
         return response()->json(['success' => true, 'data' => $proposal]);
@@ -484,8 +489,15 @@ class ClientProposalController extends Controller
         // Rate lines can still be deleted after approval (destroyRate has no
         // status guard), so without this check a proposal could be signed
         // with zero rates - producing an empty signed-rate snapshot below
-        // that doesn't match what's actually in the signed PDF.
-        if ($proposal->rates()->doesntExist()) {
+        // that doesn't match what's actually in the signed PDF. RFP-bridged
+        // proposals never populate the legacy rates() relation at all - their
+        // rate lines live on proposal_request_product_rates instead - so
+        // those count too.
+        $hasLegacyRates = $proposal->rates()->exists();
+        $hasRfpRates = $proposal->proposal_request_id
+            && $proposal->proposalRequest?->productRates()->exists();
+
+        if (! $hasLegacyRates && ! $hasRfpRates) {
             return response()->json(['success' => false, 'message' => 'This proposal has no rate lines - add at least one before marking it as signed.'], 422);
         }
 
@@ -682,7 +694,7 @@ class ClientProposalController extends Controller
             'message' => "{$proposal->code} for {$owner->name} needs your approval.",
             'from_user_id' => $owner->id,
             'notifiable' => $proposal,
-            'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
+            'link' => ['title' => 'View Proposal', 'url' => '/page_proposal_requests'],
             'email_subject' => "Approval needed — {$proposal->code}",
             // Clicking this notification opens the Proposals page AND the
             // specific proposal's modal - this one needs the RM's eyes on
@@ -713,7 +725,7 @@ class ClientProposalController extends Controller
             'message' => "{$proposal->code} for {$owner->name} was approved by the RM and needs your final decision.",
             'from_user_id' => $owner->id,
             'notifiable' => $proposal,
-            'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
+            'link' => ['title' => 'View Proposal', 'url' => '/page_proposal_requests'],
             'email_subject' => "Final approval needed — {$proposal->code}",
             'data' => ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
         ]);
@@ -731,15 +743,28 @@ class ClientProposalController extends Controller
             return;
         }
 
+        // RFP-bridged proposals are deep-linked to "My Requests" (same page
+        // the creator submitted the request from, via its code - see
+        // logic_proposal_requests_mine.js's openMyProposalRequestByCode());
+        // proposals created without an RFP behind them (the clientMasters-
+        // scoped store() path) have no "My Requests" row to land on, so they
+        // fall back to the Proposal Requests page, which still opens the
+        // same #ClientProposalModal directly by id.
+        $code = $proposal->proposalRequest?->code;
+
         TeamNotifier::notify([$creator->id], [
             'type' => "proposal.{$decision}",
             'title' => "Proposal {$decision}",
             'message' => "{$proposal->code} was {$decision} by {$decidedBy->name}.",
             'from_user_id' => $decidedBy->id,
             'notifiable' => $proposal,
-            'link' => ['title' => 'View Proposal', 'url' => '/page_proposals'],
+            'link' => $code
+                ? ['title' => 'View My Requests', 'url' => '/page_proposal_requests_mine']
+                : ['title' => 'View Proposal', 'url' => '/page_proposal_requests'],
             'email_subject' => "Your proposal was {$decision} — {$proposal->code}",
-            'data' => ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
+            'data' => $code
+                ? ['modal_fn' => 'openMyProposalRequestByCode', 'modal_args' => [$code]]
+                : ['modal_fn' => 'openProposalModal', 'modal_args' => [$proposal->id]],
         ]);
     }
 
@@ -872,30 +897,5 @@ class ClientProposalController extends Controller
             });
 
         return response()->json(['success' => true, 'data' => $rows]);
-    }
-
-    /**
-     * Shared lane/tariff resolution - factored out of rateLookup() so both
-     * the manual lookup endpoint and the auto-prefill above use one path.
-     */
-    protected function resolveRate($originPortId, $destinationPortId, $containerVariantId): array
-    {
-        $lane = Lane::where('origin_port_id', $originPortId)
-            ->where('destination_port_id', $destinationPortId)
-            ->where('is_active', true)->first();
-        if (! $lane) {
-            return [];
-        }
-
-        $tariffRate = LaneTariffRate::where('lane_id', $lane->lane_id)
-            ->activeOn()->orderByDesc('effective_date')->first();
-        if (! $tariffRate) {
-            return [];
-        }
-
-        $price = LaneTariffRatePrice::where('lane_tariff_rate_id', $tariffRate->rate_id)
-            ->where('container_variant_id', $containerVariantId)->first();
-
-        return $price ? ['frt' => (float) $price->frt] : [];
     }
 }
